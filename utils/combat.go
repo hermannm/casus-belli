@@ -4,7 +4,7 @@ import (
 	"immerse/hermannia/server/types"
 )
 
-func CombatBonus(unit types.Unit) int {
+func CombatBonus(unit *types.Unit) int {
 	switch unit.Type {
 	case "footman":
 		return 1
