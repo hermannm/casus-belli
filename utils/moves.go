@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"immerse/hermannia/server/types"
+	"immerse-ntnu/hermannia/server/types"
 )
 
 func Sailable(area types.BoardArea) bool {

@@ -2,8 +2,8 @@ package validation
 
 import (
 	"errors"
-	"immerse/hermannia/server/types"
-	"immerse/hermannia/server/utils"
+	"immerse-ntnu/hermannia/server/types"
+	"immerse-ntnu/hermannia/server/utils"
 )
 
 func ValidateOrder(order types.Order) error {

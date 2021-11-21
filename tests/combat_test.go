@@ -1,8 +1,8 @@
 package tests
 
 import (
-	"immerse/hermannia/server/types"
-	"immerse/hermannia/server/utils"
+	"immerse-ntnu/hermannia/server/types"
+	"immerse-ntnu/hermannia/server/utils"
 	"testing"
 )
 
