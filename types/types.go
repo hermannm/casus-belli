@@ -32,3 +32,8 @@ type Order struct {
 	To       *BoardArea
 	SecondTo *BoardArea
 }
+
+type OrderResult struct {
+	Status OrderStatus
+	Order  Order
+}

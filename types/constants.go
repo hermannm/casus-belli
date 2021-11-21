@@ -28,3 +28,11 @@ const (
 	Transport OrderType = "transport"
 	Besiege   OrderType = "besiege"
 )
+
+type OrderStatus string
+
+const (
+	Success OrderStatus = "success"
+	Tie     OrderStatus = "tie"
+	Fail    OrderStatus = "fail"
+)
