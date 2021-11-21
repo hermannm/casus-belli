@@ -45,7 +45,7 @@ func TestAttack(test *testing.T) {
 		To:   &area2,
 	}
 
-	result := utils.AttackModifier(order)
+	result := utils.AttackModifier(order, false)
 	expected := -2
 
 	if result != expected {
