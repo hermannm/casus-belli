@@ -18,6 +18,10 @@ func ValidateOrder(order types.Order) error {
 }
 
 func validateMoveOrSupport(order types.Order) error {
+	if order.To == nil {
+		return errors.New("moves and supports must have destination")
+	}
+
 	if _, ok := order.From.Neighbors[order.To.Name]; !ok {
 		return errors.New("destination not adjacent to origin")
 	}
