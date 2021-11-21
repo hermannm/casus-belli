@@ -4,6 +4,15 @@ import (
 	"immerse/hermannia/server/types"
 )
 
+func CombatBonus(unit types.Unit) int {
+	switch unit.Type {
+	case "footman":
+		return 1
+	default:
+		return 0
+	}
+}
+
 func AttackModifier(order types.Order) int {
 	attackModifier := 0
 
@@ -22,7 +31,7 @@ func AttackModifier(order types.Order) int {
 	if order.From.OccupyingUnit.Type == types.Catapult && order.To.Castle {
 		attackModifier++
 	} else {
-		attackModifier += order.From.OccupyingUnit.CombatBonus()
+		attackModifier += CombatBonus(order.From.OccupyingUnit)
 	}
 
 	return attackModifier

@@ -1,32 +1,14 @@
 package types
 
-type UnitType string
-
-const (
-	Footman  UnitType = "footman"
-	Horse    UnitType = "horse"
-	Ship     UnitType = "ship"
-	Catapult UnitType = "catapult"
-)
-
-type PlayerColor string
-
-const (
-	Yellow PlayerColor = "yellow"
-	Red    PlayerColor = "red"
-	Green  PlayerColor = "green"
-	White  PlayerColor = "white"
-	Black  PlayerColor = "black"
-)
+type Player struct {
+	ConnectionID string
+	Color        PlayerColor
+	Units        []Unit
+}
 
 type Unit struct {
 	Type  UnitType
 	Color PlayerColor
-}
-
-type Neighbor struct {
-	Area        BoardArea
-	AcrossWater bool
 }
 
 type BoardArea struct {
@@ -39,7 +21,14 @@ type BoardArea struct {
 	Neighbors         map[string]Neighbor
 }
 
+type Neighbor struct {
+	Area        BoardArea
+	AcrossWater bool
+}
+
 type Order struct {
-	To   BoardArea
-	From BoardArea
+	Type     OrderType
+	From     BoardArea
+	To       BoardArea
+	SecondTo BoardArea
 }
