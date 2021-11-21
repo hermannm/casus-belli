@@ -10,7 +10,7 @@ func (board *board) ResolveOrders(orders []t.Order) []t.OrderResult {
 	for _, order := range orders {
 		results = append(results, t.OrderResult{
 			Status: t.Success,
-			Order:  order,
+			Order:  &order,
 		})
 	}
 

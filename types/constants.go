@@ -47,3 +47,15 @@ const (
 	Summer Season = "summer"
 	Fall   Season = "fall"
 )
+
+type ModifierType string
+
+const (
+	UnitMod     ModifierType = "unit"
+	ForestMod   ModifierType = "forest"
+	CastleMod   ModifierType = "castle"
+	RiverMod    ModifierType = "river"
+	SeaMod      ModifierType = "sea"
+	SurpriseMod ModifierType = "surprise"
+	SupportMod  ModifierType = "support"
+)

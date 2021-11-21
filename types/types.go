@@ -38,5 +38,17 @@ type Order struct {
 
 type OrderResult struct {
 	Status OrderStatus
-	Order  Order
+	Order  *Order
+	Dice   DieResult
+}
+
+type DieResult struct {
+	Result    int
+	Modifiers []Modifier
+}
+
+type Modifier struct {
+	Type        ModifierType
+	Mod         int
+	SupportFrom PlayerColor
 }
