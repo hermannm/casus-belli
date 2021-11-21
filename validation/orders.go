@@ -90,8 +90,8 @@ func validateBesiege(order types.Order) error {
 		return errors.New("besieged area must have castle")
 	}
 
-	if order.From.Control != "" {
-		return errors.New("besieged area cannot already be conquered")
+	if order.From.Control != types.Uncontrolled {
+		return errors.New("besieged area cannot already be controlled")
 	}
 
 	if order.From.OccupyingUnit.Type == types.Ship {

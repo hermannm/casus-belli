@@ -23,6 +23,7 @@ func TestAttack(t *testing.T) {
 
 	area2 := types.BoardArea{
 		Name:          "area2",
+		Control:       types.Uncontrolled,
 		OccupyingUnit: nil,
 		Forest:        true,
 		Castle:        true,

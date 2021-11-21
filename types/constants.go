@@ -12,11 +12,12 @@ const (
 type PlayerColor string
 
 const (
-	Yellow PlayerColor = "yellow"
-	Red    PlayerColor = "red"
-	Green  PlayerColor = "green"
-	White  PlayerColor = "white"
-	Black  PlayerColor = "black"
+	Yellow       PlayerColor = "yellow"
+	Red          PlayerColor = "red"
+	Green        PlayerColor = "green"
+	White        PlayerColor = "white"
+	Black        PlayerColor = "black"
+	Uncontrolled PlayerColor = ""
 )
 
 type OrderType string
