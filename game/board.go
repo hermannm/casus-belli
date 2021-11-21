@@ -1,9 +1,9 @@
 package game
 
 import (
-	"immerse-ntnu/hermannia/server/types"
+	t "immerse-ntnu/hermannia/server/types"
 )
 
-type board map[string]*types.BoardArea
+type board map[string]*t.BoardArea
 
 var Board board

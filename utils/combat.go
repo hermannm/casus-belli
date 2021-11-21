@@ -1,10 +1,10 @@
 package utils
 
 import (
-	"immerse-ntnu/hermannia/server/types"
+	t "immerse-ntnu/hermannia/server/types"
 )
 
-func CombatBonus(unit *types.Unit) int {
+func CombatBonus(unit *t.Unit) int {
 	switch unit.Type {
 	case "footman":
 		return 1
@@ -13,7 +13,7 @@ func CombatBonus(unit *types.Unit) int {
 	}
 }
 
-func AttackModifier(order types.Order) int {
+func AttackModifier(order t.Order) int {
 	attackModifier := 0
 
 	if order.To.Forest {
@@ -28,7 +28,7 @@ func AttackModifier(order types.Order) int {
 		}
 	}
 
-	if order.From.Unit.Type == types.Catapult && order.To.Castle {
+	if order.From.Unit.Type == t.Catapult && order.To.Castle {
 		attackModifier++
 	} else {
 		attackModifier += CombatBonus(order.From.Unit)

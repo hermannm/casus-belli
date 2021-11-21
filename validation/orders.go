@@ -2,22 +2,22 @@ package validation
 
 import (
 	"errors"
-	"immerse-ntnu/hermannia/server/types"
+	t "immerse-ntnu/hermannia/server/types"
 	"immerse-ntnu/hermannia/server/utils"
 )
 
-func ValidateOrder(order types.Order) error {
+func ValidateOrder(order t.Order) error {
 	switch {
-	case order.Type == types.Move || order.Type == types.Support:
+	case order.Type == t.Move || order.Type == t.Support:
 		validateMoveOrSupport(order)
-	case order.Type == types.Besiege || order.Type == types.Transport:
+	case order.Type == t.Besiege || order.Type == t.Transport:
 		validateBesiegeOrTransport(order)
 	}
 
 	return nil
 }
 
-func validateMoveOrSupport(order types.Order) error {
+func validateMoveOrSupport(order t.Order) error {
 	if order.To == nil {
 		return errors.New("moves and supports must have destination")
 	}
@@ -26,7 +26,7 @@ func validateMoveOrSupport(order types.Order) error {
 		return errors.New("destination not adjacent to origin")
 	}
 
-	if order.From.Unit.Type == types.Ship {
+	if order.From.Unit.Type == t.Ship {
 		if !utils.Sailable(*order.To) {
 			return errors.New("ship order destination must be coast or sea")
 		}
@@ -37,21 +37,21 @@ func validateMoveOrSupport(order types.Order) error {
 	}
 
 	switch order.Type {
-	case types.Move:
+	case t.Move:
 		return validateMove(order)
-	case types.Support:
+	case t.Support:
 		return validateSupport(order)
 	}
 
 	return nil
 }
 
-func validateMove(order types.Order) error {
-	if order.SecondTo != nil && order.From.Unit.Type != types.Horse {
+func validateMove(order t.Order) error {
+	if order.SecondTo != nil && order.From.Unit.Type != t.Horse {
 		return errors.New("only horse units can have second destination")
 	}
 
-	if order.From.Unit.Type == types.Horse {
+	if order.From.Unit.Type == t.Horse {
 		secondDestination, ok := order.To.Neighbors[order.SecondTo.Name]
 
 		if secondDestination != nil && !ok {
@@ -66,7 +66,7 @@ func validateMove(order types.Order) error {
 	return nil
 }
 
-func validateSupport(order types.Order) error {
+func validateSupport(order t.Order) error {
 	if order.SecondTo != nil {
 		return errors.New("support orders cannot have second destination")
 	}
@@ -74,39 +74,39 @@ func validateSupport(order types.Order) error {
 	return nil
 }
 
-func validateBesiegeOrTransport(order types.Order) error {
+func validateBesiegeOrTransport(order t.Order) error {
 	if order.To != nil || order.SecondTo != nil {
 		return errors.New("besiege or transport orders cannot have destinations")
 	}
 
 	switch order.Type {
-	case types.Besiege:
+	case t.Besiege:
 		return validateBesiege(order)
-	case types.Transport:
+	case t.Transport:
 		return validateTransport(order)
 	}
 
 	return nil
 }
 
-func validateBesiege(order types.Order) error {
+func validateBesiege(order t.Order) error {
 	if !order.From.Castle {
 		return errors.New("besieged area must have castle")
 	}
 
-	if order.From.Control != types.Uncontrolled {
+	if order.From.Control != t.Uncontrolled {
 		return errors.New("besieged area cannot already be controlled")
 	}
 
-	if order.From.Unit.Type == types.Ship {
+	if order.From.Unit.Type == t.Ship {
 		return errors.New("ships cannot besiege")
 	}
 
 	return nil
 }
 
-func validateTransport(order types.Order) error {
-	if order.From.Unit.Type != types.Ship {
+func validateTransport(order t.Order) error {
+	if order.From.Unit.Type != t.Ship {
 		return errors.New("only ships can transport")
 	}
 

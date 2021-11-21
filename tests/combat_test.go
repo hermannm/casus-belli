@@ -1,46 +1,46 @@
 package tests
 
 import (
-	"immerse-ntnu/hermannia/server/types"
+	t "immerse-ntnu/hermannia/server/types"
 	"immerse-ntnu/hermannia/server/utils"
 	"testing"
 )
 
-func TestAttack(t *testing.T) {
-	unit := types.Unit{
-		Type:  types.Footman,
-		Color: types.Yellow,
+func TestAttack(test *testing.T) {
+	unit := t.Unit{
+		Type:  t.Footman,
+		Color: t.Yellow,
 	}
 
-	area1 := types.BoardArea{
+	area1 := t.BoardArea{
 		Name:    "area1",
-		Control: types.Yellow,
+		Control: t.Yellow,
 		Unit:    &unit,
 		Forest:  false,
 		Castle:  false,
 		Sea:     false,
 	}
 
-	area2 := types.BoardArea{
+	area2 := t.BoardArea{
 		Name:    "area2",
-		Control: types.Uncontrolled,
+		Control: t.Uncontrolled,
 		Unit:    nil,
 		Forest:  true,
 		Castle:  true,
 		Sea:     false,
 	}
 
-	area1.Neighbors["area2"] = &types.Neighbor{
+	area1.Neighbors["area2"] = &t.Neighbor{
 		Area:        &area2,
 		AcrossWater: true,
 	}
 
-	area2.Neighbors["area1"] = &types.Neighbor{
+	area2.Neighbors["area1"] = &t.Neighbor{
 		Area:        &area1,
 		AcrossWater: true,
 	}
 
-	order := types.Order{
+	order := t.Order{
 		From: &area1,
 		To:   &area2,
 	}
@@ -49,6 +49,6 @@ func TestAttack(t *testing.T) {
 	expected := -2
 
 	if result != expected {
-		t.Errorf("Incorrect attack modifier, got %d, want %d", result, expected)
+		test.Errorf("Incorrect attack modifier, got %d, want %d", result, expected)
 	}
 }

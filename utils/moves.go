@@ -1,10 +1,10 @@
 package utils
 
 import (
-	"immerse-ntnu/hermannia/server/types"
+	t "immerse-ntnu/hermannia/server/types"
 )
 
-func Sailable(area types.BoardArea) bool {
+func Sailable(area t.BoardArea) bool {
 	if area.Sea {
 		return true
 	}
