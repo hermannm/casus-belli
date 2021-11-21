@@ -28,10 +28,10 @@ func AttackModifier(order types.Order) int {
 		}
 	}
 
-	if order.From.OccupyingUnit.Type == types.Catapult && order.To.Castle {
+	if order.From.Unit.Type == types.Catapult && order.To.Castle {
 		attackModifier++
 	} else {
-		attackModifier += CombatBonus(order.From.OccupyingUnit)
+		attackModifier += CombatBonus(order.From.Unit)
 	}
 
 	return attackModifier

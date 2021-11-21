@@ -13,21 +13,21 @@ func TestAttack(t *testing.T) {
 	}
 
 	area1 := types.BoardArea{
-		Name:          "area1",
-		Control:       types.Yellow,
-		OccupyingUnit: &unit,
-		Forest:        false,
-		Castle:        false,
-		Sea:           false,
+		Name:    "area1",
+		Control: types.Yellow,
+		Unit:    &unit,
+		Forest:  false,
+		Castle:  false,
+		Sea:     false,
 	}
 
 	area2 := types.BoardArea{
-		Name:          "area2",
-		Control:       types.Uncontrolled,
-		OccupyingUnit: nil,
-		Forest:        true,
-		Castle:        true,
-		Sea:           false,
+		Name:    "area2",
+		Control: types.Uncontrolled,
+		Unit:    nil,
+		Forest:  true,
+		Castle:  true,
+		Sea:     false,
 	}
 
 	area1.Neighbors["area2"] = &types.Neighbor{

@@ -22,7 +22,7 @@ func validateMoveOrSupport(order types.Order) error {
 		return errors.New("destination not adjacent to origin")
 	}
 
-	if order.From.OccupyingUnit.Type == types.Ship {
+	if order.From.Unit.Type == types.Ship {
 		if !utils.Sailable(*order.To) {
 			return errors.New("ship order destination must be coast or sea")
 		}
@@ -43,11 +43,11 @@ func validateMoveOrSupport(order types.Order) error {
 }
 
 func validateMove(order types.Order) error {
-	if order.SecondTo != nil && order.From.OccupyingUnit.Type != types.Horse {
+	if order.SecondTo != nil && order.From.Unit.Type != types.Horse {
 		return errors.New("only horse units can have second destination")
 	}
 
-	if order.From.OccupyingUnit.Type == types.Horse {
+	if order.From.Unit.Type == types.Horse {
 		secondDestination, ok := order.To.Neighbors[order.SecondTo.Name]
 
 		if secondDestination != nil && !ok {
@@ -94,7 +94,7 @@ func validateBesiege(order types.Order) error {
 		return errors.New("besieged area cannot already be controlled")
 	}
 
-	if order.From.OccupyingUnit.Type == types.Ship {
+	if order.From.Unit.Type == types.Ship {
 		return errors.New("ships cannot besiege")
 	}
 
@@ -102,7 +102,7 @@ func validateBesiege(order types.Order) error {
 }
 
 func validateTransport(order types.Order) error {
-	if order.From.OccupyingUnit.Type != types.Ship {
+	if order.From.Unit.Type != types.Ship {
 		return errors.New("only ships can transport")
 	}
 

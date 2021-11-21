@@ -12,13 +12,13 @@ type Unit struct {
 }
 
 type BoardArea struct {
-	Name          string
-	Control       PlayerColor
-	OccupyingUnit *Unit
-	Forest        bool
-	Castle        bool
-	Sea           bool
-	Neighbors     map[string]*Neighbor
+	Name      string
+	Control   PlayerColor
+	Unit      *Unit
+	Forest    bool
+	Castle    bool
+	Sea       bool
+	Neighbors map[string]*Neighbor
 }
 
 type Neighbor struct {
