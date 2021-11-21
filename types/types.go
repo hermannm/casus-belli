@@ -28,12 +28,12 @@ type Neighbor struct {
 }
 
 type Order struct {
-	Type      OrderType
-	Player    *Player
-	From      *BoardArea
-	To        *BoardArea
-	SecondTo  *BoardArea
-	UnitBuild UnitType
+	Type         OrderType
+	Player       *Player
+	From         *BoardArea
+	To           *BoardArea
+	Dependencies []*Order
+	UnitBuild    UnitType
 }
 
 type OrderResult struct {

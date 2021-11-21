@@ -64,19 +64,14 @@ func validateMoveOrSupport(order t.Order) error {
 }
 
 func validateMove(order t.Order) error {
-	if order.SecondTo != nil && order.From.Unit.Type != t.Horse {
-		return errors.New("only horse units can have second destination")
-	}
-
-	if order.From.Unit.Type == t.Horse {
-		secondDestination, ok := order.To.Neighbors[order.SecondTo.Name]
-
-		if secondDestination != nil && !ok {
-			return errors.New("destination not adjacent to origin")
-		}
-	} else {
-		if order.SecondTo != nil {
-			return errors.New("only horse units can have second destination")
+	if order.From.Unit == nil ||
+		order.From.Unit.Color != order.Player.Color {
+		for _, dep := range order.Dependencies {
+			if !(dep.From.Unit.Type == t.Horse &&
+				dep.From.Unit.Color == order.Player.Color &&
+				dep.To == order.From) {
+				return errors.New("must have unit in origin area")
+			}
 		}
 	}
 
@@ -84,16 +79,13 @@ func validateMove(order t.Order) error {
 }
 
 func validateSupport(order t.Order) error {
-	if order.SecondTo != nil {
-		return errors.New("support orders cannot have second destination")
-	}
 
 	return nil
 }
 
 func validateBesiegeOrTransport(order t.Order) error {
-	if order.To != nil || order.SecondTo != nil {
-		return errors.New("besiege or transport orders cannot have destinations")
+	if order.To != nil {
+		return errors.New("besiege or transport orders cannot have destination")
 	}
 
 	switch order.Type {
@@ -131,10 +123,6 @@ func validateTransport(order t.Order) error {
 }
 
 func validateWinterOrder(order t.Order) error {
-	if order.SecondTo != nil {
-		return errors.New("winter order cannot have second destination")
-	}
-
 	switch order.Type {
 	case t.Move:
 		return validateWinterMove(order)
