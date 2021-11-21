@@ -24,13 +24,16 @@ type BoardArea struct {
 type Neighbor struct {
 	Area        *BoardArea
 	AcrossWater bool
+	DangerZone  string
 }
 
 type Order struct {
-	Type     OrderType
-	From     *BoardArea
-	To       *BoardArea
-	SecondTo *BoardArea
+	Type      OrderType
+	Player    *Player
+	From      *BoardArea
+	To        *BoardArea
+	SecondTo  *BoardArea
+	UnitBuild UnitType
 }
 
 type OrderResult struct {

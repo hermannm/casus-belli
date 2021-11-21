@@ -27,6 +27,7 @@ const (
 	Support   OrderType = "support"
 	Transport OrderType = "transport"
 	Besiege   OrderType = "besiege"
+	Build     OrderType = "build"
 )
 
 type OrderStatus string
@@ -36,4 +37,13 @@ const (
 	Tie     OrderStatus = "tie"
 	Fail    OrderStatus = "fail"
 	Error   OrderStatus = "error"
+)
+
+type Season string
+
+const (
+	Winter Season = "winter"
+	Spring Season = "spring"
+	Summer Season = "summer"
+	Fall   Season = "fall"
 )

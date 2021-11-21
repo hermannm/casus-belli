@@ -6,15 +6,32 @@ import (
 	"immerse-ntnu/hermannia/server/utils"
 )
 
-func ValidateOrder(order t.Order) error {
-	switch {
-	case order.Type == t.Move || order.Type == t.Support:
-		validateMoveOrSupport(order)
-	case order.Type == t.Besiege || order.Type == t.Transport:
-		validateBesiegeOrTransport(order)
+func ValidateOrder(order t.Order, season t.Season) error {
+	if order.Player.Color != order.From.Control {
+		return errors.New("must control area that is ordered")
 	}
 
-	return nil
+	switch season {
+	case t.Winter:
+		return validateWinterOrder(order)
+	default:
+		return validateNonWinterOrder(order)
+	}
+}
+
+func validateNonWinterOrder(order t.Order) error {
+	if order.UnitBuild != "" {
+		return errors.New("units can only be built in winter")
+	}
+
+	switch {
+	case order.Type == t.Move || order.Type == t.Support:
+		return validateMoveOrSupport(order)
+	case order.Type == t.Besiege || order.Type == t.Transport:
+		return validateBesiegeOrTransport(order)
+	}
+
+	return errors.New("invalid order type")
 }
 
 func validateMoveOrSupport(order t.Order) error {
@@ -43,7 +60,7 @@ func validateMoveOrSupport(order t.Order) error {
 		return validateSupport(order)
 	}
 
-	return nil
+	return errors.New("invalid order type")
 }
 
 func validateMove(order t.Order) error {
@@ -86,7 +103,7 @@ func validateBesiegeOrTransport(order t.Order) error {
 		return validateTransport(order)
 	}
 
-	return nil
+	return errors.New("invalid order type")
 }
 
 func validateBesiege(order t.Order) error {
@@ -108,6 +125,54 @@ func validateBesiege(order t.Order) error {
 func validateTransport(order t.Order) error {
 	if order.From.Unit.Type != t.Ship {
 		return errors.New("only ships can transport")
+	}
+
+	return nil
+}
+
+func validateWinterOrder(order t.Order) error {
+	if order.SecondTo != nil {
+		return errors.New("winter order cannot have second destination")
+	}
+
+	switch order.Type {
+	case t.Move:
+		return validateWinterMove(order)
+	case t.Build:
+		return validateBuild(order)
+	}
+
+	return errors.New("invalid order type")
+}
+
+func validateWinterMove(order t.Order) error {
+	if order.To.Control != order.Player.Color {
+		return errors.New("must control destination area in winter move")
+	}
+
+	if order.UnitBuild != "" {
+		return errors.New("cannot build unit with move order")
+	}
+
+	return nil
+}
+
+func validateBuild(order t.Order) error {
+	if order.From.Unit != nil {
+		return errors.New("cannot build in area already occupied")
+	}
+
+	switch order.UnitBuild {
+	case t.Footman:
+		break
+	case t.Horse:
+		break
+	case t.Ship:
+		break
+	case t.Catapult:
+		break
+	default:
+		return errors.New("invalid unit type")
 	}
 
 	return nil
