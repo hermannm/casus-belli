@@ -35,4 +35,5 @@ const (
 	Success OrderStatus = "success"
 	Tie     OrderStatus = "tie"
 	Fail    OrderStatus = "fail"
+	Error   OrderStatus = "error"
 )
