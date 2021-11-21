@@ -13,12 +13,12 @@ func TestAttack(t *testing.T) {
 	}
 
 	area1 := types.BoardArea{
-		Name:              "area1",
-		ControllingPlayer: types.Yellow,
-		OccupyingUnit:     &unit,
-		Forest:            false,
-		Castle:            false,
-		Sea:               false,
+		Name:          "area1",
+		Control:       types.Yellow,
+		OccupyingUnit: &unit,
+		Forest:        false,
+		Castle:        false,
+		Sea:           false,
 	}
 
 	area2 := types.BoardArea{
