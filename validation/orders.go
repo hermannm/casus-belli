@@ -141,6 +141,10 @@ func validateWinterMove(order Order) error {
 		return errors.New("must control destination area in winter move")
 	}
 
+	if order.From.Unit.Type == Ship && !order.To.IsCoast() {
+		return errors.New("ship winter move destination must be coast")
+	}
+
 	if order.UnitBuild != "" {
 		return errors.New("cannot build unit with move order")
 	}
