@@ -11,6 +11,8 @@ type Unit struct {
 	Color PlayerColor
 }
 
+type Board map[string]*BoardArea
+
 type BoardArea struct {
 	Name      string
 	Control   PlayerColor
@@ -34,11 +36,11 @@ type Order struct {
 	To           *BoardArea
 	Dependencies []*Order
 	UnitBuild    UnitType
+	Result       OrderResult
 }
 
 type OrderResult struct {
 	Status OrderStatus
-	Order  *Order
 	Dice   DieResult
 }
 

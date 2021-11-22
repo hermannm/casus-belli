@@ -36,6 +36,7 @@ const (
 	Success OrderStatus = "success"
 	Tie     OrderStatus = "tie"
 	Fail    OrderStatus = "fail"
+	Pending OrderStatus = "pending"
 	Error   OrderStatus = "error"
 )
 
