@@ -1,8 +1,8 @@
 package tests
 
 import (
+	"immerse-ntnu/hermannia/server/game"
 	. "immerse-ntnu/hermannia/server/types"
-	"immerse-ntnu/hermannia/server/utils"
 	"testing"
 )
 
@@ -45,7 +45,7 @@ func TestAttack(test *testing.T) {
 		To:   &area2,
 	}
 
-	result := utils.AttackModifier(order, false)
+	result := game.AttackModifier(order, false)
 	expected := -2
 
 	if result != expected {

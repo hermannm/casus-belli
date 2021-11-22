@@ -1,12 +1,8 @@
-package utils
+package types
 
-import (
-	. "immerse-ntnu/hermannia/server/types"
-)
-
-func Sailable(area BoardArea) bool {
+func (area BoardArea) IsCoast() bool {
 	if area.Sea {
-		return true
+		return false
 	}
 
 	for _, neighbor := range area.Neighbors {

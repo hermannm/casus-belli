@@ -1,4 +1,4 @@
-package utils
+package game
 
 import (
 	. "immerse-ntnu/hermannia/server/types"

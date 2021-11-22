@@ -3,7 +3,6 @@ package validation
 import (
 	"errors"
 	. "immerse-ntnu/hermannia/server/types"
-	"immerse-ntnu/hermannia/server/utils"
 )
 
 func ValidateOrder(order Order, season Season) error {
@@ -44,8 +43,8 @@ func validateMoveOrSupport(order Order) error {
 	}
 
 	if order.From.Unit.Type == Ship {
-		if !utils.Sailable(*order.To) {
-			return errors.New("ship order destination must be coast or sea")
+		if !(order.To.Sea || order.To.IsCoast()) {
+			return errors.New("ship order destination must be sea or coast")
 		}
 	} else {
 		if order.To.Sea {
@@ -155,11 +154,13 @@ func validateBuild(order Order) error {
 	}
 
 	switch order.UnitBuild {
+	case Ship:
+		if !order.From.IsCoast() {
+			return errors.New("ships can only be built on coast")
+		}
 	case Footman:
 		break
 	case Horse:
-		break
-	case Ship:
 		break
 	case Catapult:
 		break
