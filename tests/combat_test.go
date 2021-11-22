@@ -1,46 +1,46 @@
 package tests
 
 import (
-	t "immerse-ntnu/hermannia/server/types"
+	. "immerse-ntnu/hermannia/server/types"
 	"immerse-ntnu/hermannia/server/utils"
 	"testing"
 )
 
 func TestAttack(test *testing.T) {
-	unit := t.Unit{
-		Type:  t.Footman,
-		Color: t.Yellow,
+	unit := Unit{
+		Type:  Footman,
+		Color: Yellow,
 	}
 
-	area1 := t.BoardArea{
+	area1 := BoardArea{
 		Name:    "area1",
-		Control: t.Yellow,
+		Control: Yellow,
 		Unit:    &unit,
 		Forest:  false,
 		Castle:  false,
 		Sea:     false,
 	}
 
-	area2 := t.BoardArea{
+	area2 := BoardArea{
 		Name:    "area2",
-		Control: t.Uncontrolled,
+		Control: Uncontrolled,
 		Unit:    nil,
 		Forest:  true,
 		Castle:  true,
 		Sea:     false,
 	}
 
-	area1.Neighbors["area2"] = &t.Neighbor{
+	area1.Neighbors["area2"] = &Neighbor{
 		Area:        &area2,
 		AcrossWater: true,
 	}
 
-	area2.Neighbors["area1"] = &t.Neighbor{
+	area2.Neighbors["area1"] = &Neighbor{
 		Area:        &area1,
 		AcrossWater: true,
 	}
 
-	order := t.Order{
+	order := Order{
 		From: &area1,
 		To:   &area2,
 	}

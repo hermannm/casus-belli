@@ -1,15 +1,15 @@
 package game
 
 import (
-	t "immerse-ntnu/hermannia/server/types"
+	. "immerse-ntnu/hermannia/server/types"
 )
 
-func (board *board) ResolveOrders(orders []*t.Order) []t.OrderResult {
-	var results []t.OrderResult
+func (board *board) ResolveOrders(orders []*Order) []OrderResult {
+	var results []OrderResult
 
 	for _, order := range orders {
-		results = append(results, t.OrderResult{
-			Status: t.Success,
+		results = append(results, OrderResult{
+			Status: Success,
 			Order:  order,
 		})
 	}
