@@ -52,11 +52,11 @@ const (
 type ModifierType string
 
 const (
+	DiceMod     ModifierType = "dice"
 	UnitMod     ModifierType = "unit"
 	ForestMod   ModifierType = "forest"
 	CastleMod   ModifierType = "castle"
-	RiverMod    ModifierType = "river"
-	SeaMod      ModifierType = "sea"
+	WaterMod    ModifierType = "water"
 	SurpriseMod ModifierType = "surprise"
 	SupportMod  ModifierType = "support"
 )

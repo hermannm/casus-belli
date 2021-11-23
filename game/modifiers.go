@@ -4,48 +4,70 @@ import (
 	. "immerse-ntnu/hermannia/server/types"
 )
 
-func CombatBonus(unitType UnitType) int {
+func AppendUnitMod(mods []Modifier, unitType UnitType) []Modifier {
 	switch unitType {
 	case Footman:
-		return 1
+		return append(mods, Modifier{
+			Type:  UnitMod,
+			Value: +1,
+		})
 	default:
-		return 0
+		return mods
 	}
 }
 
-func DefenseModifier(area BoardArea) int {
-	return CombatBonus(area.Unit.Type)
+func DefenseModifiers(area BoardArea) []Modifier {
+	mods := []Modifier{}
+
+	mods = AppendUnitMod(mods, area.Unit.Type)
+
+	return mods
 }
 
-func AttackModifier(order Order, otherAttackers bool) int {
-	attackModifier := 0
+func AttackModifiers(order Order, otherAttackers bool) []Modifier {
+	mods := []Modifier{}
 
 	if (order.To.Control == Uncontrolled && !otherAttackers) ||
 		(order.To.Unit != nil && order.To.Control == order.To.Unit.Color) {
 		if order.To.Forest {
-			attackModifier--
+			mods = append(mods, Modifier{
+				Type:  ForestMod,
+				Value: -1,
+			})
 		}
 		if order.To.Castle {
-			attackModifier--
+			mods = append(mods, Modifier{
+				Type:  CastleMod,
+				Value: -1,
+			})
 		}
 		if neighbor, ok := order.From.Neighbors[order.To.Name]; ok {
 			if neighbor.AcrossWater {
-				attackModifier--
+				mods = append(mods, Modifier{
+					Type:  WaterMod,
+					Value: -1,
+				})
 			}
 		}
 	}
 
 	if neighbor, ok := order.From.Neighbors[order.To.Name]; ok {
 		if neighbor.DangerZone != "" {
-			attackModifier++
+			mods = append(mods, Modifier{
+				Type:  SurpriseMod,
+				Value: +1,
+			})
 		}
 	}
 
 	if order.From.Unit.Type == Catapult && order.To.Castle {
-		attackModifier++
+		mods = append(mods, Modifier{
+			Type:  UnitMod,
+			Value: +1,
+		})
 	} else {
-		attackModifier += CombatBonus(order.From.Unit.Type)
+		mods = AppendUnitMod(mods, order.From.Unit.Type)
 	}
 
-	return attackModifier
+	return mods
 }

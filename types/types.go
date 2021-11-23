@@ -21,6 +21,7 @@ type BoardArea struct {
 	Castle    bool
 	Sea       bool
 	Neighbors map[string]*Neighbor
+	Incoming  []*Order
 }
 
 type Neighbor struct {
@@ -36,21 +37,17 @@ type Order struct {
 	To           *BoardArea
 	Dependencies []*Order
 	UnitBuild    UnitType
-	Result       OrderResult
+	Status       OrderStatus
+	Result       CombatResult
 }
 
-type OrderResult struct {
-	Status OrderStatus
-	Dice   DieResult
-}
-
-type DieResult struct {
-	Result    int
-	Modifiers []Modifier
+type CombatResult struct {
+	Total int
+	Parts []Modifier
 }
 
 type Modifier struct {
 	Type        ModifierType
-	Mod         int
+	Value       int
 	SupportFrom PlayerColor
 }
