@@ -1,9 +1,5 @@
 package game
 
-import (
-	. "immerse-ntnu/hermannia/server/types"
-)
-
 func resolveCombat(area *BoardArea) bool {
 	if area.Control == Uncontrolled {
 		if len(area.IncomingMoves) == 1 {

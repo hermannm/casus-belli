@@ -1,10 +1,6 @@
 package game
 
-import (
-	. "immerse-ntnu/hermannia/server/types"
-)
-
-func ResolveRound(round *GameRound) {
+func ResolveRound(round *Round) {
 	activeOrders := resolveOrders(round.Board, round.FirstOrders)
 	round.SecondOrders = append(round.SecondOrders, activeOrders...)
 	activeOrders = resolveOrders(round.Board, round.SecondOrders)

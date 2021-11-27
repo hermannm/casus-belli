@@ -1,4 +1,4 @@
-package types
+package game
 
 type UnitType string
 

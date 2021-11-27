@@ -1,4 +1,4 @@
-package types
+package game
 
 type Player struct {
 	ConnectionID string
@@ -11,7 +11,7 @@ type Unit struct {
 	Color PlayerColor
 }
 
-type GameRound struct {
+type Round struct {
 	Board        Board
 	FirstOrders  []*Order
 	SecondOrders []*Order

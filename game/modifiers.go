@@ -1,9 +1,5 @@
 package game
 
-import (
-	. "immerse-ntnu/hermannia/server/types"
-)
-
 func AppendUnitMod(mods []Modifier, unitType UnitType) []Modifier {
 	switch unitType {
 	case Footman:

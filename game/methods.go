@@ -1,4 +1,4 @@
-package types
+package game
 
 func (area BoardArea) IsCoast() bool {
 	if area.Sea {

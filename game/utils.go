@@ -1,9 +1,5 @@
 package game
 
-import (
-	. "immerse-ntnu/hermannia/server/types"
-)
-
 func removeOrder(orders []*Order, orderToRemove *Order) []*Order {
 	newOrders := []*Order{}
 
