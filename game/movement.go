@@ -35,7 +35,10 @@ func (area *BoardArea) transportNeighbors(exclude map[string]*BoardArea) map[str
 				continue
 			}
 
-			if neighbor.Area.Outgoing.Type == Transport && neighbor.Area.Unit.Color == area.Unit.Color {
+			if neighbor.Area.Outgoing != nil &&
+				neighbor.Area.Outgoing.Type == Transport &&
+				neighbor.Area.Unit.Color == area.Unit.Color {
+
 				newExclude := copyMap(exclude)
 				newExclude[area.Name] = area
 				connectedNeighbors := neighbor.Area.transportNeighbors(newExclude)
