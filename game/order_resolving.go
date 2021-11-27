@@ -95,7 +95,7 @@ func (board Board) resolveTransportOrders() {
 }
 
 func failTransportDependentMoves(area *BoardArea) {
-	transportNeighbors := findTransportNeighbors(area, make(map[string]*BoardArea))
+	transportNeighbors := area.transportNeighbors(make(map[string]*BoardArea))
 
 	for _, area := range transportNeighbors {
 		for from, move := range area.IncomingMoves {

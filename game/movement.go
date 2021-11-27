@@ -19,14 +19,14 @@ func (order *Order) Transportable() bool {
 		return false
 	}
 
-	possibleDestinations := findTransportNeighbors(order.From, make(map[string]*BoardArea))
+	possibleDestinations := order.From.transportNeighbors(make(map[string]*BoardArea))
 
 	_, transportable := possibleDestinations[order.To.Name]
 
 	return transportable
 }
 
-func findTransportNeighbors(area *BoardArea, exclude map[string]*BoardArea) map[string]*BoardArea {
+func (area *BoardArea) transportNeighbors(exclude map[string]*BoardArea) map[string]*BoardArea {
 	neighbors := make(map[string]*BoardArea)
 
 	for _, neighbor := range area.Neighbors {
@@ -38,7 +38,7 @@ func findTransportNeighbors(area *BoardArea, exclude map[string]*BoardArea) map[
 			if neighbor.Area.Outgoing.Type == Transport && neighbor.Area.Unit.Color == area.Unit.Color {
 				newExclude := copyMap(exclude)
 				newExclude[area.Name] = area
-				connectedNeighbors := findTransportNeighbors(neighbor.Area, newExclude)
+				connectedNeighbors := neighbor.Area.transportNeighbors(newExclude)
 
 				neighbors = mergeMaps(neighbors, connectedNeighbors)
 			}
