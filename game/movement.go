@@ -1,6 +1,20 @@
 package game
 
-func Transportable(order *Order) bool {
+func (area *BoardArea) IsCoast() bool {
+	if area.Sea {
+		return false
+	}
+
+	for _, neighbor := range area.Neighbors {
+		if neighbor.Area.Sea {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (order *Order) Transportable() bool {
 	if order.Type != Move || order.From.Unit.Type == Ship {
 		return false
 	}
@@ -34,4 +48,24 @@ func findTransportNeighbors(area *BoardArea, exclude map[string]*BoardArea) map[
 	}
 
 	return neighbors
+}
+
+func copyMap(oldMap map[string]*BoardArea) map[string]*BoardArea {
+	newMap := make(map[string]*BoardArea)
+	for key, area := range oldMap {
+		newMap[key] = area
+	}
+	return newMap
+}
+
+func mergeMaps(maps ...map[string]*BoardArea) map[string]*BoardArea {
+	newMap := make(map[string]*BoardArea)
+
+	for _, subMap := range maps {
+		for key, area := range subMap {
+			newMap[key] = area
+		}
+	}
+
+	return newMap
 }

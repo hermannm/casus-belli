@@ -1,27 +1,32 @@
 package game
 
-func resolveCombat(area *BoardArea) bool {
+import (
+	"math/rand"
+	"time"
+)
+
+func (area *BoardArea) resolveCombat() bool {
 	if area.Control == Uncontrolled {
 		if len(area.IncomingMoves) == 1 {
-			resolveCombatPvE(area)
+			area.resolveCombatPvE()
 		} else {
-			resolved := resolveCombatPvP(area)
+			resolved := area.resolveCombatPvP()
 			if !resolved {
 				return resolved
 			}
-			resolveCombatPvE(area)
+			area.resolveCombatPvE()
 		}
 	}
 
 	return true
 }
 
-func resolveCombatPvP(area *BoardArea) bool {
+func (area *BoardArea) resolveCombatPvP() bool {
 	defense := area.Unit != nil
 	return defense
 }
 
-func resolveCombatPvE(area *BoardArea) {
+func (area *BoardArea) resolveCombatPvE() {
 	order := getOnlyOrder(area.IncomingMoves)
 
 	mods := AttackModifiers(*order, false)
@@ -55,9 +60,9 @@ func resolveCombatPvE(area *BoardArea) {
 	})
 
 	if total <= 4 {
-		succeedMove(area, order)
+		order.succeedMove()
 	} else {
-		failMove(order)
+		order.failMove()
 	}
 }
 
@@ -74,4 +79,9 @@ func callSupport(supportOrder *Order, area *BoardArea) PlayerColor {
 
 	// TODO: implement support dispatch
 	return supportOrder.Player.Color
+}
+
+func RollDice() int {
+	rand.Seed(time.Now().UnixNano())
+	return rand.Intn(6) + 1
 }

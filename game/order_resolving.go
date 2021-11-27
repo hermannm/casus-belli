@@ -1,13 +1,35 @@
 package game
 
-func ResolveRound(round *Round) {
-	activeOrders := resolveOrders(round.Board, round.FirstOrders)
+func (round *Round) Resolve() {
+	activeOrders := round.Board.resolve(round.FirstOrders)
+
 	round.SecondOrders = append(round.SecondOrders, activeOrders...)
-	activeOrders = resolveOrders(round.Board, round.SecondOrders)
+	activeOrders = round.Board.resolve(round.SecondOrders)
+
 	resolveFinalOrders(round.Board, activeOrders)
 }
 
-func populateAreaOrders(board Board, orders []*Order) {
+func (board Board) resolve(orders []*Order) (stillActive []*Order) {
+	board.populateAreaOrders(orders)
+	board.cutSupports()
+
+	conflictFreeResolved := false
+	for !conflictFreeResolved {
+		conflictFreeResolved = board.resolveConflictFreeOrders()
+	}
+
+	board.resolveTransportOrders()
+
+	stillActive = make([]*Order, 0)
+	for _, order := range orders {
+		if order.Status == Pending {
+			stillActive = append(stillActive, order)
+		}
+	}
+	return stillActive
+}
+
+func (board Board) populateAreaOrders(orders []*Order) {
 	for _, order := range orders {
 		if to, ok := board[order.To.Name]; ok {
 			switch order.Type {
@@ -23,9 +45,9 @@ func populateAreaOrders(board Board, orders []*Order) {
 	}
 }
 
-func cutSupports(board Board) {
+func (board Board) cutSupports() {
 	for _, area := range board {
-		if area.Outgoing.Type == Support {
+		if area.Outgoing != nil && area.Outgoing.Type == Support {
 			if len(area.IncomingMoves) > 0 {
 				area.Outgoing.Status = Fail
 				delete(area.Outgoing.To.IncomingSupports, area.Outgoing.From.Name)
@@ -34,47 +56,31 @@ func cutSupports(board Board) {
 	}
 }
 
-func resolveOrders(board Board, orders []*Order) []*Order {
-	populateAreaOrders(board, orders)
-	cutSupports(board)
+func (board Board) resolveConflictFreeOrders() bool {
+	allResolved := false
 
-	conflictFreeResolved := false
-	for !conflictFreeResolved {
-		conflictFreeResolved = resolveConflictFreeOrders(board)
-	}
+	for !allResolved {
+		allResolved = true
 
-	resolveTransportOrders(board)
+		for _, area := range board {
+			if area.Unit != nil || len(area.IncomingMoves) != 1 {
+				continue
+			}
 
-	activeOrders := []*Order{}
-	for _, order := range orders {
-		if order.Status == Pending {
-			activeOrders = append(activeOrders, order)
-		}
-	}
-	return activeOrders
-}
+			allResolved = false
 
-func resolveConflictFreeOrders(board Board) bool {
-	allResolved := true
-
-	for _, area := range board {
-		if area.Unit != nil || len(area.IncomingMoves) != 1 {
-			continue
-		}
-
-		allResolved = false
-
-		if area.Control == Uncontrolled {
-			resolveCombatPvE(area)
-		} else {
-			succeedMove(area, getOnlyOrder(area.IncomingMoves))
+			if area.Control == Uncontrolled {
+				area.resolveCombatPvE()
+			} else {
+				getOnlyOrder(area.IncomingMoves).succeedMove()
+			}
 		}
 	}
 
 	return allResolved
 }
 
-func resolveTransportOrders(board Board) {
+func (board Board) resolveTransportOrders() {
 	for _, area := range board {
 		if area.Outgoing.Type != Transport {
 			continue
@@ -84,7 +90,7 @@ func resolveTransportOrders(board Board) {
 			continue
 		}
 
-		resolveCombat(area)
+		area.resolveCombat()
 
 		if area.Outgoing == nil {
 			failTransportDependentMoves(area)
@@ -98,8 +104,8 @@ func failTransportDependentMoves(area *BoardArea) {
 	for _, area := range transportNeighbors {
 		for from, move := range area.IncomingMoves {
 			if _, ok := area.Neighbors[from]; !ok {
-				if !Transportable(move) {
-					failMove(move)
+				if !move.Transportable() {
+					move.failMove()
 				}
 			}
 		}
