@@ -1,18 +1,17 @@
 package game
 
-type Player struct {
-	ConnectionID string
-	Color        PlayerColor
-	Units        []*Unit
+type Game struct {
+	Board   Board
+	Rounds  []*Round
+	Players []*Player
 }
 
-type Unit struct {
-	Type  UnitType
+type Player struct {
 	Color PlayerColor
 }
 
 type Round struct {
-	Board        Board
+	Season       Season
 	FirstOrders  []*Order
 	SecondOrders []*Order
 }
@@ -23,14 +22,20 @@ type BoardArea struct {
 	Name             string
 	Control          PlayerColor
 	Unit             *Unit
+	Sea              bool
 	Forest           bool
 	Castle           bool
-	Sea              bool
+	SiegeCount       int
 	Neighbors        map[string]*Neighbor
 	IncomingMoves    map[string]*Order
 	IncomingSupports map[string]*Order
 	Outgoing         *Order
 	Combats          []Combat
+}
+
+type Unit struct {
+	Type  UnitType
+	Color PlayerColor
 }
 
 type Neighbor struct {

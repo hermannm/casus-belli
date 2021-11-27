@@ -1,30 +1,25 @@
 package game
 
-func (round *Round) Resolve() {
-	activeOrders := round.Board.resolve(round.FirstOrders)
-
-	round.SecondOrders = append(round.SecondOrders, activeOrders...)
-	activeOrders = round.Board.resolve(round.SecondOrders)
-
-	resolveFinalOrders(round.Board, activeOrders)
+func (board Board) Resolve(round *Round) {
+	switch round.Season {
+	case Winter:
+		board.resolveWinter(round.FirstOrders)
+	default:
+		board.populateAreaOrders(round.FirstOrders)
+		board.resolveMoves()
+		board.populateAreaOrders(round.SecondOrders)
+		board.resolveMoves()
+		board.resolveSieges()
+		board.cleanup()
+	}
 }
 
-func (board Board) resolve(orders []*Order) (stillActive []*Order) {
-	board.populateAreaOrders(orders)
-
+func (board Board) resolveMoves() {
 	board.cutSupports()
 
 	board.resolveConflictFreeOrders()
 
 	board.resolveTransportOrders()
-
-	stillActive = make([]*Order, 0)
-	for _, order := range orders {
-		if order.Status == Pending {
-			stillActive = append(stillActive, order)
-		}
-	}
-	return stillActive
 }
 
 func (board Board) populateAreaOrders(orders []*Order) {
@@ -89,12 +84,12 @@ func (board Board) resolveTransportOrders() {
 		area.resolveCombat()
 
 		if area.Outgoing == nil {
-			failTransportDependentMoves(area)
+			area.failTransportDependentMoves()
 		}
 	}
 }
 
-func failTransportDependentMoves(area *BoardArea) {
+func (area *BoardArea) failTransportDependentMoves() {
 	transportNeighbors := area.transportNeighbors(make(map[string]*BoardArea))
 
 	for _, area := range transportNeighbors {
@@ -109,6 +104,14 @@ func failTransportDependentMoves(area *BoardArea) {
 	}
 }
 
-func resolveFinalOrders(board Board, orders []*Order) {
+func (board Board) resolveSieges() {
+
+}
+
+func (board Board) cleanup() {
+
+}
+
+func (board Board) resolveWinter(orders []*Order) {
 
 }
