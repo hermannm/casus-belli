@@ -27,8 +27,8 @@ type BoardArea struct {
 	Castle           bool
 	Sea              bool
 	Neighbors        map[string]*Neighbor
-	IncomingMoves    []*Order
-	IncomingSupports []*Order
+	IncomingMoves    map[string]*Order
+	IncomingSupports map[string]*Order
 	Outgoing         *Order
 	Combats          []Combat
 }

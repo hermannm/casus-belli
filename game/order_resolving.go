@@ -12,9 +12,9 @@ func populateAreaOrders(board Board, orders []*Order) {
 		if to, ok := board[order.To.Name]; ok {
 			switch order.Type {
 			case Move:
-				to.IncomingMoves = append(to.IncomingMoves, order)
+				to.IncomingMoves[order.From.Name] = order
 			case Support:
-				to.IncomingSupports = append(to.IncomingSupports, order)
+				to.IncomingSupports[order.From.Name] = order
 			}
 		}
 		if from, ok := board[order.From.Name]; ok {
@@ -28,10 +28,7 @@ func cutSupports(board Board) {
 		if area.Outgoing.Type == Support {
 			if len(area.IncomingMoves) > 0 {
 				area.Outgoing.Status = Fail
-				area.Outgoing.To.IncomingSupports = removeOrder(
-					area.Outgoing.To.IncomingSupports,
-					area.Outgoing,
-				)
+				delete(area.Outgoing.To.IncomingSupports, area.Outgoing.From.Name)
 			}
 		}
 	}
@@ -70,7 +67,7 @@ func resolveConflictFreeOrders(board Board) bool {
 		if area.Control == Uncontrolled {
 			resolveCombatPvE(area)
 		} else {
-			succeedMove(area, area.IncomingMoves[0])
+			succeedMove(area, getOnlyOrder(area.IncomingMoves))
 		}
 	}
 
@@ -88,6 +85,25 @@ func resolveTransportOrders(board Board) {
 		}
 
 		resolveCombat(area)
+
+		if area.Outgoing == nil {
+			failTransportDependentMoves(area)
+		}
+	}
+}
+
+func failTransportDependentMoves(area *BoardArea) {
+	transportNeighbors := findTransportNeighbors(area, make(map[string]*BoardArea))
+
+	for _, area := range transportNeighbors {
+		for from, move := range area.IncomingMoves {
+			if _, ok := area.Neighbors[from]; !ok {
+				if !Transportable(move) {
+					failMove(move)
+				}
+			}
+		}
+
 	}
 }
 

@@ -22,7 +22,7 @@ func resolveCombatPvP(area *BoardArea) bool {
 }
 
 func resolveCombatPvE(area *BoardArea) {
-	order := area.IncomingMoves[0]
+	order := getOnlyOrder(area.IncomingMoves)
 
 	mods := AttackModifiers(*order, false)
 

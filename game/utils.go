@@ -1,20 +1,9 @@
 package game
 
-func removeOrder(orders []*Order, orderToRemove *Order) []*Order {
-	newOrders := []*Order{}
-
-	for _, order := range orders {
-		if order != orderToRemove {
-			newOrders = append(newOrders, order)
-		}
-	}
-
-	return newOrders
-}
-
 func failMove(order *Order) {
 	order.Status = Fail
 	order.From.Outgoing = nil
+	delete(order.To.IncomingMoves, order.From.Name)
 }
 
 func succeedMove(area *BoardArea, order *Order) {
@@ -25,10 +14,36 @@ func succeedMove(area *BoardArea, order *Order) {
 			order.Status = Success
 			order.From.Unit = nil
 			order.From.Outgoing = nil
+			delete(area.IncomingMoves, order.From.Name)
 		} else {
 			failMove(move)
 		}
 	}
+}
 
-	area.IncomingMoves = []*Order{}
+func getOnlyOrder(orders map[string]*Order) *Order {
+	for _, order := range orders {
+		return order
+	}
+	return nil
+}
+
+func mergeMaps(maps ...map[string]*BoardArea) map[string]*BoardArea {
+	newMap := make(map[string]*BoardArea)
+
+	for _, subMap := range maps {
+		for key, area := range subMap {
+			newMap[key] = area
+		}
+	}
+
+	return newMap
+}
+
+func copyMap(oldMap map[string]*BoardArea) map[string]*BoardArea {
+	newMap := make(map[string]*BoardArea)
+	for key, area := range oldMap {
+		newMap[key] = area
+	}
+	return newMap
 }
