@@ -105,11 +105,30 @@ func (area *BoardArea) failTransportDependentMoves() {
 }
 
 func (board Board) resolveSieges() {
-
+	for _, area := range board {
+		if area.Outgoing != nil && area.Outgoing.Type == Besiege {
+			area.SiegeCount++
+			area.Outgoing.Status = Success
+			area.Outgoing = nil
+			if area.SiegeCount == 2 {
+				area.Control = area.Unit.Color
+				area.SiegeCount = 0
+			}
+		}
+	}
 }
 
 func (board Board) cleanup() {
+	for _, area := range board {
+		if area.Outgoing != nil {
+			area.Outgoing.Status = Success
+			area.Outgoing = nil
+		}
 
+		if len(area.IncomingSupports) > 0 {
+			area.IncomingSupports = make(map[string]*Order)
+		}
+	}
 }
 
 func (board Board) resolveWinter(orders []*Order) {
