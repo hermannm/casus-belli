@@ -11,12 +11,10 @@ func (round *Round) Resolve() {
 
 func (board Board) resolve(orders []*Order) (stillActive []*Order) {
 	board.populateAreaOrders(orders)
+
 	board.cutSupports()
 
-	conflictFreeResolved := false
-	for !conflictFreeResolved {
-		conflictFreeResolved = board.resolveConflictFreeOrders()
-	}
+	board.resolveConflictFreeOrders()
 
 	board.resolveTransportOrders()
 
@@ -56,7 +54,7 @@ func (board Board) cutSupports() {
 	}
 }
 
-func (board Board) resolveConflictFreeOrders() bool {
+func (board Board) resolveConflictFreeOrders() {
 	allResolved := false
 
 	for !allResolved {
@@ -76,8 +74,6 @@ func (board Board) resolveConflictFreeOrders() bool {
 			}
 		}
 	}
-
-	return allResolved
 }
 
 func (board Board) resolveTransportOrders() {
