@@ -73,7 +73,7 @@ func (board Board) resolveConflictFreeOrders() {
 
 func (board Board) resolveTransportOrders() {
 	for _, area := range board {
-		if area.Outgoing.Type != Transport {
+		if area.Outgoing != nil && area.Outgoing.Type != Transport {
 			continue
 		}
 
