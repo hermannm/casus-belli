@@ -11,17 +11,26 @@ type Unit struct {
 	Color PlayerColor
 }
 
+type GameRound struct {
+	Board        Board
+	FirstOrders  []*Order
+	SecondOrders []*Order
+}
+
 type Board map[string]*BoardArea
 
 type BoardArea struct {
-	Name      string
-	Control   PlayerColor
-	Unit      *Unit
-	Forest    bool
-	Castle    bool
-	Sea       bool
-	Neighbors map[string]*Neighbor
-	Incoming  []*Order
+	Name             string
+	Control          PlayerColor
+	Unit             *Unit
+	Forest           bool
+	Castle           bool
+	Sea              bool
+	Neighbors        map[string]*Neighbor
+	IncomingMoves    []*Order
+	IncomingSupports []*Order
+	Outgoing         *Order
+	Combats          []Combat
 }
 
 type Neighbor struct {
@@ -31,19 +40,20 @@ type Neighbor struct {
 }
 
 type Order struct {
-	Type         OrderType
-	Player       *Player
-	From         *BoardArea
-	To           *BoardArea
-	Dependencies []*Order
-	UnitBuild    UnitType
-	Status       OrderStatus
-	Result       CombatResult
+	Type      OrderType
+	Player    *Player
+	From      *BoardArea
+	To        *BoardArea
+	UnitBuild UnitType
+	Status    OrderStatus
 }
 
-type CombatResult struct {
-	Total int
-	Parts []Modifier
+type Combat []Result
+
+type Result struct {
+	Total  int
+	Parts  []Modifier
+	Player PlayerColor
 }
 
 type Modifier struct {

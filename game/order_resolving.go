@@ -4,39 +4,53 @@ import (
 	. "immerse-ntnu/hermannia/server/types"
 )
 
-func ResolveOrders(board Board, orders []*Order) {
-	firstOrders := []*Order{}
-	nextOrders := []*Order{}
-
-	for _, order := range orders {
-		if len(order.Dependencies) == 0 {
-			firstOrders = append(firstOrders, order)
-		} else {
-			nextOrders = append(nextOrders, order)
-		}
-	}
-
-	activeOrders := resolveOrders(board, firstOrders)
-	nextOrders = append(nextOrders, activeOrders...)
-	activeOrders = resolveOrders(board, nextOrders)
-	resolveFinalOrders(board, activeOrders)
+func ResolveRound(round *GameRound) {
+	activeOrders := resolveOrders(round.Board, round.FirstOrders)
+	round.SecondOrders = append(round.SecondOrders, activeOrders...)
+	activeOrders = resolveOrders(round.Board, round.SecondOrders)
+	resolveFinalOrders(round.Board, activeOrders)
 }
 
-func populateIncomingOrders(board Board, orders []*Order) {
-	for _, area := range board {
-		area.Incoming = []*Order{}
-	}
-
+func populateAreaOrders(board Board, orders []*Order) {
 	for _, order := range orders {
 		if to, ok := board[order.To.Name]; ok {
-			to.Incoming = append(to.Incoming, order)
+			switch order.Type {
+			case Move:
+				to.IncomingMoves = append(to.IncomingMoves, order)
+			case Support:
+				to.IncomingSupports = append(to.IncomingSupports, order)
+			}
+		}
+		if from, ok := board[order.From.Name]; ok {
+			from.Outgoing = order
+		}
+	}
+}
+
+func cutSupports(board Board) {
+	for _, area := range board {
+		if area.Outgoing.Type == Support {
+			if len(area.IncomingMoves) > 0 {
+				area.Outgoing.Status = Fail
+				area.Outgoing.To.IncomingSupports = removeOrder(
+					area.Outgoing.To.IncomingSupports,
+					area.Outgoing,
+				)
+			}
 		}
 	}
 }
 
 func resolveOrders(board Board, orders []*Order) []*Order {
-	populateIncomingOrders(board, orders)
-	resolveConflictFreeOrders(board, orders)
+	populateAreaOrders(board, orders)
+	cutSupports(board)
+
+	conflictFreeResolved := false
+	for !conflictFreeResolved {
+		conflictFreeResolved = resolveConflictFreeOrders(board)
+	}
+
+	resolveTransportOrders(board)
 
 	activeOrders := []*Order{}
 	for _, order := range orders {
@@ -47,39 +61,40 @@ func resolveOrders(board Board, orders []*Order) []*Order {
 	return activeOrders
 }
 
-func resolveConflictFreeOrders(board Board, orders []*Order) {
-	for _, order := range orders {
-		if order.Type != Move {
-			continue
-		}
-		if order.To.Unit != nil {
+func resolveConflictFreeOrders(board Board) bool {
+	allResolved := true
+
+	for _, area := range board {
+		if area.Unit != nil || len(area.IncomingMoves) != 1 {
 			continue
 		}
 
-		movesToDest := 0
-		for _, orderToDest := range order.To.Incoming {
-			if orderToDest.Type == Move {
-				movesToDest++
-			}
+		allResolved = false
+
+		if area.Control == Uncontrolled {
+			resolveCombatPvE(area)
+		} else {
+			succeedMove(area, area.IncomingMoves[0])
+		}
+	}
+
+	return allResolved
+}
+
+func resolveTransportOrders(board Board) {
+	for _, area := range board {
+		if area.Outgoing.Type != Transport {
+			continue
 		}
 
-		if movesToDest == 1 {
-			if order.To.Control == Uncontrolled {
-				resolveCombat(order.To)
-			} else {
-				succeedMove(order)
-			}
+		if len(area.IncomingMoves) == 0 {
+			continue
 		}
+
+		resolveCombat(area)
 	}
 }
 
 func resolveFinalOrders(board Board, orders []*Order) {
 
-}
-
-func succeedMove(order *Order) {
-	order.To.Control = order.Player.Color
-	order.To.Unit = order.From.Unit
-	order.From.Unit = nil
-	order.Status = Success
 }

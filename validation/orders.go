@@ -64,17 +64,16 @@ func validateMoveOrSupport(order Order) error {
 
 func validateMove(order Order) error {
 	if order.From.Unit == nil || order.From.Unit.Color != order.Player.Color {
-		eligibleDep := false
+		secondHorseMove := false
 
-		for _, dep := range order.Dependencies {
-			if !(dep.From.Unit.Type == Horse &&
-				dep.From.Unit.Color == order.Player.Color &&
-				dep.To == order.From) {
-				eligibleDep = true
+		for _, firstOrder := range order.From.IncomingMoves {
+			if firstOrder.From.Unit == order.From.Unit {
+				secondHorseMove = true
+				break
 			}
 		}
 
-		if !eligibleDep {
+		if !secondHorseMove {
 			return errors.New("must have unit in origin area")
 		}
 	}
