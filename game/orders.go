@@ -40,10 +40,8 @@ func (area *BoardArea) failTransportDependentMoves() {
 
 	for _, area := range transportNeighbors {
 		for from, move := range area.IncomingMoves {
-			if _, ok := area.Neighbors[from]; !ok {
-				if !move.Transportable() {
-					move.failMove()
-				}
+			if !area.HasNeighbor(from) && !move.Transportable() {
+				move.failMove()
 			}
 		}
 	}

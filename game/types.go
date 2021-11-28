@@ -30,7 +30,7 @@ type BoardArea struct {
 	Forest           bool
 	Castle           bool
 	SiegeCount       int
-	Neighbors        map[string]*Neighbor
+	Neighbors        []Neighbor
 	IncomingMoves    map[string]*Order
 	IncomingSupports map[string]*Order
 	Outgoing         *Order
@@ -45,8 +45,8 @@ type Unit struct {
 type Neighbor struct {
 	Area       *BoardArea
 	River      bool
+	Cliffs     bool
 	DangerZone string
-	Cliffs     string
 }
 
 type Order struct {
@@ -54,6 +54,7 @@ type Order struct {
 	Player *Player
 	From   *BoardArea
 	To     *BoardArea
+	Via    string
 	Build  UnitType
 	Status OrderStatus
 }

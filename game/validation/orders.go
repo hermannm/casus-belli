@@ -38,7 +38,7 @@ func validateMoveOrSupport(order game.Order) error {
 		return errors.New("moves and supports must have destination")
 	}
 
-	if _, ok := order.From.Neighbors[order.To.Name]; !ok {
+	if !order.From.HasNeighbor(order.To.Name) {
 		return errors.New("destination not adjacent to origin")
 	}
 

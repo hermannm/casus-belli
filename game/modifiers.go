@@ -30,13 +30,22 @@ func DefenseModifiers(area BoardArea) []Modifier {
 
 	mods = AppendUnitMod(mods, area.Unit.Type)
 
-	mods = append(mods, RollDice())
+	mods = append(mods, DiceModifier())
 
 	return mods
 }
 
 func AttackModifiers(order Order, otherAttackers bool, borderConflict bool) []Modifier {
 	mods := []Modifier{}
+
+	neighbor, hasNeighbor := order.From.GetNeighbor(order.To.Name, order.Via)
+
+	if hasNeighbor {
+		mods = append(mods, Modifier{
+			Type:  SurpriseMod,
+			Value: +1,
+		})
+	}
 
 	if (order.To.Control == Uncontrolled && !otherAttackers) ||
 		(order.To.Unit != nil && order.To.Control == order.To.Unit.Color && !borderConflict) {
@@ -55,7 +64,7 @@ func AttackModifiers(order Order, otherAttackers bool, borderConflict bool) []Mo
 			})
 		}
 
-		if neighbor, ok := order.From.Neighbors[order.To.Name]; ok {
+		if hasNeighbor && neighbor.DangerZone != "" {
 			if neighbor.River || (order.From.Sea && !order.To.Sea) {
 				mods = append(mods, Modifier{
 					Type:  WaterMod,
@@ -72,15 +81,6 @@ func AttackModifiers(order Order, otherAttackers bool, borderConflict bool) []Mo
 		}
 	}
 
-	if neighbor, ok := order.From.Neighbors[order.To.Name]; ok {
-		if neighbor.DangerZone != "" {
-			mods = append(mods, Modifier{
-				Type:  SurpriseMod,
-				Value: +1,
-			})
-		}
-	}
-
 	if order.From.Unit.Type == Catapult && order.To.Castle {
 		mods = append(mods, Modifier{
 			Type:  UnitMod,
@@ -90,16 +90,20 @@ func AttackModifiers(order Order, otherAttackers bool, borderConflict bool) []Mo
 		mods = AppendUnitMod(mods, order.From.Unit.Type)
 	}
 
-	mods = append(mods, RollDice())
+	mods = append(mods, DiceModifier())
 
 	return mods
 }
 
-func RollDice() Modifier {
-	rand.Seed(time.Now().UnixNano())
-
+func DiceModifier() Modifier {
 	return Modifier{
 		Type:  DiceMod,
-		Value: rand.Intn(6) + 1,
+		Value: RollDice(),
 	}
+}
+
+func RollDice() int {
+	rand.Seed(time.Now().UnixNano())
+
+	return rand.Intn(6) + 1
 }

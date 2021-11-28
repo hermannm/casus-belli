@@ -29,14 +29,18 @@ func TestAttack(test *testing.T) {
 		Sea:     false,
 	}
 
-	area1.Neighbors["area2"] = &game.Neighbor{
-		Area:  &area2,
-		River: true,
+	area1.Neighbors = []game.Neighbor{
+		{
+			Area:  &area2,
+			River: true,
+		},
 	}
 
-	area2.Neighbors["area1"] = &game.Neighbor{
-		Area:  &area1,
-		River: true,
+	area2.Neighbors = []game.Neighbor{
+		{
+			Area:  &area1,
+			River: true,
+		},
 	}
 
 	order := game.Order{
