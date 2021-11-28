@@ -19,6 +19,7 @@ func (board Board) resolveMoves() {
 	board.resolveConflictFreeOrders()
 	board.resolveTransportOrders()
 	board.resolveBorderConflicts()
+	board.resolveConflicts()
 }
 
 func (board Board) populateAreaOrders(orders []*Order) {
@@ -93,7 +94,9 @@ func (board Board) resolveBorderConflicts() {
 
 	for name, area := range board {
 		if area.Outgoing != nil &&
+			area.Outgoing.Type == Move &&
 			area.Outgoing.To.Outgoing != nil &&
+			area.Outgoing.To.Outgoing.Type == Move &&
 			name == area.Outgoing.To.Outgoing.To.Name {
 
 			area2 := area.Outgoing.To
@@ -105,6 +108,22 @@ func (board Board) resolveBorderConflicts() {
 				resolveBorderCombat(area, area2)
 			}
 
+		}
+	}
+}
+
+func (board Board) resolveConflicts() {
+	allResolved := false
+
+	for !allResolved {
+		allResolved = true
+
+		for _, area := range board {
+			if area.Outgoing != nil && area.Outgoing.Type == Move {
+				allResolved = false
+			}
+
+			area.resolveCombat()
 		}
 	}
 }

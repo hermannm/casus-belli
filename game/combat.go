@@ -5,11 +5,14 @@ func (area *BoardArea) resolveCombat() bool {
 		if len(area.IncomingMoves) == 1 {
 			area.resolveCombatPvE()
 		} else {
-			resolved := area.resolveCombatPvP()
-			if !resolved {
-				return resolved
-			}
+			area.resolveCombatPvP()
 			area.resolveCombatPvE()
+		}
+	} else {
+		if area.Unit == nil && len(area.IncomingMoves) == 1 {
+			getOnlyOrder(area.IncomingMoves).succeedMove()
+		} else {
+			area.resolveCombatPvP()
 		}
 	}
 
@@ -35,9 +38,38 @@ func (area *BoardArea) resolveCombatPvE() {
 	}
 }
 
-func (area *BoardArea) resolveCombatPvP() bool {
-	defense := area.Unit != nil
-	return defense
+func (area *BoardArea) resolveCombatPvP() {
+	defending := area.Unit
+
+	mods := make(map[PlayerColor][]Modifier)
+
+	for _, move := range area.IncomingMoves {
+		mods[move.Player.Color] = AttackModifiers(*move, true, false)
+	}
+
+	if defending != nil {
+		mods[defending.Color] = DefenseModifiers(*area)
+	}
+
+	combat, winner, tie := combatResults(mods)
+
+	if tie {
+		for _, order := range area.IncomingMoves {
+			order.failMove()
+
+			for _, result := range combat {
+				if order.Player.Color == result.Player {
+					if result.Total < winner.Total {
+						order.die()
+					}
+				}
+			}
+		}
+
+		return
+	}
+
+	area.resolveWinner(winner.Player)
 }
 
 func resolveBorderCombat(area1 *BoardArea, area2 *BoardArea) {
@@ -56,14 +88,15 @@ func resolveBorderCombat(area1 *BoardArea, area2 *BoardArea) {
 	if tie {
 		area1.Outgoing.failMove()
 		area2.Outgoing.failMove()
+		return
+	}
+
+	if winner.Player == area1.Unit.Color {
+		area2.Outgoing.failMove()
+		area1.Outgoing.succeedMove()
 	} else {
-		if winner.Player == area1.Unit.Color {
-			area2.Outgoing.failMove()
-			area1.Outgoing.succeedMove()
-		} else {
-			area1.Outgoing.failMove()
-			area2.Outgoing.succeedMove()
-		}
+		area1.Outgoing.failMove()
+		area2.Outgoing.succeedMove()
 	}
 }
 

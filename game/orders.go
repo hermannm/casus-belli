@@ -6,6 +6,10 @@ func (order *Order) failMove() {
 	delete(order.To.IncomingMoves, order.From.Name)
 }
 
+func (order *Order) die() {
+	order.From.Unit = nil
+}
+
 func (order *Order) succeedMove() {
 	order.To.Control = order.Player.Color
 	order.To.Unit = order.From.Unit
@@ -15,13 +19,14 @@ func (order *Order) succeedMove() {
 	delete(order.To.IncomingMoves, order.From.Name)
 }
 
-func (order *Order) winCombat() {
-	if order.To.Outgoing != nil {
-		order.To.Outgoing.Status = Fail
+func (area *BoardArea) resolveWinner(winner PlayerColor) {
+	if area.Outgoing != nil && area.Unit.Color != winner {
+		area.Outgoing.Status = Fail
+		area.Outgoing = nil
 	}
 
-	for _, move := range order.To.IncomingMoves {
-		if move == order {
+	for _, move := range area.IncomingMoves {
+		if move.Player.Color == winner {
 			move.succeedMove()
 		} else {
 			move.failMove()
