@@ -1,4 +1,4 @@
-package tests
+package game_test
 
 import (
 	"immerse-ntnu/hermannia/server/game"
@@ -8,12 +8,12 @@ import (
 func TestAttack(test *testing.T) {
 	unit := game.Unit{
 		Type:  game.Footman,
-		Color: game.Yellow,
+		Color: "yellow",
 	}
 
 	area1 := game.BoardArea{
 		Name:    "area1",
-		Control: game.Yellow,
+		Control: "yellow",
 		Unit:    &unit,
 		Forest:  false,
 		Castle:  false,
