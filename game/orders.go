@@ -1,9 +1,21 @@
 package game
 
+func removeOrder(oldOrders []*Order, remove *Order) []*Order {
+	newOrders := make([]*Order, 0)
+
+	for _, order := range oldOrders {
+		if order != remove {
+			newOrders = append(newOrders, order)
+		}
+	}
+
+	return newOrders
+}
+
 func (order *Order) failMove() {
 	order.Status = Fail
 	order.From.Outgoing = nil
-	delete(order.To.IncomingMoves, order.From.Name)
+	order.To.IncomingMoves = removeOrder(order.To.IncomingMoves, order)
 }
 
 func (order *Order) die() {
@@ -16,7 +28,7 @@ func (order *Order) succeedMove() {
 	order.Status = Success
 	order.From.Unit = nil
 	order.From.Outgoing = nil
-	delete(order.To.IncomingMoves, order.From.Name)
+	order.To.IncomingMoves = removeOrder(order.To.IncomingMoves, order)
 }
 
 func (area *BoardArea) resolveWinner(winner PlayerColor) {
@@ -39,17 +51,10 @@ func (area *BoardArea) failTransportDependentMoves() {
 	transportNeighbors := area.transportNeighbors(make(map[string]*BoardArea))
 
 	for _, area := range transportNeighbors {
-		for from, move := range area.IncomingMoves {
-			if !area.HasNeighbor(from) && !move.Transportable() {
+		for _, move := range area.IncomingMoves {
+			if !area.HasNeighbor(move.From.Name) && !move.Transportable() {
 				move.failMove()
 			}
 		}
 	}
-}
-
-func getOnlyOrder(orders map[string]*Order) *Order {
-	for _, order := range orders {
-		return order
-	}
-	return nil
 }

@@ -31,8 +31,8 @@ type BoardArea struct {
 	Castle           bool
 	SiegeCount       int
 	Neighbors        []Neighbor
-	IncomingMoves    map[string]*Order
-	IncomingSupports map[string]*Order
+	IncomingMoves    []*Order
+	IncomingSupports []*Order
 	Outgoing         *Order
 	Combats          []Combat
 }

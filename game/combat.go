@@ -10,7 +10,7 @@ func (area *BoardArea) resolveCombat() bool {
 		}
 	} else {
 		if area.Unit == nil && len(area.IncomingMoves) == 1 {
-			getOnlyOrder(area.IncomingMoves).succeedMove()
+			area.IncomingMoves[0].succeedMove()
 		} else {
 			area.resolveCombatPvP()
 		}
@@ -20,7 +20,7 @@ func (area *BoardArea) resolveCombat() bool {
 }
 
 func (area *BoardArea) resolveCombatPvE() {
-	order := getOnlyOrder(area.IncomingMoves)
+	order := area.IncomingMoves[0]
 
 	mods := map[PlayerColor][]Modifier{
 		order.From.Unit.Color: AttackModifiers(*order, false, false),
@@ -78,7 +78,7 @@ func resolveBorderCombat(area1 *BoardArea, area2 *BoardArea) {
 	for _, area := range []*BoardArea{area1, area2} {
 		mods[area.Unit.Color] = AttackModifiers(*area.Outgoing, true, true)
 
-		appendSupportMods(mods, area, map[string]*Order{area.Name: area.Outgoing})
+		appendSupportMods(mods, area.Outgoing.To, []*Order{area.Outgoing})
 	}
 
 	combat, winner, tie := combatResults(mods)
@@ -123,7 +123,7 @@ func combatResults(playerMods map[PlayerColor][]Modifier) (combat Combat, winner
 	return combat, winner, tie
 }
 
-func appendSupportMods(mods map[PlayerColor][]Modifier, area *BoardArea, moves map[string]*Order) {
+func appendSupportMods(mods map[PlayerColor][]Modifier, area *BoardArea, moves []*Order) {
 	for _, move := range moves {
 		mods[move.From.Unit.Color] = make([]Modifier, 0)
 	}
@@ -141,7 +141,7 @@ func appendSupportMods(mods map[PlayerColor][]Modifier, area *BoardArea, moves m
 	}
 }
 
-func callSupport(support *Order, area *BoardArea, moves map[string]*Order) PlayerColor {
+func callSupport(support *Order, area *BoardArea, moves []*Order) PlayerColor {
 	if support.Player.Color == area.Control {
 		return support.Player.Color
 	}

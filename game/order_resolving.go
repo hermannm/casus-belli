@@ -27,9 +27,9 @@ func (board Board) populateAreaOrders(orders []*Order) {
 		if to, ok := board[order.To.Name]; ok {
 			switch order.Type {
 			case Move:
-				to.IncomingMoves[order.From.Name] = order
+				to.IncomingMoves = append(to.IncomingMoves, order)
 			case Support:
-				to.IncomingSupports[order.From.Name] = order
+				to.IncomingSupports = append(to.IncomingSupports, order)
 			}
 		}
 		if from, ok := board[order.From.Name]; ok {
@@ -43,7 +43,11 @@ func (board Board) cutSupports() {
 		if area.Outgoing != nil && area.Outgoing.Type == Support {
 			if len(area.IncomingMoves) > 0 {
 				area.Outgoing.Status = Fail
-				delete(area.Outgoing.To.IncomingSupports, area.Outgoing.From.Name)
+
+				area.Outgoing.To.IncomingSupports = removeOrder(
+					area.Outgoing.To.IncomingSupports,
+					area.Outgoing,
+				)
 			}
 		}
 	}
@@ -65,7 +69,7 @@ func (board Board) resolveConflictFreeOrders() {
 			if area.Control == Uncontrolled {
 				area.resolveCombatPvE()
 			} else {
-				getOnlyOrder(area.IncomingMoves).succeedMove()
+				area.IncomingMoves[0].succeedMove()
 			}
 		}
 	}
@@ -153,7 +157,7 @@ func (board Board) cleanup() {
 		}
 
 		if len(area.IncomingSupports) > 0 {
-			area.IncomingSupports = make(map[string]*Order)
+			area.IncomingSupports = make([]*Order, 0)
 		}
 	}
 }
