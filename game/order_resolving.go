@@ -24,6 +24,14 @@ func (board Board) resolveMoves() {
 
 func (board Board) populateAreaOrders(orders []*Order) {
 	for _, order := range orders {
+		if from, ok := board[order.From.Name]; ok {
+			from.Outgoing = order
+		}
+
+		if order.To == nil {
+			continue
+		}
+
 		if to, ok := board[order.To.Name]; ok {
 			switch order.Type {
 			case Move:
@@ -31,9 +39,6 @@ func (board Board) populateAreaOrders(orders []*Order) {
 			case Support:
 				to.IncomingSupports = append(to.IncomingSupports, order)
 			}
-		}
-		if from, ok := board[order.From.Name]; ok {
-			from.Outgoing = order
 		}
 	}
 }
@@ -77,7 +82,7 @@ func (board Board) resolveConflictFreeOrders() {
 
 func (board Board) resolveTransportOrders() {
 	for _, area := range board {
-		if area.Outgoing != nil && area.Outgoing.Type != Transport {
+		if area.Outgoing == nil || area.Outgoing.Type != Transport {
 			continue
 		}
 
@@ -125,6 +130,10 @@ func (board Board) resolveConflicts() {
 		allResolved = true
 
 		for _, area := range board {
+			if len(area.IncomingMoves) == 0 {
+				continue
+			}
+
 			if area.Outgoing != nil && area.Outgoing.Type == Move {
 				allResolved = false
 			}

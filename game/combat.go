@@ -1,7 +1,7 @@
 package game
 
-func (area *BoardArea) resolveCombat() bool {
-	if area.Control == Uncontrolled {
+func (area *BoardArea) resolveCombat() {
+	if area.Control == Uncontrolled && !area.Sea {
 		if len(area.IncomingMoves) == 1 {
 			area.resolveCombatPvE()
 		} else {
@@ -15,8 +15,6 @@ func (area *BoardArea) resolveCombat() bool {
 			area.resolveCombatPvP()
 		}
 	}
-
-	return true
 }
 
 func (area *BoardArea) resolveCombatPvE() {
@@ -31,7 +29,7 @@ func (area *BoardArea) resolveCombatPvE() {
 	combat, result, _ := combatResults(mods)
 	area.Combats = append(area.Combats, combat)
 
-	if result.Total <= 4 {
+	if result.Total >= 4 {
 		order.succeedMove()
 	} else {
 		order.failMove()
@@ -51,7 +49,10 @@ func (area *BoardArea) resolveCombatPvP() {
 		mods[defending.Color] = DefenseModifiers(*area)
 	}
 
+	appendSupportMods(mods, area, area.IncomingMoves)
+
 	combat, winner, tie := combatResults(mods)
+	area.Combats = append(area.Combats, combat)
 
 	if tie {
 		for _, order := range area.IncomingMoves {
@@ -124,10 +125,6 @@ func combatResults(playerMods map[PlayerColor][]Modifier) (combat Combat, winner
 }
 
 func appendSupportMods(mods map[PlayerColor][]Modifier, area *BoardArea, moves []*Order) {
-	for _, move := range moves {
-		mods[move.From.Unit.Color] = make([]Modifier, 0)
-	}
-
 	for _, support := range area.IncomingSupports {
 		supported := callSupport(support, area, moves)
 

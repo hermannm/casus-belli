@@ -41,10 +41,12 @@ func AttackModifiers(order Order, otherAttackers bool, borderConflict bool) []Mo
 	neighbor, hasNeighbor := order.From.GetNeighbor(order.To.Name, order.Via)
 
 	if hasNeighbor {
-		mods = append(mods, Modifier{
-			Type:  SurpriseMod,
-			Value: +1,
-		})
+		if neighbor.DangerZone != "" {
+			mods = append(mods, Modifier{
+				Type:  SurpriseMod,
+				Value: +1,
+			})
+		}
 	}
 
 	if (order.To.Control == Uncontrolled && !otherAttackers) ||
@@ -64,7 +66,7 @@ func AttackModifiers(order Order, otherAttackers bool, borderConflict bool) []Mo
 			})
 		}
 
-		if hasNeighbor && neighbor.DangerZone != "" {
+		if hasNeighbor {
 			if neighbor.River || (order.From.Sea && !order.To.Sea) {
 				mods = append(mods, Modifier{
 					Type:  WaterMod,
