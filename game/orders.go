@@ -48,12 +48,14 @@ func (area *BoardArea) resolveWinner(winner PlayerColor) {
 }
 
 func (area *BoardArea) failTransportDependentMoves() {
-	transportNeighbors := area.transportNeighbors(make(map[string]*BoardArea))
+	transportNeighbors, _ := area.TransportNeighbors(make([]*BoardArea, 0))
 
 	for _, area := range transportNeighbors {
 		for _, move := range area.IncomingMoves {
-			if !area.HasNeighbor(move.From.Name) && !move.Transportable() {
-				move.failMove()
+			if !area.HasNeighbor(move.From.Name) {
+				if _, transportable := transportNeighbors[move.To.Name]; !transportable {
+					move.failMove()
+				}
 			}
 		}
 	}

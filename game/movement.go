@@ -1,13 +1,21 @@
 package game
 
 func (area *BoardArea) GetNeighbor(neighborName string, via string) (Neighbor, bool) {
+	var n Neighbor
+	ok := false
+
 	for _, neighbor := range area.Neighbors {
-		if neighborName == neighbor.Area.Name && via == neighbor.DangerZone {
-			return neighbor, true
+		if neighborName == neighbor.Area.Name {
+			if !ok {
+				n = neighbor
+				ok = true
+			} else if neighbor.DangerZone != "" && via == neighbor.DangerZone {
+				n = neighbor
+			}
 		}
 	}
 
-	return Neighbor{}, false
+	return n, ok
 }
 
 func (area *BoardArea) NeighborAreas() []*BoardArea {
@@ -55,34 +63,31 @@ func (area *BoardArea) IsCoast() bool {
 	return false
 }
 
-func (order *Order) Transportable() bool {
-	if order.Type != Move || order.From.Unit.Type == Ship {
-		return false
-	}
+func (area *BoardArea) TransportNeighbors(path []*BoardArea) (
+	neighbors map[string]*BoardArea,
+	paths [][]*BoardArea,
+) {
+	neighbors = make(map[string]*BoardArea)
+	paths = make([][]*BoardArea, 0)
 
-	possibleDestinations := order.From.transportNeighbors(make(map[string]*BoardArea))
-
-	_, transportable := possibleDestinations[order.To.Name]
-
-	return transportable
-}
-
-func (area *BoardArea) transportNeighbors(exclude map[string]*BoardArea) map[string]*BoardArea {
-	neighbors := make(map[string]*BoardArea)
-
+outer:
 	for _, neighborArea := range area.NeighborAreas() {
 		if neighborArea.Sea {
-			if _, excluded := exclude[neighborArea.Name]; excluded {
-				continue
+			for _, alreadyTransporting := range path {
+				if alreadyTransporting.Name == neighborArea.Name {
+					continue outer
+				}
 			}
 
 			if neighborArea.Outgoing != nil &&
 				neighborArea.Outgoing.Type == Transport &&
 				neighborArea.Unit.Color == area.Unit.Color {
 
-				newExclude := copyMap(exclude)
-				newExclude[area.Name] = area
-				connectedNeighbors := neighborArea.transportNeighbors(newExclude)
+				connectedNeighbors, paths := neighborArea.TransportNeighbors(append(path, area))
+
+				for _, newPath := range paths {
+					paths = append(paths, append(path, newPath...))
+				}
 
 				neighbors = mergeMaps(neighbors, connectedNeighbors)
 			}
@@ -91,7 +96,7 @@ func (area *BoardArea) transportNeighbors(exclude map[string]*BoardArea) map[str
 		}
 	}
 
-	return neighbors
+	return neighbors, paths
 }
 
 func copyMap(oldMap map[string]*BoardArea) map[string]*BoardArea {
