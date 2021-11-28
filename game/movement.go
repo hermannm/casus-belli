@@ -55,9 +55,11 @@ func (area *BoardArea) transportNeighbors(exclude map[string]*BoardArea) map[str
 
 func copyMap(oldMap map[string]*BoardArea) map[string]*BoardArea {
 	newMap := make(map[string]*BoardArea)
+
 	for key, area := range oldMap {
 		newMap[key] = area
 	}
+
 	return newMap
 }
 

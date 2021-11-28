@@ -40,18 +40,21 @@ func AttackModifiers(order Order, otherAttackers bool, borderConflict bool) []Mo
 
 	if (order.To.Control == Uncontrolled && !otherAttackers) ||
 		(order.To.Unit != nil && order.To.Control == order.To.Unit.Color && !borderConflict) {
+
 		if order.To.Forest {
 			mods = append(mods, Modifier{
 				Type:  ForestMod,
 				Value: -1,
 			})
 		}
+
 		if order.To.Castle {
 			mods = append(mods, Modifier{
 				Type:  CastleMod,
 				Value: -1,
 			})
 		}
+
 		if neighbor, ok := order.From.Neighbors[order.To.Name]; ok {
 			if neighbor.AcrossWater {
 				mods = append(mods, Modifier{

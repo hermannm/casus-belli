@@ -30,6 +30,7 @@ func (area *BoardArea) resolveWinner(winner PlayerColor) {
 			move.succeedMove()
 		} else {
 			move.failMove()
+			move.die()
 		}
 	}
 }

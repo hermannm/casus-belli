@@ -110,7 +110,6 @@ func (board Board) resolveBorderConflicts() {
 
 				resolveBorderCombat(area, area2)
 			}
-
 		}
 	}
 }
