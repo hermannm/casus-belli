@@ -6,7 +6,7 @@ func (game *Game) NewRound() {
 	if len(game.Rounds) == 0 {
 		season = Winter
 	} else {
-		season = NextSeason(game.Rounds[len(game.Rounds)-1].Season)
+		season = nextSeason(game.Rounds[len(game.Rounds)-1].Season)
 	}
 
 	game.Rounds = append(game.Rounds, &Round{
@@ -16,7 +16,26 @@ func (game *Game) NewRound() {
 	})
 }
 
-func NextSeason(season Season) Season {
+func (game *Game) ReceiveOrders(orders []Order) {
+	round := game.Rounds[len(game.Rounds)-1]
+
+	round.mut.Lock()
+	defer round.mut.Unlock()
+
+	for _, order := range orders {
+		if order.From.Unit == nil {
+			round.SecondOrders = append(round.SecondOrders, &order)
+		} else {
+			if order.From.Unit.Color == order.Player.Color {
+				round.FirstOrders = append(round.SecondOrders, &order)
+			} else {
+				round.SecondOrders = append(round.SecondOrders, &order)
+			}
+		}
+	}
+}
+
+func nextSeason(season Season) Season {
 	switch season {
 	case Winter:
 		return Spring

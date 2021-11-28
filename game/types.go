@@ -1,5 +1,7 @@
 package game
 
+import "sync"
+
 type Game struct {
 	Board   Board
 	Rounds  []*Round
@@ -11,6 +13,7 @@ type Player struct {
 }
 
 type Round struct {
+	mut          sync.Mutex
 	Season       Season
 	FirstOrders  []*Order
 	SecondOrders []*Order
