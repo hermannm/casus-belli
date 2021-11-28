@@ -56,12 +56,19 @@ func AttackModifiers(order Order, otherAttackers bool, borderConflict bool) []Mo
 		}
 
 		if neighbor, ok := order.From.Neighbors[order.To.Name]; ok {
-			if neighbor.AcrossWater {
+			if neighbor.River || (order.From.Sea && !order.To.Sea) {
 				mods = append(mods, Modifier{
 					Type:  WaterMod,
 					Value: -1,
 				})
 			}
+		} else {
+			/* If destination is not in neighbors, then order is transported,
+			and takes penalty for moving across water */
+			mods = append(mods, Modifier{
+				Type:  WaterMod,
+				Value: -1,
+			})
 		}
 	}
 

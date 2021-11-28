@@ -43,9 +43,10 @@ type Unit struct {
 }
 
 type Neighbor struct {
-	Area        *BoardArea
-	AcrossWater bool
-	DangerZone  string
+	Area       *BoardArea
+	River      bool
+	DangerZone string
+	Cliffs     string
 }
 
 type Order struct {
