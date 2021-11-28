@@ -19,7 +19,7 @@ func ValidateOrder(order game.Order, season game.Season) error {
 }
 
 func validateNonWinterOrder(order game.Order) error {
-	if order.UnitBuild != "" {
+	if order.Build != "" {
 		return errors.New("units can only be built in winter")
 	}
 
@@ -144,7 +144,7 @@ func validateWinterMove(order game.Order) error {
 		return errors.New("ship winter move destination must be coast")
 	}
 
-	if order.UnitBuild != "" {
+	if order.Build != "" {
 		return errors.New("cannot build unit with move order")
 	}
 
@@ -156,7 +156,7 @@ func validateBuild(order game.Order) error {
 		return errors.New("cannot build in area already occupied")
 	}
 
-	switch order.UnitBuild {
+	switch order.Build {
 	case game.Ship:
 		if !order.From.IsCoast() {
 			return errors.New("ships can only be built on coast")

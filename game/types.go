@@ -24,6 +24,7 @@ type Board map[string]*BoardArea
 type BoardArea struct {
 	Name             string
 	Control          PlayerColor
+	Home             PlayerColor
 	Unit             *Unit
 	Sea              bool
 	Forest           bool
@@ -48,12 +49,12 @@ type Neighbor struct {
 }
 
 type Order struct {
-	Type      OrderType
-	Player    *Player
-	From      *BoardArea
-	To        *BoardArea
-	UnitBuild UnitType
-	Status    OrderStatus
+	Type   OrderType
+	Player *Player
+	From   *BoardArea
+	To     *BoardArea
+	Build  UnitType
+	Status OrderStatus
 }
 
 type Combat []Result
