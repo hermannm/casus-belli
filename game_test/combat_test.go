@@ -44,7 +44,7 @@ func TestAttack(test *testing.T) {
 		To:   &area2,
 	}
 
-	mods := game.AttackModifiers(order, false)
+	mods := game.AttackModifiers(order, false, false)
 	result := 0
 	for _, mod := range mods {
 		result += mod.Value

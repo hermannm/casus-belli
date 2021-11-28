@@ -16,10 +16,9 @@ func (board Board) Resolve(round *Round) {
 
 func (board Board) resolveMoves() {
 	board.cutSupports()
-
 	board.resolveConflictFreeOrders()
-
 	board.resolveTransportOrders()
+	board.resolveBorderConflicts()
 }
 
 func (board Board) populateAreaOrders(orders []*Order) {
@@ -89,18 +88,24 @@ func (board Board) resolveTransportOrders() {
 	}
 }
 
-func (area *BoardArea) failTransportDependentMoves() {
-	transportNeighbors := area.transportNeighbors(make(map[string]*BoardArea))
+func (board Board) resolveBorderConflicts() {
+	processed := make(map[string]bool)
 
-	for _, area := range transportNeighbors {
-		for from, move := range area.IncomingMoves {
-			if _, ok := area.Neighbors[from]; !ok {
-				if !move.Transportable() {
-					move.failMove()
-				}
+	for name, area := range board {
+		if area.Outgoing != nil &&
+			area.Outgoing.To.Outgoing != nil &&
+			name == area.Outgoing.To.Outgoing.To.Name {
+
+			area2 := area.Outgoing.To
+
+			if !processed[name] && !processed[area2.Name] {
+				processed[name] = true
+				processed[area2.Name] = true
+
+				resolveBorderCombat(area, area2)
 			}
-		}
 
+		}
 	}
 }
 

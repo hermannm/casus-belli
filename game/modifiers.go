@@ -1,5 +1,18 @@
 package game
 
+import (
+	"math/rand"
+	"time"
+)
+
+func modTotal(mods []Modifier) int {
+	total := 0
+	for _, mod := range mods {
+		total += mod.Value
+	}
+	return total
+}
+
 func AppendUnitMod(mods []Modifier, unitType UnitType) []Modifier {
 	switch unitType {
 	case Footman:
@@ -17,14 +30,16 @@ func DefenseModifiers(area BoardArea) []Modifier {
 
 	mods = AppendUnitMod(mods, area.Unit.Type)
 
+	mods = append(mods, RollDice())
+
 	return mods
 }
 
-func AttackModifiers(order Order, otherAttackers bool) []Modifier {
+func AttackModifiers(order Order, otherAttackers bool, borderConflict bool) []Modifier {
 	mods := []Modifier{}
 
 	if (order.To.Control == Uncontrolled && !otherAttackers) ||
-		(order.To.Unit != nil && order.To.Control == order.To.Unit.Color) {
+		(order.To.Unit != nil && order.To.Control == order.To.Unit.Color && !borderConflict) {
 		if order.To.Forest {
 			mods = append(mods, Modifier{
 				Type:  ForestMod,
@@ -65,5 +80,16 @@ func AttackModifiers(order Order, otherAttackers bool) []Modifier {
 		mods = AppendUnitMod(mods, order.From.Unit.Type)
 	}
 
+	mods = append(mods, RollDice())
+
 	return mods
+}
+
+func RollDice() Modifier {
+	rand.Seed(time.Now().UnixNano())
+
+	return Modifier{
+		Type:  DiceMod,
+		Value: rand.Intn(6) + 1,
+	}
 }
