@@ -101,7 +101,10 @@ func (board Board) resolveBorderConflicts() {
 
 			area2 := area.Outgoing.To
 
-			if !processed[name] && !processed[area2.Name] {
+			_, processedArea1 := processed[name]
+			_, processedArea2 := processed[area2.Name]
+
+			if !processedArea1 && !processedArea2 {
 				processed[name] = true
 				processed[area2.Name] = true
 
