@@ -141,8 +141,8 @@ func (board Board) resolveConflictFreeOrders() {
 // Finds transport orders under attack, and resolves their combat.
 func (board Board) resolveTransportOrders() {
 	for _, area := range board {
-		if area.Outgoing != nil ||
-			area.Outgoing.Type == Transport ||
+		if area.Outgoing != nil &&
+			area.Outgoing.Type == Transport &&
 			len(area.IncomingMoves) > 0 {
 
 			area.resolveCombat()
