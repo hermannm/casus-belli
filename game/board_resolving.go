@@ -69,12 +69,27 @@ func (board Board) resolveConflictFreeOrders() {
 				continue
 			}
 
+			move := area.IncomingMoves[0]
+			if !area.HasNeighbor(move.To.Name) {
+				transportable, dangerZone := move.Transportable(true)
+
+				if transportable {
+					if dangerZone {
+						if !move.crossDangerZone() {
+							continue
+						}
+					}
+				} else {
+					continue
+				}
+			}
+
 			allResolved = false
 
 			if area.Control == Uncontrolled {
 				area.resolveCombatPvE()
 			} else {
-				area.IncomingMoves[0].succeedMove()
+				move.succeedMove()
 			}
 		}
 	}
@@ -138,6 +153,7 @@ func (board Board) resolveConflicts() {
 
 			if area.Outgoing != nil && area.Outgoing.Type == Move {
 				allResolved = false
+				continue
 			}
 
 			area.resolveCombat()
