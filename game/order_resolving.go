@@ -23,12 +23,15 @@ func (order *Order) die() {
 }
 
 func (order *Order) succeedMove() {
-	order.To.Control = order.Player
 	order.To.Unit = order.From.Unit
 	order.Status = Success
 	order.From.Unit = nil
 	order.From.Outgoing = nil
 	order.To.IncomingMoves = removeOrder(order.To.IncomingMoves, order)
+
+	if !order.To.Sea {
+		order.To.Control = order.Player
+	}
 }
 
 func (area *BoardArea) resolveWinner(winner PlayerColor) {

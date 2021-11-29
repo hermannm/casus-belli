@@ -15,6 +15,7 @@ func (board Board) Resolve(round *Round) {
 }
 
 func (board Board) resolveMoves() {
+	board.crossDangerZones()
 	board.cutSupports()
 	board.resolveConflictFreeOrders()
 	board.resolveTransportOrders()
@@ -43,6 +44,22 @@ func (board Board) populateAreaOrders(orders []*Order) {
 	}
 }
 
+func (board Board) crossDangerZones() {
+	for _, area := range board {
+		if area.Outgoing == nil || area.Outgoing.Type != Move {
+			continue
+		}
+
+		move := area.Outgoing
+
+		if destination, ok := area.GetNeighbor(move.To.Name, move.Via); ok {
+			if destination.DangerZone != "" {
+				move.crossDangerZone()
+			}
+		}
+	}
+}
+
 func (board Board) cutSupports() {
 	for _, area := range board {
 		if area.Outgoing != nil && area.Outgoing.Type == Support {
@@ -60,26 +77,26 @@ func (board Board) cutSupports() {
 
 func (board Board) resolveConflictFreeOrders() {
 	allResolved := false
+	resolved := make(map[string]bool)
 
 	for !allResolved {
 		allResolved = true
 
 		for _, area := range board {
+			if resolved[area.Name] {
+				continue
+			}
+
 			if area.Unit != nil || len(area.IncomingMoves) != 1 {
 				continue
 			}
 
 			move := area.IncomingMoves[0]
 			if !area.HasNeighbor(move.To.Name) {
-				transportable, dangerZone := move.Transportable(true)
+				transported := move.Transport()
 
-				if transportable {
-					if dangerZone {
-						if !move.crossDangerZone() {
-							continue
-						}
-					}
-				} else {
+				if !transported {
+					resolved[area.Name] = true
 					continue
 				}
 			}
@@ -91,6 +108,7 @@ func (board Board) resolveConflictFreeOrders() {
 			} else {
 				move.succeedMove()
 			}
+			resolved[area.Name] = true
 		}
 	}
 }
@@ -105,38 +123,43 @@ func (board Board) resolveTransportOrders() {
 			continue
 		}
 
-		player := area.Unit.Color
-
 		area.resolveCombat()
-
-		if area.Outgoing == nil {
-			area.failTransportDependencies(player, make(map[string]bool))
-		}
 	}
 }
 
 func (board Board) resolveBorderConflicts() {
 	processed := make(map[string]bool)
 
-	for name, area := range board {
-		if area.Outgoing != nil &&
-			area.Outgoing.Type == Move &&
-			area.Outgoing.To.Outgoing != nil &&
-			area.Outgoing.To.Outgoing.Type == Move &&
-			name == area.Outgoing.To.Outgoing.To.Name {
+	for _, area1 := range board {
+		if area1.Outgoing == nil ||
+			area1.Outgoing.Type != Move ||
+			processed[area1.Name] {
 
-			area2 := area.Outgoing.To
+			continue
+		}
 
-			_, processedArea1 := processed[name]
-			_, processedArea2 := processed[area2.Name]
+		area2 := area1.Outgoing.To
 
-			if !processedArea1 && !processedArea2 {
-				processed[name] = true
-				processed[area2.Name] = true
+		processed[area1.Name], processed[area2.Name] = true, true
 
-				resolveBorderCombat(area, area2)
+		if area2.Outgoing == nil ||
+			area2.Outgoing.Type != Move ||
+			area1.Name != area2.Outgoing.To.Name ||
+			processed[area2.Name] {
+
+			continue
+		}
+
+		if !area1.HasNeighbor(area2.Name) {
+			success1 := area1.Outgoing.Transport()
+			success2 := area2.Outgoing.Transport()
+
+			if !success1 || !success2 {
+				continue
 			}
 		}
+
+		resolveBorderCombat(area1, area2)
 	}
 }
 
@@ -149,6 +172,12 @@ func (board Board) resolveConflicts() {
 		for _, area := range board {
 			if len(area.IncomingMoves) == 0 {
 				continue
+			}
+
+			for _, move := range area.IncomingMoves {
+				if !move.From.HasNeighbor(move.To.Name) {
+					move.Transport()
+				}
 			}
 
 			if area.Outgoing != nil && area.Outgoing.Type == Move {

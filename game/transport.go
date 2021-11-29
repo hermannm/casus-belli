@@ -1,10 +1,26 @@
 package game
 
-func (order Order) Transportable(conflictFree bool) (
+func (order *Order) Transport() bool {
+	transportable, dangerZone := order.Transportable()
+
+	if transportable {
+		if dangerZone {
+			return order.crossDangerZone()
+		}
+
+		return true
+	} else {
+		order.failMove()
+
+		return false
+	}
+}
+
+func (order Order) Transportable() (
 	transportable bool,
 	dangerZone bool,
 ) {
-	transportable, dangerZone = order.From.canNeighborsTransport(order.To.Name, conflictFree, make(map[string]bool))
+	transportable, dangerZone = order.From.canNeighborsTransport(order.To.Name, make(map[string]bool))
 
 	return transportable, dangerZone
 }
@@ -40,7 +56,7 @@ func (area BoardArea) transportingNeighbors(exclude map[string]bool) (
 	return neighbors, newExclude
 }
 
-func (area BoardArea) canNeighborsTransport(destination string, conflictFree bool, exclude map[string]bool) (
+func (area BoardArea) canNeighborsTransport(destination string, exclude map[string]bool) (
 	transportable bool,
 	dangerZone bool,
 ) {
@@ -49,7 +65,7 @@ func (area BoardArea) canNeighborsTransport(destination string, conflictFree boo
 	transportingNeighbors, newExclude := area.transportingNeighbors(exclude)
 
 	for _, transport := range transportingNeighbors {
-		if conflictFree && len(transport.Area.IncomingMoves) > 0 {
+		if len(transport.Area.IncomingMoves) > 0 {
 			continue
 		}
 
@@ -60,7 +76,7 @@ func (area BoardArea) canNeighborsTransport(destination string, conflictFree boo
 				dangerZone = false
 			}
 		} else {
-			canTransport, danger := transport.Area.canNeighborsTransport(destination, conflictFree, newExclude)
+			canTransport, danger := transport.Area.canNeighborsTransport(destination, newExclude)
 
 			if canTransport {
 				transportable = true
@@ -73,40 +89,4 @@ func (area BoardArea) canNeighborsTransport(destination string, conflictFree boo
 	}
 
 	return transportable, dangerZone
-}
-
-func (area *BoardArea) failTransportDependencies(player PlayerColor, exclude map[string]bool) {
-	neighbors, newExclude := area.neighborAreasWithout(exclude)
-	newExclude[area.Name] = true
-
-	for _, neighbor := range neighbors {
-		if exclude[neighbor.Name] {
-			continue
-		}
-
-		if neighbor.Sea {
-			if neighbor.Outgoing != nil &&
-				neighbor.Unit.Color == player &&
-				neighbor.Outgoing.Type == Transport {
-
-				neighbor.failTransportDependencies(player, newExclude)
-			}
-		} else if area.Sea {
-			if neighbor.Outgoing != nil &&
-				neighbor.Unit.Color == player &&
-				neighbor.Outgoing.Type == Move &&
-				!neighbor.HasNeighbor(neighbor.Outgoing.To.Name) {
-
-				transportable, dangerZone := neighbor.Outgoing.Transportable(false)
-
-				if transportable {
-					if dangerZone {
-						neighbor.Outgoing.crossDangerZone()
-					}
-				} else {
-					neighbor.Outgoing.failMove()
-				}
-			}
-		}
-	}
 }

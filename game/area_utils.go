@@ -57,25 +57,3 @@ func (area *BoardArea) NeighborAreas() []*BoardArea {
 
 	return areas
 }
-
-func (area *BoardArea) neighborAreasWithout(exclude map[string]bool) (
-	areas []*BoardArea,
-	newExclude map[string]bool,
-) {
-	areas = make([]*BoardArea, 0)
-	newExclude = make(map[string]bool)
-	for k, v := range exclude {
-		newExclude[k] = v
-	}
-
-	for _, neighbor := range area.Neighbors {
-		if newExclude[neighbor.Area.Name] {
-			continue
-		}
-
-		areas = append(areas, neighbor.Area)
-		newExclude[neighbor.Area.Name] = true
-	}
-
-	return areas, newExclude
-}

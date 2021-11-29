@@ -79,6 +79,27 @@ func printBoard(board game.Board, areas map[string]*game.Unit, neighbors bool) {
 	}
 }
 
+func adjustBoard(board game.Board, areas map[string]*game.Unit) {
+	for key, unit := range areas {
+		if unit != nil {
+			board[key].Unit = unit
+			if !board[key].Sea {
+				board[key].Control = unit.Color
+			}
+		}
+	}
+}
+
+func printResolvePrint(board game.Board, areas map[string]*game.Unit, round *game.Round) {
+	fmt.Print("---BEFORE---\n\n")
+	printBoard(board, areas, false)
+
+	board.Resolve(round)
+
+	fmt.Print("---AFTER---\n\n")
+	printBoard(board, areas, false)
+}
+
 func main() {
 	board, err := setup.ReadBoard(5)
 
@@ -86,7 +107,80 @@ func main() {
 		fmt.Println(err.Error())
 	}
 
-	testTransportCombat(board)
+	testTransportWithDangerZone(board)
+}
+
+func testTransportWithDangerZone(board game.Board) {
+	areas := map[string]*game.Unit{
+		"Winde": {
+			Type:  game.Footman,
+			Color: "green",
+		},
+		"Mare Gond": {
+			Type:  game.Ship,
+			Color: "green",
+		},
+		"Mare Elle": {
+			Type:  game.Ship,
+			Color: "green",
+		},
+		"Mare Ovond": {
+			Type:  game.Ship,
+			Color: "green",
+		},
+		"Mare Duna": {
+			Type:  game.Ship,
+			Color: "red",
+		},
+		"Mare Furie": {
+			Type:  game.Ship,
+			Color: "red",
+		},
+		"Fond": nil,
+	}
+
+	adjustBoard(board, areas)
+
+	round := game.Round{
+		Season: game.Spring,
+		FirstOrders: []*game.Order{
+			{
+				Type:   game.Move,
+				Player: "green",
+				From:   board["Winde"],
+				To:     board["Fond"],
+			},
+			{
+				Type:   game.Transport,
+				Player: "green",
+				From:   board["Mare Gond"],
+			},
+			{
+				Type:   game.Transport,
+				Player: "green",
+				From:   board["Mare Elle"],
+			},
+			{
+				Type:   game.Transport,
+				Player: "green",
+				From:   board["Mare Ovond"],
+			},
+			{
+				Type:   game.Move,
+				Player: "red",
+				From:   board["Mare Duna"],
+				To:     board["Mare Gond"],
+			},
+			{
+				Type:   game.Move,
+				Player: "red",
+				From:   board["Mare Furie"],
+				To:     board["Mare Elle"],
+			},
+		},
+	}
+
+	printResolvePrint(board, areas, &round)
 }
 
 func testTransportCombat(board game.Board) {
@@ -106,14 +200,7 @@ func testTransportCombat(board game.Board) {
 		"Zona": nil,
 	}
 
-	for key, unit := range areas {
-		if unit != nil {
-			board[key].Unit = unit
-			if !board[key].Sea {
-				board[key].Control = unit.Color
-			}
-		}
-	}
+	adjustBoard(board, areas)
 
 	round := game.Round{
 		Season: game.Spring,
@@ -138,11 +225,5 @@ func testTransportCombat(board game.Board) {
 		},
 	}
 
-	fmt.Print("---BEFORE---\n\n")
-	printBoard(board, areas, false)
-
-	board.Resolve(&round)
-
-	fmt.Print("---AFTER---\n\n")
-	printBoard(board, areas, false)
+	printResolvePrint(board, areas, &round)
 }
