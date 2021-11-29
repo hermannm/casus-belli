@@ -68,7 +68,7 @@ func (board Board) crossDangerZones() {
 // If not attacked, checks if support is across danger zone, and if it fails.
 func (board Board) cutSupports() {
 	for _, area := range board {
-		if area.Outgoing != nil || area.Outgoing.Type != Support {
+		if area.Outgoing == nil || area.Outgoing.Type != Support {
 			continue
 		}
 
