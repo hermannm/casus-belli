@@ -97,14 +97,14 @@ func (area *BoardArea) failTransportDependencies(player PlayerColor, exclude map
 				neighbor.Outgoing.Type == Move &&
 				!neighbor.HasNeighbor(neighbor.Outgoing.To.Name) {
 
-				transportable, dangerZone := area.Outgoing.Transportable(false)
+				transportable, dangerZone := neighbor.Outgoing.Transportable(false)
 
 				if transportable {
 					if dangerZone {
-						area.Outgoing.crossDangerZone()
+						neighbor.Outgoing.crossDangerZone()
 					}
 				} else {
-					area.Outgoing.failMove()
+					neighbor.Outgoing.failMove()
 				}
 			}
 		}
