@@ -1,176 +1,67 @@
 package game
 
-func (board Board) Resolve(round *Round) {
-	switch round.Season {
-	case Winter:
-		board.resolveWinter(round.FirstOrders)
-	default:
-		board.populateAreaOrders(round.FirstOrders)
-		board.resolveMoves()
-		board.populateAreaOrders(round.SecondOrders)
-		board.resolveMoves()
-		board.resolveSieges()
-		board.cleanup()
-	}
-}
+func removeOrder(oldOrders []*Order, remove *Order) []*Order {
+	newOrders := make([]*Order, 0)
 
-func (board Board) resolveMoves() {
-	board.cutSupports()
-	board.resolveConflictFreeOrders()
-	board.resolveTransportOrders()
-	board.resolveBorderConflicts()
-	board.resolveConflicts()
-}
-
-func (board Board) populateAreaOrders(orders []*Order) {
-	for _, order := range orders {
-		if from, ok := board[order.From.Name]; ok {
-			from.Outgoing = order
-		}
-
-		if order.To == nil {
-			continue
-		}
-
-		if to, ok := board[order.To.Name]; ok {
-			switch order.Type {
-			case Move:
-				to.IncomingMoves = append(to.IncomingMoves, order)
-			case Support:
-				to.IncomingSupports = append(to.IncomingSupports, order)
-			}
+	for _, order := range oldOrders {
+		if order != remove {
+			newOrders = append(newOrders, order)
 		}
 	}
+
+	return newOrders
 }
 
-func (board Board) cutSupports() {
-	for _, area := range board {
-		if area.Outgoing != nil && area.Outgoing.Type == Support {
-			if len(area.IncomingMoves) > 0 {
-				area.Outgoing.Status = Fail
+func (order *Order) failMove() {
+	order.Status = Fail
+	order.From.Outgoing = nil
+	order.To.IncomingMoves = removeOrder(order.To.IncomingMoves, order)
+}
 
-				area.Outgoing.To.IncomingSupports = removeOrder(
-					area.Outgoing.To.IncomingSupports,
-					area.Outgoing,
-				)
-			}
+func (order *Order) die() {
+	order.From.Unit = nil
+}
+
+func (order *Order) succeedMove() {
+	order.To.Control = order.Player.Color
+	order.To.Unit = order.From.Unit
+	order.Status = Success
+	order.From.Unit = nil
+	order.From.Outgoing = nil
+	order.To.IncomingMoves = removeOrder(order.To.IncomingMoves, order)
+}
+
+func (area *BoardArea) resolveWinner(winner PlayerColor) {
+	if area.Outgoing != nil && area.Unit.Color != winner {
+		area.Outgoing.Status = Fail
+		area.Outgoing = nil
+	}
+
+	for _, move := range area.IncomingMoves {
+		if move.Player.Color == winner {
+			move.succeedMove()
+		} else {
+			move.failMove()
+			move.die()
 		}
 	}
 }
 
-func (board Board) resolveConflictFreeOrders() {
-	allResolved := false
+func (order *Order) crossDangerZone() {
+	diceMod := DiceModifier()
 
-	for !allResolved {
-		allResolved = true
-
-		for _, area := range board {
-			if area.Unit != nil || len(area.IncomingMoves) != 1 {
-				continue
-			}
-
-			allResolved = false
-
-			if area.Control == Uncontrolled {
-				area.resolveCombatPvE()
-			} else {
-				area.IncomingMoves[0].succeedMove()
-			}
-		}
+	combat := Combat{
+		{
+			Total:  diceMod.Value,
+			Parts:  []Modifier{diceMod},
+			Player: order.Player.Color,
+		},
 	}
-}
 
-func (board Board) resolveTransportOrders() {
-	for _, area := range board {
-		if area.Outgoing == nil || area.Outgoing.Type != Transport {
-			continue
-		}
+	order.From.Combats = append(order.From.Combats, combat)
 
-		if len(area.IncomingMoves) == 0 {
-			continue
-		}
-
-		area.resolveCombat()
-
-		if area.Outgoing == nil {
-			area.failTransportDependentMoves()
-		}
+	if diceMod.Value <= 2 {
+		order.failMove()
+		order.die()
 	}
-}
-
-func (board Board) resolveBorderConflicts() {
-	processed := make(map[string]bool)
-
-	for name, area := range board {
-		if area.Outgoing != nil &&
-			area.Outgoing.Type == Move &&
-			area.Outgoing.To.Outgoing != nil &&
-			area.Outgoing.To.Outgoing.Type == Move &&
-			name == area.Outgoing.To.Outgoing.To.Name {
-
-			area2 := area.Outgoing.To
-
-			_, processedArea1 := processed[name]
-			_, processedArea2 := processed[area2.Name]
-
-			if !processedArea1 && !processedArea2 {
-				processed[name] = true
-				processed[area2.Name] = true
-
-				resolveBorderCombat(area, area2)
-			}
-		}
-	}
-}
-
-func (board Board) resolveConflicts() {
-	allResolved := false
-
-	for !allResolved {
-		allResolved = true
-
-		for _, area := range board {
-			if len(area.IncomingMoves) == 0 {
-				continue
-			}
-
-			if area.Outgoing != nil && area.Outgoing.Type == Move {
-				allResolved = false
-			}
-
-			area.resolveCombat()
-		}
-	}
-}
-
-func (board Board) resolveSieges() {
-	for _, area := range board {
-		if area.Outgoing != nil && area.Outgoing.Type == Besiege {
-			area.SiegeCount++
-			area.Outgoing.Status = Success
-			area.Outgoing = nil
-
-			if area.SiegeCount == 2 {
-				area.Control = area.Unit.Color
-				area.SiegeCount = 0
-			}
-		}
-	}
-}
-
-func (board Board) cleanup() {
-	for _, area := range board {
-		if area.Outgoing != nil {
-			area.Outgoing.Status = Success
-			area.Outgoing = nil
-		}
-
-		if len(area.IncomingSupports) > 0 {
-			area.IncomingSupports = make([]*Order, 0)
-		}
-	}
-}
-
-func (board Board) resolveWinter(orders []*Order) {
-
 }
