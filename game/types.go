@@ -5,12 +5,12 @@ import "sync"
 type Game struct {
 	Board   Board
 	Rounds  []*Round
-	Players []*Player
+	Players []PlayerColor
 }
 
-type Player struct {
-	Color PlayerColor
-}
+type PlayerColor string
+
+const Uncontrolled PlayerColor = ""
 
 type Round struct {
 	mut          sync.Mutex
@@ -18,6 +18,15 @@ type Round struct {
 	FirstOrders  []*Order
 	SecondOrders []*Order
 }
+
+type Season string
+
+const (
+	Winter Season = "winter"
+	Spring Season = "spring"
+	Summer Season = "summer"
+	Fall   Season = "fall"
+)
 
 type Board map[string]*BoardArea
 
@@ -42,6 +51,15 @@ type Unit struct {
 	Color PlayerColor
 }
 
+type UnitType string
+
+const (
+	Footman  UnitType = "footman"
+	Horse    UnitType = "horse"
+	Ship     UnitType = "ship"
+	Catapult UnitType = "catapult"
+)
+
 type Neighbor struct {
 	Area       *BoardArea
 	River      bool
@@ -59,6 +77,26 @@ type Order struct {
 	Status OrderStatus
 }
 
+type OrderType string
+
+const (
+	Move      OrderType = "move"
+	Support   OrderType = "support"
+	Transport OrderType = "transport"
+	Besiege   OrderType = "besiege"
+	Build     OrderType = "build"
+)
+
+type OrderStatus string
+
+const (
+	Pending OrderStatus = ""
+	Success OrderStatus = "success"
+	Tie     OrderStatus = "tie"
+	Fail    OrderStatus = "fail"
+	Error   OrderStatus = "error"
+)
+
 type Combat []Result
 
 type Result struct {
@@ -72,3 +110,15 @@ type Modifier struct {
 	Value       int
 	SupportFrom PlayerColor
 }
+
+type ModifierType string
+
+const (
+	DiceMod     ModifierType = "dice"
+	UnitMod     ModifierType = "unit"
+	ForestMod   ModifierType = "forest"
+	CastleMod   ModifierType = "castle"
+	WaterMod    ModifierType = "water"
+	SurpriseMod ModifierType = "surprise"
+	SupportMod  ModifierType = "support"
+)
