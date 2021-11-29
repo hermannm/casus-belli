@@ -51,7 +51,7 @@ type Neighbor struct {
 
 type Order struct {
 	Type   OrderType
-	Player *Player
+	Player PlayerColor
 	From   *BoardArea
 	To     *BoardArea
 	Via    string

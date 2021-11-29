@@ -42,7 +42,7 @@ func (area *BoardArea) resolveCombatPvP() {
 	mods := make(map[PlayerColor][]Modifier)
 
 	for _, move := range area.IncomingMoves {
-		mods[move.Player.Color] = AttackModifiers(*move, true, false)
+		mods[move.Player] = AttackModifiers(*move, true, false)
 	}
 
 	if defending != nil {
@@ -59,7 +59,7 @@ func (area *BoardArea) resolveCombatPvP() {
 			order.failMove()
 
 			for _, result := range combat {
-				if order.Player.Color == result.Player {
+				if order.Player == result.Player {
 					if result.Total < winner.Total {
 						order.die()
 					}
@@ -132,20 +132,20 @@ func appendSupportMods(mods map[PlayerColor][]Modifier, area *BoardArea, moves [
 			mods[supported] = append(mods[supported], Modifier{
 				Type:        SupportMod,
 				Value:       1,
-				SupportFrom: support.Player.Color,
+				SupportFrom: support.Player,
 			})
 		}
 	}
 }
 
 func callSupport(support *Order, area *BoardArea, moves []*Order) PlayerColor {
-	if support.Player.Color == area.Control {
-		return support.Player.Color
+	if support.Player == area.Control {
+		return support.Player
 	}
 
 	for _, move := range moves {
-		if support.Player.Color == move.From.Unit.Color {
-			return support.Player.Color
+		if support.Player == move.From.Unit.Color {
+			return support.Player
 		}
 	}
 

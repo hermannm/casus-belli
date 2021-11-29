@@ -86,6 +86,10 @@ func main() {
 		fmt.Println(err.Error())
 	}
 
+	testTransportCombat(board)
+}
+
+func testTransportCombat(board game.Board) {
 	areas := map[string]*game.Unit{
 		"Worp": {
 			Type:  game.Footman,
@@ -111,26 +115,23 @@ func main() {
 		}
 	}
 
-	red := game.Player{Color: "red"}
-	green := game.Player{Color: "red"}
-
 	round := game.Round{
 		Season: game.Spring,
 		FirstOrders: []*game.Order{
 			{
 				Type:   game.Move,
-				Player: &green,
+				Player: "green",
 				From:   board["Worp"],
 				To:     board["Zona"],
 			},
 			{
 				Type:   game.Transport,
-				Player: &green,
+				Player: "green",
 				From:   board["Mare Gond"],
 			},
 			{
 				Type:   game.Move,
-				Player: &red,
+				Player: "red",
 				From:   board["Mare Elle"],
 				To:     board["Mare Gond"],
 			},

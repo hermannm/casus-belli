@@ -26,7 +26,7 @@ func (game *Game) ReceiveOrders(orders []Order) {
 		if order.From.Unit == nil {
 			round.SecondOrders = append(round.SecondOrders, &order)
 		} else {
-			if order.From.Unit.Color == order.Player.Color {
+			if order.From.Unit.Color == order.Player {
 				round.FirstOrders = append(round.SecondOrders, &order)
 			} else {
 				round.SecondOrders = append(round.SecondOrders, &order)

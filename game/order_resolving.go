@@ -23,7 +23,7 @@ func (order *Order) die() {
 }
 
 func (order *Order) succeedMove() {
-	order.To.Control = order.Player.Color
+	order.To.Control = order.Player
 	order.To.Unit = order.From.Unit
 	order.Status = Success
 	order.From.Unit = nil
@@ -38,7 +38,7 @@ func (area *BoardArea) resolveWinner(winner PlayerColor) {
 	}
 
 	for _, move := range area.IncomingMoves {
-		if move.Player.Color == winner {
+		if move.Player == winner {
 			move.succeedMove()
 		} else {
 			move.failMove()
@@ -47,14 +47,14 @@ func (area *BoardArea) resolveWinner(winner PlayerColor) {
 	}
 }
 
-func (order *Order) crossDangerZone() {
+func (order *Order) crossDangerZone() bool {
 	diceMod := DiceModifier()
 
 	combat := Combat{
 		{
 			Total:  diceMod.Value,
 			Parts:  []Modifier{diceMod},
-			Player: order.Player.Color,
+			Player: order.Player,
 		},
 	}
 
@@ -63,5 +63,7 @@ func (order *Order) crossDangerZone() {
 	if diceMod.Value <= 2 {
 		order.failMove()
 		order.die()
+		return false
 	}
+	return true
 }

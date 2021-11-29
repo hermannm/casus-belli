@@ -6,7 +6,7 @@ import (
 )
 
 func ValidateOrder(order game.Order, season game.Season) error {
-	if order.Player.Color != order.From.Control {
+	if order.Player != order.From.Control {
 		return errors.New("must control area that is ordered")
 	}
 
@@ -63,7 +63,7 @@ func validateMoveOrSupport(order game.Order) error {
 }
 
 func validateMove(order game.Order) error {
-	if order.From.Unit == nil || order.From.Unit.Color != order.Player.Color {
+	if order.From.Unit == nil || order.From.Unit.Color != order.Player {
 		secondHorseMove := false
 
 		for _, firstOrder := range order.From.IncomingMoves {
@@ -136,7 +136,7 @@ func validateWinterOrder(order game.Order) error {
 }
 
 func validateWinterMove(order game.Order) error {
-	if order.To.Control != order.Player.Color {
+	if order.To.Control != order.Player {
 		return errors.New("must control destination area in winter move")
 	}
 
