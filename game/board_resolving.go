@@ -93,9 +93,16 @@ func (board Board) resolveConflictFreeOrders() {
 
 			move := area.IncomingMoves[0]
 			if !area.HasNeighbor(move.To.Name) {
-				transported := move.Transport()
+				transportable, dangerZone := move.Transportable()
 
-				if !transported {
+				if transportable {
+					if dangerZone {
+						if !move.crossDangerZone() {
+							resolved[area.Name] = true
+							continue
+						}
+					}
+				} else {
 					resolved[area.Name] = true
 					continue
 				}
@@ -170,14 +177,14 @@ func (board Board) resolveConflicts() {
 		allResolved = true
 
 		for _, area := range board {
-			if len(area.IncomingMoves) == 0 {
-				continue
-			}
-
 			for _, move := range area.IncomingMoves {
 				if !move.From.HasNeighbor(move.To.Name) {
 					move.Transport()
 				}
+			}
+
+			if len(area.IncomingMoves) == 0 {
+				continue
 			}
 
 			if area.Outgoing != nil && area.Outgoing.Type == Move {
