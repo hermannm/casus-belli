@@ -14,6 +14,10 @@ func (area *BoardArea) IsCoast() bool {
 	return false
 }
 
+// Returns an area's neighbor of the given name, and whether it was found.
+// If the area has several neighbor relations to the area,
+// returns the one matching the provided 'via' string
+// (currently the name of the neighbor relation's danger zone).
 func (area *BoardArea) GetNeighbor(neighborName string, via string) (Neighbor, bool) {
 	var n Neighbor
 	ok := false
@@ -42,6 +46,8 @@ func (area *BoardArea) HasNeighbor(neighborName string) bool {
 	return false
 }
 
+// Returns an area's neighboring areas.
+// Ensures no duplicates in the case of multiple neighbor relations to a single area.
 func (area *BoardArea) NeighborAreas() []*BoardArea {
 	areas := make([]*BoardArea, 0)
 	added := make(map[string]bool)

@@ -5,6 +5,7 @@ import (
 	"immerse-ntnu/hermannia/server/game"
 )
 
+// Takes a game order, and returns an error if it is invalid.
 func ValidateOrder(order game.Order, season game.Season) error {
 	if order.Player != order.From.Control {
 		return errors.New("must control area that is ordered")

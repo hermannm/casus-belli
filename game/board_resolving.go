@@ -1,5 +1,6 @@
 package game
 
+// Applies changes to the board given a round of orders.
 func (board Board) Resolve(round *Round) {
 	switch round.Season {
 	case Winter:
@@ -23,6 +24,7 @@ func (board Board) resolveMoves() {
 	board.resolveConflicts()
 }
 
+// Takes a list of orders and adds references to them in the board's areas.
 func (board Board) populateAreaOrders(orders []*Order) {
 	for _, order := range orders {
 		if from, ok := board[order.From.Name]; ok {
@@ -44,6 +46,8 @@ func (board Board) populateAreaOrders(orders []*Order) {
 	}
 }
 
+// Finds move orders attempting to cross danger zones to their destinations,
+// and checks if they fail.
 func (board Board) crossDangerZones() {
 	for _, area := range board {
 		if area.Outgoing == nil || area.Outgoing.Type != Move {
@@ -60,50 +64,64 @@ func (board Board) crossDangerZones() {
 	}
 }
 
+// Removes support orders that are attacked.
+// If not attacked, checks if support is across danger zone, and if it fails.
 func (board Board) cutSupports() {
 	for _, area := range board {
-		if area.Outgoing != nil && area.Outgoing.Type == Support {
-			if len(area.IncomingMoves) > 0 {
-				area.Outgoing.Status = Fail
+		if area.Outgoing != nil || area.Outgoing.Type != Support {
+			continue
+		}
 
-				area.Outgoing.To.IncomingSupports = removeOrder(
-					area.Outgoing.To.IncomingSupports,
-					area.Outgoing,
-				)
+		support := area.Outgoing
+
+		if len(area.IncomingMoves) > 0 {
+			support.failSupport()
+			continue
+		}
+
+		if destination, ok := area.GetNeighbor(support.To.Name, support.Via); ok {
+			if destination.DangerZone != "" {
+				support.crossDangerZone()
 			}
 		}
 	}
 }
 
+// Goes through areas that can be resolved without PvP combat, and resolves them.
 func (board Board) resolveConflictFreeOrders() {
 	allResolved := false
-	resolved := make(map[string]bool)
+	processed := make(map[string]bool)
 
+	// Keeps looping to potentially discover orders that can be resolved after others.
 	for !allResolved {
 		allResolved = true
 
 		for _, area := range board {
-			if resolved[area.Name] {
+			if processed[area.Name] || area.Unit != nil {
 				continue
 			}
 
-			if area.Unit != nil || len(area.IncomingMoves) != 1 {
+			if len(area.IncomingMoves) != 1 {
+				processed[area.Name] = true
 				continue
 			}
 
 			move := area.IncomingMoves[0]
+
+			// Checks if transport-dependent order can be transported without combat.
+			// If it cannot, adds it to 'resolved' map to avoid repeating expensive Transportable call.
 			if !area.HasNeighbor(move.To.Name) {
 				transportable, dangerZone := move.Transportable()
 
 				if transportable {
 					if dangerZone {
 						if !move.crossDangerZone() {
-							resolved[area.Name] = true
+							processed[area.Name] = true
 							continue
 						}
 					}
 				} else {
-					resolved[area.Name] = true
+					processed[area.Name] = true
 					continue
 				}
 			}
@@ -115,25 +133,25 @@ func (board Board) resolveConflictFreeOrders() {
 			} else {
 				move.succeedMove()
 			}
-			resolved[area.Name] = true
+			processed[area.Name] = true
 		}
 	}
 }
 
+// Finds transport orders under attack, and resolves their combat.
 func (board Board) resolveTransportOrders() {
 	for _, area := range board {
-		if area.Outgoing == nil || area.Outgoing.Type != Transport {
-			continue
-		}
+		if area.Outgoing != nil ||
+			area.Outgoing.Type == Transport ||
+			len(area.IncomingMoves) > 0 {
 
-		if len(area.IncomingMoves) == 0 {
-			continue
+			area.resolveCombat()
 		}
-
-		area.resolveCombat()
 	}
 }
 
+// Finds pairs of areas on the board that are attacking each other,
+// and resolves combat between them.
 func (board Board) resolveBorderConflicts() {
 	processed := make(map[string]bool)
 
@@ -147,8 +165,6 @@ func (board Board) resolveBorderConflicts() {
 
 		area2 := area1.Outgoing.To
 
-		processed[area1.Name], processed[area2.Name] = true, true
-
 		if area2.Outgoing == nil ||
 			area2.Outgoing.Type != Move ||
 			area1.Name != area2.Outgoing.To.Name ||
@@ -157,6 +173,9 @@ func (board Board) resolveBorderConflicts() {
 			continue
 		}
 
+		processed[area1.Name], processed[area2.Name] = true, true
+
+		// If attacks must transport, both must succeed transport for this to still be a border conflict.
 		if !area1.HasNeighbor(area2.Name) {
 			success1 := area1.Outgoing.Transport()
 			success2 := area2.Outgoing.Transport()
@@ -170,13 +189,21 @@ func (board Board) resolveBorderConflicts() {
 	}
 }
 
+// Goes through areas that could not be previously resolved due to conflicting orders,
+// and resolves them.
 func (board Board) resolveConflicts() {
 	allResolved := false
+	processed := make(map[string]bool)
 
+	// Keeps looping to potentially discover orders that can be resolved after others.
 	for !allResolved {
 		allResolved = true
 
 		for _, area := range board {
+			if processed[area.Name] {
+				continue
+			}
+
 			for _, move := range area.IncomingMoves {
 				if !move.From.HasNeighbor(move.To.Name) {
 					move.Transport()
@@ -184,6 +211,7 @@ func (board Board) resolveConflicts() {
 			}
 
 			if len(area.IncomingMoves) == 0 {
+				processed[area.Name] = true
 				continue
 			}
 
@@ -193,10 +221,12 @@ func (board Board) resolveConflicts() {
 			}
 
 			area.resolveCombat()
+			processed[area.Name] = true
 		}
 	}
 }
 
+// Goes through areas with siege orders, and updates the area following the siege.
 func (board Board) resolveSieges() {
 	for _, area := range board {
 		if area.Outgoing != nil && area.Outgoing.Type == Besiege {
@@ -212,6 +242,7 @@ func (board Board) resolveSieges() {
 	}
 }
 
+// Cleans up remaining order references on the board after the round.
 func (board Board) cleanup() {
 	for _, area := range board {
 		if area.Outgoing != nil {
@@ -225,6 +256,8 @@ func (board Board) cleanup() {
 	}
 }
 
+// Goes through the board and resolves winter orders.
+// TODO: Implement.
 func (board Board) resolveWinter(orders []*Order) {
 
 }

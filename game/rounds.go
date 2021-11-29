@@ -1,5 +1,6 @@
 package game
 
+// Initializes a new round of the game.
 func (game *Game) NewRound() {
 	var season Season
 
@@ -16,6 +17,8 @@ func (game *Game) NewRound() {
 	})
 }
 
+// Receives orders to be processed in the current round.
+// Sorts orders on their sequence in the round.
 func (game *Game) ReceiveOrders(orders []Order) {
 	round := game.Rounds[len(game.Rounds)-1]
 
@@ -23,6 +26,8 @@ func (game *Game) ReceiveOrders(orders []Order) {
 	defer round.mut.Unlock()
 
 	for _, order := range orders {
+		// If order origin has no unit, or unit of different color,
+		// then order is a second horse move and should be processed after all others.
 		if order.From.Unit == nil {
 			round.SecondOrders = append(round.SecondOrders, &order)
 		} else {
@@ -35,6 +40,7 @@ func (game *Game) ReceiveOrders(orders []Order) {
 	}
 }
 
+// Helper function to get the next season given the current season.
 func nextSeason(season Season) Season {
 	switch season {
 	case Winter:

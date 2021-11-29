@@ -1,5 +1,7 @@
 package game
 
+// Fails transport-dependent move if it cannot transport.
+// Returns true if the transport did not fail.
 func (order *Order) Transport() bool {
 	transportable, dangerZone := order.Transportable()
 
@@ -16,6 +18,8 @@ func (order *Order) Transport() bool {
 	}
 }
 
+// Checks if a transport-dependent move can be transported.
+// If transportable, also returns whether transport must pass danger zone.
 func (order Order) Transportable() (
 	transportable bool,
 	dangerZone bool,
@@ -25,12 +29,52 @@ func (order Order) Transportable() (
 	return transportable, dangerZone
 }
 
-func (area BoardArea) transportingNeighbors(exclude map[string]bool) (
-	neighbors []Neighbor,
-	newExclude map[string]bool,
+// Checks if a land unit can be transported to destination.
+// Takes a map of area names to exclude, to enable recursion.
+// Returns whether the unit can be transported, and if so, whether it must pass through danger zone.
+func (area BoardArea) canNeighborsTransport(destination string, exclude map[string]bool) (
+	transportable bool,
+	dangerZone bool,
 ) {
-	neighbors = make([]Neighbor, 0)
-	newExclude = make(map[string]bool)
+	dangerZone = true
+
+	transportingNeighbors, newExclude := area.transportingNeighbors(exclude)
+
+	for _, transport := range transportingNeighbors {
+		// Transports either happen when resolving conflict-free orders, in which case it should not allow transports under attack,
+		// or after transport combats are resolved, in which case there should no longer be any transports under attack.
+		if len(transport.Area.IncomingMoves) > 0 {
+			continue
+		}
+
+		if transport.Area.HasNeighbor(destination) {
+			transportable = true
+
+			if transport.DangerZone == "" {
+				dangerZone = false
+			}
+		} else {
+			// Recursive call to check for eligible chain of transports to destination.
+			canTransport, danger := transport.Area.canNeighborsTransport(destination, newExclude)
+
+			if canTransport {
+				transportable = true
+
+				if !danger && transport.DangerZone == "" {
+					dangerZone = false
+				}
+			}
+		}
+	}
+
+	return transportable, dangerZone
+}
+
+// Finds an area's friendly neighbors that offer transports.
+// Takes a map of area names to exclude, and returns it with the transporting neighbors added.
+func (area BoardArea) transportingNeighbors(exclude map[string]bool) ([]Neighbor, map[string]bool) {
+	neighbors := make([]Neighbor, 0)
+	newExclude := make(map[string]bool)
 	for k, v := range exclude {
 		newExclude[k] = v
 	}
@@ -54,39 +98,4 @@ func (area BoardArea) transportingNeighbors(exclude map[string]bool) (
 	}
 
 	return neighbors, newExclude
-}
-
-func (area BoardArea) canNeighborsTransport(destination string, exclude map[string]bool) (
-	transportable bool,
-	dangerZone bool,
-) {
-	dangerZone = true
-
-	transportingNeighbors, newExclude := area.transportingNeighbors(exclude)
-
-	for _, transport := range transportingNeighbors {
-		if len(transport.Area.IncomingMoves) > 0 {
-			continue
-		}
-
-		if transport.Area.HasNeighbor(destination) {
-			transportable = true
-
-			if transport.DangerZone == "" {
-				dangerZone = false
-			}
-		} else {
-			canTransport, danger := transport.Area.canNeighborsTransport(destination, newExclude)
-
-			if canTransport {
-				transportable = true
-
-				if !danger && transport.DangerZone == "" {
-					dangerZone = false
-				}
-			}
-		}
-	}
-
-	return transportable, dangerZone
 }

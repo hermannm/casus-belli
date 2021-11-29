@@ -46,6 +46,13 @@ type BoardArea struct {
 	Combats          []Combat
 }
 
+type Neighbor struct {
+	Area       *BoardArea
+	River      bool
+	Cliffs     bool
+	DangerZone string
+}
+
 type Unit struct {
 	Type  UnitType
 	Color PlayerColor
@@ -59,13 +66,6 @@ const (
 	Ship     UnitType = "ship"
 	Catapult UnitType = "catapult"
 )
-
-type Neighbor struct {
-	Area       *BoardArea
-	River      bool
-	Cliffs     bool
-	DangerZone string
-}
 
 type Order struct {
 	Type   OrderType

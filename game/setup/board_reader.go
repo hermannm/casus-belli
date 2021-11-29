@@ -8,11 +8,13 @@ import (
 	"os"
 )
 
+// Utility type for json unmarshaling.
 type board struct {
 	Areas     []area     `json:"areas"`
 	Neighbors []neighbor `json:"neighbors"`
 }
 
+// Utility type for json unmarshaling.
 type area struct {
 	Name   string           `json:"name"`
 	Sea    bool             `json:"sea"`
@@ -21,6 +23,7 @@ type area struct {
 	Home   game.PlayerColor `json:"home"`
 }
 
+// Utility type for json unmarshaling.
 type neighbor struct {
 	Area1      string `json:"area1"`
 	Area2      string `json:"area2"`
@@ -29,6 +32,7 @@ type neighbor struct {
 	DangerZone string `json:"dangerZone"`
 }
 
+// Reads and constructs the board matching the given number of players.
 func ReadBoard(players int) (game.Board, error) {
 	file, err := os.Open(fmt.Sprintf("./game/setup/board_%dplayers.json", players))
 	if err != nil {
