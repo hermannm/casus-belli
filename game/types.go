@@ -25,7 +25,7 @@ type BoardArea struct {
 	Name             string
 	Control          PlayerColor
 	Home             PlayerColor
-	Unit             *Unit
+	Unit             Unit
 	Sea              bool
 	Forest           bool
 	Castle           bool
@@ -91,6 +91,7 @@ const (
 )
 
 const (
+	NoUnit   UnitType = ""
 	Footman  UnitType = "footman"
 	Horse    UnitType = "horse"
 	Ship     UnitType = "ship"

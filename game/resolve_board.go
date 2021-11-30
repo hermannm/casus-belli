@@ -98,7 +98,7 @@ func (board Board) resolveConflictFreeOrders() {
 		allResolved = true
 
 		for _, area := range board {
-			if processed[area.Name] || area.Unit != nil {
+			if processed[area.Name] || !area.IsEmpty() {
 				continue
 			}
 

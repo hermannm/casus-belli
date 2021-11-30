@@ -37,7 +37,7 @@ func attackModifiers(order Order, otherAttackers bool, borderConflict bool) []Mo
 	// - Area is uncontrolled, and this unit is the only attacker.
 	// - Destination is controlled and defended, and this is not a border conflict.
 	if (order.To.Control == Uncontrolled && !otherAttackers) ||
-		(order.To.Unit != nil && order.To.Control == order.To.Unit.Color && !borderConflict) {
+		(!order.To.IsEmpty() && order.To.Control == order.To.Unit.Color && !borderConflict) {
 
 		if order.To.Forest {
 			mods = append(mods, Modifier{
@@ -137,7 +137,7 @@ func appendSupportMods(mods map[PlayerColor][]Modifier, area *BoardArea, moves [
 //
 // TODO: Implement asking player who to support if they are not involved themselves.
 func callSupport(support *Order, area *BoardArea, moves []*Order) PlayerColor {
-	if area.Unit != nil && area.Unit.Color == support.Player {
+	if !area.IsEmpty() && area.Unit.Color == support.Player {
 		return support.Player
 	}
 

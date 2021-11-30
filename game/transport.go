@@ -79,7 +79,7 @@ func (area BoardArea) transportingNeighbors(exclude map[string]bool) ([]Neighbor
 		newExclude[k] = v
 	}
 
-	if area.Unit == nil {
+	if area.IsEmpty() {
 		return neighbors, newExclude
 	}
 

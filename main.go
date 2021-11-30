@@ -6,7 +6,7 @@ import (
 	"immerse-ntnu/hermannia/server/game/setup"
 )
 
-func printBoard(board game.Board, areas map[string]*game.Unit, neighbors bool) {
+func printBoard(board game.Board, areas map[string]game.Unit, neighbors bool) {
 	for _, area := range board {
 		if _, ok := areas[area.Name]; !ok {
 			continue
@@ -30,7 +30,7 @@ func printBoard(board game.Board, areas map[string]*game.Unit, neighbors bool) {
 		}
 		fmt.Println(areaString)
 
-		if area.Unit != nil {
+		if area.IsEmpty() {
 			fmt.Println("Unit:", area.Unit.Color, area.Unit.Type)
 		}
 
@@ -79,9 +79,9 @@ func printBoard(board game.Board, areas map[string]*game.Unit, neighbors bool) {
 	}
 }
 
-func adjustBoard(board game.Board, areas map[string]*game.Unit) {
+func adjustBoard(board game.Board, areas map[string]game.Unit) {
 	for key, unit := range areas {
-		if unit != nil {
+		if unit.Type != game.NoUnit {
 			board[key].Unit = unit
 			if !board[key].Sea {
 				board[key].Control = unit.Color
@@ -90,7 +90,7 @@ func adjustBoard(board game.Board, areas map[string]*game.Unit) {
 	}
 }
 
-func printResolvePrint(board game.Board, areas map[string]*game.Unit, round *game.Round) {
+func printResolvePrint(board game.Board, areas map[string]game.Unit, round *game.Round) {
 	fmt.Print("---BEFORE---\n\n")
 	printBoard(board, areas, false)
 
@@ -111,7 +111,7 @@ func main() {
 }
 
 func testTransportWithDangerZone(board game.Board) {
-	areas := map[string]*game.Unit{
+	areas := map[string]game.Unit{
 		"Winde": {
 			Type:  game.Footman,
 			Color: "green",
@@ -136,7 +136,7 @@ func testTransportWithDangerZone(board game.Board) {
 			Type:  game.Ship,
 			Color: "red",
 		},
-		"Fond": nil,
+		"Fond": {},
 	}
 
 	adjustBoard(board, areas)
@@ -184,7 +184,7 @@ func testTransportWithDangerZone(board game.Board) {
 }
 
 func testTransportCombat(board game.Board) {
-	areas := map[string]*game.Unit{
+	areas := map[string]game.Unit{
 		"Worp": {
 			Type:  game.Footman,
 			Color: "green",
@@ -197,7 +197,7 @@ func testTransportCombat(board game.Board) {
 			Type:  game.Ship,
 			Color: "red",
 		},
-		"Zona": nil,
+		"Zona": {},
 	}
 
 	adjustBoard(board, areas)

@@ -64,7 +64,7 @@ func validateMoveOrSupport(order game.Order) error {
 }
 
 func validateMove(order game.Order) error {
-	if order.From.Unit == nil || order.From.Unit.Color != order.Player {
+	if order.From.IsEmpty() || order.From.Unit.Color != order.Player {
 		secondHorseMove := false
 
 		for _, firstOrder := range order.From.IncomingMoves {
@@ -153,7 +153,7 @@ func validateWinterMove(order game.Order) error {
 }
 
 func validateBuild(order game.Order) error {
-	if order.From.Unit != nil {
+	if !order.From.IsEmpty() {
 		return errors.New("cannot build in area already occupied")
 	}
 

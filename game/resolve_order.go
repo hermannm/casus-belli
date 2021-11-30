@@ -14,9 +14,8 @@ func (support *Order) failSupport() {
 
 // Succeeds a move order and adjusts board areas accordingly.
 func (move *Order) succeedMove() {
-	move.To.Unit = move.From.Unit
+	moveUnit(move.From, move.To)
 	move.Status = Success
-	move.From.Unit = nil
 	move.From.Order = nil
 	move.To.IncomingMoves = removeOrder(move.To.IncomingMoves, move)
 
@@ -35,23 +34,14 @@ func (move *Order) failMove() {
 
 // Removes a move order's unit from the board.
 func (move *Order) killAttacker() {
-	move.From.Unit = nil
-}
-
-// Removes a defending unit from the board, and fails its order if any.
-func (area *BoardArea) killDefender() {
-	area.Unit = nil
-	if area.Order != nil {
-		area.Order.Status = Fail
-		area.Order = nil
-	}
+	move.From.Unit = Unit{}
 }
 
 // Succeeds move from the winner after combat in an area,
 // and fails all others.
 func (area *BoardArea) resolveWinner(winner PlayerColor) {
-	if area.Unit != nil && area.Unit.Color != winner {
-		area.killDefender()
+	if !area.IsEmpty() && area.Unit.Color != winner {
+		area.removeUnit()
 	}
 
 	for _, move := range area.IncomingMoves {
@@ -68,8 +58,8 @@ func (area *BoardArea) resolveWinner(winner PlayerColor) {
 // Used for resolving combats that have follow-up combats,
 // and so should not succeed the winning move yet.
 func (area *BoardArea) resolveIntermediaryWinner(winner PlayerColor) {
-	if area.Unit != nil && area.Unit.Color != winner {
-		area.killDefender()
+	if !area.IsEmpty() && area.Unit.Color != winner {
+		area.removeUnit()
 	}
 
 	for _, move := range area.IncomingMoves {

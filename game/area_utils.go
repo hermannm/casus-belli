@@ -1,5 +1,23 @@
 package game
 
+func (area BoardArea) IsEmpty() bool {
+	return area.Unit.Type == NoUnit
+}
+
+// Removes a unit from the board, and fails its order if any.
+func (area *BoardArea) removeUnit() {
+	area.Unit = Unit{}
+	if area.Order != nil {
+		area.Order.Status = Fail
+		area.Order = nil
+	}
+}
+
+func moveUnit(from *BoardArea, to *BoardArea) {
+	to.Unit = from.Unit
+	from.Unit = Unit{}
+}
+
 func (area *BoardArea) IsCoast() bool {
 	if area.Sea {
 		return false
