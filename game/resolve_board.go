@@ -15,6 +15,7 @@ func (board Board) Resolve(round *Round) {
 	}
 }
 
+// Resolves moves on the board in order.
 func (board Board) resolveMoves() {
 	board.crossDangerZones()
 	board.cutSupports()

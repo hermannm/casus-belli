@@ -1,17 +1,6 @@
 package game
 
-func removeOrder(oldOrders []*Order, remove *Order) []*Order {
-	newOrders := make([]*Order, 0)
-
-	for _, order := range oldOrders {
-		if order != remove {
-			newOrders = append(newOrders, order)
-		}
-	}
-
-	return newOrders
-}
-
+// Fails a support order and cleans up references to it on the board.
 func (support *Order) failSupport() {
 	support.Status = Fail
 
@@ -23,29 +12,33 @@ func (support *Order) failSupport() {
 	support.From.Outgoing = nil
 }
 
-func (order *Order) succeedMove() {
-	order.To.Unit = order.From.Unit
-	order.Status = Success
-	order.From.Unit = nil
-	order.From.Outgoing = nil
-	order.To.IncomingMoves = removeOrder(order.To.IncomingMoves, order)
+// Succeeds a move order and adjusts board areas accordingly.
+func (move *Order) succeedMove() {
+	move.To.Unit = move.From.Unit
+	move.Status = Success
+	move.From.Unit = nil
+	move.From.Outgoing = nil
+	move.To.IncomingMoves = removeOrder(move.To.IncomingMoves, move)
 
 	// Seas cannot be controlled.
-	if !order.To.Sea {
-		order.To.Control = order.Player
+	if !move.To.Sea {
+		move.To.Control = move.Player
 	}
 }
 
-func (order *Order) failMove() {
-	order.Status = Fail
-	order.From.Outgoing = nil
-	order.To.IncomingMoves = removeOrder(order.To.IncomingMoves, order)
+// Fails a move order and cleans up references to it on the board.
+func (move *Order) failMove() {
+	move.Status = Fail
+	move.From.Outgoing = nil
+	move.To.IncomingMoves = removeOrder(move.To.IncomingMoves, move)
 }
 
-func (order *Order) die() {
-	order.From.Unit = nil
+// Removes a move order's unit from the board.
+func (move *Order) killAttacker() {
+	move.From.Unit = nil
 }
 
+// Removes a defending unit from the board, and fails its order if any.
 func (area *BoardArea) killDefender() {
 	area.Unit = nil
 	if area.Outgoing != nil {
@@ -66,7 +59,7 @@ func (area *BoardArea) resolveWinner(winner PlayerColor) {
 			move.succeedMove()
 		} else {
 			move.failMove()
-			move.die()
+			move.killAttacker()
 		}
 	}
 }
@@ -82,7 +75,7 @@ func (area *BoardArea) resolveIntermediaryWinner(winner PlayerColor) {
 	for _, move := range area.IncomingMoves {
 		if move.Player != winner {
 			move.failMove()
-			move.die()
+			move.killAttacker()
 		}
 	}
 }
@@ -92,8 +85,9 @@ func (area *BoardArea) resolveIntermediaryWinner(winner PlayerColor) {
 // Adds result to combat list of origin area.
 // Returns true if order succeeded.
 func (order *Order) crossDangerZone() bool {
-	diceMod := DiceModifier()
+	diceMod := diceModifier()
 
+	// Records crossing attempt as a combat, so clients can see dice roll.
 	combat := Combat{
 		{
 			Total:  diceMod.Value,
@@ -101,8 +95,6 @@ func (order *Order) crossDangerZone() bool {
 			Player: order.Player,
 		},
 	}
-
-	// Records crossing attempt as a combat, so clients can see dice roll.
 	order.From.Combats = append(order.From.Combats, combat)
 
 	// All danger zones currently require a dice roll greater than 2.
@@ -111,7 +103,7 @@ func (order *Order) crossDangerZone() bool {
 		switch order.Type {
 		case Move:
 			order.failMove()
-			order.die()
+			order.killAttacker()
 		case Support:
 			order.failSupport()
 		}
@@ -119,4 +111,17 @@ func (order *Order) crossDangerZone() bool {
 		return false
 	}
 	return true
+}
+
+// Takes a list of orders and returns it without the removed order.
+func removeOrder(oldOrders []*Order, remove *Order) []*Order {
+	newOrders := make([]*Order, 0)
+
+	for _, order := range oldOrders {
+		if order != remove {
+			newOrders = append(newOrders, order)
+		}
+	}
+
+	return newOrders
 }

@@ -5,39 +5,19 @@ import (
 	"time"
 )
 
-func modTotal(mods []Modifier) int {
-	total := 0
-	for _, mod := range mods {
-		total += mod.Value
-	}
-	return total
-}
-
-func AppendUnitMod(mods []Modifier, unitType UnitType) []Modifier {
-	switch unitType {
-	case Footman:
-		return append(mods, Modifier{
-			Type:  UnitMod,
-			Value: +1,
-		})
-	default:
-		return mods
-	}
-}
-
 // Returns modifiers (including dice roll) of defending unit in an area.
-func DefenseModifiers(area BoardArea) []Modifier {
+func defenseModifiers(area BoardArea) []Modifier {
 	mods := []Modifier{}
 
-	mods = AppendUnitMod(mods, area.Unit.Type)
+	mods = appendUnitMod(mods, area.Unit.Type)
 
-	mods = append(mods, DiceModifier())
+	mods = append(mods, diceModifier())
 
 	return mods
 }
 
 // Returns modifiers (including dice roll) of attacking unit in an area.
-func AttackModifiers(order Order, otherAttackers bool, borderConflict bool) []Modifier {
+func attackModifiers(order Order, otherAttackers bool, borderConflict bool) []Modifier {
 	mods := []Modifier{}
 
 	neighbor, hasNeighbor := order.From.GetNeighbor(order.To.Name, order.Via)
@@ -98,25 +78,110 @@ func AttackModifiers(order Order, otherAttackers bool, borderConflict bool) []Mo
 			Value: +1,
 		})
 	} else {
-		mods = AppendUnitMod(mods, order.From.Unit.Type)
+		mods = appendUnitMod(mods, order.From.Unit.Type)
 	}
 
-	mods = append(mods, DiceModifier())
+	mods = append(mods, diceModifier())
 
 	return mods
 }
 
-func DiceModifier() Modifier {
+// Appends unit modifier to the list if given unit type provides a modifier.
+func appendUnitMod(mods []Modifier, unitType UnitType) []Modifier {
+	switch unitType {
+	case Footman:
+		return append(mods, Modifier{
+			Type:  UnitMod,
+			Value: +1,
+		})
+	default:
+		return mods
+	}
+}
+
+// Rolls dice and wraps result in a modifier.
+func diceModifier() Modifier {
 	return Modifier{
 		Type:  DiceMod,
-		Value: RollDice(),
+		Value: rollDice(),
 	}
 }
 
 // Returns a pseudo-random integer between 1 and 6.
-func RollDice() int {
+func rollDice() int {
 	// Uses nanoseconds since 1970 as random seed generator, to approach random outcome.
 	rand.Seed(time.Now().UnixNano())
 
 	return rand.Intn(6) + 1
+}
+
+// Calls support from support orders to the given area.
+// Appends support modifiers to receiving players' modifier lists in the given map.
+func appendSupportMods(mods map[PlayerColor][]Modifier, area *BoardArea, moves []*Order) {
+	for _, support := range area.IncomingSupports {
+		supported := callSupport(support, area, moves)
+
+		if _, isPlayer := mods[supported]; isPlayer {
+			mods[supported] = append(mods[supported], Modifier{
+				Type:        SupportMod,
+				Value:       1,
+				SupportFrom: support.Player,
+			})
+		}
+	}
+}
+
+// Returns which player a given support order supports in a combat.
+// If combatant matches support order's player, support is automatically given.
+// If support is not given to any combatant, returns "".
+//
+// TODO: Implement asking player who to support if they are not involved themselves.
+func callSupport(support *Order, area *BoardArea, moves []*Order) PlayerColor {
+	if area.Unit != nil && area.Unit.Color == support.Player {
+		return support.Player
+	}
+
+	for _, move := range moves {
+		if support.Player == move.From.Unit.Color {
+			return support.Player
+		}
+	}
+
+	return ""
+}
+
+// Constructs combat results from combatants' modifiers.
+func combatResults(playerMods map[PlayerColor][]Modifier) (
+	combat Combat,
+	winner Result,
+	tie bool,
+) {
+	for player, mods := range playerMods {
+		total := sumModifiers(mods)
+
+		result := Result{
+			Total:  sumModifiers(mods),
+			Parts:  mods,
+			Player: player,
+		}
+
+		if total > winner.Total {
+			winner = result
+			tie = false
+		} else if total == winner.Total {
+			tie = true
+		}
+
+		combat = append(combat, result)
+	}
+
+	return combat, winner, tie
+}
+
+func sumModifiers(mods []Modifier) int {
+	total := 0
+	for _, mod := range mods {
+		total += mod.Value
+	}
+	return total
 }

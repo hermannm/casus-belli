@@ -10,8 +10,6 @@ type Game struct {
 
 type PlayerColor string
 
-const Uncontrolled PlayerColor = ""
-
 type Round struct {
 	mut          sync.Mutex
 	Season       Season
@@ -20,13 +18,6 @@ type Round struct {
 }
 
 type Season string
-
-const (
-	Winter Season = "winter"
-	Spring Season = "spring"
-	Summer Season = "summer"
-	Fall   Season = "fall"
-)
 
 type Board map[string]*BoardArea
 
@@ -39,18 +30,18 @@ type BoardArea struct {
 	Forest           bool
 	Castle           bool
 	SiegeCount       int
+	Combats          []Combat
 	Neighbors        []Neighbor
+	Outgoing         *Order
 	IncomingMoves    []*Order
 	IncomingSupports []*Order
-	Outgoing         *Order
-	Combats          []Combat
 }
 
 type Neighbor struct {
 	Area       *BoardArea
 	River      bool
-	Cliffs     bool
-	DangerZone string
+	Cliffs     bool   // Whether coast between neighboring land areas have cliffs (and thus is impassable to ships).
+	DangerZone string // If not "": the name of the danger zone that the neighboring area lies across (requires check to pass).
 }
 
 type Unit struct {
@@ -59,13 +50,6 @@ type Unit struct {
 }
 
 type UnitType string
-
-const (
-	Footman  UnitType = "footman"
-	Horse    UnitType = "horse"
-	Ship     UnitType = "ship"
-	Catapult UnitType = "catapult"
-)
 
 type Order struct {
 	Type   OrderType
@@ -79,23 +63,7 @@ type Order struct {
 
 type OrderType string
 
-const (
-	Move      OrderType = "move"
-	Support   OrderType = "support"
-	Transport OrderType = "transport"
-	Besiege   OrderType = "besiege"
-	Build     OrderType = "build"
-)
-
 type OrderStatus string
-
-const (
-	Pending OrderStatus = ""
-	Success OrderStatus = "success"
-	Tie     OrderStatus = "tie"
-	Fail    OrderStatus = "fail"
-	Error   OrderStatus = "error"
-)
 
 type Combat []Result
 
@@ -112,6 +80,38 @@ type Modifier struct {
 }
 
 type ModifierType string
+
+const Uncontrolled PlayerColor = ""
+
+const (
+	Winter Season = "winter"
+	Spring Season = "spring"
+	Summer Season = "summer"
+	Fall   Season = "fall"
+)
+
+const (
+	Footman  UnitType = "footman"
+	Horse    UnitType = "horse"
+	Ship     UnitType = "ship"
+	Catapult UnitType = "catapult"
+)
+
+const (
+	Move      OrderType = "move"
+	Support   OrderType = "support"
+	Transport OrderType = "transport"
+	Besiege   OrderType = "besiege"
+	Build     OrderType = "build"
+)
+
+const (
+	Pending OrderStatus = ""
+	Success OrderStatus = "success"
+	Tie     OrderStatus = "tie"
+	Fail    OrderStatus = "fail"
+	Error   OrderStatus = "error"
+)
 
 const (
 	DiceMod     ModifierType = "dice"

@@ -40,7 +40,7 @@ func (game *Game) ReceiveOrders(orders []Order) {
 	}
 }
 
-// Helper function to get the next season given the current season.
+// Returns the next season given the current season.
 func nextSeason(season Season) Season {
 	switch season {
 	case Winter:

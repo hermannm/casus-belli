@@ -18,22 +18,22 @@ func (area *BoardArea) IsCoast() bool {
 // If the area has several neighbor relations to the area,
 // returns the one matching the provided 'via' string
 // (currently the name of the neighbor relation's danger zone).
-func (area *BoardArea) GetNeighbor(neighborName string, via string) (Neighbor, bool) {
-	var n Neighbor
-	ok := false
-
-	for _, neighbor := range area.Neighbors {
-		if neighborName == neighbor.Area.Name {
-			if !ok {
-				n = neighbor
-				ok = true
-			} else if neighbor.DangerZone != "" && via == neighbor.DangerZone {
-				n = neighbor
+func (area *BoardArea) GetNeighbor(neighborName string, via string) (
+	neighbor Neighbor,
+	hasNeighbor bool,
+) {
+	for _, n := range area.Neighbors {
+		if neighborName == n.Area.Name {
+			if !hasNeighbor {
+				neighbor = n
+				hasNeighbor = true
+			} else if n.DangerZone != "" && via == n.DangerZone {
+				neighbor = n
 			}
 		}
 	}
 
-	return n, ok
+	return neighbor, hasNeighbor
 }
 
 func (area *BoardArea) HasNeighbor(neighborName string) bool {

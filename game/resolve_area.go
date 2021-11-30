@@ -44,7 +44,7 @@ func (area *BoardArea) resolveCombatPvE() {
 	order := area.IncomingMoves[0]
 
 	mods := map[PlayerColor][]Modifier{
-		order.From.Unit.Color: AttackModifiers(*order, false, false),
+		order.From.Unit.Color: attackModifiers(*order, false, false),
 	}
 
 	appendSupportMods(mods, area, area.IncomingMoves)
@@ -67,11 +67,11 @@ func (area *BoardArea) resolveCombatPvP() (PlayerColor, bool) {
 	mods := make(map[PlayerColor][]Modifier)
 
 	for _, move := range area.IncomingMoves {
-		mods[move.Player] = AttackModifiers(*move, true, false)
+		mods[move.Player] = attackModifiers(*move, true, false)
 	}
 
 	if defending != nil {
-		mods[defending.Color] = DefenseModifiers(*area)
+		mods[defending.Color] = defenseModifiers(*area)
 	}
 
 	appendSupportMods(mods, area, area.IncomingMoves)
@@ -88,7 +88,7 @@ func (area *BoardArea) resolveCombatPvP() (PlayerColor, bool) {
 			for _, result := range combat {
 				if order.Player == result.Player {
 					if result.Total < winner.Total {
-						order.die()
+						order.killAttacker()
 					}
 				}
 			}
@@ -115,7 +115,7 @@ func resolveBorderCombat(area1 *BoardArea, area2 *BoardArea) {
 	mods := make(map[PlayerColor][]Modifier)
 
 	for _, area := range []*BoardArea{area1, area2} {
-		mods[area.Unit.Color] = AttackModifiers(*area.Outgoing, true, true)
+		mods[area.Unit.Color] = attackModifiers(*area.Outgoing, true, true)
 
 		appendSupportMods(mods, area.Outgoing.To, []*Order{area.Outgoing})
 	}
@@ -137,64 +137,4 @@ func resolveBorderCombat(area1 *BoardArea, area2 *BoardArea) {
 		area1.Outgoing.failMove()
 		area2.Outgoing.succeedMove()
 	}
-}
-
-// Constructs combat results from combatants' modifiers.
-func combatResults(playerMods map[PlayerColor][]Modifier) (
-	combat Combat,
-	winner Result,
-	tie bool,
-) {
-	for player, mods := range playerMods {
-		total := modTotal(mods)
-
-		result := Result{
-			Total:  modTotal(mods),
-			Parts:  mods,
-			Player: player,
-		}
-
-		if total > winner.Total {
-			winner = result
-			tie = false
-		} else if total == winner.Total {
-			tie = true
-		}
-
-		combat = append(combat, result)
-	}
-
-	return combat, winner, tie
-}
-
-// Calls support for a combat and adds support modifiers appropriately.
-func appendSupportMods(mods map[PlayerColor][]Modifier, area *BoardArea, moves []*Order) {
-	for _, support := range area.IncomingSupports {
-		supported := callSupport(support, area, moves)
-
-		if _, isPlayer := mods[supported]; isPlayer {
-			mods[supported] = append(mods[supported], Modifier{
-				Type:        SupportMod,
-				Value:       1,
-				SupportFrom: support.Player,
-			})
-		}
-	}
-}
-
-// Returns which player a given support order supports in a combat.
-// If combatant matches support order's player, support is automatically given.
-// TODO: Implement asking player who to support if they are not involved themselves.
-func callSupport(support *Order, area *BoardArea, moves []*Order) PlayerColor {
-	if area.Unit != nil && area.Unit.Color == support.Player {
-		return support.Player
-	}
-
-	for _, move := range moves {
-		if support.Player == move.From.Unit.Color {
-			return support.Player
-		}
-	}
-
-	return ""
 }
