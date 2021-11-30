@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"immerse-ntnu/hermannia/server/game"
-	"io/ioutil"
 	"os"
 )
 
@@ -34,19 +33,14 @@ type neighbor struct {
 
 // Reads and constructs the board matching the given number of players.
 func ReadBoard(players int) (game.Board, error) {
-	file, err := os.Open(fmt.Sprintf("./game/setup/board_%dplayers.json", players))
-	if err != nil {
-		return nil, err
-	}
-
-	bytes, err := ioutil.ReadAll(file)
+	content, err := os.ReadFile(fmt.Sprintf("./game/setup/board_%dplayers.json", players))
 	if err != nil {
 		return nil, err
 	}
 
 	var jsonBoard board
 
-	err = json.Unmarshal(bytes, &jsonBoard)
+	err = json.Unmarshal(content, &jsonBoard)
 	if err != nil {
 		return nil, err
 	}
