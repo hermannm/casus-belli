@@ -29,7 +29,7 @@ func (board Board) resolveMoves() {
 func (board Board) populateAreaOrders(orders []*Order) {
 	for _, order := range orders {
 		if from, ok := board[order.From.Name]; ok {
-			from.Outgoing = order
+			from.Order = order
 		}
 
 		if order.To == nil {
@@ -51,11 +51,11 @@ func (board Board) populateAreaOrders(orders []*Order) {
 // and checks if they fail.
 func (board Board) crossDangerZones() {
 	for _, area := range board {
-		if area.Outgoing == nil || area.Outgoing.Type != Move {
+		if area.Order == nil || area.Order.Type != Move {
 			continue
 		}
 
-		move := area.Outgoing
+		move := area.Order
 
 		if destination, ok := area.GetNeighbor(move.To.Name, move.Via); ok {
 			if destination.DangerZone != "" {
@@ -69,11 +69,11 @@ func (board Board) crossDangerZones() {
 // If not attacked, checks if support is across danger zone, and if it fails.
 func (board Board) cutSupports() {
 	for _, area := range board {
-		if area.Outgoing == nil || area.Outgoing.Type != Support {
+		if area.Order == nil || area.Order.Type != Support {
 			continue
 		}
 
-		support := area.Outgoing
+		support := area.Order
 
 		if len(area.IncomingMoves) > 0 {
 			support.failSupport()
@@ -142,8 +142,8 @@ func (board Board) resolveConflictFreeOrders() {
 // Finds transport orders under attack, and resolves their combat.
 func (board Board) resolveTransportOrders() {
 	for _, area := range board {
-		if area.Outgoing != nil &&
-			area.Outgoing.Type == Transport &&
+		if area.Order != nil &&
+			area.Order.Type == Transport &&
 			len(area.IncomingMoves) > 0 {
 
 			area.resolveCombat()
@@ -157,18 +157,18 @@ func (board Board) resolveBorderConflicts() {
 	processed := make(map[string]bool)
 
 	for _, area1 := range board {
-		if area1.Outgoing == nil ||
-			area1.Outgoing.Type != Move ||
+		if area1.Order == nil ||
+			area1.Order.Type != Move ||
 			processed[area1.Name] {
 
 			continue
 		}
 
-		area2 := area1.Outgoing.To
+		area2 := area1.Order.To
 
-		if area2.Outgoing == nil ||
-			area2.Outgoing.Type != Move ||
-			area1.Name != area2.Outgoing.To.Name ||
+		if area2.Order == nil ||
+			area2.Order.Type != Move ||
+			area1.Name != area2.Order.To.Name ||
 			processed[area2.Name] {
 
 			continue
@@ -178,8 +178,8 @@ func (board Board) resolveBorderConflicts() {
 
 		// If attacks must transport, both must succeed transport for this to still be a border conflict.
 		if !area1.HasNeighbor(area2.Name) {
-			success1 := area1.Outgoing.Transport()
-			success2 := area2.Outgoing.Transport()
+			success1 := area1.Order.Transport()
+			success2 := area2.Order.Transport()
 
 			if !success1 || !success2 {
 				continue
@@ -216,7 +216,7 @@ func (board Board) resolveConflicts() {
 				continue
 			}
 
-			if area.Outgoing != nil && area.Outgoing.Type == Move {
+			if area.Order != nil && area.Order.Type == Move {
 				allResolved = false
 				continue
 			}
@@ -230,10 +230,10 @@ func (board Board) resolveConflicts() {
 // Goes through areas with siege orders, and updates the area following the siege.
 func (board Board) resolveSieges() {
 	for _, area := range board {
-		if area.Outgoing != nil && area.Outgoing.Type == Besiege {
+		if area.Order != nil && area.Order.Type == Besiege {
 			area.SiegeCount++
-			area.Outgoing.Status = Success
-			area.Outgoing = nil
+			area.Order.Status = Success
+			area.Order = nil
 
 			if area.SiegeCount == 2 {
 				area.Control = area.Unit.Color
@@ -246,9 +246,9 @@ func (board Board) resolveSieges() {
 // Cleans up remaining order references on the board after the round.
 func (board Board) cleanup() {
 	for _, area := range board {
-		if area.Outgoing != nil {
-			area.Outgoing.Status = Success
-			area.Outgoing = nil
+		if area.Order != nil {
+			area.Order.Status = Success
+			area.Order = nil
 		}
 
 		if len(area.IncomingSupports) > 0 {

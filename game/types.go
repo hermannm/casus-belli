@@ -32,7 +32,7 @@ type BoardArea struct {
 	SiegeCount       int
 	Combats          []Combat
 	Neighbors        []Neighbor
-	Outgoing         *Order
+	Order            *Order
 	IncomingMoves    []*Order
 	IncomingSupports []*Order
 }

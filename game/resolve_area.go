@@ -115,9 +115,9 @@ func resolveBorderCombat(area1 *BoardArea, area2 *BoardArea) {
 	mods := make(map[PlayerColor][]Modifier)
 
 	for _, area := range []*BoardArea{area1, area2} {
-		mods[area.Unit.Color] = attackModifiers(*area.Outgoing, true, true)
+		mods[area.Unit.Color] = attackModifiers(*area.Order, true, true)
 
-		appendSupportMods(mods, area.Outgoing.To, []*Order{area.Outgoing})
+		appendSupportMods(mods, area.Order.To, []*Order{area.Order})
 	}
 
 	combat, winner, tie := combatResults(mods)
@@ -125,16 +125,16 @@ func resolveBorderCombat(area1 *BoardArea, area2 *BoardArea) {
 	area2.Combats = append(area2.Combats, combat)
 
 	if tie {
-		area1.Outgoing.failMove()
-		area2.Outgoing.failMove()
+		area1.Order.failMove()
+		area2.Order.failMove()
 		return
 	}
 
 	if winner.Player == area1.Unit.Color {
-		area2.Outgoing.failMove()
-		area1.Outgoing.succeedMove()
+		area2.Order.failMove()
+		area1.Order.succeedMove()
 	} else {
-		area1.Outgoing.failMove()
-		area2.Outgoing.succeedMove()
+		area1.Order.failMove()
+		area2.Order.succeedMove()
 	}
 }

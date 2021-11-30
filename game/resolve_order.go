@@ -9,7 +9,7 @@ func (support *Order) failSupport() {
 		support,
 	)
 
-	support.From.Outgoing = nil
+	support.From.Order = nil
 }
 
 // Succeeds a move order and adjusts board areas accordingly.
@@ -17,7 +17,7 @@ func (move *Order) succeedMove() {
 	move.To.Unit = move.From.Unit
 	move.Status = Success
 	move.From.Unit = nil
-	move.From.Outgoing = nil
+	move.From.Order = nil
 	move.To.IncomingMoves = removeOrder(move.To.IncomingMoves, move)
 
 	// Seas cannot be controlled.
@@ -29,7 +29,7 @@ func (move *Order) succeedMove() {
 // Fails a move order and cleans up references to it on the board.
 func (move *Order) failMove() {
 	move.Status = Fail
-	move.From.Outgoing = nil
+	move.From.Order = nil
 	move.To.IncomingMoves = removeOrder(move.To.IncomingMoves, move)
 }
 
@@ -41,9 +41,9 @@ func (move *Order) killAttacker() {
 // Removes a defending unit from the board, and fails its order if any.
 func (area *BoardArea) killDefender() {
 	area.Unit = nil
-	if area.Outgoing != nil {
-		area.Outgoing.Status = Fail
-		area.Outgoing = nil
+	if area.Order != nil {
+		area.Order.Status = Fail
+		area.Order = nil
 	}
 }
 
