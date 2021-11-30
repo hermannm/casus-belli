@@ -3,8 +3,9 @@ package setup
 import (
 	"encoding/json"
 	"fmt"
-	"immerse-ntnu/hermannia/server/game"
 	"os"
+
+	"github.com/immerse-ntnu/hermannia/server/game"
 )
 
 // Utility type for json unmarshaling.

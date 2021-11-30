@@ -2,7 +2,8 @@ package validation
 
 import (
 	"errors"
-	"immerse-ntnu/hermannia/server/game"
+
+	"github.com/immerse-ntnu/hermannia/server/game"
 )
 
 // Takes a game order, and returns an error if it is invalid.

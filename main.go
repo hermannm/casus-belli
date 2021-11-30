@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	"immerse-ntnu/hermannia/server/game"
-	"immerse-ntnu/hermannia/server/game/setup"
+
+	"github.com/immerse-ntnu/hermannia/server/game"
+	"github.com/immerse-ntnu/hermannia/server/game/setup"
 )
 
 func printBoard(board game.Board, areas map[string]game.Unit, neighbors bool) {
