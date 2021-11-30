@@ -117,7 +117,7 @@ func rollDice() int {
 
 // Calls support from support orders to the given area.
 // Appends support modifiers to receiving players' modifier lists in the given map.
-func appendSupportMods(mods map[PlayerColor][]Modifier, area *BoardArea, moves []*Order) {
+func appendSupportMods(mods map[PlayerColor][]Modifier, area BoardArea, moves []*Order) {
 	for _, support := range area.IncomingSupports {
 		supported := callSupport(support, area, moves)
 
@@ -136,7 +136,7 @@ func appendSupportMods(mods map[PlayerColor][]Modifier, area *BoardArea, moves [
 // If support is not given to any combatant, returns "".
 //
 // TODO: Implement asking player who to support if they are not involved themselves.
-func callSupport(support *Order, area *BoardArea, moves []*Order) PlayerColor {
+func callSupport(support *Order, area BoardArea, moves []*Order) PlayerColor {
 	if !area.IsEmpty() && area.Unit.Color == support.Player {
 		return support.Player
 	}

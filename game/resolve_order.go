@@ -103,7 +103,7 @@ func (order *Order) crossDangerZone() bool {
 	return true
 }
 
-// Takes a list of orders and returns it without the removed order.
+// Takes a list of order references and returns it without the removed order.
 func removeOrder(oldOrders []*Order, remove *Order) []*Order {
 	newOrders := make([]*Order, 0)
 

@@ -47,7 +47,7 @@ func (area *BoardArea) resolveCombatPvE() {
 		order.From.Unit.Color: attackModifiers(*order, false, false),
 	}
 
-	appendSupportMods(mods, area, area.IncomingMoves)
+	appendSupportMods(mods, *area, area.IncomingMoves)
 
 	combat, result, _ := combatResults(mods)
 	area.Combats = append(area.Combats, combat)
@@ -72,7 +72,7 @@ func (area *BoardArea) resolveCombatPvP() (PlayerColor, bool) {
 		mods[area.Unit.Color] = defenseModifiers(*area)
 	}
 
-	appendSupportMods(mods, area, area.IncomingMoves)
+	appendSupportMods(mods, *area, area.IncomingMoves)
 
 	combat, winner, tie := combatResults(mods)
 	area.Combats = append(area.Combats, combat)
@@ -115,7 +115,7 @@ func resolveBorderCombat(area1 *BoardArea, area2 *BoardArea) {
 	for _, area := range []*BoardArea{area1, area2} {
 		mods[area.Unit.Color] = attackModifiers(*area.Order, true, true)
 
-		appendSupportMods(mods, area.Order.To, []*Order{area.Order})
+		appendSupportMods(mods, *area.Order.To, []*Order{area.Order})
 	}
 
 	combat, winner, tie := combatResults(mods)
