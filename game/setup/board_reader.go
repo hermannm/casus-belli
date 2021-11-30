@@ -16,11 +16,11 @@ type board struct {
 
 // Utility type for json unmarshaling.
 type area struct {
-	Name   string           `json:"name"`
-	Sea    bool             `json:"sea"`
-	Forest bool             `json:"forest"`
-	Castle bool             `json:"castle"`
-	Home   game.PlayerColor `json:"home"`
+	Name   string `json:"name"`
+	Sea    bool   `json:"sea"`
+	Forest bool   `json:"forest"`
+	Castle bool   `json:"castle"`
+	Home   string `json:"home"`
 }
 
 // Utility type for json unmarshaling.
@@ -56,8 +56,8 @@ func ReadBoard(players int) (game.Board, error) {
 	for _, jsonArea := range jsonBoard.Areas {
 		area := game.BoardArea{
 			Name:             jsonArea.Name,
-			Control:          jsonArea.Home,
-			Home:             jsonArea.Home,
+			Control:          game.Player(jsonArea.Home),
+			Home:             game.Player(jsonArea.Home),
 			Sea:              jsonArea.Sea,
 			Forest:           jsonArea.Forest,
 			Castle:           jsonArea.Castle,

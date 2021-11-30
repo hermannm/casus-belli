@@ -37,7 +37,7 @@ func attackModifiers(order Order, otherAttackers bool, borderConflict bool) []Mo
 	// - Area is uncontrolled, and this unit is the only attacker.
 	// - Destination is controlled and defended, and this is not a border conflict.
 	if (order.To.Control == Uncontrolled && !otherAttackers) ||
-		(!order.To.IsEmpty() && order.To.Control == order.To.Unit.Color && !borderConflict) {
+		(!order.To.IsEmpty() && order.To.Control == order.To.Unit.Player && !borderConflict) {
 
 		if order.To.Forest {
 			mods = append(mods, Modifier{
@@ -117,7 +117,7 @@ func rollDice() int {
 
 // Calls support from support orders to the given area.
 // Appends support modifiers to receiving players' modifier lists in the given map.
-func appendSupportMods(mods map[PlayerColor][]Modifier, area BoardArea, moves []*Order) {
+func appendSupportMods(mods map[Player][]Modifier, area BoardArea, moves []*Order) {
 	for _, support := range area.IncomingSupports {
 		supported := callSupport(support, area, moves)
 
@@ -136,13 +136,13 @@ func appendSupportMods(mods map[PlayerColor][]Modifier, area BoardArea, moves []
 // If support is not given to any combatant, returns "".
 //
 // TODO: Implement asking player who to support if they are not involved themselves.
-func callSupport(support *Order, area BoardArea, moves []*Order) PlayerColor {
-	if !area.IsEmpty() && area.Unit.Color == support.Player {
+func callSupport(support *Order, area BoardArea, moves []*Order) Player {
+	if !area.IsEmpty() && area.Unit.Player == support.Player {
 		return support.Player
 	}
 
 	for _, move := range moves {
-		if support.Player == move.From.Unit.Color {
+		if support.Player == move.From.Unit.Player {
 			return support.Player
 		}
 	}
@@ -151,7 +151,7 @@ func callSupport(support *Order, area BoardArea, moves []*Order) PlayerColor {
 }
 
 // Constructs combat results from combatants' modifiers.
-func combatResults(playerMods map[PlayerColor][]Modifier) (
+func combatResults(playerMods map[Player][]Modifier) (
 	combat Combat,
 	winner Result,
 	tie bool,

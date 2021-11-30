@@ -5,10 +5,10 @@ import "sync"
 type Game struct {
 	Board   Board
 	Rounds  []*Round
-	Players []PlayerColor
+	Players []Player
 }
 
-type PlayerColor string
+type Player string
 
 type Round struct {
 	mut          sync.Mutex
@@ -23,8 +23,8 @@ type Board map[string]*BoardArea
 
 type BoardArea struct {
 	Name             string
-	Control          PlayerColor
-	Home             PlayerColor
+	Control          Player
+	Home             Player
 	Unit             Unit
 	Sea              bool
 	Forest           bool
@@ -45,15 +45,15 @@ type Neighbor struct {
 }
 
 type Unit struct {
-	Type  UnitType
-	Color PlayerColor
+	Type   UnitType
+	Player Player
 }
 
 type UnitType string
 
 type Order struct {
 	Type   OrderType
-	Player PlayerColor
+	Player Player
 	From   *BoardArea
 	To     *BoardArea
 	Via    string
@@ -70,18 +70,18 @@ type Combat []Result
 type Result struct {
 	Total  int
 	Parts  []Modifier
-	Player PlayerColor
+	Player Player
 }
 
 type Modifier struct {
 	Type        ModifierType
 	Value       int
-	SupportFrom PlayerColor
+	SupportFrom Player
 }
 
 type ModifierType string
 
-const Uncontrolled PlayerColor = ""
+const Uncontrolled Player = ""
 
 const (
 	Winter Season = "winter"

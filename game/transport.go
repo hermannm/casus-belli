@@ -86,7 +86,7 @@ func (area BoardArea) transportingNeighbors(exclude map[string]bool) ([]Neighbor
 	for _, neighbor := range area.Neighbors {
 		if neighbor.Area.Order != nil &&
 			neighbor.Area.Order.Type == Transport &&
-			neighbor.Area.Unit.Color == area.Unit.Color {
+			neighbor.Area.Unit.Player == area.Unit.Player {
 
 			if exclude[neighbor.Area.Name] {
 				continue

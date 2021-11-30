@@ -236,7 +236,7 @@ func (board Board) resolveSieges() {
 			area.Order = nil
 
 			if area.SiegeCount == 2 {
-				area.Control = area.Unit.Color
+				area.Control = area.Unit.Player
 				area.SiegeCount = 0
 			}
 		}

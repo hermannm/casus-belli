@@ -31,7 +31,7 @@ func printBoard(board game.Board, areas map[string]game.Unit, neighbors bool) {
 		fmt.Println(areaString)
 
 		if area.IsEmpty() {
-			fmt.Println("Unit:", area.Unit.Color, area.Unit.Type)
+			fmt.Println("Unit:", area.Unit.Player, area.Unit.Type)
 		}
 
 		if neighbors {
@@ -84,7 +84,7 @@ func adjustBoard(board game.Board, areas map[string]game.Unit) {
 		if unit.Type != game.NoUnit {
 			board[key].Unit = unit
 			if !board[key].Sea {
-				board[key].Control = unit.Color
+				board[key].Control = unit.Player
 			}
 		}
 	}
@@ -113,28 +113,28 @@ func main() {
 func testTransportWithDangerZone(board game.Board) {
 	areas := map[string]game.Unit{
 		"Winde": {
-			Type:  game.Footman,
-			Color: "green",
+			Type:   game.Footman,
+			Player: "green",
 		},
 		"Mare Gond": {
-			Type:  game.Ship,
-			Color: "green",
+			Type:   game.Ship,
+			Player: "green",
 		},
 		"Mare Elle": {
-			Type:  game.Ship,
-			Color: "green",
+			Type:   game.Ship,
+			Player: "green",
 		},
 		"Mare Ovond": {
-			Type:  game.Ship,
-			Color: "green",
+			Type:   game.Ship,
+			Player: "green",
 		},
 		"Mare Duna": {
-			Type:  game.Ship,
-			Color: "red",
+			Type:   game.Ship,
+			Player: "red",
 		},
 		"Mare Furie": {
-			Type:  game.Ship,
-			Color: "red",
+			Type:   game.Ship,
+			Player: "red",
 		},
 		"Fond": {},
 	}
@@ -186,16 +186,16 @@ func testTransportWithDangerZone(board game.Board) {
 func testTransportCombat(board game.Board) {
 	areas := map[string]game.Unit{
 		"Worp": {
-			Type:  game.Footman,
-			Color: "green",
+			Type:   game.Footman,
+			Player: "green",
 		},
 		"Mare Gond": {
-			Type:  game.Ship,
-			Color: "green",
+			Type:   game.Ship,
+			Player: "green",
 		},
 		"Mare Elle": {
-			Type:  game.Ship,
-			Color: "red",
+			Type:   game.Ship,
+			Player: "red",
 		},
 		"Zona": {},
 	}

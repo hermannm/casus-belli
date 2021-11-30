@@ -39,8 +39,8 @@ func (move *Order) killAttacker() {
 
 // Succeeds move from the winner after combat in an area,
 // and fails all others.
-func (area *BoardArea) resolveWinner(winner PlayerColor) {
-	if !area.IsEmpty() && area.Unit.Color != winner {
+func (area *BoardArea) resolveWinner(winner Player) {
+	if !area.IsEmpty() && area.Unit.Player != winner {
 		area.removeUnit()
 	}
 
@@ -57,8 +57,8 @@ func (area *BoardArea) resolveWinner(winner PlayerColor) {
 // Fails all units involved in combat except winner.
 // Used for resolving combats that have follow-up combats,
 // and so should not succeed the winning move yet.
-func (area *BoardArea) resolveIntermediaryWinner(winner PlayerColor) {
-	if !area.IsEmpty() && area.Unit.Color != winner {
+func (area *BoardArea) resolveIntermediaryWinner(winner Player) {
+	if !area.IsEmpty() && area.Unit.Player != winner {
 		area.removeUnit()
 	}
 
