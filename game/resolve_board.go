@@ -57,10 +57,9 @@ func (board Board) crossDangerZones() {
 
 		move := area.Order
 
-		if destination, ok := area.GetNeighbor(move.To.Name, move.Via); ok {
-			if destination.DangerZone != "" {
-				move.crossDangerZone()
-			}
+		destination, adjacent := area.GetNeighbor(move.To.Name, move.Via)
+		if adjacent && destination.DangerZone != "" {
+			move.crossDangerZone()
 		}
 	}
 }
@@ -80,10 +79,9 @@ func (board Board) cutSupports() {
 			continue
 		}
 
-		if destination, ok := area.GetNeighbor(support.To.Name, support.Via); ok {
-			if destination.DangerZone != "" {
-				support.crossDangerZone()
-			}
+		destination, adjacent := area.GetNeighbor(support.To.Name, support.Via)
+		if adjacent && destination.DangerZone != "" {
+			support.crossDangerZone()
 		}
 	}
 }
@@ -110,18 +108,16 @@ func (board Board) resolveConflictFreeOrders() {
 			move := area.IncomingMoves[0]
 
 			// Checks if transport-dependent order can be transported without combat.
-			// If it cannot, adds it to 'resolved' map to avoid repeating expensive Transportable call.
+			// If it cannot, adds it to 'resolved' map to avoid repeating Transportable calculation.
 			if !area.HasNeighbor(move.To.Name) {
 				transportable, dangerZone := move.Transportable()
 
-				if transportable {
-					if dangerZone {
-						if !move.crossDangerZone() {
-							processed[area.Name] = true
-							continue
-						}
-					}
-				} else {
+				if !transportable {
+					processed[area.Name] = true
+					continue
+				}
+
+				if dangerZone && !move.crossDangerZone() {
 					processed[area.Name] = true
 					continue
 				}
@@ -230,15 +226,17 @@ func (board Board) resolveConflicts() {
 // Goes through areas with siege orders, and updates the area following the siege.
 func (board Board) resolveSieges() {
 	for _, area := range board {
-		if area.Order != nil && area.Order.Type == Besiege {
-			area.SiegeCount++
-			area.Order.Status = Success
-			area.Order = nil
+		if area.Order == nil || area.Order.Type != Besiege {
+			continue
+		}
 
-			if area.SiegeCount == 2 {
-				area.Control = area.Unit.Player
-				area.SiegeCount = 0
-			}
+		area.SiegeCount++
+		area.Order.Status = Success
+		area.Order = nil
+
+		if area.SiegeCount == 2 {
+			area.Control = area.Unit.Player
+			area.SiegeCount = 0
 		}
 	}
 }

@@ -68,9 +68,11 @@ func validateMove(order game.Order) error {
 		secondHorseMove := false
 
 		for _, firstOrder := range order.From.IncomingMoves {
-			if firstOrder.From.Unit == order.From.Unit {
+			if firstOrder.From.Unit.Type == game.Horse &&
+				firstOrder.To.Name == order.From.Name &&
+				firstOrder.Player == order.Player {
+
 				secondHorseMove = true
-				break
 			}
 		}
 

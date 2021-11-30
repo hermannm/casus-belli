@@ -41,13 +41,15 @@ func (area BoardArea) GetNeighbor(neighborName string, via string) (
 	hasNeighbor bool,
 ) {
 	for _, n := range area.Neighbors {
-		if neighborName == n.Area.Name {
-			if !hasNeighbor {
-				neighbor = n
-				hasNeighbor = true
-			} else if n.DangerZone != "" && via == n.DangerZone {
-				neighbor = n
-			}
+		if neighborName != n.Area.Name {
+			continue
+		}
+
+		if !hasNeighbor {
+			neighbor = n
+			hasNeighbor = true
+		} else if n.DangerZone != "" && via == n.DangerZone {
+			neighbor = n
 		}
 	}
 

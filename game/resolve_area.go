@@ -3,39 +3,46 @@ package game
 // Delegates resolving of combat to other functions depending on the state of the area.
 func (area *BoardArea) resolveCombat() {
 	if area.Control == Uncontrolled && !area.Sea {
+		// If area is an empty, uncontrolled land area with a single attacker,
+		// then the attacker fights the area.
 		if area.IsEmpty() && len(area.IncomingMoves) == 1 {
-			// If area is an empty, uncontrolled land area with a single attacker,
-			// then the attacker fights the area.
 			area.resolveCombatPvE()
-		} else {
-			// If uncontrolled area is not empty or has several attackers,
-			// then involved units must first fight each other.
-			winner, tie := area.resolveCombatPvP()
-
-			// Consequences of ties are handled by resolveCombatPvP.
-			if !tie {
-				// If area was already occupied and occupier won, it stays there.
-				// If an attacker won, they get to attempt to conquer the area.
-				if !area.IsEmpty() && area.Unit.Player == winner {
-					area.resolveWinner(winner)
-				} else {
-					area.resolveIntermediaryWinner(winner)
-					area.resolveCombatPvE()
-				}
-			}
+			return
 		}
-	} else {
-		// If area is conquered, empty and has only one attacker, it automatically succeeds.
-		if area.IsEmpty() && len(area.IncomingMoves) == 1 {
-			area.IncomingMoves[0].succeedMove()
-		} else {
-			winner, tie := area.resolveCombatPvP()
 
-			if !tie {
-				area.resolveWinner(winner)
-			}
+		// If uncontrolled area is not empty or has several attackers,
+		// then involved units must first fight each other.
+		winner, tie := area.resolveCombatPvP()
+
+		// Ties are handled by resolveCombatPvP.
+		if tie {
+			return
 		}
+
+		// If area was already occupied and occupier won, it stays there.
+		if !area.IsEmpty() && area.Unit.Player == winner {
+			area.resolveWinner(winner)
+			return
+		}
+
+		// If an attacker won, they get to attempt to conquer the area.
+		area.resolveIntermediaryWinner(winner)
+		area.resolveCombatPvE()
+		return
 	}
+
+	// If area is conquered, empty and has only one attacker, it automatically succeeds.
+	if area.IsEmpty() && len(area.IncomingMoves) == 1 {
+		area.IncomingMoves[0].succeedMove()
+		return
+	}
+
+	// If attacked area has defender or multiple attackers, they must fight.
+	winner, tie := area.resolveCombatPvP()
+	if tie {
+		return
+	}
+	area.resolveWinner(winner)
 }
 
 // Resolves combat between a single attacker and an unconquered area.
@@ -84,20 +91,16 @@ func (area *BoardArea) resolveCombatPvP() (Player, bool) {
 			order.failMove()
 
 			for _, result := range combat {
-				if order.Player == result.Player {
-					if result.Total < winner.Total {
-						order.killAttacker()
-					}
+				if order.Player == result.Player && result.Total < winner.Total {
+					order.killAttacker()
 				}
 			}
 		}
 
 		if !area.IsEmpty() {
 			for _, result := range combat {
-				if area.Unit.Player == result.Player {
-					if result.Total < winner.Total {
-						area.removeUnit()
-					}
+				if area.Unit.Player == result.Player && result.Total < winner.Total {
+					area.removeUnit()
 				}
 			}
 		}

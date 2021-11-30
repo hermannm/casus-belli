@@ -24,13 +24,11 @@ func attackModifiers(order Order, otherAttackers bool, borderConflict bool) []Mo
 
 	// Assumes danger zone checks have been made before combat,
 	// and thus adds surprise modifier to attacker coming across such zones.
-	if hasNeighbor {
-		if neighbor.DangerZone != "" {
-			mods = append(mods, Modifier{
-				Type:  SurpriseMod,
-				Value: +1,
-			})
-		}
+	if hasNeighbor && neighbor.DangerZone != "" {
+		mods = append(mods, Modifier{
+			Type:  SurpriseMod,
+			Value: +1,
+		})
 	}
 
 	// Terrain modifiers should be added if:

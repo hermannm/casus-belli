@@ -5,17 +5,16 @@ package game
 func (order *Order) Transport() bool {
 	transportable, dangerZone := order.Transportable()
 
-	if transportable {
-		if dangerZone {
-			return order.crossDangerZone()
-		}
-
-		return true
-	} else {
+	if !transportable {
 		order.failMove()
-
 		return false
 	}
+
+	if dangerZone {
+		return order.crossDangerZone()
+	}
+
+	return true
 }
 
 // Checks if a transport-dependent move can be transported.
@@ -53,16 +52,17 @@ func (area BoardArea) canNeighborsTransport(destination string, exclude map[stri
 			if transport.DangerZone == "" {
 				dangerZone = false
 			}
-		} else {
-			// Recursive call to check for eligible chain of transports to destination.
-			canTransport, danger := transport.Area.canNeighborsTransport(destination, newExclude)
 
-			if canTransport {
-				transportable = true
+			continue
+		}
 
-				if !danger && transport.DangerZone == "" {
-					dangerZone = false
-				}
+		canTransport, danger := transport.Area.canNeighborsTransport(destination, newExclude)
+
+		if canTransport {
+			transportable = true
+
+			if !danger && transport.DangerZone == "" {
+				dangerZone = false
 			}
 		}
 	}
@@ -84,17 +84,16 @@ func (area BoardArea) transportingNeighbors(exclude map[string]bool) ([]Neighbor
 	}
 
 	for _, neighbor := range area.Neighbors {
-		if neighbor.Area.Order != nil &&
-			neighbor.Area.Order.Type == Transport &&
-			neighbor.Area.Unit.Player == area.Unit.Player {
+		if neighbor.Area.Order == nil ||
+			neighbor.Area.Order.Type != Transport ||
+			neighbor.Area.Unit.Player != area.Unit.Player ||
+			exclude[neighbor.Area.Name] {
 
-			if exclude[neighbor.Area.Name] {
-				continue
-			}
-
-			neighbors = append(neighbors, neighbor)
-			newExclude[neighbor.Area.Name] = true
+			continue
 		}
+
+		neighbors = append(neighbors, neighbor)
+		newExclude[neighbor.Area.Name] = true
 	}
 
 	return neighbors, newExclude

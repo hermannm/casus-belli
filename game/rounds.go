@@ -28,15 +28,12 @@ func (game *Game) ReceiveOrders(orders []Order) {
 	for _, order := range orders {
 		// If order origin has no unit, or unit of different color,
 		// then order is a second horse move and should be processed after all others.
-		if order.From.IsEmpty() {
+		if order.From.IsEmpty() || order.From.Unit.Player != order.Player {
 			round.SecondOrders = append(round.SecondOrders, &order)
-		} else {
-			if order.From.Unit.Player == order.Player {
-				round.FirstOrders = append(round.SecondOrders, &order)
-			} else {
-				round.SecondOrders = append(round.SecondOrders, &order)
-			}
+			continue
 		}
+
+		round.FirstOrders = append(round.SecondOrders, &order)
 	}
 }
 

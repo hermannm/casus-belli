@@ -71,9 +71,9 @@ func (area *BoardArea) resolveIntermediaryWinner(winner Player) {
 }
 
 // Rolls dice to see if order makes it across danger zone.
+// Returns true if order succeeded.
 // If order is a move and fails, it is killed.
 // Adds result to combat list of origin area.
-// Returns true if order succeeded.
 func (order *Order) crossDangerZone() bool {
 	diceMod := diceModifier()
 
