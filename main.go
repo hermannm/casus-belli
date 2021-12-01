@@ -31,7 +31,7 @@ func printBoard(board game.Board, areas map[string]game.Unit, neighbors bool) {
 		}
 		fmt.Println(areaString)
 
-		if area.IsEmpty() {
+		if !area.IsEmpty() {
 			fmt.Println("Unit:", area.Unit.Player, area.Unit.Type)
 		}
 
