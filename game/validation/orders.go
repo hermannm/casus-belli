@@ -3,7 +3,7 @@ package validation
 import (
 	"errors"
 
-	"github.com/immerse-ntnu/hermannia/server/game"
+	"github.com/immerse-ntnu/despot-dash/server/game"
 )
 
 // Takes a game order, and returns an error if it is invalid.
