@@ -392,7 +392,8 @@
 		},
 		{
 			"area1": "Ninin",
-			"area2": "Nund"
+			"area2": "Nund",
+			"cliffs": true
 		},
 		{
 			"area1": "Nund",
