@@ -1,3 +1,3 @@
-module github.com/immerse-ntnu/despot-dash/server
+module github.com/immerse-ntnu/hermannia/server
 
 go 1.17

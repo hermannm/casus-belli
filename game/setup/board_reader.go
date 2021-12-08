@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/immerse-ntnu/despot-dash/server/game"
+	"github.com/immerse-ntnu/hermannia/server/game"
 )
 
 // Utility type for json unmarshaling.
