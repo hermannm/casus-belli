@@ -22,6 +22,7 @@ func (board Board) resolveMoves() {
 	board.resolveConflictFreeOrders()
 	board.resolveTransportOrders()
 	board.resolveBorderConflicts()
+	board.resolveMoveCycles()
 	board.resolveConflicts()
 }
 
@@ -184,6 +185,37 @@ func (board Board) resolveBorderConflicts() {
 
 		resolveBorderCombat(area1, area2)
 	}
+}
+
+// Resolves cycles of move orders (more than 2 move orders going in circle).
+func (board Board) resolveMoveCycles() {
+	processed := make(map[string]bool)
+
+	for name, area := range board {
+		if processed[name] {
+			continue
+		}
+
+		cycle := area.discoverCycle(area.Name)
+
+		for _, cycleArea := range cycle {
+			processed[cycleArea.Name] = true
+		}
+	}
+}
+
+// Recursively finds a cycle of moves starting and ending with the given firstArea name.
+// Returns a list of pointers to the areas in the cycle.
+func (area *BoardArea) discoverCycle(firstArea string) []*BoardArea {
+	if area.Order == nil || area.Order.Type != Move {
+		return nil
+	}
+
+	if area.Order.To.Name == firstArea {
+		return []*BoardArea{area}
+	}
+
+	return append(area.Order.To.discoverCycle(firstArea), area)
 }
 
 // Goes through areas that could not be previously resolved due to conflicting orders,
