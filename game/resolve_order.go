@@ -13,8 +13,12 @@ func (support *Order) failSupport() {
 }
 
 // Succeeds a move order and adjusts board areas accordingly.
-func (move *Order) succeedMove() {
+func (move *Order) moveAndSucceed() {
 	moveUnit(move.From, move.To)
+	move.succeedMove()
+}
+
+func (move *Order) succeedMove() {
 	move.Status = Success
 	move.From.Order = nil
 	move.To.IncomingMoves = removeOrder(move.To.IncomingMoves, move)
@@ -46,7 +50,7 @@ func (area *BoardArea) resolveWinner(winner Player) {
 
 	for _, move := range area.IncomingMoves {
 		if move.Player == winner {
-			move.succeedMove()
+			move.moveAndSucceed()
 		} else {
 			move.failMove()
 			move.killAttacker()

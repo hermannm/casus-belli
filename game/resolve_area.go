@@ -12,7 +12,7 @@ func (area *BoardArea) resolveCombat() {
 
 		// If uncontrolled area is not empty or has several attackers,
 		// then involved units must first fight each other.
-		winner, tie := area.resolveCombatPvP()
+		winner, tie := area.resolveCombatPvP(true)
 
 		// Ties are handled by resolveCombatPvP.
 		if tie {
@@ -33,12 +33,12 @@ func (area *BoardArea) resolveCombat() {
 
 	// If area is conquered, empty and has only one attacker, it automatically succeeds.
 	if area.IsEmpty() && len(area.IncomingMoves) == 1 {
-		area.IncomingMoves[0].succeedMove()
+		area.IncomingMoves[0].moveAndSucceed()
 		return
 	}
 
 	// If attacked area has defender or multiple attackers, they must fight.
-	winner, tie := area.resolveCombatPvP()
+	winner, tie := area.resolveCombatPvP(true)
 	if tie {
 		return
 	}
@@ -51,35 +51,36 @@ func (area *BoardArea) resolveCombatPvE() {
 	order := area.IncomingMoves[0]
 
 	mods := map[Player][]Modifier{
-		order.From.Unit.Player: attackModifiers(*order, false, false),
+		order.From.Unit.Player: attackModifiers(*order, false, false, true),
 	}
 
-	appendSupportMods(mods, *area, area.IncomingMoves)
+	appendSupportMods(mods, *area, area.IncomingMoves, true)
 
 	combat, result, _ := combatResults(mods)
 	area.Combats = append(area.Combats, combat)
 
 	if result.Total >= 4 {
-		order.succeedMove()
+		order.moveAndSucceed()
 	} else {
 		order.failMove()
 	}
 }
 
 // Resolves combat when attacked area is defended or has multiple attackers.
+// Takes in parameter for whether to account for defender in combat (most often true).
 // Returns winner ("" in the case of tie) and whether there was a tie for the highest result.
-func (area *BoardArea) resolveCombatPvP() (Player, bool) {
+func (area *BoardArea) resolveCombatPvP(includeDefender bool) (Player, bool) {
 	mods := make(map[Player][]Modifier)
 
 	for _, move := range area.IncomingMoves {
-		mods[move.Player] = attackModifiers(*move, true, false)
+		mods[move.Player] = attackModifiers(*move, true, false, includeDefender)
 	}
 
-	if !area.IsEmpty() {
+	if !area.IsEmpty() && includeDefender {
 		mods[area.Unit.Player] = defenseModifiers(*area)
 	}
 
-	appendSupportMods(mods, *area, area.IncomingMoves)
+	appendSupportMods(mods, *area, area.IncomingMoves, includeDefender)
 
 	combat, winner, tie := combatResults(mods)
 	area.Combats = append(area.Combats, combat)
@@ -97,7 +98,7 @@ func (area *BoardArea) resolveCombatPvP() (Player, bool) {
 			}
 		}
 
-		if !area.IsEmpty() {
+		if !area.IsEmpty() && includeDefender {
 			for _, result := range combat {
 				if area.Unit.Player == result.Player && result.Total < winner.Total {
 					area.removeUnit()
@@ -116,9 +117,9 @@ func resolveBorderCombat(area1 *BoardArea, area2 *BoardArea) {
 	mods := make(map[Player][]Modifier)
 
 	for _, area := range []*BoardArea{area1, area2} {
-		mods[area.Unit.Player] = attackModifiers(*area.Order, true, true)
+		mods[area.Unit.Player] = attackModifiers(*area.Order, true, true, false)
 
-		appendSupportMods(mods, *area.Order.To, []*Order{area.Order})
+		appendSupportMods(mods, *area.Order.To, []*Order{area.Order}, false)
 	}
 
 	combat, winner, tie := combatResults(mods)
@@ -133,9 +134,9 @@ func resolveBorderCombat(area1 *BoardArea, area2 *BoardArea) {
 
 	if winner.Player == area1.Unit.Player {
 		area2.Order.failMove()
-		area1.Order.succeedMove()
+		area1.Order.moveAndSucceed()
 	} else {
 		area1.Order.failMove()
-		area2.Order.succeedMove()
+		area2.Order.moveAndSucceed()
 	}
 }

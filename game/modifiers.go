@@ -17,7 +17,7 @@ func defenseModifiers(area BoardArea) []Modifier {
 }
 
 // Returns modifiers (including dice roll) of attacking unit in an area.
-func attackModifiers(order Order, otherAttackers bool, borderConflict bool) []Modifier {
+func attackModifiers(order Order, otherAttackers bool, borderConflict bool, includeDefender bool) []Modifier {
 	mods := []Modifier{}
 
 	neighbor, hasNeighbor := order.From.GetNeighbor(order.To.Name, order.Via)
@@ -35,7 +35,10 @@ func attackModifiers(order Order, otherAttackers bool, borderConflict bool) []Mo
 	// - Area is uncontrolled, and this unit is the only attacker.
 	// - Destination is controlled and defended, and this is not a border conflict.
 	if (order.To.Control == Uncontrolled && !otherAttackers) ||
-		(!order.To.IsEmpty() && order.To.Control == order.To.Unit.Player && !borderConflict) {
+		(!order.To.IsEmpty() &&
+			order.To.Control == order.To.Unit.Player &&
+			!borderConflict &&
+			includeDefender) {
 
 		if order.To.Forest {
 			mods = append(mods, Modifier{
@@ -115,9 +118,9 @@ func rollDice() int {
 
 // Calls support from support orders to the given area.
 // Appends support modifiers to receiving players' modifier lists in the given map.
-func appendSupportMods(mods map[Player][]Modifier, area BoardArea, moves []*Order) {
+func appendSupportMods(mods map[Player][]Modifier, area BoardArea, moves []*Order, includeDefender bool) {
 	for _, support := range area.IncomingSupports {
-		supported := callSupport(support, area, moves)
+		supported := callSupport(support, area, moves, includeDefender)
 
 		if _, isPlayer := mods[supported]; isPlayer {
 			mods[supported] = append(mods[supported], Modifier{
@@ -134,8 +137,8 @@ func appendSupportMods(mods map[Player][]Modifier, area BoardArea, moves []*Orde
 // If support is not given to any combatant, returns "".
 //
 // TODO: Implement asking player who to support if they are not involved themselves.
-func callSupport(support *Order, area BoardArea, moves []*Order) Player {
-	if !area.IsEmpty() && area.Unit.Player == support.Player {
+func callSupport(support *Order, area BoardArea, moves []*Order, includeDefender bool) Player {
+	if !area.IsEmpty() && area.Unit.Player == support.Player && includeDefender {
 		return support.Player
 	}
 

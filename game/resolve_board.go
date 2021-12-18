@@ -129,7 +129,7 @@ func (board Board) resolveConflictFreeOrders() {
 			if area.Control == Uncontrolled {
 				area.resolveCombatPvE()
 			} else {
-				move.succeedMove()
+				move.moveAndSucceed()
 			}
 			processed[area.Name] = true
 		}
@@ -187,6 +187,14 @@ func (board Board) resolveBorderConflicts() {
 	}
 }
 
+type cycleState struct {
+	unit   Unit
+	order  *Order
+	combat bool
+	winner Player
+	tie    bool
+}
+
 // Resolves cycles of move orders (more than 2 move orders going in circle).
 func (board Board) resolveMoveCycles() {
 	processed := make(map[string]bool)
@@ -198,14 +206,78 @@ func (board Board) resolveMoveCycles() {
 
 		cycle := area.discoverCycle(area.Name)
 
+		if cycle == nil {
+			continue
+		}
+
+		cycleStates := make(map[string]cycleState)
+
 		for _, cycleArea := range cycle {
-			processed[cycleArea.Name] = true
+			processed[cycleArea.Order.To.Name] = true
+
+			cycleStates[cycleArea.Order.To.Name] = cycleState{
+				unit:  cycleArea.Unit,
+				order: cycleArea.Order,
+			}
+
+			if len(cycleArea.Order.To.IncomingMoves) < 2 {
+				continue
+			}
+
+			winner, tie := cycleArea.Order.To.resolveCombatPvP(false)
+
+			if state, ok := cycleStates[cycleArea.Order.To.Name]; ok {
+				state.combat = true
+				state.winner = winner
+				state.tie = tie
+
+				cycleStates[cycleArea.Order.To.Name] = state
+			}
+		}
+
+		for _, cycleArea := range cycle {
+			state := cycleStates[cycleArea.Name]
+
+			if !state.combat {
+				cycleArea.removeUnit()
+				state.order.succeedMove()
+				cycleArea.Unit = state.unit
+				if state.order.From.Unit == state.unit {
+					state.order.From.Unit = Unit{}
+				}
+				state.order.From.Order = nil
+				continue
+			}
+
+			// Ties already handled by resolveCombatPvP.
+			if state.tie {
+				continue
+			}
+
+			for _, move := range area.IncomingMoves {
+				if move.Player != state.winner {
+					move.failMove()
+					move.killAttacker()
+					continue
+				}
+
+				if move.Player != state.unit.Player {
+					move.moveAndSucceed()
+					continue
+				}
+
+				move.succeedMove()
+				cycleArea.Unit = state.unit
+				if state.order.From.Unit == state.unit {
+					state.order.From.Unit = Unit{}
+				}
+			}
 		}
 	}
 }
 
 // Recursively finds a cycle of moves starting and ending with the given firstArea name.
-// Returns a list of pointers to the areas in the cycle.
+// Returns a list of pointers to the areas in the cycle, or nil if no cycle was found.
 func (area *BoardArea) discoverCycle(firstArea string) []*BoardArea {
 	if area.Order == nil || area.Order.Type != Move {
 		return nil
@@ -215,7 +287,12 @@ func (area *BoardArea) discoverCycle(firstArea string) []*BoardArea {
 		return []*BoardArea{area}
 	}
 
-	return append(area.Order.To.discoverCycle(firstArea), area)
+	continuation := area.Order.To.discoverCycle(firstArea)
+	if continuation == nil {
+		return nil
+	} else {
+		return append(continuation, area)
+	}
 }
 
 // Goes through areas that could not be previously resolved due to conflicting orders,
