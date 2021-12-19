@@ -4,6 +4,7 @@ import (
 	"testing"
 )
 
+// Tests whether units correctly move in circle without outside interference.
 func TestResolveConflictFreeMoveCycle(t *testing.T) {
 	redUnit := Unit{Type: Footman, Player: "red"}
 	greenUnit := Unit{Type: Footman, Player: "green"}
@@ -13,6 +14,7 @@ func TestResolveConflictFreeMoveCycle(t *testing.T) {
 	greenOrder := Order{Type: Move, Player: "green"}
 	yellowOrder := Order{Type: Move, Player: "yellow"}
 
+	// Sets up a limited example board.
 	board := Board{
 		"Leil": &BoardArea{
 			Name:          "Leil",
@@ -62,6 +64,7 @@ func TestResolveConflictFreeMoveCycle(t *testing.T) {
 		},
 	}
 
+	// Sets up the move orders to go in circle.
 	redOrder.From = board["Leil"]
 	redOrder.To = board["Limbol"]
 	greenOrder.From = board["Limbol"]
@@ -69,8 +72,10 @@ func TestResolveConflictFreeMoveCycle(t *testing.T) {
 	yellowOrder.From = board["Worp"]
 	yellowOrder.To = board["Leil"]
 
+	// Runs the resolve function, mutating the board.
 	board.resolveMoveCycles()
 
+	// The expected result of units having switched places in the circle.
 	expected := map[string]struct {
 		control Player
 		unit    Unit
