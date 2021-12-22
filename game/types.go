@@ -23,12 +23,12 @@ type Board map[string]*BoardArea
 
 type BoardArea struct {
 	Name             string
-	Control          Player
-	Home             Player
-	Unit             Unit
-	Sea              bool
 	Forest           bool
 	Castle           bool
+	Sea              bool
+	Home             Player
+	Control          Player
+	Unit             Unit
 	SiegeCount       int
 	Combats          []Combat
 	Neighbors        []Neighbor
