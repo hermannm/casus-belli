@@ -4,6 +4,12 @@ import (
 	. "github.com/immerse-ntnu/hermannia/server/game"
 )
 
+// Utility type for setting up expected outcomes of a test of board resolving.
+type expectedControl map[string]struct {
+	control Player
+	unit    Unit
+}
+
 // Returns an empty, limited example board for testing.
 func mockBoard() Board {
 	board := Board{}
@@ -116,4 +122,13 @@ func mockBoard() Board {
 	}
 
 	return board
+}
+
+// Utility function for placing units on a map.
+// Takes a map of area names to units to be placed there.
+func placeUnits(board Board, units map[string]Unit) {
+	for area, unit := range units {
+		board[area].Unit = unit
+		board[area].Control = unit.Player
+	}
 }
