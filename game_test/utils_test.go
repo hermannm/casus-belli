@@ -1,14 +1,10 @@
 package game_test
 
 import (
+	"testing"
+
 	. "github.com/immerse-ntnu/hermannia/server/game"
 )
-
-// Utility type for setting up expected outcomes of a test of board resolving.
-type expectedControl map[string]struct {
-	control Player
-	unit    Unit
-}
 
 // Returns an empty, limited example board for testing.
 func mockBoard() Board {
@@ -130,5 +126,22 @@ func placeUnits(board Board, units map[string]Unit) {
 	for area, unit := range units {
 		board[area].Unit = unit
 		board[area].Control = unit.Player
+	}
+}
+
+// Utility type for setting up expected outcomes of a test of board resolving.
+type expectedControl map[string]struct {
+	control Player
+	unit    Unit
+}
+
+func checkExpectedControl(board Board, expected expectedControl, t *testing.T) {
+	for name, area := range board {
+		if area.Control != expected[name].control {
+			t.Errorf("unexpected control of %v, want %v, got %v", name, area.Control, expected[name].control)
+		}
+		if area.Unit != expected[name].unit {
+			t.Errorf("unexpected unit in %v, want %v, got %v", name, area.Unit, expected[name].unit)
+		}
 	}
 }
