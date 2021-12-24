@@ -59,6 +59,23 @@ func (area *BoardArea) resolveCombatPvE() {
 	}
 }
 
+// Resolves PvE combat in an area if it results in a loss, but leaves wins unresolved.
+// Takes in the order with which to calculate combat, and returns whether the order was resolved.
+func (area *BoardArea) resolveCombatPvELoss(order *Order) (resolved bool) {
+	if area.Control != Uncontrolled {
+		return false
+	}
+
+	win := area.calculateCombatPvE(order)
+
+	if !win {
+		order.failMove()
+		resolved = true
+	}
+
+	return resolved
+}
+
 // Takes in an order (assuming it's a move order to the given area)
 // and returns whether the move wins in combat against the uncontrolled area.
 func (area *BoardArea) calculateCombatPvE(order *Order) bool {

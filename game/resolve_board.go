@@ -239,13 +239,8 @@ func (board Board) resolveMoveCycles() {
 			state := cycleStates[cycleArea.Name]
 
 			if !state.combat {
-				if cycleArea.Control == Uncontrolled {
-					win := cycleArea.calculateCombatPvE(state.order)
-
-					if !win {
-						state.order.failMove()
-						continue
-					}
+				if cycleArea.resolveCombatPvELoss(state.order) {
+					continue
 				}
 
 				cycleArea.removeUnit()
@@ -272,13 +267,8 @@ func (board Board) resolveMoveCycles() {
 					continue
 				}
 
-				if cycleArea.Control == Uncontrolled {
-					win := cycleArea.calculateCombatPvE(state.order)
-
-					if !win {
-						state.order.failMove()
-						continue
-					}
+				if cycleArea.resolveCombatPvELoss(state.order) {
+					continue
 				}
 
 				if move.Player != state.unit.Player {
