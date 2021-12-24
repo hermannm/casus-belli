@@ -239,12 +239,23 @@ func (board Board) resolveMoveCycles() {
 			state := cycleStates[cycleArea.Name]
 
 			if !state.combat {
+				if cycleArea.Control == Uncontrolled {
+					win := cycleArea.calculateCombatPvE(state.order)
+
+					if !win {
+						state.order.failMove()
+						continue
+					}
+				}
+
 				cycleArea.removeUnit()
 				state.order.succeedMove()
+
 				cycleArea.Unit = state.unit
 				if state.order.From.Unit == state.unit {
 					state.order.From.Unit = Unit{}
 				}
+
 				state.order.From.Order = nil
 				continue
 			}
@@ -259,6 +270,15 @@ func (board Board) resolveMoveCycles() {
 					move.failMove()
 					move.killAttacker()
 					continue
+				}
+
+				if cycleArea.Control == Uncontrolled {
+					win := cycleArea.calculateCombatPvE(state.order)
+
+					if !win {
+						state.order.failMove()
+						continue
+					}
 				}
 
 				if move.Player != state.unit.Player {
@@ -277,16 +297,19 @@ func (board Board) resolveMoveCycles() {
 }
 
 // Recursively finds a cycle of moves starting and ending with the given firstArea name.
+// Assumes that border conflicts (move cycles with just 2 areas) are already solved.
 // Returns a list of pointers to the areas in the cycle, or nil if no cycle was found.
 func (area *BoardArea) discoverCycle(firstArea string) []*BoardArea {
 	if area.Order == nil || area.Order.Type != Move {
 		return nil
 	}
 
+	// The base case: the destination is the beginning of the cycle.
 	if area.Order.To.Name == firstArea {
 		return []*BoardArea{area}
 	}
 
+	// If the base case is not yet reached, pass cycle discovery to the next area in the chain.
 	continuation := area.Order.To.discoverCycle(firstArea)
 	if continuation == nil {
 		return nil
