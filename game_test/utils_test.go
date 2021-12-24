@@ -10,7 +10,7 @@ import (
 func mockBoard() Board {
 	board := Board{}
 
-	areas := []BoardArea{
+	areas := []*BoardArea{
 		{Name: "Lusía", Castle: true},
 		{Name: "Lomone", Forest: true},
 		{Name: "Limbol", Forest: true},
@@ -99,7 +99,7 @@ func mockBoard() Board {
 		area.Neighbors = make([]Neighbor, 0)
 		area.IncomingMoves = make([]*Order, 0)
 		area.IncomingSupports = make([]*Order, 0)
-		board[area.Name] = &area
+		board[area.Name] = area
 	}
 
 	for _, neighbor := range neighbors {
@@ -137,11 +137,16 @@ type expectedControl map[string]struct {
 
 func checkExpectedControl(board Board, expected expectedControl, t *testing.T) {
 	for name, area := range board {
-		if area.Control != expected[name].control {
-			t.Errorf("unexpected control of %v, want %v, got %v", name, area.Control, expected[name].control)
+		expectation, ok := expected[name]
+		if !ok {
+			continue
 		}
-		if area.Unit != expected[name].unit {
-			t.Errorf("unexpected unit in %v, want %v, got %v", name, area.Unit, expected[name].unit)
+
+		if area.Control != expectation.control {
+			t.Errorf("unexpected control of %v, want %v, got %v", name, area.Control, expectation.control)
+		}
+		if area.Unit != expectation.unit {
+			t.Errorf("unexpected unit in %v, want %v, got %v", name, area.Unit, expectation.unit)
 		}
 	}
 }
