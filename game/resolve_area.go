@@ -45,6 +45,21 @@ func (area *BoardArea) resolveCombat() {
 	area.resolveWinner(winner)
 }
 
+// Takes in an order (assuming it's a move order to the given area)
+// and returns whether the move wins in combat against the uncontrolled area.
+func (area *BoardArea) calculateCombatPvE(order *Order) bool {
+	mods := map[Player][]Modifier{
+		order.Player: attackModifiers(*order, false, false, true),
+	}
+
+	appendSupportMods(mods, *area, area.IncomingMoves, true)
+
+	combat, result, _ := combatResults(mods)
+	area.Combats = append(area.Combats, combat)
+
+	return result.Total >= 4
+}
+
 // Resolves combat between a single attacker and an unconquered area.
 func (area *BoardArea) resolveCombatPvE() {
 	// Assumes check has already been made that there is just one attacker.
@@ -74,21 +89,6 @@ func (area *BoardArea) resolveCombatPvELoss(order *Order) (resolved bool) {
 	}
 
 	return resolved
-}
-
-// Takes in an order (assuming it's a move order to the given area)
-// and returns whether the move wins in combat against the uncontrolled area.
-func (area *BoardArea) calculateCombatPvE(order *Order) bool {
-	mods := map[Player][]Modifier{
-		order.Player: attackModifiers(*order, false, false, true),
-	}
-
-	appendSupportMods(mods, *area, area.IncomingMoves, true)
-
-	combat, result, _ := combatResults(mods)
-	area.Combats = append(area.Combats, combat)
-
-	return result.Total >= 4
 }
 
 // Resolves combat when attacked area is defended or has multiple attackers.

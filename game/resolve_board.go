@@ -187,6 +187,7 @@ func (board Board) resolveBorderConflicts() {
 	}
 }
 
+// Utility type for storing state of an area in a cycle while resolving it.
 type cycleState struct {
 	unit   Unit
 	order  *Order
@@ -197,6 +198,7 @@ type cycleState struct {
 
 // Resolves cycles of move orders (more than 2 move orders going in circle).
 func (board Board) resolveMoveCycles() {
+	// Sets up a map of already processed areas to avoid re-processing cycles.
 	processed := make(map[string]bool)
 
 	for name, area := range board {
@@ -210,16 +212,20 @@ func (board Board) resolveMoveCycles() {
 			continue
 		}
 
+		// Sets up a map to store the state of areas in a cycle.
 		cycleStates := make(map[string]cycleState)
 
 		for _, cycleArea := range cycle {
 			processed[cycleArea.Order.To.Name] = true
 
+			// Stores the unit and order of the area in the cycleState,
+			// as these may be switched out during resolving.
 			cycleStates[cycleArea.Order.To.Name] = cycleState{
 				unit:  cycleArea.Unit,
 				order: cycleArea.Order,
 			}
 
+			// PvP combat must only be resolved if there is more than 1 incoming move.
 			if len(cycleArea.Order.To.IncomingMoves) < 2 {
 				continue
 			}
@@ -235,10 +241,12 @@ func (board Board) resolveMoveCycles() {
 			}
 		}
 
+		// Now that all cycle states are stored, changes to the board can be resolved.
 		for _, cycleArea := range cycle {
 			state := cycleStates[cycleArea.Name]
 
 			if !state.combat {
+				// If destination area was uncontrolled, resolve PvE combat before proceeding.
 				if cycleArea.resolveCombatPvELoss(state.order) {
 					continue
 				}
@@ -267,6 +275,7 @@ func (board Board) resolveMoveCycles() {
 					continue
 				}
 
+				// If move won the PvP combat, but area is uncontrolled, it must also win PvE combat.
 				if cycleArea.resolveCombatPvELoss(state.order) {
 					continue
 				}
