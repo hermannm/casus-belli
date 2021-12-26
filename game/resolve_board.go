@@ -386,8 +386,24 @@ func (board Board) cleanup() {
 	}
 }
 
-// Goes through the board and resolves winter orders.
-// TODO: Implement.
+// Resolves winter orders (builds and internal moves) on the board.
+// Assumes they have already been validated.
 func (board Board) resolveWinter(orders []*Order) {
+	for _, order := range orders {
+		switch order.Type {
 
+		case Build:
+			board[order.From.Name].Unit = Unit{
+				Player: order.Player,
+				Type:   order.Build,
+			}
+
+		case Move:
+			board[order.To.Name].Unit = board[order.From.Name].Unit
+			board[order.From.Name].Unit = Unit{}
+
+		}
+
+		order.Status = Success
+	}
 }
