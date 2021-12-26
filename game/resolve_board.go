@@ -5,6 +5,7 @@ func (board Board) Resolve(round *Round) {
 	switch round.Season {
 	case Winter:
 		board.resolveWinter(round.FirstOrders)
+		board.cleanup()
 	default:
 		board.populateAreaOrders(round.FirstOrders)
 		board.resolveMoves()
@@ -403,7 +404,5 @@ func (board Board) resolveWinter(orders []*Order) {
 			board[order.From.Name].Unit = Unit{}
 
 		}
-
-		order.Status = Success
 	}
 }
