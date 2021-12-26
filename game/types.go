@@ -30,7 +30,7 @@ type BoardArea struct {
 	Control          Player
 	Unit             Unit
 	SiegeCount       int
-	Combats          []Combat
+	Battles          []Battle
 	Neighbors        []Neighbor
 	Order            *Order
 	IncomingMoves    []*Order
@@ -65,7 +65,7 @@ type OrderType string
 
 type OrderStatus string
 
-type Combat []Result
+type Battle []Result
 
 type Result struct {
 	Total  int

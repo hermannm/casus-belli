@@ -59,7 +59,7 @@ func ReadBoard(players int) (game.Board, error) {
 			Neighbors:        make([]game.Neighbor, 0),
 			IncomingMoves:    make([]*game.Order, 0),
 			IncomingSupports: make([]*game.Order, 0),
-			Combats:          make([]game.Combat, 0),
+			Battles:          make([]game.Battle, 0),
 		}
 
 		board[area.Name] = &area

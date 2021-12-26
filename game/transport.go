@@ -40,8 +40,10 @@ func (area BoardArea) canNeighborsTransport(destination string, exclude map[stri
 	transportingNeighbors, newExclude := area.transportingNeighbors(exclude)
 
 	for _, transport := range transportingNeighbors {
-		// Transports either happen when resolving conflict-free orders, in which case it should not allow transports under attack,
-		// or after transport combats are resolved, in which case there should no longer be any transports under attack.
+		// Transports either happen when resolving conflict-free orders,
+		// in which case it should not allow transports under attack,
+		// or after transport battles are resolved,
+		// in which case there should no longer be any transports under attack.
 		if len(transport.Area.IncomingMoves) > 0 {
 			continue
 		}

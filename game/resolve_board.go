@@ -87,7 +87,7 @@ func (board Board) cutSupports() {
 	}
 }
 
-// Goes through areas that can be resolved without PvP combat, and resolves them.
+// Goes through areas that can be resolved without PvP battle, and resolves them.
 func (board Board) resolveConflictFreeOrders() {
 	allResolved := false
 	processed := make(map[string]bool)
@@ -108,7 +108,7 @@ func (board Board) resolveConflictFreeOrders() {
 
 			move := area.IncomingMoves[0]
 
-			// Checks if transport-dependent order can be transported without combat.
+			// Checks if transport-dependent order can be transported without battle.
 			// If it cannot, adds it to 'resolved' map to avoid repeating Transportable calculation.
 			if !area.HasNeighbor(move.To.Name) {
 				transportable, dangerZone := move.Transportable()
@@ -127,7 +127,7 @@ func (board Board) resolveConflictFreeOrders() {
 			allResolved = false
 
 			if area.Control == Uncontrolled {
-				area.resolveCombatPvE()
+				area.resolvePvEBattle()
 			} else {
 				move.moveAndSucceed()
 			}
@@ -136,20 +136,20 @@ func (board Board) resolveConflictFreeOrders() {
 	}
 }
 
-// Finds transport orders under attack, and resolves their combat.
+// Finds transport orders under attack, and resolves their battles.
 func (board Board) resolveTransportOrders() {
 	for _, area := range board {
 		if area.Order != nil &&
 			area.Order.Type == Transport &&
 			len(area.IncomingMoves) > 0 {
 
-			area.resolveCombat()
+			area.resolveBattle()
 		}
 	}
 }
 
 // Finds pairs of areas on the board that are attacking each other,
-// and resolves combat between them.
+// and resolves battles between them.
 func (board Board) resolveBorderConflicts() {
 	processed := make(map[string]bool)
 
@@ -183,7 +183,7 @@ func (board Board) resolveBorderConflicts() {
 			}
 		}
 
-		resolveBorderCombat(area1, area2)
+		resolveBorderBattle(area1, area2)
 	}
 }
 
@@ -191,7 +191,7 @@ func (board Board) resolveBorderConflicts() {
 type cycleState struct {
 	unit   Unit
 	order  *Order
-	combat bool
+	battle bool
 	winner Player
 	tie    bool
 }
@@ -225,15 +225,15 @@ func (board Board) resolveMoveCycles() {
 				order: cycleArea.Order,
 			}
 
-			// PvP combat must only be resolved if there is more than 1 incoming move.
+			// PvP battle must only be resolved if there is more than 1 incoming move.
 			if len(cycleArea.Order.To.IncomingMoves) < 2 {
 				continue
 			}
 
-			winner, tie := cycleArea.Order.To.resolveCombatPvP(false)
+			winner, tie := cycleArea.Order.To.resolvePvPBattle(false)
 
 			if state, ok := cycleStates[cycleArea.Order.To.Name]; ok {
-				state.combat = true
+				state.battle = true
 				state.winner = winner
 				state.tie = tie
 
@@ -245,9 +245,9 @@ func (board Board) resolveMoveCycles() {
 		for _, cycleArea := range cycle {
 			state := cycleStates[cycleArea.Name]
 
-			if !state.combat {
-				// If destination area was uncontrolled, resolve PvE combat before proceeding.
-				if cycleArea.resolveCombatPvELoss(state.order) {
+			if !state.battle {
+				// If destination area was uncontrolled, resolve PvE battle before proceeding.
+				if cycleArea.resolvePvEBattleLoss(state.order) {
 					continue
 				}
 
@@ -263,7 +263,7 @@ func (board Board) resolveMoveCycles() {
 				continue
 			}
 
-			// Ties already handled by resolveCombatPvP.
+			// Ties already handled by resolvePvPBattle.
 			if state.tie {
 				continue
 			}
@@ -275,8 +275,8 @@ func (board Board) resolveMoveCycles() {
 					continue
 				}
 
-				// If move won the PvP combat, but area is uncontrolled, it must also win PvE combat.
-				if cycleArea.resolveCombatPvELoss(state.order) {
+				// If move won the PvP battle, but area is uncontrolled, it must also win PvE battle.
+				if cycleArea.resolvePvEBattleLoss(state.order) {
 					continue
 				}
 
@@ -348,7 +348,7 @@ func (board Board) resolveConflicts() {
 				continue
 			}
 
-			area.resolveCombat()
+			area.resolveBattle()
 			processed[area.Name] = true
 		}
 	}

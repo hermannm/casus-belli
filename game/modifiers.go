@@ -22,7 +22,7 @@ func attackModifiers(order Order, otherAttackers bool, borderConflict bool, incl
 
 	neighbor, hasNeighbor := order.From.GetNeighbor(order.To.Name, order.Via)
 
-	// Assumes danger zone checks have been made before combat,
+	// Assumes danger zone checks have been made before battle,
 	// and thus adds surprise modifier to attacker coming across such zones.
 	if hasNeighbor && neighbor.DangerZone != "" {
 		mods = append(mods, Modifier{
@@ -132,9 +132,9 @@ func appendSupportMods(mods map[Player][]Modifier, area BoardArea, moves []*Orde
 	}
 }
 
-// Returns which player a given support order supports in a combat.
-// If combatant matches support order's player, support is automatically given.
-// If support is not given to any combatant, returns "".
+// Returns which player a given support order supports in a battle.
+// If the support order's player matches a player in the battle, support is automatically given.
+// If support is not given to any player in the battle, returns "".
 //
 // TODO: Implement asking player who to support if they are not involved themselves.
 func callSupport(support *Order, area BoardArea, moves []*Order, includeDefender bool) Player {
@@ -151,9 +151,9 @@ func callSupport(support *Order, area BoardArea, moves []*Order, includeDefender
 	return ""
 }
 
-// Constructs combat results from combatants' modifiers.
-func combatResults(playerMods map[Player][]Modifier) (
-	combat Combat,
+// Constructs battle results from players' modifiers.
+func battleResults(playerMods map[Player][]Modifier) (
+	battle Battle,
 	winner Result,
 	tie bool,
 ) {
@@ -173,10 +173,10 @@ func combatResults(playerMods map[Player][]Modifier) (
 			tie = true
 		}
 
-		combat = append(combat, result)
+		battle = append(battle, result)
 	}
 
-	return combat, winner, tie
+	return battle, winner, tie
 }
 
 func sumModifiers(mods []Modifier) int {

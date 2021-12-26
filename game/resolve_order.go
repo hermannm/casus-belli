@@ -41,7 +41,7 @@ func (move *Order) killAttacker() {
 	move.From.Unit = Unit{}
 }
 
-// Succeeds move from the winner after combat in an area,
+// Succeeds move from the winner after battle in an area,
 // and fails all others.
 func (area *BoardArea) resolveWinner(winner Player) {
 	if !area.IsEmpty() && area.Unit.Player != winner {
@@ -58,8 +58,8 @@ func (area *BoardArea) resolveWinner(winner Player) {
 	}
 }
 
-// Fails all units involved in combat except winner.
-// Used for resolving combats that have follow-up combats,
+// Fails all units involved in battle except winner.
+// Used for resolving battles that have follow-up battles,
 // and so should not succeed the winning move yet.
 func (area *BoardArea) resolveIntermediaryWinner(winner Player) {
 	if !area.IsEmpty() && area.Unit.Player != winner {
@@ -77,19 +77,19 @@ func (area *BoardArea) resolveIntermediaryWinner(winner Player) {
 // Rolls dice to see if order makes it across danger zone.
 // Returns true if order succeeded.
 // If order is a move and fails, it is killed.
-// Adds result to combat list of origin area.
+// Adds result to battle list of origin area.
 func (order *Order) crossDangerZone() bool {
 	diceMod := diceModifier()
 
-	// Records crossing attempt as a combat, so clients can see dice roll.
-	combat := Combat{
+	// Records crossing attempt as a battle, so clients can see dice roll.
+	battle := Battle{
 		{
 			Total:  diceMod.Value,
 			Parts:  []Modifier{diceMod},
 			Player: order.Player,
 		},
 	}
-	order.From.Combats = append(order.From.Combats, combat)
+	order.From.Battles = append(order.From.Battles, battle)
 
 	// All danger zones currently require a dice roll greater than 2.
 	// May need to be changed in the future if a more dynamic implementation is preferred.

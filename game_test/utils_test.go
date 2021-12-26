@@ -95,7 +95,7 @@ func mockBoard() Board {
 	}
 
 	for _, area := range areas {
-		area.Combats = make([]Combat, 0)
+		area.Battles = make([]Battle, 0)
 		area.Neighbors = make([]Neighbor, 0)
 		area.IncomingMoves = make([]*Order, 0)
 		area.IncomingSupports = make([]*Order, 0)

@@ -52,12 +52,12 @@ func printBoard(board game.Board, areas map[string]game.Unit, neighbors bool) {
 			}
 		}
 
-		if len(area.Combats) > 0 {
-			fmt.Println("\nCOMBATS:")
-			for _, combat := range area.Combats {
-				combatString := ""
+		if len(area.Battles) > 0 {
+			fmt.Println("\nBATTLES:")
+			for _, battle := range area.Battles {
+				battleString := ""
 
-				for _, result := range combat {
+				for _, result := range battle {
 					resultString := fmt.Sprintf("%s: %d ( ", result.Player, result.Total)
 
 					for _, mod := range result.Parts {
@@ -69,10 +69,10 @@ func printBoard(board game.Board, areas map[string]game.Unit, neighbors bool) {
 
 					resultString += ") "
 
-					combatString += resultString
+					battleString += resultString
 				}
 
-				fmt.Println(combatString)
+				fmt.Println(battleString)
 			}
 		}
 
@@ -184,7 +184,7 @@ func testTransportWithDangerZone(board game.Board) {
 	printResolvePrint(board, areas, &round)
 }
 
-func testTransportCombat(board game.Board) {
+func testTransportBattle(board game.Board) {
 	areas := map[string]game.Unit{
 		"Worp": {
 			Type:   game.Footman,
