@@ -14,31 +14,35 @@ type Lobby struct {
 
 	// Maps player IDs (unique to the lobby) to their socket connections for sending and receiving.
 	Connections map[string]*websocket.Conn
-
-	// Mutex for handling multiple requests trying to change the same lobby.
-	Mut *sync.Mutex
 }
 
 // Sets up a new lobby with routes for joining it, one route for each given player ID.
-func CreateLobby(id string, minPlayers int, playerIDs []string) {
+// Returns the lobby, and a wait group to wait for the lobby to fill up.
+func CreateLobby(id string, minPlayers int, playerIDs []string) (Lobby, *sync.WaitGroup) {
 	lobby := Lobby{
 		ID:          id,
 		PlayerCount: len(playerIDs),
 		Connections: make(map[string]*websocket.Conn, len(playerIDs)),
 	}
 
+	var mut sync.Mutex
+	var wg sync.WaitGroup
+	wg.Add(lobby.PlayerCount)
+
 	for _, playerID := range playerIDs {
-		http.HandleFunc("/"+id+"/join/"+playerID, addPlayer(&lobby, playerID))
+		http.HandleFunc("/"+id+"/join/"+playerID, addPlayer(&lobby, playerID, &mut, &wg))
 	}
+
+	return lobby, &wg
 }
 
 // Returns a handler for routes to add a player to the given lobby with the given player ID.
-func addPlayer(lobby *Lobby, playerID string) http.HandlerFunc {
+func addPlayer(lobby *Lobby, playerID string, mut *sync.Mutex, wg *sync.WaitGroup) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		lobby.Mut.Lock()
+		mut.Lock()
 		if _, available := lobby.Connections[playerID]; !available {
-			http.Error(w, "Player ID already taken.", http.StatusConflict)
-			lobby.Mut.Unlock()
+			http.Error(w, "player ID already taken", http.StatusConflict)
+			mut.Unlock()
 			return
 		}
 
@@ -52,10 +56,13 @@ func addPlayer(lobby *Lobby, playerID string) http.HandlerFunc {
 		socket, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			log.Println(err)
-			http.Error(w, "Unable to establish socket connection.", http.StatusInternalServerError)
+			http.Error(w, "unable to establish socket connection", http.StatusInternalServerError)
+			mut.Unlock()
+			return
 		}
 
 		lobby.Connections[playerID] = socket
-		lobby.Mut.Unlock()
+		mut.Unlock()
+		wg.Done()
 	}
 }
