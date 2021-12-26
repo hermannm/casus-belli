@@ -19,9 +19,9 @@ type Round struct {
 
 type Season string
 
-type Board map[string]*BoardArea
+type Board map[string]*Area
 
-type BoardArea struct {
+type Area struct {
 	Name             string
 	Forest           bool
 	Castle           bool
@@ -38,7 +38,7 @@ type BoardArea struct {
 }
 
 type Neighbor struct {
-	Area       *BoardArea
+	Area       *Area
 	River      bool
 	Cliffs     bool   // Whether coast between neighboring land areas have cliffs (and thus is impassable to ships).
 	DangerZone string // If not "": the name of the danger zone that the neighboring area lies across (requires check to pass).
@@ -54,8 +54,8 @@ type UnitType string
 type Order struct {
 	Type   OrderType
 	Player Player
-	From   *BoardArea
-	To     *BoardArea
+	From   *Area
+	To     *Area
 	Via    string
 	Build  UnitType
 	Status OrderStatus

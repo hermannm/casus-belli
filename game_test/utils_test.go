@@ -10,7 +10,7 @@ import (
 func mockBoard() Board {
 	board := Board{}
 
-	areas := []*BoardArea{
+	areas := []*Area{
 		{Name: "Lusía", Castle: true},
 		{Name: "Lomone", Forest: true},
 		{Name: "Limbol", Forest: true},

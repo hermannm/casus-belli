@@ -1,11 +1,11 @@
 package game
 
-func (area BoardArea) IsEmpty() bool {
+func (area Area) IsEmpty() bool {
 	return area.Unit.Type == NoUnit
 }
 
 // Removes a unit from the board, and fails its order if any.
-func (area *BoardArea) removeUnit() {
+func (area *Area) removeUnit() {
 	area.Unit = Unit{}
 	if area.Order != nil {
 		area.Order.Status = Fail
@@ -13,12 +13,12 @@ func (area *BoardArea) removeUnit() {
 	}
 }
 
-func moveUnit(from *BoardArea, to *BoardArea) {
+func moveUnit(from *Area, to *Area) {
 	to.Unit = from.Unit
 	from.Unit = Unit{}
 }
 
-func (area BoardArea) IsCoast() bool {
+func (area Area) IsCoast() bool {
 	if area.Sea {
 		return false
 	}
@@ -36,7 +36,7 @@ func (area BoardArea) IsCoast() bool {
 // If the area has several neighbor relations to the area,
 // returns the one matching the provided 'via' string
 // (currently the name of the neighbor relation's danger zone).
-func (area BoardArea) GetNeighbor(neighborName string, via string) (
+func (area Area) GetNeighbor(neighborName string, via string) (
 	neighbor Neighbor,
 	hasNeighbor bool,
 ) {
@@ -56,7 +56,7 @@ func (area BoardArea) GetNeighbor(neighborName string, via string) (
 	return neighbor, hasNeighbor
 }
 
-func (area BoardArea) HasNeighbor(neighborName string) bool {
+func (area Area) HasNeighbor(neighborName string) bool {
 	for _, neighbor := range area.Neighbors {
 		if neighbor.Area.Name == neighborName {
 			return true
@@ -68,8 +68,8 @@ func (area BoardArea) HasNeighbor(neighborName string) bool {
 
 // Returns an area's neighboring areas.
 // Ensures no duplicates in the case of multiple neighbor relations to a single area.
-func (area BoardArea) NeighborAreas() []*BoardArea {
-	areas := make([]*BoardArea, 0)
+func (area Area) NeighborAreas() []*Area {
+	areas := make([]*Area, 0)
 	added := make(map[string]bool)
 
 	for _, neighbor := range area.Neighbors {

@@ -6,7 +6,7 @@ import (
 )
 
 // Returns modifiers (including dice roll) of defending unit in an area.
-func defenseModifiers(area BoardArea) []Modifier {
+func defenseModifiers(area Area) []Modifier {
 	mods := []Modifier{}
 
 	mods = appendUnitMod(mods, area.Unit.Type)
@@ -118,7 +118,7 @@ func rollDice() int {
 
 // Calls support from support orders to the given area.
 // Appends support modifiers to receiving players' modifier lists in the given map.
-func appendSupportMods(mods map[Player][]Modifier, area BoardArea, moves []*Order, includeDefender bool) {
+func appendSupportMods(mods map[Player][]Modifier, area Area, moves []*Order, includeDefender bool) {
 	for _, support := range area.IncomingSupports {
 		supported := callSupport(support, area, moves, includeDefender)
 
@@ -137,7 +137,7 @@ func appendSupportMods(mods map[Player][]Modifier, area BoardArea, moves []*Orde
 // If support is not given to any player in the battle, returns "".
 //
 // TODO: Implement asking player who to support if they are not involved themselves.
-func callSupport(support *Order, area BoardArea, moves []*Order, includeDefender bool) Player {
+func callSupport(support *Order, area Area, moves []*Order, includeDefender bool) Player {
 	if !area.IsEmpty() && area.Unit.Player == support.Player && includeDefender {
 		return support.Player
 	}

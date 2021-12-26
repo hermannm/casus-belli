@@ -1,7 +1,7 @@
 package game
 
 // Delegates resolving of battle to other functions depending on the state of the area.
-func (area *BoardArea) resolveBattle() {
+func (area *Area) resolveBattle() {
 	if area.Control == Uncontrolled && !area.Sea {
 		// If area is an empty, uncontrolled land area with a single attacker,
 		// then the attacker fights the area.
@@ -47,7 +47,7 @@ func (area *BoardArea) resolveBattle() {
 
 // Takes in an order (assuming it's a move order to the given area)
 // and returns whether the move wins battle against the uncontrolled area.
-func (area *BoardArea) calculatePvEBattle(order *Order) bool {
+func (area *Area) calculatePvEBattle(order *Order) bool {
 	mods := map[Player][]Modifier{
 		order.Player: attackModifiers(*order, false, false, true),
 	}
@@ -61,7 +61,7 @@ func (area *BoardArea) calculatePvEBattle(order *Order) bool {
 }
 
 // Resolves battle between a single attacker and an unconquered area.
-func (area *BoardArea) resolvePvEBattle() {
+func (area *Area) resolvePvEBattle() {
 	// Assumes check has already been made that there is just one attacker.
 	order := area.IncomingMoves[0]
 
@@ -76,7 +76,7 @@ func (area *BoardArea) resolvePvEBattle() {
 
 // Resolves PvE battle in an area if it results in a loss, but leaves wins unresolved.
 // Takes in the order with which to calculate battle, and returns whether the order was resolved.
-func (area *BoardArea) resolvePvEBattleLoss(order *Order) (resolved bool) {
+func (area *Area) resolvePvEBattleLoss(order *Order) (resolved bool) {
 	if area.Control != Uncontrolled {
 		return false
 	}
@@ -94,7 +94,7 @@ func (area *BoardArea) resolvePvEBattleLoss(order *Order) (resolved bool) {
 // Resolves battle when attacked area is defended or has multiple attackers.
 // Takes in parameter for whether to account for defender in battle (most often true).
 // Returns winner ("" in the case of tie) and whether there was a tie for the highest result.
-func (area *BoardArea) resolvePvPBattle(includeDefender bool) (Player, bool) {
+func (area *Area) resolvePvPBattle(includeDefender bool) (Player, bool) {
 	mods := make(map[Player][]Modifier)
 
 	for _, move := range area.IncomingMoves {
@@ -138,10 +138,10 @@ func (area *BoardArea) resolvePvPBattle(includeDefender bool) (Player, bool) {
 }
 
 // Resolves battle when units from two areas attack each other simultaneously.
-func resolveBorderBattle(area1 *BoardArea, area2 *BoardArea) {
+func resolveBorderBattle(area1 *Area, area2 *Area) {
 	mods := make(map[Player][]Modifier)
 
-	for _, area := range []*BoardArea{area1, area2} {
+	for _, area := range []*Area{area1, area2} {
 		mods[area.Unit.Player] = attackModifiers(*area.Order, true, true, false)
 
 		appendSupportMods(mods, *area.Order.To, []*Order{area.Order}, false)

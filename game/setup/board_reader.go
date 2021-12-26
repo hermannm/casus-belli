@@ -49,7 +49,7 @@ func ReadBoard(players int) (game.Board, error) {
 	board := make(game.Board)
 
 	for _, jsonArea := range jsonBoard.Areas {
-		area := game.BoardArea{
+		area := game.Area{
 			Name:             jsonArea.Name,
 			Control:          game.Player(jsonArea.Home),
 			Home:             game.Player(jsonArea.Home),

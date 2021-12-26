@@ -43,7 +43,7 @@ func (move *Order) killAttacker() {
 
 // Succeeds move from the winner after battle in an area,
 // and fails all others.
-func (area *BoardArea) resolveWinner(winner Player) {
+func (area *Area) resolveWinner(winner Player) {
 	if !area.IsEmpty() && area.Unit.Player != winner {
 		area.removeUnit()
 	}
@@ -61,7 +61,7 @@ func (area *BoardArea) resolveWinner(winner Player) {
 // Fails all units involved in battle except winner.
 // Used for resolving battles that have follow-up battles,
 // and so should not succeed the winning move yet.
-func (area *BoardArea) resolveIntermediaryWinner(winner Player) {
+func (area *Area) resolveIntermediaryWinner(winner Player) {
 	if !area.IsEmpty() && area.Unit.Player != winner {
 		area.removeUnit()
 	}

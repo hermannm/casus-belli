@@ -31,7 +31,7 @@ func (order Order) Transportable() (
 // Checks if a land unit can be transported to destination.
 // Takes a map of area names to exclude, to enable recursion.
 // Returns whether the unit can be transported, and if so, whether it must pass through danger zone.
-func (area BoardArea) canNeighborsTransport(destination string, exclude map[string]bool) (
+func (area Area) canNeighborsTransport(destination string, exclude map[string]bool) (
 	transportable bool,
 	dangerZone bool,
 ) {
@@ -74,7 +74,7 @@ func (area BoardArea) canNeighborsTransport(destination string, exclude map[stri
 
 // Finds an area's friendly neighbors that offer transports.
 // Takes a map of area names to exclude, and returns it with the transporting neighbors added.
-func (area BoardArea) transportingNeighbors(exclude map[string]bool) ([]Neighbor, map[string]bool) {
+func (area Area) transportingNeighbors(exclude map[string]bool) ([]Neighbor, map[string]bool) {
 	neighbors := make([]Neighbor, 0)
 	newExclude := make(map[string]bool)
 	for k, v := range exclude {

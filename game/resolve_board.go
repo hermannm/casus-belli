@@ -298,14 +298,14 @@ func (board Board) resolveMoveCycles() {
 // Recursively finds a cycle of moves starting and ending with the given firstArea name.
 // Assumes that border conflicts (move cycles with just 2 areas) are already solved.
 // Returns a list of pointers to the areas in the cycle, or nil if no cycle was found.
-func (area *BoardArea) discoverCycle(firstArea string) []*BoardArea {
+func (area *Area) discoverCycle(firstArea string) []*Area {
 	if area.Order == nil || area.Order.Type != Move {
 		return nil
 	}
 
 	// The base case: the destination is the beginning of the cycle.
 	if area.Order.To.Name == firstArea {
-		return []*BoardArea{area}
+		return []*Area{area}
 	}
 
 	// If the base case is not yet reached, pass cycle discovery to the next area in the chain.
