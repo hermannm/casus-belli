@@ -20,6 +20,7 @@ type Lobby struct {
 	Connections map[string]*websocket.Conn
 }
 
+// Returns the current connected players in a lobby, and the max number of potential players.
 func (lobby Lobby) PlayerCount() (current int, max int) {
 	for _, conn := range lobby.Connections {
 		if conn != nil {
@@ -32,6 +33,7 @@ func (lobby Lobby) PlayerCount() (current int, max int) {
 	return current, max
 }
 
+// Returns a map of player IDs to whether they are taken (true if taken).
 func (lobby Lobby) AvailablePlayerIDs() map[string]bool {
 	available := make(map[string]bool)
 
@@ -47,7 +49,10 @@ func (lobby Lobby) AvailablePlayerIDs() map[string]bool {
 }
 
 // Registers handlers for the lobby API routes.
-func StartAPI(address string) {
+func StartAPI(address string, open bool) {
+	if open {
+		http.HandleFunc("/new", createLobbyHandler)
+	}
 	http.HandleFunc("/join", addPlayer)
 	http.ListenAndServe(address, nil)
 }
@@ -72,6 +77,36 @@ func CreateLobby(id string, playerIDs []string) (*Lobby, error) {
 	lobbies[id] = &lobby
 
 	return &lobby, nil
+}
+
+// Handler for creating lobbies for servers that let users create their own lobbies.
+func createLobbyHandler(res http.ResponseWriter, req *http.Request) {
+	params := req.URL.Query()
+
+	if !params.Has("id") || !params.Has("playerIDs") {
+		http.Error(res, "insufficient query parameters", http.StatusBadRequest)
+		return
+	}
+
+	id := params.Get("id")
+	if _, ok := lobbies[id]; ok {
+		http.Error(res, "lobby with ID \""+id+"\" already exists", http.StatusConflict)
+		return
+	}
+
+	playerIDs := params["playerIDs"]
+	if len(playerIDs) < 2 {
+		http.Error(res, "at least 2 player IDs must be provided to lobby", http.StatusBadRequest)
+		return
+	}
+
+	_, err := CreateLobby(id, playerIDs)
+	if err != nil {
+		http.Error(res, "error creating lobby", http.StatusInternalServerError)
+		return
+	}
+
+	res.Write([]byte("lobby created"))
 }
 
 // Removes a lobby from the lobby map and closes its connections.
@@ -135,6 +170,9 @@ func addPlayer(res http.ResponseWriter, req *http.Request) {
 	}
 
 	lobby.Connections[playerID] = socket
+
+	res.Write([]byte("joined lobby"))
+
 	lobby.Mut.Unlock()
 	lobby.WG.Done()
 }
