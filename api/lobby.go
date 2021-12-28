@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"net/url"
 	"sync"
 
 	"github.com/gorilla/websocket"
@@ -54,6 +55,7 @@ func StartAPI(address string, open bool) {
 		http.HandleFunc("/new", createLobbyHandler)
 	}
 	http.HandleFunc("/join", addPlayer)
+	http.HandleFunc("/info", lobbyInfo)
 	http.ListenAndServe(address, nil)
 }
 
@@ -81,10 +83,8 @@ func CreateLobby(id string, playerIDs []string) (*Lobby, error) {
 
 // Handler for creating lobbies for servers that let users create their own lobbies.
 func createLobbyHandler(res http.ResponseWriter, req *http.Request) {
-	params := req.URL.Query()
-
-	if !params.Has("id") || !params.Has("playerIDs") {
-		http.Error(res, "insufficient query parameters", http.StatusBadRequest)
+	params, ok := checkParams(res, req, "id", "playerIDs")
+	if !ok {
 		return
 	}
 
@@ -126,10 +126,8 @@ func CloseLobby(id string) error {
 
 // Handler for adding a player to a lobby.
 func addPlayer(res http.ResponseWriter, req *http.Request) {
-	params := req.URL.Query()
-
-	if !params.Has("lobby") || !params.Has("player") {
-		http.Error(res, "insufficient query parameters", http.StatusBadRequest)
+	params, ok := checkParams(res, req, "lobby", "player")
+	if !ok {
 		return
 	}
 
@@ -175,4 +173,33 @@ func addPlayer(res http.ResponseWriter, req *http.Request) {
 
 	lobby.Mut.Unlock()
 	lobby.WG.Done()
+}
+
+type lobbyInfo struct {
+	id          string
+	connections map[string]bool
+}
+
+func getLobbyInfo(res http.ResponseWriter, req *http.Request) {
+	_, ok := checkParams(res, req, "lobby")
+	if !ok {
+		return
+	}
+}
+
+// Checks the given request for the existence of the provided parameter keys.
+// If all exist, returns the parameters, otherwise returns ok = false.
+func checkParams(res http.ResponseWriter, req *http.Request, keys ...string) (
+	params url.Values, ok bool,
+) {
+	params = req.URL.Query()
+
+	for _, key := range keys {
+		if !params.Has(key) {
+			http.Error(res, "insufficient query parameters", http.StatusBadRequest)
+			return nil, false
+		}
+	}
+
+	return params, true
 }
