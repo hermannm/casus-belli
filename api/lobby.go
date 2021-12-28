@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"errors"
 	"log"
 	"net/http"
@@ -55,7 +56,7 @@ func StartAPI(address string, open bool) {
 		http.HandleFunc("/new", createLobbyHandler)
 	}
 	http.HandleFunc("/join", addPlayer)
-	http.HandleFunc("/info", lobbyInfo)
+	http.HandleFunc("/info", getLobby)
 	http.ListenAndServe(address, nil)
 }
 
@@ -139,7 +140,6 @@ func addPlayer(res http.ResponseWriter, req *http.Request) {
 
 	playerID := params.Get("player")
 	lobby.Mut.Lock()
-
 	conn, ok := lobby.Connections[playerID]
 	if !ok {
 		http.Error(res, "invalid player ID", http.StatusBadRequest)
@@ -175,16 +175,35 @@ func addPlayer(res http.ResponseWriter, req *http.Request) {
 	lobby.WG.Done()
 }
 
+// Utility type for responding to requests for lobby info.
 type lobbyInfo struct {
-	id          string
-	connections map[string]bool
+	ID                 string          `json:"id"`
+	AvailablePlayerIDs map[string]bool `json:"availablePlayerIDs"`
 }
 
-func getLobbyInfo(res http.ResponseWriter, req *http.Request) {
-	_, ok := checkParams(res, req, "lobby")
+// Handler for returning information about a given lobby.
+func getLobby(res http.ResponseWriter, req *http.Request) {
+	params, ok := checkParams(res, req, "lobby")
 	if !ok {
 		return
 	}
+
+	lobbyID := params.Get("lobby")
+	lobby, ok := lobbies[lobbyID]
+	if !ok {
+		http.Error(res, "no lobby with id \""+lobbyID+"\"", http.StatusBadRequest)
+		return
+	}
+
+	info, err := json.Marshal(lobbyInfo{
+		ID:                 lobby.ID,
+		AvailablePlayerIDs: lobby.AvailablePlayerIDs(),
+	})
+	if err != nil {
+		http.Error(res, "error in reading lobby \""+lobbyID+"\"", http.StatusInternalServerError)
+	}
+
+	res.Write(info)
 }
 
 // Checks the given request for the existence of the provided parameter keys.
