@@ -23,8 +23,9 @@ type Lobby struct {
 }
 
 type Connection struct {
-	Socket *websocket.Conn
-	Active bool
+	Socket  *websocket.Conn
+	Receive chan []byte
+	Active  bool
 }
 
 func (lobby *Lobby) Send(playerID string, message interface{}) error {
@@ -35,6 +36,17 @@ func (lobby *Lobby) Send(playerID string, message interface{}) error {
 
 	err := conn.Socket.WriteJSON(message)
 	return err
+}
+
+func (conn Connection) Listen() {
+	for {
+		_, message, err := conn.Socket.ReadMessage()
+		if err != nil {
+			continue
+		}
+
+		conn.Receive <- message
+	}
 }
 
 // Returns the current connected players in a lobby, and the max number of potential players.
@@ -184,10 +196,12 @@ func addPlayer(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	lobby.Connections[playerID] = Connection{
+	conn = Connection{
 		Socket: socket,
 		Active: true,
 	}
+	lobby.Connections[playerID] = conn
+	conn.Listen()
 
 	res.Write([]byte("joined lobby"))
 
