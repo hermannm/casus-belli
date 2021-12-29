@@ -40,6 +40,10 @@ func (lobby *Lobby) Send(playerID string, message interface{}) error {
 
 func (conn Connection) Listen() {
 	for {
+		if conn.Socket == nil {
+			return
+		}
+
 		_, message, err := conn.Socket.ReadMessage()
 		if err != nil {
 			continue
