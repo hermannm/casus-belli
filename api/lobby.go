@@ -133,8 +133,9 @@ func CloseLobby(id string) error {
 		return errors.New("no lobby with ID \"" + id + "\" exists")
 	}
 
-	for _, conn := range lobby.Connections {
+	for playerID, conn := range lobby.Connections {
 		conn.Socket.Close()
+		lobby.Connections[playerID] = Connection{}
 	}
 	delete(lobbies, id)
 
