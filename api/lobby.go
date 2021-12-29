@@ -201,7 +201,7 @@ func addPlayer(res http.ResponseWriter, req *http.Request) {
 		Active: true,
 	}
 	lobby.Connections[playerID] = conn
-	conn.Listen()
+	go conn.Listen()
 
 	res.Write([]byte("joined lobby"))
 
