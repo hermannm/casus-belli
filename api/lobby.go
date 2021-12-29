@@ -19,13 +19,18 @@ type Lobby struct {
 	WG  *sync.WaitGroup
 
 	// Maps player IDs (unique to the lobby) to their socket connections for sending and receiving.
-	Connections map[string]*websocket.Conn
+	Connections map[string]Connection
+}
+
+type Connection struct {
+	Socket *websocket.Conn
+	Active bool
 }
 
 // Returns the current connected players in a lobby, and the max number of potential players.
 func (lobby Lobby) PlayerCount() (current int, max int) {
 	for _, conn := range lobby.Connections {
-		if conn != nil {
+		if conn.Active {
 			current++
 		}
 	}
@@ -40,7 +45,7 @@ func (lobby Lobby) AvailablePlayerIDs() map[string]bool {
 	available := make(map[string]bool)
 
 	for playerID, conn := range lobby.Connections {
-		if conn == nil {
+		if conn.Active {
 			available[playerID] = true
 		} else {
 			available[playerID] = false
@@ -56,7 +61,6 @@ func StartAPI(address string, open bool) {
 		http.HandleFunc("/new", createLobbyHandler)
 	}
 	http.HandleFunc("/join", addPlayer)
-	http.HandleFunc("/reconnect", reconnectPlayer)
 	http.HandleFunc("/info", getLobby)
 	http.HandleFunc("/all", getLobbies)
 	http.ListenAndServe(address, nil)
@@ -72,10 +76,10 @@ func CreateLobby(id string, playerIDs []string) (*Lobby, error) {
 
 	lobby := Lobby{
 		ID:          id,
-		Connections: make(map[string]*websocket.Conn, len(playerIDs)),
+		Connections: make(map[string]Connection, len(playerIDs)),
 	}
 	for _, playerID := range playerIDs {
-		lobby.Connections[playerID] = nil
+		lobby.Connections[playerID] = Connection{}
 	}
 	lobby.WG.Add(len(lobby.Connections))
 
@@ -120,42 +124,40 @@ func CloseLobby(id string) error {
 	}
 
 	for _, conn := range lobby.Connections {
-		conn.Close()
+		conn.Socket.Close()
 	}
 	delete(lobbies, id)
 
 	return nil
 }
 
-func validateJoinRequest(res http.ResponseWriter, req *http.Request) (
-	lobby *Lobby, playerID string, ok bool,
-) {
+// Handler for adding a player to a lobby.
+func addPlayer(res http.ResponseWriter, req *http.Request) {
 	params, ok := checkParams(res, req, "lobby", "player")
 	if !ok {
-		return &Lobby{}, "", false
+		return
 	}
 
 	lobbyID := params.Get("lobby")
-	lobby, ok = lobbies[lobbyID]
+	lobby, ok := lobbies[lobbyID]
 	if !ok {
 		http.Error(res, "no lobby with ID "+lobbyID+" exists", http.StatusBadRequest)
 	}
 
-	playerID = params.Get("player")
+	playerID := params.Get("player")
 	lobby.Mut.Lock()
-
-	if _, ok = lobby.Connections[playerID]; !ok {
+	conn, ok := lobby.Connections[playerID]
+	if !ok {
 		http.Error(res, "invalid player ID", http.StatusBadRequest)
 		lobby.Mut.Unlock()
-		return &Lobby{}, "", false
+		return
+	}
+	if conn.Active {
+		http.Error(res, "player ID already taken", http.StatusConflict)
+		lobby.Mut.Unlock()
+		return
 	}
 
-	return lobby, playerID, true
-}
-
-func (lobby *Lobby) addConnection(playerID string, res http.ResponseWriter, req *http.Request) (
-	connection *websocket.Conn, ok bool,
-) {
 	upgrader := websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
@@ -163,46 +165,23 @@ func (lobby *Lobby) addConnection(playerID string, res http.ResponseWriter, req 
 		CheckOrigin: func(*http.Request) bool { return true },
 	}
 
-	conn, err := upgrader.Upgrade(res, req, nil)
+	socket, err := upgrader.Upgrade(res, req, nil)
 	if err != nil {
 		log.Println(err)
 		http.Error(res, "unable to establish socket connection", http.StatusInternalServerError)
 		lobby.Mut.Unlock()
-		return nil, false
-	}
-
-	lobby.Connections[playerID] = conn
-	lobby.Mut.Unlock()
-	return conn, true
-}
-
-// Handler for adding a player to a lobby.
-func addPlayer(res http.ResponseWriter, req *http.Request) {
-	lobby, playerID, ok := validateJoinRequest(res, req)
-	if !ok {
 		return
 	}
 
-	if lobby.Connections[playerID] != nil {
-		http.Error(res, "player ID already taken", http.StatusConflict)
-		lobby.Mut.Unlock()
-		return
+	lobby.Connections[playerID] = Connection{
+		Socket: socket,
+		Active: true,
 	}
 
-	_, ok = lobby.addConnection(playerID, res, req)
-	if !ok {
-		return
-	}
-
-	lobby.WG.Done()
 	res.Write([]byte("joined lobby"))
-}
 
-func reconnectPlayer(res http.ResponseWriter, req *http.Request) {
-	lobby, playerID, ok := validateJoinRequest(res, req)
-	if !ok {
-		return
-	}
+	lobby.Mut.Unlock()
+	lobby.WG.Done()
 }
 
 // Utility type for responding to requests for lobby info.
