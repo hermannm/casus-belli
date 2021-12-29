@@ -32,16 +32,16 @@ type Connection struct {
 
 // Returns the player connection in the lobby corresponding to the given player ID,
 // or ok=false if none is found.
-func (lobby Lobby) GetConn(playerID string) (conn Connection, ok bool) {
+func (lobby Lobby) GetPlayer(playerID string) (conn Connection, ok bool) {
 	lobby.Mut.Lock()
 	defer lobby.Mut.Unlock()
 	conn, ok = lobby.Connections[playerID]
 	return conn, ok
 }
 
-// Sets the connection in the lobby corresponding to the given player ID.
+// Sets the player connection in the lobby corresponding to the given player ID.
 // Returns an error if no matching player is found.
-func (lobby Lobby) setConn(playerID string, conn Connection) error {
+func (lobby Lobby) setPlayer(playerID string, conn Connection) error {
 	lobby.Mut.Lock()
 	defer lobby.Mut.Unlock()
 
@@ -160,7 +160,7 @@ func CloseLobby(id string) error {
 	for playerID, conn := range lobby.Connections {
 		conn.Socket.Close()
 		conn.setActive(false)
-		lobby.setConn(playerID, Connection{})
+		lobby.setPlayer(playerID, Connection{})
 	}
 	delete(lobbies, id)
 
