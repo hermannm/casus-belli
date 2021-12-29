@@ -7,26 +7,31 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+// Global list of game lobbies.
 var lobbies = make(map[string]*Lobby)
 
+// A collection of players for a game.
 type Lobby struct {
 	ID string
 
-	Mut *sync.Mutex
-	WG  *sync.WaitGroup
+	Mut *sync.Mutex     // Used to synchronize the adding/removal of players.
+	WG  *sync.WaitGroup // Used to wait for the lobby to fill up with players.
 
 	// Maps player IDs (unique to the lobby) to their socket connections for sending and receiving.
 	Connections map[string]Connection
 }
 
+// A player's connection to a game lobby.
 type Connection struct {
 	Socket   *websocket.Conn
-	Receiver chan []byte
-	Active   bool
+	Receiver chan []byte // Channel that receives all messages from the socket connection.
+	Active   bool        // Whether the connection is initialized/not timed out.
 
-	Mut *sync.Mutex
+	Mut *sync.Mutex // Used to synchronize reading and setting the Active field.
 }
 
+// Returns the player connection in the lobby corresponding to the given player ID,
+// or ok=false if none is found.
 func (lobby Lobby) GetConn(playerID string) (conn Connection, ok bool) {
 	lobby.Mut.Lock()
 	defer lobby.Mut.Unlock()
@@ -34,6 +39,8 @@ func (lobby Lobby) GetConn(playerID string) (conn Connection, ok bool) {
 	return conn, ok
 }
 
+// Sets the connection in the lobby corresponding to the given player ID.
+// Returns an error if no matching player is found.
 func (lobby Lobby) setConn(playerID string, conn Connection) error {
 	lobby.Mut.Lock()
 	defer lobby.Mut.Unlock()
@@ -46,18 +53,22 @@ func (lobby Lobby) setConn(playerID string, conn Connection) error {
 	return nil
 }
 
+// Returns the Active flag of a connection in a thread-safe manner.
 func (conn *Connection) isActive() bool {
 	conn.Mut.Lock()
 	defer conn.Mut.Unlock()
 	return conn.Active
 }
 
+// Sets the Active flag of a connection in a thread-safe manner.
 func (conn *Connection) setActive(active bool) {
 	conn.Mut.Lock()
 	defer conn.Mut.Unlock()
 	conn.Active = active
 }
 
+// Marshals the given message to JSON and sends it over the connection.
+// Returns an error if the connection is inactive, or if the marshaling/sending failed.
 func (conn *Connection) Send(message interface{}) error {
 	if !conn.isActive() {
 		return errors.New("cannot send to inactive connection")
@@ -67,6 +78,8 @@ func (conn *Connection) Send(message interface{}) error {
 	return err
 }
 
+// Listens for messages from the connection, and forwards them to the connection's receiver channel.
+// Listens continuously until the connection turns inactive.
 func (conn *Connection) Listen() {
 	for {
 		if !conn.isActive() {
@@ -78,11 +91,11 @@ func (conn *Connection) Listen() {
 			continue
 		}
 
-		conn.setActive(true)
 		conn.Receiver <- message
 	}
 }
 
+// Returns the connection's receiver channel.
 func (conn *Connection) Receive() chan []byte {
 	return conn.Receiver
 }

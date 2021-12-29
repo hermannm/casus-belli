@@ -37,34 +37,6 @@ func checkParams(res http.ResponseWriter, req *http.Request, keys ...string) (
 	return params, true
 }
 
-// Handler for creating lobbies for servers that let users create their own lobbies.
-func createLobbyHandler(res http.ResponseWriter, req *http.Request) {
-	params, ok := checkParams(res, req, "id", "playerIDs")
-	if !ok {
-		return
-	}
-
-	id := params.Get("id")
-	if _, ok := lobbies[id]; ok {
-		http.Error(res, "lobby with ID \""+id+"\" already exists", http.StatusConflict)
-		return
-	}
-
-	playerIDs := params["playerIDs"]
-	if len(playerIDs) < 2 {
-		http.Error(res, "at least 2 player IDs must be provided to lobby", http.StatusBadRequest)
-		return
-	}
-
-	_, err := CreateLobby(id, playerIDs)
-	if err != nil {
-		http.Error(res, "error creating lobby", http.StatusInternalServerError)
-		return
-	}
-
-	res.Write([]byte("lobby created"))
-}
-
 // Utility type for responding to requests for lobby info.
 type lobbyInfo struct {
 	ID                 string          `json:"id"`
@@ -168,4 +140,32 @@ func addPlayer(res http.ResponseWriter, req *http.Request) {
 
 	lobby.Mut.Unlock()
 	lobby.WG.Done()
+}
+
+// Handler for creating lobbies for servers that let users create their own lobbies.
+func createLobbyHandler(res http.ResponseWriter, req *http.Request) {
+	params, ok := checkParams(res, req, "id", "playerIDs")
+	if !ok {
+		return
+	}
+
+	id := params.Get("id")
+	if _, ok := lobbies[id]; ok {
+		http.Error(res, "lobby with ID \""+id+"\" already exists", http.StatusConflict)
+		return
+	}
+
+	playerIDs := params["playerIDs"]
+	if len(playerIDs) < 2 {
+		http.Error(res, "at least 2 player IDs must be provided to lobby", http.StatusBadRequest)
+		return
+	}
+
+	_, err := CreateLobby(id, playerIDs)
+	if err != nil {
+		http.Error(res, "error creating lobby", http.StatusInternalServerError)
+		return
+	}
+
+	res.Write([]byte("lobby created"))
 }
