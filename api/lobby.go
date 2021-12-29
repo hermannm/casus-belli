@@ -20,9 +20,9 @@ type Lobby struct {
 }
 
 type Connection struct {
-	Socket  *websocket.Conn
-	Receive chan []byte
-	Active  bool
+	Socket   *websocket.Conn
+	Receiver chan []byte
+	Active   bool
 
 	Mut *sync.Mutex
 }
@@ -79,8 +79,12 @@ func (conn *Connection) Listen() {
 		}
 
 		conn.setActive(true)
-		conn.Receive <- message
+		conn.Receiver <- message
 	}
+}
+
+func (conn *Connection) Receive() chan []byte {
+	return conn.Receiver
 }
 
 // Returns the current connected players in a lobby, and the max number of potential players.
