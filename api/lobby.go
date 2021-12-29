@@ -27,6 +27,16 @@ type Connection struct {
 	Active bool
 }
 
+func (lobby *Lobby) Send(playerID string, message interface{}) error {
+	conn, ok := lobby.Connections[playerID]
+	if !ok {
+		return errors.New("invalid player ID")
+	}
+
+	err := conn.Socket.WriteJSON(message)
+	return err
+}
+
 // Returns the current connected players in a lobby, and the max number of potential players.
 func (lobby Lobby) PlayerCount() (current int, max int) {
 	for _, conn := range lobby.Connections {
