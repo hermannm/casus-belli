@@ -14,7 +14,8 @@ import (
 var lobbies = make(map[string]*Lobby)
 
 type Lobby struct {
-	ID  string
+	ID string
+
 	Mut *sync.Mutex
 	WG  *sync.WaitGroup
 
@@ -26,21 +27,53 @@ type Connection struct {
 	Socket  *websocket.Conn
 	Receive chan []byte
 	Active  bool
+
+	Mut *sync.Mutex
 }
 
-func (lobby *Lobby) Send(playerID string, message interface{}) error {
-	conn, ok := lobby.Connections[playerID]
-	if !ok {
+func (lobby Lobby) GetConn(playerID string) (conn Connection, ok bool) {
+	lobby.Mut.Lock()
+	defer lobby.Mut.Unlock()
+	conn, ok = lobby.Connections[playerID]
+	return conn, ok
+}
+
+func (lobby Lobby) setConn(playerID string, conn Connection) error {
+	lobby.Mut.Lock()
+	defer lobby.Mut.Unlock()
+
+	if _, ok := lobby.Connections[playerID]; !ok {
 		return errors.New("invalid player ID")
+	}
+
+	lobby.Connections[playerID] = conn
+	return nil
+}
+
+func (conn *Connection) isActive() bool {
+	conn.Mut.Lock()
+	defer conn.Mut.Unlock()
+	return conn.Active
+}
+
+func (conn *Connection) setActive(active bool) {
+	conn.Mut.Lock()
+	defer conn.Mut.Unlock()
+	conn.Active = active
+}
+
+func (conn *Connection) Send(message interface{}) error {
+	if !conn.isActive() {
+		return errors.New("cannot send to inactive connection")
 	}
 
 	err := conn.Socket.WriteJSON(message)
 	return err
 }
 
-func (conn Connection) Listen() {
+func (conn *Connection) Listen() {
 	for {
-		if conn.Socket == nil {
+		if !conn.isActive() {
 			return
 		}
 
@@ -49,6 +82,7 @@ func (conn Connection) Listen() {
 			continue
 		}
 
+		conn.setActive(true)
 		conn.Receive <- message
 	}
 }
@@ -56,7 +90,7 @@ func (conn Connection) Listen() {
 // Returns the current connected players in a lobby, and the max number of potential players.
 func (lobby Lobby) PlayerCount() (current int, max int) {
 	for _, conn := range lobby.Connections {
-		if conn.Active {
+		if conn.isActive() {
 			current++
 		}
 	}
@@ -71,7 +105,7 @@ func (lobby Lobby) AvailablePlayerIDs() map[string]bool {
 	available := make(map[string]bool)
 
 	for playerID, conn := range lobby.Connections {
-		if conn.Active {
+		if conn.isActive() {
 			available[playerID] = true
 		} else {
 			available[playerID] = false
@@ -151,7 +185,8 @@ func CloseLobby(id string) error {
 
 	for playerID, conn := range lobby.Connections {
 		conn.Socket.Close()
-		lobby.Connections[playerID] = Connection{}
+		conn.setActive(false)
+		lobby.setConn(playerID, Connection{})
 	}
 	delete(lobbies, id)
 
@@ -179,7 +214,7 @@ func addPlayer(res http.ResponseWriter, req *http.Request) {
 		lobby.Mut.Unlock()
 		return
 	}
-	if conn.Active {
+	if conn.isActive() {
 		http.Error(res, "player ID already taken", http.StatusConflict)
 		lobby.Mut.Unlock()
 		return
