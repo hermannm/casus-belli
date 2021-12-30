@@ -5,15 +5,24 @@ import (
 	"errors"
 )
 
-func Deserialize(rawMessage []byte, incoming IncomingMessages) error {
+func Receive(receiver chan []byte, incoming IncomingMessages, errs chan error) {
+	for {
+		message := <-receiver
+		go Deserialize(message, incoming, errs)
+	}
+}
+
+func Deserialize(rawMessage []byte, incoming IncomingMessages, errs chan error) {
 	var baseMessage BaseMessage
 
 	err := json.Unmarshal(rawMessage, &baseMessage)
 	if err != nil {
-		return err
+		errs <- err
+		return
 	}
 	if baseMessage.Type == "" {
-		return errors.New("error in deserializing message")
+		errs <- errors.New("error in deserializing message")
+		return
 	}
 
 	switch baseMessage.Type {
@@ -22,7 +31,8 @@ func Deserialize(rawMessage []byte, incoming IncomingMessages) error {
 		var ordersMessage OrdersMessage
 		err := json.Unmarshal(rawMessage, &ordersMessage)
 		if err != nil {
-			return err
+			errs <- err
+			return
 		}
 
 		incoming.Orders <- ordersMessage
@@ -31,7 +41,8 @@ func Deserialize(rawMessage []byte, incoming IncomingMessages) error {
 		var supportMessage SupportMessage
 		err := json.Unmarshal(rawMessage, &supportMessage)
 		if err != nil {
-			return err
+			errs <- err
+			return
 		}
 
 		incoming.Support <- supportMessage
@@ -40,7 +51,8 @@ func Deserialize(rawMessage []byte, incoming IncomingMessages) error {
 		var quitMessage QuitMessage
 		err := json.Unmarshal(rawMessage, &quitMessage)
 		if err != nil {
-			return err
+			errs <- err
+			return
 		}
 
 		incoming.Quit <- quitMessage
@@ -49,12 +61,11 @@ func Deserialize(rawMessage []byte, incoming IncomingMessages) error {
 		var winterVoteMessage WinterVoteMessage
 		err := json.Unmarshal(rawMessage, &winterVoteMessage)
 		if err != nil {
-			return err
+			errs <- err
+			return
 		}
 
 		incoming.WinterVote <- winterVoteMessage
 
 	}
-
-	return nil
 }
