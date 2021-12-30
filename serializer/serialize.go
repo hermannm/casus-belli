@@ -67,5 +67,8 @@ func Deserialize(rawMessage []byte, incoming IncomingMessages, errs chan error) 
 
 		incoming.WinterVote <- winterVoteMessage
 
+	default:
+		errs <- errors.New("unrecognized message type")
+		return
 	}
 }
