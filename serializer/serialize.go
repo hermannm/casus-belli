@@ -5,70 +5,65 @@ import (
 	"errors"
 )
 
-func Receive(receiver chan []byte, incoming IncomingMessages, errs chan error) {
-	for {
-		message := <-receiver
-		go Deserialize(message, incoming, errs)
-	}
-}
+func Deserialize(rawMessages chan []byte, deserialized IncomingMessages, errs chan error) {
+	for rawMessage := range rawMessages {
+		var baseMessage BaseMessage
 
-func Deserialize(rawMessage []byte, incoming IncomingMessages, errs chan error) {
-	var baseMessage BaseMessage
-
-	err := json.Unmarshal(rawMessage, &baseMessage)
-	if err != nil {
-		errs <- err
-		return
-	}
-	if baseMessage.Type == "" {
-		errs <- errors.New("error in deserializing message")
-		return
-	}
-
-	switch baseMessage.Type {
-
-	case OrdersMessageType:
-		var ordersMessage OrdersMessage
-		err := json.Unmarshal(rawMessage, &ordersMessage)
+		err := json.Unmarshal(rawMessage, &baseMessage)
 		if err != nil {
 			errs <- err
-			return
+			continue
+		}
+		if baseMessage.Type == "" {
+			errs <- errors.New("error in deserializing message")
+			continue
 		}
 
-		incoming.Orders <- ordersMessage
+		switch baseMessage.Type {
 
-	case SupportMessageType:
-		var supportMessage SupportMessage
-		err := json.Unmarshal(rawMessage, &supportMessage)
-		if err != nil {
-			errs <- err
-			return
+		case OrdersMessageType:
+			var ordersMessage OrdersMessage
+			err := json.Unmarshal(rawMessage, &ordersMessage)
+			if err != nil {
+				errs <- err
+				continue
+			}
+
+			deserialized.Orders <- ordersMessage
+
+		case SupportMessageType:
+			var supportMessage SupportMessage
+			err := json.Unmarshal(rawMessage, &supportMessage)
+			if err != nil {
+				errs <- err
+				continue
+			}
+
+			deserialized.Support <- supportMessage
+
+		case QuitMessageType:
+			var quitMessage QuitMessage
+			err := json.Unmarshal(rawMessage, &quitMessage)
+			if err != nil {
+				errs <- err
+				continue
+			}
+
+			deserialized.Quit <- quitMessage
+
+		case WinterVoteMessageType:
+			var winterVoteMessage WinterVoteMessage
+			err := json.Unmarshal(rawMessage, &winterVoteMessage)
+			if err != nil {
+				errs <- err
+				continue
+			}
+
+			deserialized.WinterVote <- winterVoteMessage
+
+		default:
+			errs <- errors.New("unrecognized message type")
+			continue
 		}
-
-		incoming.Support <- supportMessage
-
-	case QuitMessageType:
-		var quitMessage QuitMessage
-		err := json.Unmarshal(rawMessage, &quitMessage)
-		if err != nil {
-			errs <- err
-			return
-		}
-
-		incoming.Quit <- quitMessage
-
-	case WinterVoteMessageType:
-		var winterVoteMessage WinterVoteMessage
-		err := json.Unmarshal(rawMessage, &winterVoteMessage)
-		if err != nil {
-			errs <- err
-			return
-		}
-
-		incoming.WinterVote <- winterVoteMessage
-
-	default:
-		errs <- errors.New("unrecognized message type")
-		return
 	}
 }
