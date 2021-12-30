@@ -1,16 +1,22 @@
 package serializer
 
 const (
-	OrdersMessageType     = "orders"
-	SupportMessageType    = "support"
-	QuitMessageType       = "quit"
+	OrdersMessageType  = "orders"
+	SupportMessageType = "support"
+	QuitMessageType    = "quit"
+	KickMessageType    = "kick"
+
+	// Message types used for the throne expansion.
 	WinterVoteMessageType = "winterVote"
+	SwordMessageType      = "sword"
+	RavenMessageType      = "raven"
 )
 
 type IncomingMessages struct {
 	Orders     chan OrdersMessage
 	Support    chan SupportMessage
 	Quit       chan QuitMessage
+	Kick       chan KickMessage
 	WinterVote chan WinterVoteMessage
 }
 
@@ -48,12 +54,35 @@ type SupportMessage struct {
 	Player string `json:"player"` // ID of the player in the destination area to support.
 }
 
+// Message passed from the client when they want to quit the game.
 type QuitMessage struct {
 	BaseMessage
 }
 
-// Message passed from the client during winter voting in games that have that enabled.
+// Message passed from the client when they vote to kick another player.
+type KickMessage struct {
+	BaseMessage
+	Player string `json:"player"` // ID of the player to votekick.
+}
+
+// Message passed from the client during winter council voting.
+// Used for the throne expansion.
 type WinterVoteMessage struct {
 	BaseMessage
-	Vote string `json:"vote"` // ID of the player that the submitting player votes for.
+	Player string `json:"player"` // ID of the player that the submitting player votes for.
+}
+
+// Message passed from the client with the sword to declare where they want to use it.
+// Used for the throne expansion.
+type SwordMessage struct {
+	BaseMessage
+	Area        string // Name of the area in which the player wants to use the sword in battle.
+	BattleIndex int    // Index of the battle in which to use the sword, in case of several battles in the area.
+}
+
+// Message passed from the client with the raven when they want to spy on another player's orders.
+// Used for the throne expansion.
+type RavenMessage struct {
+	BaseMessage
+	Player string // ID of the player on whom to spy.
 }
