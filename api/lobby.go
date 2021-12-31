@@ -25,9 +25,7 @@ type Lobby struct {
 type Connection struct {
 	Socket   *websocket.Conn
 	Active   bool // Whether the connection is initialized/not timed out.
-	Receiver interface {
-		HandleMessage([]byte)
-	}
+	Receiver interface{ HandleMessage([]byte) }
 
 	Mut *sync.Mutex // Used to synchronize reading and setting the Active field.
 }

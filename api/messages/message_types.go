@@ -16,14 +16,6 @@ type BaseMessage struct {
 	Type string `json:"type"`
 }
 
-func (message BaseMessage) GetType() string {
-	return message.Type
-}
-
-type Message interface {
-	GetType() string
-}
-
 // Message passed from the client when submitting orders.
 type OrdersMessage struct {
 	BaseMessage
