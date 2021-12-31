@@ -1,4 +1,4 @@
-package serializer
+package messages
 
 const (
 	OrdersMessageType  = "orders"

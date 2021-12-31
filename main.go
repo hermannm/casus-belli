@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/immerse-ntnu/hermannia/server/game"
-	"github.com/immerse-ntnu/hermannia/server/setup"
+	"github.com/immerse-ntnu/hermannia/server/game/setup"
 )
 
 func printBoard(board game.Board, areas map[string]game.Unit, neighbors bool) {
