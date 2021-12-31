@@ -12,14 +12,6 @@ const (
 	RavenMessageType      = "raven"
 )
 
-type IncomingMessages struct {
-	Orders     chan OrdersMessage
-	Support    chan SupportMessage
-	Quit       chan QuitMessage
-	Kick       chan KickMessage
-	WinterVote chan WinterVoteMessage
-}
-
 type BaseMessage struct {
 	Type string `json:"type"`
 }

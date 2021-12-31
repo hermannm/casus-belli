@@ -24,8 +24,10 @@ type Lobby struct {
 // A player's connection to a game lobby.
 type Connection struct {
 	Socket   *websocket.Conn
-	Receiver chan []byte // Channel that receives all messages from the socket connection.
-	Active   bool        // Whether the connection is initialized/not timed out.
+	Active   bool // Whether the connection is initialized/not timed out.
+	Receiver interface {
+		HandleMessage([]byte)
+	}
 
 	Mut *sync.Mutex // Used to synchronize reading and setting the Active field.
 }
@@ -91,13 +93,8 @@ func (conn *Connection) Listen() {
 			continue
 		}
 
-		conn.Receiver <- message
+		go conn.Receiver.HandleMessage(message)
 	}
-}
-
-// Returns the connection's receiver channel.
-func (conn *Connection) Receive() chan []byte {
-	return conn.Receiver
 }
 
 // Returns the current connected players in a lobby, and the max number of potential players.
