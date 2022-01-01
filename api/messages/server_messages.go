@@ -31,10 +31,15 @@ type OrdersConfirmationMessage struct {
 // Message sent from server to all clients when the results for a round are calculated.
 type RoundResultMessage struct {
 	BaseMessage
-	// Maps a player's ID to their submitted orders, now with the Status field calculated.
-	Orders map[string][]OrderMessage `json:"orders"`
+	// Maps a player's ID to their submitted orders, now with added Status field.
+	Orders map[string][]OrderWithStatusMessage `json:"orders"`
 	// Maps area names to the chronological list of battles that took place in that area.
 	Battles map[string][]Battle `json:"battles"`
+}
+
+type OrderWithStatusMessage struct {
+	OrderMessage
+	Status string `json:"status"`
 }
 
 type Battle []Result
