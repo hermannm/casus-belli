@@ -6,8 +6,8 @@ import (
 )
 
 type Receiver struct {
-	Orders     chan OrdersMessage
-	Support    chan SupportMessage
+	Orders     chan SubmitOrdersMessage
+	Support    chan GiveSupportMessage
 	Quit       chan QuitMessage
 	Kick       chan KickMessage
 	WinterVote chan WinterVoteMessage
@@ -16,8 +16,8 @@ type Receiver struct {
 
 func NewReceiver() Receiver {
 	return Receiver{
-		Orders:     make(chan OrdersMessage),
-		Support:    make(chan SupportMessage),
+		Orders:     make(chan SubmitOrdersMessage),
+		Support:    make(chan GiveSupportMessage),
 		Quit:       make(chan QuitMessage),
 		Kick:       make(chan KickMessage),
 		WinterVote: make(chan WinterVoteMessage),
@@ -40,8 +40,8 @@ func (receiver *Receiver) HandleMessage(rawMessage []byte) {
 
 	switch baseMessage.Type {
 
-	case OrdersMessageType:
-		var ordersMessage OrdersMessage
+	case SubmitOrdersMessageType:
+		var ordersMessage SubmitOrdersMessage
 		err := json.Unmarshal(rawMessage, &ordersMessage)
 		if err != nil {
 			receiver.Errors <- err
@@ -50,8 +50,8 @@ func (receiver *Receiver) HandleMessage(rawMessage []byte) {
 
 		receiver.Orders <- ordersMessage
 
-	case SupportMessageType:
-		var supportMessage SupportMessage
+	case GiveSupportMessageType:
+		var supportMessage GiveSupportMessage
 		err := json.Unmarshal(rawMessage, &supportMessage)
 		if err != nil {
 			receiver.Errors <- err
