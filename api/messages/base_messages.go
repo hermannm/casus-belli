@@ -12,4 +12,5 @@ type OrderMessage struct {
 	To        string `json:"to"`
 	Via       string `json:"via"`
 	Build     string `json:"build"`
+	Status    string `json:"status"`
 }
