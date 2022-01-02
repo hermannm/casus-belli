@@ -14,9 +14,9 @@ type Game struct {
 }
 
 type Lobby interface {
-	Close() error
 	GetPlayer(playerID string) (conn Connection, ok bool)
-	SendToAll(message interface{}) error
+	SendToAll(message interface{}) []error
+	Close() error
 }
 
 type Connection interface {

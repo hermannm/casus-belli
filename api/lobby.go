@@ -87,6 +87,19 @@ func (conn *Connection) Send(message interface{}) error {
 	return err
 }
 
+func (lobby *Lobby) SendToAll(message interface{}) []error {
+	var errs []error
+
+	for _, conn := range lobby.Connections {
+		err := conn.Send(message)
+		if err != nil {
+			errs = append(errs, err)
+		}
+	}
+
+	return errs
+}
+
 // Listens for messages from the connection, and forwards them to the connection's receiver channel.
 // Listens continuously until the connection turns inactive.
 func (conn *Connection) Listen() {
