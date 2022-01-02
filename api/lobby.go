@@ -12,7 +12,8 @@ var lobbies = make(map[string]*Lobby)
 
 // A collection of players for a game.
 type Lobby struct {
-	ID string
+	ID   string
+	Game Game
 
 	Mut *sync.Mutex     // Used to synchronize the adding/removal of players.
 	WG  *sync.WaitGroup // Used to wait for the lobby to fill up with players.
@@ -25,9 +26,17 @@ type Lobby struct {
 type Connection struct {
 	Socket   *websocket.Conn
 	Active   bool // Whether the connection is initialized/not timed out.
-	Receiver interface{ HandleMessage([]byte) }
+	Receiver Receiver
 
 	Mut *sync.Mutex // Used to synchronize reading and setting the Active field.
+}
+
+type Receiver interface {
+	HandleMessage([]byte)
+}
+
+type Game interface {
+	AddPlayer(string) (Receiver, error)
 }
 
 // Returns the player connection in the lobby corresponding to the given player ID,
@@ -146,18 +155,13 @@ func CreateLobby(id string, playerIDs []string) (*Lobby, error) {
 }
 
 // Removes a lobby from the lobby map and closes its connections.
-func CloseLobby(id string) error {
-	lobby, ok := lobbies[id]
-	if !ok {
-		return errors.New("no lobby with ID \"" + id + "\" exists")
-	}
-
+func (lobby Lobby) Close() error {
 	for playerID, conn := range lobby.Connections {
 		conn.Socket.Close()
 		conn.setActive(false)
 		lobby.setPlayer(playerID, Connection{})
 	}
-	delete(lobbies, id)
+	delete(lobbies, lobby.ID)
 
 	return nil
 }

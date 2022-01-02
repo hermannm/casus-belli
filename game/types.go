@@ -1,11 +1,26 @@
 package game
 
-import "sync"
+import (
+	"sync"
+
+	"github.com/immerse-ntnu/hermannia/server/api/messages"
+)
 
 type Game struct {
-	Board   Board
-	Rounds  []*Round
-	Players []Player
+	Board    Board
+	Rounds   []*Round
+	Messages map[Player]messages.Receiver
+	Lobby    Lobby
+}
+
+type Lobby interface {
+	Close() error
+	GetPlayer(playerID string) (conn Connection, ok bool)
+	SendToAll(message interface{}) error
+}
+
+type Connection interface {
+	Send(message interface{}) error
 }
 
 type Player string

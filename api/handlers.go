@@ -9,8 +9,10 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+type GameCreator func(players []string, lobby Lobby, config ...interface{}) (Game, error)
+
 // Registers handlers for the lobby API endpoints.
-func StartAPI(address string, open bool) {
+func StartAPI(address string, open bool, games map[string]GameCreator) {
 	if open {
 		// Endpoint for clients to create their own lobbies if the server is set to enable that.
 		// Takes query parameters "id" (unique name of the lobby) and "playerIDs".
@@ -140,9 +142,18 @@ func addPlayer(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	receiver, err := lobby.Game.AddPlayer(playerID)
+	if err != nil {
+		log.Println(err)
+		http.Error(res, "unable to join game", http.StatusConflict)
+		lobby.Mut.Unlock()
+		return
+	}
+
 	conn = Connection{
-		Socket: socket,
-		Active: true,
+		Socket:   socket,
+		Active:   true,
+		Receiver: receiver,
 	}
 	lobby.Connections[playerID] = conn
 	go conn.Listen()
