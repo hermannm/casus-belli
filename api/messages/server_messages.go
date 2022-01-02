@@ -37,6 +37,7 @@ type RoundResultMessage struct {
 	Battles map[string][]Battle `json:"battles"`
 }
 
+// Order message with added Status field for showing the server's calculated result.
 type OrderWithStatusMessage struct {
 	OrderMessage
 	Status string `json:"status"`

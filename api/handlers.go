@@ -9,14 +9,25 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-// Registers handlers for the lobby API routes.
+// Registers handlers for the lobby API endpoints.
 func StartAPI(address string, open bool) {
 	if open {
+		// Endpoint for clients to create their own lobbies if the server is set to enable that.
+		// Takes query parameters "id" (unique name of the lobby) and "playerIDs".
 		http.HandleFunc("/new", createLobbyHandler)
 	}
+
+	// Endpoint for clients to join a given lobby.
+	// Takes query parameters "lobby" (name of the lobby) and "player" (the player ID that the client wants to claim).
 	http.HandleFunc("/join", addPlayer)
+
+	// Endpoint for clients to view info about a single lobby.
+	// Takes query parameter "lobby" (name of the lobby).
 	http.HandleFunc("/info", getLobby)
+
+	// Endpoint for clients to view info about all lobbies on the server.
 	http.HandleFunc("/all", getLobbies)
+
 	http.ListenAndServe(address, nil)
 }
 
