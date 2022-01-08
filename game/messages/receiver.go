@@ -11,6 +11,8 @@ type Receiver struct {
 	Quit       chan Quit
 	Kick       chan Kick
 	WinterVote chan WinterVote
+	Sword      chan Sword
+	Raven      chan Raven
 	Errors     chan error
 }
 
@@ -21,6 +23,8 @@ func NewReceiver() Receiver {
 		Quit:       make(chan Quit),
 		Kick:       make(chan Kick),
 		WinterVote: make(chan WinterVote),
+		Sword:      make(chan Sword),
+		Raven:      make(chan Raven),
 		Errors:     make(chan error),
 	}
 }
@@ -70,6 +74,16 @@ func (receiver *Receiver) HandleMessage(rawMessage []byte) {
 
 		receiver.Quit <- quitMessage
 
+	case KickType:
+		var kickMessage Kick
+		err := json.Unmarshal(rawMessage, &kickMessage)
+		if err != nil {
+			receiver.Errors <- err
+			return
+		}
+
+		receiver.Kick <- kickMessage
+
 	case WinterVoteType:
 		var winterVoteMessage WinterVote
 		err := json.Unmarshal(rawMessage, &winterVoteMessage)
@@ -79,6 +93,26 @@ func (receiver *Receiver) HandleMessage(rawMessage []byte) {
 		}
 
 		receiver.WinterVote <- winterVoteMessage
+
+	case SwordType:
+		var swordMessage Sword
+		err := json.Unmarshal(rawMessage, &swordMessage)
+		if err != nil {
+			receiver.Errors <- err
+			return
+		}
+
+		receiver.Sword <- swordMessage
+
+	case RavenType:
+		var ravenMessage Raven
+		err := json.Unmarshal(rawMessage, &ravenMessage)
+		if err != nil {
+			receiver.Errors <- err
+			return
+		}
+
+		receiver.Raven <- ravenMessage
 
 	default:
 		receiver.Errors <- errors.New("unrecognized message type")
