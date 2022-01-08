@@ -9,24 +9,15 @@ import (
 func (game *Game) AddPlayer(playerString string) (*messages.Receiver, error) {
 	player := Player(playerString)
 
-	validPlayer := false
-	for key, receiver := range game.Messages {
-		if key != player {
-			continue
-		}
-
-		if receiver == nil {
-			return nil, errors.New("player already exists")
-		}
-
-		validPlayer = true
-		break
-	}
-	if !validPlayer {
+	receiver, ok := game.Messages[player]
+	if !ok {
 		return nil, errors.New("invalid player tag")
 	}
+	if receiver != nil {
+		return nil, errors.New("player already exists")
+	}
 
-	receiver := messages.NewReceiver()
-	game.Messages[player] = &receiver
-	return &receiver, nil
+	newReceiver := messages.NewReceiver()
+	game.Messages[player] = &newReceiver
+	return &newReceiver, nil
 }
