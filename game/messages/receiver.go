@@ -6,27 +6,27 @@ import (
 )
 
 type Receiver struct {
-	Orders     chan SubmitOrdersMessage
-	Support    chan GiveSupportMessage
-	Quit       chan QuitMessage
-	Kick       chan KickMessage
-	WinterVote chan WinterVoteMessage
+	Orders     chan SubmitOrders
+	Support    chan GiveSupport
+	Quit       chan Quit
+	Kick       chan Kick
+	WinterVote chan WinterVote
 	Errors     chan error
 }
 
 func NewReceiver() Receiver {
 	return Receiver{
-		Orders:     make(chan SubmitOrdersMessage),
-		Support:    make(chan GiveSupportMessage),
-		Quit:       make(chan QuitMessage),
-		Kick:       make(chan KickMessage),
-		WinterVote: make(chan WinterVoteMessage),
+		Orders:     make(chan SubmitOrders),
+		Support:    make(chan GiveSupport),
+		Quit:       make(chan Quit),
+		Kick:       make(chan Kick),
+		WinterVote: make(chan WinterVote),
 		Errors:     make(chan error),
 	}
 }
 
 func (receiver *Receiver) HandleMessage(rawMessage []byte) {
-	var baseMessage BaseMessage
+	var baseMessage Base
 
 	err := json.Unmarshal(rawMessage, &baseMessage)
 	if err != nil {
@@ -40,8 +40,8 @@ func (receiver *Receiver) HandleMessage(rawMessage []byte) {
 
 	switch baseMessage.Type {
 
-	case SubmitOrdersMessageType:
-		var ordersMessage SubmitOrdersMessage
+	case SubmitOrdersType:
+		var ordersMessage SubmitOrders
 		err := json.Unmarshal(rawMessage, &ordersMessage)
 		if err != nil {
 			receiver.Errors <- err
@@ -50,8 +50,8 @@ func (receiver *Receiver) HandleMessage(rawMessage []byte) {
 
 		receiver.Orders <- ordersMessage
 
-	case GiveSupportMessageType:
-		var supportMessage GiveSupportMessage
+	case GiveSupportType:
+		var supportMessage GiveSupport
 		err := json.Unmarshal(rawMessage, &supportMessage)
 		if err != nil {
 			receiver.Errors <- err
@@ -60,8 +60,8 @@ func (receiver *Receiver) HandleMessage(rawMessage []byte) {
 
 		receiver.Support <- supportMessage
 
-	case QuitMessageType:
-		var quitMessage QuitMessage
+	case QuitType:
+		var quitMessage Quit
 		err := json.Unmarshal(rawMessage, &quitMessage)
 		if err != nil {
 			receiver.Errors <- err
@@ -70,8 +70,8 @@ func (receiver *Receiver) HandleMessage(rawMessage []byte) {
 
 		receiver.Quit <- quitMessage
 
-	case WinterVoteMessageType:
-		var winterVoteMessage WinterVoteMessage
+	case WinterVoteType:
+		var winterVoteMessage WinterVote
 		err := json.Unmarshal(rawMessage, &winterVoteMessage)
 		if err != nil {
 			receiver.Errors <- err
