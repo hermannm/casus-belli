@@ -9,8 +9,13 @@ import (
 type Game struct {
 	Board    Board
 	Rounds   []*Round
-	Messages map[Player]*messages.Receiver
 	Lobby    Lobby
+	Messages map[Player]*messages.Receiver
+	Options  GameOptions
+}
+
+type GameOptions struct {
+	Thrones bool // Whether the game has the "Raven, Sword and Throne" expansion enabled.
 }
 
 type Lobby interface {
