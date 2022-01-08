@@ -1,4 +1,4 @@
-package setup
+package boardconfig
 
 import (
 	"encoding/json"
