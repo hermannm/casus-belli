@@ -32,9 +32,9 @@ type neighbor struct {
 	DangerZone string `json:"dangerZone"`
 }
 
-// Reads and constructs the board matching the given number of players.
-func ReadBoard(players int) (game.Board, error) {
-	content, err := os.ReadFile(fmt.Sprintf("./game/setup/board_%dplayers.json", players))
+// Reads and constructs the board matching the given map name and number of players.
+func ReadBoard(mapName string, playerCount int) (game.Board, error) {
+	content, err := os.ReadFile(fmt.Sprintf("./game/boardconfig/%s_%dplayers.json", mapName, playerCount))
 	if err != nil {
 		return nil, err
 	}
