@@ -6,5 +6,5 @@ import (
 )
 
 func main() {
-	api.StartAPI(":7000", true, app.Games)
+	api.StartPublic(":7000", app.Games)
 }

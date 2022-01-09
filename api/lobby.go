@@ -34,7 +34,7 @@ type Connection struct {
 
 // Returns the player connection in the lobby corresponding to the given player ID,
 // or ok=false if none is found.
-func (lobby *Lobby) GetPlayer(playerID string) (conn *Connection, ok bool) {
+func (lobby *Lobby) GetPlayer(playerID string) (conn interfaces.Connection, ok bool) {
 	lobby.Mut.Lock()
 	defer lobby.Mut.Unlock()
 	conn, ok = lobby.Connections[playerID]
@@ -142,26 +142,32 @@ func (lobby Lobby) AvailablePlayerIDs() map[string]bool {
 	return available
 }
 
-// Creates a lobby with the given ID.
-// Creates connection slot for each of the given player IDs,
+// Returns a new lobby with the given ID.
+// Creates a connection slot for each of the given player IDs,
 // and adds an equal number to the lobby's wait group.
-func CreateLobby(id string, playerIDs []string) (*Lobby, error) {
-	if _, ok := lobbies[id]; ok {
-		return nil, errors.New("lobby with ID \"" + id + "\" already exists")
-	}
-
+// Leaves the game field as nil.
+func NewLobby(id string, playerIDs []string) Lobby {
 	lobby := Lobby{
 		ID:          id,
 		Connections: make(map[string]*Connection, len(playerIDs)),
 	}
 	for _, playerID := range playerIDs {
-		lobby.Connections[playerID] = &Connection{}
+		lobby.Connections[playerID] = nil
 	}
 	lobby.WG.Add(len(lobby.Connections))
 
-	lobbies[id] = &lobby
+	return lobby
+}
 
-	return &lobby, nil
+// Registers a lobby in the global list of lobbies.
+// Returns error if lobby with same ID already exists.
+func RegisterLobby(lobby *Lobby) error {
+	if _, ok := lobbies[lobby.ID]; ok {
+		return errors.New("lobby with ID \"" + lobby.ID + "\" already exists")
+	}
+
+	lobbies[lobby.ID] = lobby
+	return nil
 }
 
 // Removes a lobby from the lobby map and closes its connections.

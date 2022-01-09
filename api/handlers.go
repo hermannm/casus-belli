@@ -11,13 +11,7 @@ import (
 )
 
 // Registers handlers for the lobby API endpoints.
-func StartAPI(address string, open bool, games map[string]interfaces.GameConstructor) {
-	if open {
-		// Endpoint for clients to create their own lobbies if the server is set to enable that.
-		// Takes query parameters "id" (unique name of the lobby) and "playerIDs".
-		http.HandleFunc("/new", createLobbyHandler)
-	}
-
+func Start(address string) {
 	// Endpoint for clients to join a given lobby.
 	// Takes query parameters "lobby" (name of the lobby) and "player" (the player ID that the client wants to claim).
 	http.HandleFunc("/join", addPlayer)
@@ -30,6 +24,14 @@ func StartAPI(address string, open bool, games map[string]interfaces.GameConstru
 	http.HandleFunc("/all", getLobbies)
 
 	http.ListenAndServe(address, nil)
+}
+
+func StartPublic(address string, games map[string]interfaces.GameConstructor) {
+	// Endpoint for clients to create their own lobbies if the server is set to enable that.
+	// Takes query parameters "id" (unique name of the lobby) and "playerIDs".
+	http.HandleFunc("/new", createLobbyHandler(games))
+
+	Start(address)
 }
 
 // Checks the given request for the existence of the provided parameter keys.
@@ -163,30 +165,46 @@ func addPlayer(res http.ResponseWriter, req *http.Request) {
 	lobby.WG.Done()
 }
 
-// Handler for creating lobbies for servers that let users create their own lobbies.
-func createLobbyHandler(res http.ResponseWriter, req *http.Request) {
-	params, ok := checkParams(res, req, "id", "playerIDs")
-	if !ok {
-		return
-	}
+// Returns a handler for creating lobbies (for servers with public lobby creation).
+func createLobbyHandler(games map[string]interfaces.GameConstructor) http.HandlerFunc {
+	return func(res http.ResponseWriter, req *http.Request) {
+		params, ok := checkParams(res, req, "id", "playerIDs", "game")
+		if !ok {
+			return
+		}
 
-	id := params.Get("id")
-	if _, ok := lobbies[id]; ok {
-		http.Error(res, "lobby with ID \""+id+"\" already exists", http.StatusConflict)
-		return
-	}
+		id := params.Get("id")
+		if _, ok := lobbies[id]; ok {
+			http.Error(res, "lobby with ID \""+id+"\" already exists", http.StatusConflict)
+			return
+		}
 
-	playerIDs := params["playerIDs"]
-	if len(playerIDs) < 2 {
-		http.Error(res, "at least 2 player IDs must be provided to lobby", http.StatusBadRequest)
-		return
-	}
+		playerIDs := params["playerIDs"]
+		if len(playerIDs) < 2 {
+			http.Error(res, "at least 2 player IDs must be provided to lobby", http.StatusBadRequest)
+			return
+		}
 
-	_, err := CreateLobby(id, playerIDs)
-	if err != nil {
-		http.Error(res, "error creating lobby", http.StatusInternalServerError)
-		return
-	}
+		lobby := NewLobby(id, playerIDs)
 
-	res.Write([]byte("lobby created"))
+		gameConstructor, ok := games[params.Get("game")]
+		if !ok {
+			http.Error(res, "invalid game descriptor provided", http.StatusBadRequest)
+		}
+
+		game, err := gameConstructor(playerIDs, &lobby, nil)
+		if err != nil {
+			http.Error(res, "error creating game", http.StatusInternalServerError)
+		}
+
+		lobby.Game = game
+
+		err = RegisterLobby(&lobby)
+		if err != nil {
+			http.Error(res, "error creating lobby", http.StatusInternalServerError)
+			return
+		}
+
+		res.Write([]byte("lobby created"))
+	}
 }
