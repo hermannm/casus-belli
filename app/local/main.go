@@ -1,9 +1,12 @@
 package main
 
 import (
+	"net/http"
+
 	"github.com/immerse-ntnu/hermannia/server/api"
 )
 
 func main() {
-	api.Start(":7000")
+	api.RegisterEndpoints(nil)
+	http.ListenAndServe(":7000", nil)
 }

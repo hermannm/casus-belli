@@ -10,28 +10,37 @@ import (
 	"github.com/immerse-ntnu/hermannia/server/interfaces"
 )
 
-// Registers handlers for the lobby API endpoints.
-func Start(address string) {
+// Registers handlers for the lobby API endpoints on the given ServeMux.
+// If nil is passed as the ServeMux, the default http ServeMux is used.
+func RegisterEndpoints(mux *http.ServeMux) {
+	if mux == nil {
+		mux = http.DefaultServeMux
+	}
+
 	// Endpoint for clients to join a given lobby.
 	// Takes query parameters "lobby" (name of the lobby) and "player" (the player ID that the client wants to claim).
-	http.HandleFunc("/join", addPlayer)
+	mux.HandleFunc("/join", addPlayer)
 
 	// Endpoint for clients to view info about a single lobby.
 	// Takes query parameter "lobby" (name of the lobby).
-	http.HandleFunc("/info", getLobby)
+	mux.HandleFunc("/info", getLobby)
 
 	// Endpoint for clients to view info about all lobbies on the server.
-	http.HandleFunc("/all", getLobbies)
-
-	http.ListenAndServe(address, nil)
+	mux.HandleFunc("/all", getLobbies)
 }
 
-func StartPublic(address string, games map[string]interfaces.GameConstructor) {
+// Registers handler for public lobby creation endpoint on the given ServeMux.
+// If nil is passed as the ServeMux, the default http ServeMux is used.
+// The endpoint expects a parameter corresponding to a key in the game constructor map
+// in order to know which type of game to create.
+func RegisterLobbyCreationEndpoint(mux *http.ServeMux, games map[string]interfaces.GameConstructor) {
+	if mux == nil {
+		mux = http.DefaultServeMux
+	}
+
 	// Endpoint for clients to create their own lobbies if the server is set to enable that.
 	// Takes query parameters "id" (unique name of the lobby) and "playerIDs".
-	http.HandleFunc("/new", createLobbyHandler(games))
-
-	Start(address)
+	mux.HandleFunc("/new", createLobbyHandler(games))
 }
 
 // Checks the given request for the existence of the provided parameter keys.
