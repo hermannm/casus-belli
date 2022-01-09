@@ -4,28 +4,19 @@ import (
 	"sync"
 
 	"github.com/immerse-ntnu/hermannia/server/game/messages"
+	"github.com/immerse-ntnu/hermannia/server/interfaces"
 )
 
 type Game struct {
 	Board    Board
 	Rounds   []*Round
-	Lobby    Lobby
+	Lobby    interfaces.Lobby
 	Messages map[Player]*messages.Receiver
 	Options  GameOptions
 }
 
 type GameOptions struct {
 	Thrones bool // Whether the game has the "Raven, Sword and Throne" expansion enabled.
-}
-
-type Lobby interface {
-	GetPlayer(playerID string) (conn Connection, ok bool)
-	SendToAll(message interface{}) []error
-	Close() error
-}
-
-type Connection interface {
-	Send(message interface{}) error
 }
 
 type Player string

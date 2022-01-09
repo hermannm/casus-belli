@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/gorilla/websocket"
+	"github.com/immerse-ntnu/hermannia/server/interfaces"
 )
 
 // Global list of game lobbies.
@@ -13,35 +14,27 @@ var lobbies = make(map[string]*Lobby)
 // A collection of players for a game.
 type Lobby struct {
 	ID   string
-	Game Game
+	Game interfaces.Game
 
 	Mut *sync.Mutex     // Used to synchronize the adding/removal of players.
 	WG  *sync.WaitGroup // Used to wait for the lobby to fill up with players.
 
 	// Maps player IDs (unique to the lobby) to their socket connections for sending and receiving.
-	Connections map[string]Connection
+	Connections map[string]*Connection
 }
 
 // A player's connection to a game lobby.
 type Connection struct {
 	Socket   *websocket.Conn
 	Active   bool // Whether the connection is initialized/not timed out.
-	Receiver Receiver
+	Receiver interfaces.Receiver
 
 	Mut *sync.Mutex // Used to synchronize reading and setting the Active field.
 }
 
-type Receiver interface {
-	HandleMessage([]byte)
-}
-
-type Game interface {
-	AddPlayer(string) (Receiver, error)
-}
-
 // Returns the player connection in the lobby corresponding to the given player ID,
 // or ok=false if none is found.
-func (lobby Lobby) GetPlayer(playerID string) (conn Connection, ok bool) {
+func (lobby *Lobby) GetPlayer(playerID string) (conn *Connection, ok bool) {
 	lobby.Mut.Lock()
 	defer lobby.Mut.Unlock()
 	conn, ok = lobby.Connections[playerID]
@@ -58,7 +51,7 @@ func (lobby Lobby) setPlayer(playerID string, conn Connection) error {
 		return errors.New("invalid player ID")
 	}
 
-	lobby.Connections[playerID] = conn
+	lobby.Connections[playerID] = &conn
 	return nil
 }
 
@@ -87,13 +80,17 @@ func (conn *Connection) Send(message interface{}) error {
 	return err
 }
 
-func (lobby *Lobby) SendToAll(message interface{}) []error {
-	var errs []error
+func (lobby *Lobby) SendToAll(message interface{}) map[string]error {
+	var errs map[string]error
 
-	for _, conn := range lobby.Connections {
+	for id, conn := range lobby.Connections {
 		err := conn.Send(message)
 		if err != nil {
-			errs = append(errs, err)
+			if errs == nil {
+				errs = make(map[string]error)
+			}
+
+			errs[id] = err
 		}
 	}
 
@@ -155,10 +152,10 @@ func CreateLobby(id string, playerIDs []string) (*Lobby, error) {
 
 	lobby := Lobby{
 		ID:          id,
-		Connections: make(map[string]Connection, len(playerIDs)),
+		Connections: make(map[string]*Connection, len(playerIDs)),
 	}
 	for _, playerID := range playerIDs {
-		lobby.Connections[playerID] = Connection{}
+		lobby.Connections[playerID] = &Connection{}
 	}
 	lobby.WG.Add(len(lobby.Connections))
 

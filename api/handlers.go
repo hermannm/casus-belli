@@ -7,12 +7,11 @@ import (
 	"net/url"
 
 	"github.com/gorilla/websocket"
+	"github.com/immerse-ntnu/hermannia/server/interfaces"
 )
 
-type GameCreator func(players []string, lobby Lobby, config ...interface{}) (Game, error)
-
 // Registers handlers for the lobby API endpoints.
-func StartAPI(address string, open bool, games map[string]GameCreator) {
+func StartAPI(address string, open bool, games map[string]interfaces.GameConstructor) {
 	if open {
 		// Endpoint for clients to create their own lobbies if the server is set to enable that.
 		// Takes query parameters "id" (unique name of the lobby) and "playerIDs".
@@ -150,7 +149,7 @@ func addPlayer(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	conn = Connection{
+	conn = &Connection{
 		Socket:   socket,
 		Active:   true,
 		Receiver: receiver,
