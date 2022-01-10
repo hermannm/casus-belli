@@ -177,38 +177,19 @@ func addPlayer(res http.ResponseWriter, req *http.Request) {
 // Returns a handler for creating lobbies (for servers with public lobby creation).
 func createLobbyHandler(games map[string]interfaces.GameConstructor) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
-		params, ok := checkParams(res, req, "id", "playerIDs", "game")
+		params, ok := checkParams(res, req, "id", "game")
 		if !ok {
 			return
 		}
 
 		id := params.Get("id")
-		if _, ok := lobbies[id]; ok {
-			http.Error(res, "lobby with ID \""+id+"\" already exists", http.StatusConflict)
-			return
-		}
-
-		playerIDs := params["playerIDs"]
-		if len(playerIDs) < 2 {
-			http.Error(res, "at least 2 player IDs must be provided to lobby", http.StatusBadRequest)
-			return
-		}
-
-		lobby := NewLobby(id, playerIDs)
 
 		gameConstructor, ok := games[params.Get("game")]
 		if !ok {
 			http.Error(res, "invalid game descriptor provided", http.StatusBadRequest)
 		}
 
-		game, err := gameConstructor(playerIDs, &lobby, nil)
-		if err != nil {
-			http.Error(res, "error creating game", http.StatusInternalServerError)
-		}
-
-		lobby.Game = game
-
-		err = RegisterLobby(&lobby)
+		_, err := NewLobby(id, gameConstructor)
 		if err != nil {
 			http.Error(res, "error creating lobby", http.StatusInternalServerError)
 			return

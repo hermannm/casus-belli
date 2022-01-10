@@ -33,8 +33,8 @@ type neighbor struct {
 }
 
 // Reads and constructs the board matching the given map name and number of players.
-func ReadBoard(mapName string, playerCount int) (game.Board, error) {
-	content, err := os.ReadFile(fmt.Sprintf("./game/boardconfig/%s_%dplayers.json", mapName, playerCount))
+func ReadBoard(boardName string) (game.Board, error) {
+	content, err := os.ReadFile(fmt.Sprintf("./game/boardconfig/%s.json", boardName))
 	if err != nil {
 		return nil, err
 	}

@@ -7,12 +7,12 @@ import (
 )
 
 var Games = map[string]interfaces.GameConstructor{
-	"hermannia_5players": gameConstructor("hermannia", 5),
+	"hermannia_5players": gameConstructor("hermannia_5players"),
 }
 
-func gameConstructor(mapName string, playerCount int) interfaces.GameConstructor {
-	return func(players []string, lobby interfaces.Lobby, options interface{}) (interfaces.Game, error) {
-		board, err := boardconfig.ReadBoard(mapName, playerCount)
+func gameConstructor(boardName string) interfaces.GameConstructor {
+	return func(lobby interfaces.Lobby, options interface{}) (interfaces.Game, error) {
+		board, err := boardconfig.ReadBoard(boardName)
 		if err != nil {
 			return nil, err
 		}

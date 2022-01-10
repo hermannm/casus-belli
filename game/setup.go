@@ -34,6 +34,31 @@ func DefaultOptions() GameOptions {
 	}
 }
 
+// Dynamically finds the possible player IDs for the game
+// by going through the board and finding all the different Home values.
+func (game Game) PlayerIDs() []string {
+	ids := make([]string, 0)
+
+outer:
+	for _, area := range game.Board {
+		if area.Home == Uncontrolled {
+			continue
+		}
+
+		potentialID := string(area.Home)
+
+		for _, id := range ids {
+			if potentialID == id {
+				continue outer
+			}
+		}
+
+		ids = append(ids, potentialID)
+	}
+
+	return ids
+}
+
 // Creates a new message receiver for the given player tag.
 // Adds the receiver to the game, and returns it.
 // Returns error if tag is invalid or already taken.

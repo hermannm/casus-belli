@@ -102,7 +102,7 @@ func printResolvePrint(board game.Board, areas map[string]game.Unit, round *game
 }
 
 func main() {
-	board, err := boardconfig.ReadBoard("hermannia", 5)
+	board, err := boardconfig.ReadBoard("hermannia_5players")
 
 	if err != nil {
 		fmt.Println(err.Error())

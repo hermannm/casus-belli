@@ -142,21 +142,38 @@ func (lobby Lobby) AvailablePlayerIDs() map[string]bool {
 	return available
 }
 
-// Returns a new lobby with the given ID.
-// Creates a connection slot for each of the given player IDs,
-// and adds an equal number to the lobby's wait group.
-// Leaves the game field as nil.
-func NewLobby(id string, playerIDs []string) Lobby {
+// Creates and registers a new lobby with the given ID and constructed game instance.
+// Returns error if lobby ID is already taken, or if game construction failed.
+func NewLobby(id string, gameConstructor interfaces.GameConstructor) (*Lobby, error) {
 	lobby := Lobby{
-		ID:          id,
-		Connections: make(map[string]*Connection, len(playerIDs)),
+		ID: id,
 	}
+
+	game, err := gameConstructor(&lobby, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	lobby.Game = game
+	playerIDs := game.PlayerIDs()
+	lobby.AddPlayerSlots(playerIDs)
+
+	err = RegisterLobby(&lobby)
+	if err != nil {
+		return nil, err
+	}
+
+	return &lobby, nil
+}
+
+// Takes the given list of player IDs and adds connection slots for each of them in the lobby.
+// Adds the length of the given IDs to the lobby's wait group, so it can be used to wait for the lobby to fill up.
+func (lobby *Lobby) AddPlayerSlots(playerIDs []string) {
+	lobby.Connections = make(map[string]*Connection, len(playerIDs))
 	for _, playerID := range playerIDs {
 		lobby.Connections[playerID] = nil
 	}
-	lobby.WG.Add(len(lobby.Connections))
-
-	return lobby
+	lobby.WG.Add(len(playerIDs))
 }
 
 // Registers a lobby in the global list of lobbies.

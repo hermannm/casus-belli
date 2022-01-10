@@ -6,6 +6,9 @@ type Game interface {
 	// and returns a receiver to handle messages from the player,
 	// or an error if adding the player failed.
 	AddPlayer(playerID string) (Receiver, error)
+
+	// Returns the range of possible player IDs for this game.
+	PlayerIDs() []string
 }
 
 // Handles incoming messages from a client.
@@ -41,7 +44,6 @@ type Connection interface {
 }
 
 // Signature for functions that construct a game instance.
-// Takes the list of player identifier strings for use by the game instance,
-// the lobby to which players can connect,
+// Takes the lobby to which players can connect,
 // and an untyped options parameter that can be parsed by the game instance for use in setup.
-type GameConstructor func(players []string, lobby Lobby, options interface{}) (Game, error)
+type GameConstructor func(lobby Lobby, options interface{}) (Game, error)
