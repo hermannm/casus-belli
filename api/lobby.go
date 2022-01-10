@@ -2,6 +2,7 @@ package api
 
 import (
 	"errors"
+	"net/http"
 	"sync"
 
 	"github.com/gorilla/websocket"
@@ -145,6 +146,10 @@ func (lobby Lobby) AvailablePlayerIDs() map[string]bool {
 // Creates and registers a new lobby with the given ID and constructed game instance.
 // Returns error if lobby ID is already taken, or if game construction failed.
 func NewLobby(id string, gameConstructor interfaces.GameConstructor) (*Lobby, error) {
+	if id == "" {
+		return nil, errors.New("lobby name cannot be blank")
+	}
+
 	lobby := Lobby{
 		ID: id,
 	}
@@ -171,9 +176,11 @@ func NewLobby(id string, gameConstructor interfaces.GameConstructor) (*Lobby, er
 func (lobby *Lobby) AddPlayerSlots(playerIDs []string) {
 	lobby.Connections = make(map[string]*Connection, len(playerIDs))
 	for _, playerID := range playerIDs {
-		lobby.Connections[playerID] = nil
+		lobby.Connections[playerID] = &Connection{}
 	}
-	lobby.WG.Add(len(playerIDs))
+	var wg sync.WaitGroup
+	wg.Add(len(playerIDs))
+	lobby.WG = &wg
 }
 
 // Registers a lobby in the global list of lobbies.
@@ -197,4 +204,25 @@ func (lobby Lobby) Close() error {
 	delete(lobbies, lobby.ID)
 
 	return nil
+}
+
+func findLobby(req *http.Request) (*Lobby, error) {
+	if len(lobbies) == 1 {
+		for _, lobby := range lobbies {
+			return lobby, nil
+		}
+	}
+
+	params, ok := checkParams(req, "lobby")
+	if !ok {
+		return nil, errors.New("lacking lobby query parameter")
+	}
+
+	lobbyID := params.Get("lobby")
+	lobby, ok := lobbies[lobbyID]
+	if !ok {
+		return nil, errors.New("no lobby found with provided id")
+	}
+
+	return lobby, nil
 }

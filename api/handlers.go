@@ -53,9 +53,7 @@ func RegisterLobbyCreationEndpoints(mux *http.ServeMux, games map[string]interfa
 
 // Checks the given request for the existence of the provided parameter keys.
 // If all exist, returns the parameters, otherwise returns ok = false.
-func checkParams(req *http.Request, keys ...string) (
-	params url.Values, ok bool,
-) {
+func checkParams(req *http.Request, keys ...string) (params url.Values, ok bool) {
 	params = req.URL.Query()
 
 	for _, key := range keys {
@@ -75,16 +73,9 @@ type lobbyInfo struct {
 
 // Handler for returning information about a given lobby.
 func getLobby(res http.ResponseWriter, req *http.Request) {
-	params, ok := checkParams(req, "lobby")
-	if !ok {
-		http.Error(res, "insufficient query parameters", http.StatusBadRequest)
-		return
-	}
-
-	lobbyID := params.Get("lobby")
-	lobby, ok := lobbies[lobbyID]
-	if !ok {
-		http.Error(res, "no lobby with id \""+lobbyID+"\"", http.StatusBadRequest)
+	lobby, err := findLobby(req)
+	if err != nil {
+		http.Error(res, "could not fetch lobby", http.StatusNotFound)
 		return
 	}
 
@@ -93,7 +84,7 @@ func getLobby(res http.ResponseWriter, req *http.Request) {
 		AvailablePlayerIDs: lobby.AvailablePlayerIDs(),
 	})
 	if err != nil {
-		http.Error(res, "error in reading lobby \""+lobbyID+"\"", http.StatusInternalServerError)
+		http.Error(res, "could not serialize lobby", http.StatusInternalServerError)
 		return
 	}
 
@@ -122,16 +113,14 @@ func getLobbies(res http.ResponseWriter, req *http.Request) {
 
 // Handler for adding a player to a lobby.
 func addPlayer(res http.ResponseWriter, req *http.Request) {
-	params, ok := checkParams(req, "lobby", "player")
-	if !ok {
-		http.Error(res, "insufficient query parameters", http.StatusBadRequest)
-		return
+	lobby, err := findLobby(req)
+	if err != nil {
+		http.Error(res, "could not find lobby", http.StatusNotFound)
 	}
 
-	lobbyID := params.Get("lobby")
-	lobby, ok := lobbies[lobbyID]
+	params, ok := checkParams(req, "player")
 	if !ok {
-		http.Error(res, "no lobby with ID "+lobbyID+" exists", http.StatusBadRequest)
+		http.Error(res, "must select player ID", http.StatusBadRequest)
 		return
 	}
 
