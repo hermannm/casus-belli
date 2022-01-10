@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -25,7 +26,11 @@ func main() {
 	fmt.Println()
 
 	api.RegisterEndpoints(nil)
-	http.ListenAndServe(":7000", nil)
+
+	port := "7000"
+	fmt.Printf("Listening on port %s...", port)
+	err := http.ListenAndServe(fmt.Sprintf(":%s", port), nil)
+	log.Fatal(err)
 }
 
 // CLI utility for selecting a game from a list of supported games.

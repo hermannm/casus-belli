@@ -5,6 +5,8 @@ import (
 	"errors"
 )
 
+// The Receiver handles messages coming from client, and parses them
+// to the appropriate message type channel for use by the game instance.
 type Receiver struct {
 	Orders     chan SubmitOrders
 	Support    chan GiveSupport
@@ -16,6 +18,7 @@ type Receiver struct {
 	Errors     chan error
 }
 
+// Initializes a new receiver with empty channels.
 func NewReceiver() Receiver {
 	return Receiver{
 		Orders:     make(chan SubmitOrders),
@@ -29,6 +32,7 @@ func NewReceiver() Receiver {
 	}
 }
 
+// Takes a message in byte format, deserializes it, and sends it to the appropriate channel on the receiver.
 func (receiver *Receiver) HandleMessage(rawMessage []byte) {
 	var baseMessage Base
 

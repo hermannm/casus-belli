@@ -1,14 +1,23 @@
 package main
 
 import (
+	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/immerse-ntnu/hermannia/server/api"
 	"github.com/immerse-ntnu/hermannia/server/app"
 )
 
+// Launches a game server with a public endpoint for creating lobbies.
 func main() {
+	fmt.Println("Server started...")
+
 	api.RegisterEndpoints(nil)
 	api.RegisterLobbyCreationEndpoints(nil, app.Games)
-	http.ListenAndServe(":7000", nil)
+
+	port := "7000"
+	fmt.Printf("Listening on port %s...", port)
+	err := http.ListenAndServe(fmt.Sprintf(":%s", port), nil)
+	log.Fatal(err)
 }

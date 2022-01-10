@@ -206,6 +206,9 @@ func (lobby Lobby) Close() error {
 	return nil
 }
 
+// If there is only 1 lobby on the server, returns that,
+// otherwise returns lobby corresponding to lobby parameter in request.
+// Returns error on absent lobby parameter or lobby not found.
 func findLobby(req *http.Request) (*Lobby, error) {
 	if len(lobbies) == 1 {
 		for _, lobby := range lobbies {
