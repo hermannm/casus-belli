@@ -7,7 +7,7 @@ import (
 )
 
 var Games = map[string]interfaces.GameConstructor{
-	"hermannia_5players": gameConstructor("hermannia_5players"),
+	"The Battle for Hermannia (5 players)": gameConstructor("hermannia_5players"),
 }
 
 func gameConstructor(boardName string) interfaces.GameConstructor {

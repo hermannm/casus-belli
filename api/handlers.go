@@ -182,14 +182,17 @@ func createLobbyHandler(games map[string]interfaces.GameConstructor) http.Handle
 			return
 		}
 
-		id := params.Get("id")
+		id, err := url.QueryUnescape(params.Get("id"))
+		if err != nil {
+			http.Error(res, "invalid lobby ID provided", http.StatusBadRequest)
+		}
 
 		gameConstructor, ok := games[params.Get("game")]
 		if !ok {
 			http.Error(res, "invalid game descriptor provided", http.StatusBadRequest)
 		}
 
-		_, err := NewLobby(id, gameConstructor)
+		_, err = NewLobby(id, gameConstructor)
 		if err != nil {
 			http.Error(res, "error creating lobby", http.StatusInternalServerError)
 			return
