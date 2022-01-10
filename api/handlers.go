@@ -33,7 +33,7 @@ func RegisterEndpoints(mux *http.ServeMux) {
 // If nil is passed as the ServeMux, the default http ServeMux is used.
 // The endpoint expects a parameter corresponding to a key in the game constructor map
 // in order to know which type of game to create.
-func RegisterLobbyCreationEndpoint(mux *http.ServeMux, games map[string]interfaces.GameConstructor) {
+func RegisterLobbyCreationEndpoints(mux *http.ServeMux, games map[string]interfaces.GameConstructor) {
 	if mux == nil {
 		mux = http.DefaultServeMux
 	}
@@ -41,18 +41,25 @@ func RegisterLobbyCreationEndpoint(mux *http.ServeMux, games map[string]interfac
 	// Endpoint for clients to create their own lobbies if the server is set to enable that.
 	// Takes query parameters "id" (unique name of the lobby) and "playerIDs".
 	mux.HandleFunc("/new", createLobbyHandler(games))
+
+	gameTitles := make([]string, len(games))
+	for key := range games {
+		gameTitles = append(gameTitles, key)
+	}
+
+	// Endpoint for clients to view a list of possible games for which they can create lobbies.
+	mux.HandleFunc("/games", getGames(gameTitles))
 }
 
 // Checks the given request for the existence of the provided parameter keys.
 // If all exist, returns the parameters, otherwise returns ok = false.
-func checkParams(res http.ResponseWriter, req *http.Request, keys ...string) (
+func checkParams(req *http.Request, keys ...string) (
 	params url.Values, ok bool,
 ) {
 	params = req.URL.Query()
 
 	for _, key := range keys {
 		if !params.Has(key) {
-			http.Error(res, "insufficient query parameters", http.StatusBadRequest)
 			return nil, false
 		}
 	}
@@ -68,8 +75,9 @@ type lobbyInfo struct {
 
 // Handler for returning information about a given lobby.
 func getLobby(res http.ResponseWriter, req *http.Request) {
-	params, ok := checkParams(res, req, "lobby")
+	params, ok := checkParams(req, "lobby")
 	if !ok {
+		http.Error(res, "insufficient query parameters", http.StatusBadRequest)
 		return
 	}
 
@@ -86,6 +94,7 @@ func getLobby(res http.ResponseWriter, req *http.Request) {
 	})
 	if err != nil {
 		http.Error(res, "error in reading lobby \""+lobbyID+"\"", http.StatusInternalServerError)
+		return
 	}
 
 	res.Write(info)
@@ -105,6 +114,7 @@ func getLobbies(res http.ResponseWriter, req *http.Request) {
 	info, err := json.Marshal(lobbyInfoList)
 	if err != nil {
 		http.Error(res, "error in reading lobby fetching lobby list", http.StatusInternalServerError)
+		return
 	}
 
 	res.Write(info)
@@ -112,8 +122,9 @@ func getLobbies(res http.ResponseWriter, req *http.Request) {
 
 // Handler for adding a player to a lobby.
 func addPlayer(res http.ResponseWriter, req *http.Request) {
-	params, ok := checkParams(res, req, "lobby", "player")
+	params, ok := checkParams(req, "lobby", "player")
 	if !ok {
+		http.Error(res, "insufficient query parameters", http.StatusBadRequest)
 		return
 	}
 
@@ -121,6 +132,7 @@ func addPlayer(res http.ResponseWriter, req *http.Request) {
 	lobby, ok := lobbies[lobbyID]
 	if !ok {
 		http.Error(res, "no lobby with ID "+lobbyID+" exists", http.StatusBadRequest)
+		return
 	}
 
 	playerID := params.Get("player")
@@ -177,19 +189,27 @@ func addPlayer(res http.ResponseWriter, req *http.Request) {
 // Returns a handler for creating lobbies (for servers with public lobby creation).
 func createLobbyHandler(games map[string]interfaces.GameConstructor) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
-		params, ok := checkParams(res, req, "id", "game")
+		params, ok := checkParams(req, "id", "game")
 		if !ok {
+			http.Error(res, "insufficient query parameters", http.StatusBadRequest)
 			return
 		}
 
 		id, err := url.QueryUnescape(params.Get("id"))
 		if err != nil {
 			http.Error(res, "invalid lobby ID provided", http.StatusBadRequest)
+			return
 		}
 
-		gameConstructor, ok := games[params.Get("game")]
+		gameTitle, err := url.QueryUnescape(params.Get("game"))
+		if err != nil {
+			http.Error(res, "invalid game title provided", http.StatusBadRequest)
+		}
+
+		gameConstructor, ok := games[gameTitle]
 		if !ok {
-			http.Error(res, "invalid game descriptor provided", http.StatusBadRequest)
+			http.Error(res, "invalid game title provided", http.StatusBadRequest)
+			return
 		}
 
 		_, err = NewLobby(id, gameConstructor)
@@ -199,5 +219,18 @@ func createLobbyHandler(games map[string]interfaces.GameConstructor) http.Handle
 		}
 
 		res.Write([]byte("lobby created"))
+	}
+}
+
+// Returns a handler for showing the list of games supported by the server.
+func getGames(gameTitles []string) http.HandlerFunc {
+	return func(res http.ResponseWriter, req *http.Request) {
+		jsonResponse, err := json.Marshal(gameTitles)
+		if err != nil {
+			http.Error(res, "error fetching list of games", http.StatusInternalServerError)
+			return
+		}
+
+		res.Write(jsonResponse)
 	}
 }

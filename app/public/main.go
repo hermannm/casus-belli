@@ -9,6 +9,6 @@ import (
 
 func main() {
 	api.RegisterEndpoints(nil)
-	api.RegisterLobbyCreationEndpoint(nil, app.Games)
+	api.RegisterLobbyCreationEndpoints(nil, app.Games)
 	http.ListenAndServe(":7000", nil)
 }
