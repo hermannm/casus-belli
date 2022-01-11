@@ -44,6 +44,7 @@ func selectGame(games map[string]lobby.GameConstructor) lobby.GameConstructor {
 	for index, title := range gameTitles {
 		fmt.Printf("%d: %s\n", index, title)
 	}
+	fmt.Println()
 
 	var selectedTitle string
 	for {
