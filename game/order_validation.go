@@ -1,41 +1,39 @@
-package validation
+package game
 
 import (
 	"errors"
-
-	"github.com/immerse-ntnu/hermannia/server/game"
 )
 
 // Takes a game order, and returns an error if it is invalid.
-func ValidateOrder(order game.Order, season game.Season) error {
+func ValidateOrder(order Order, season Season) error {
 	if order.Player != order.From.Control {
 		return errors.New("must control area that is ordered")
 	}
 
 	switch season {
-	case game.Winter:
+	case Winter:
 		return validateWinterOrder(order)
 	default:
 		return validateNonWinterOrder(order)
 	}
 }
 
-func validateNonWinterOrder(order game.Order) error {
+func validateNonWinterOrder(order Order) error {
 	if order.Build != "" {
 		return errors.New("units can only be built in winter")
 	}
 
 	switch {
-	case order.Type == game.Move || order.Type == game.Support:
+	case order.Type == Move || order.Type == Support:
 		return validateMoveOrSupport(order)
-	case order.Type == game.Besiege || order.Type == game.Transport:
+	case order.Type == Besiege || order.Type == Transport:
 		return validateBesiegeOrTransport(order)
 	}
 
 	return errors.New("invalid order type")
 }
 
-func validateMoveOrSupport(order game.Order) error {
+func validateMoveOrSupport(order Order) error {
 	if order.To == nil {
 		return errors.New("moves and supports must have destination")
 	}
@@ -44,7 +42,7 @@ func validateMoveOrSupport(order game.Order) error {
 		return errors.New("destination not adjacent to origin")
 	}
 
-	if order.From.Unit.Type == game.Ship {
+	if order.From.Unit.Type == Ship {
 		if !(order.To.Sea || order.To.IsCoast()) {
 			return errors.New("ship order destination must be sea or coast")
 		}
@@ -55,21 +53,21 @@ func validateMoveOrSupport(order game.Order) error {
 	}
 
 	switch order.Type {
-	case game.Move:
+	case Move:
 		return validateMove(order)
-	case game.Support:
+	case Support:
 		return validateSupport(order)
 	}
 
 	return errors.New("invalid order type")
 }
 
-func validateMove(order game.Order) error {
+func validateMove(order Order) error {
 	if order.From.IsEmpty() || order.From.Unit.Player != order.Player {
 		secondHorseMove := false
 
 		for _, firstOrder := range order.From.IncomingMoves {
-			if firstOrder.From.Unit.Type == game.Horse &&
+			if firstOrder.From.Unit.Type == Horse &&
 				firstOrder.To.Name == order.From.Name &&
 				firstOrder.Player == order.Player {
 
@@ -85,66 +83,66 @@ func validateMove(order game.Order) error {
 	return nil
 }
 
-func validateSupport(order game.Order) error {
+func validateSupport(order Order) error {
 	return nil
 }
 
-func validateBesiegeOrTransport(order game.Order) error {
+func validateBesiegeOrTransport(order Order) error {
 	if order.To != nil {
 		return errors.New("besiege or transport orders cannot have destination")
 	}
 
 	switch order.Type {
-	case game.Besiege:
+	case Besiege:
 		return validateBesiege(order)
-	case game.Transport:
+	case Transport:
 		return validateTransport(order)
 	}
 
 	return errors.New("invalid order type")
 }
 
-func validateBesiege(order game.Order) error {
+func validateBesiege(order Order) error {
 	if !order.From.Castle {
 		return errors.New("besieged area must have castle")
 	}
 
-	if order.From.Control != game.Uncontrolled {
+	if order.From.Control != Uncontrolled {
 		return errors.New("besieged area cannot already be controlled")
 	}
 
-	if order.From.Unit.Type == game.Ship {
+	if order.From.Unit.Type == Ship {
 		return errors.New("ships cannot besiege")
 	}
 
 	return nil
 }
 
-func validateTransport(order game.Order) error {
-	if order.From.Unit.Type != game.Ship {
+func validateTransport(order Order) error {
+	if order.From.Unit.Type != Ship {
 		return errors.New("only ships can transport")
 	}
 
 	return nil
 }
 
-func validateWinterOrder(order game.Order) error {
+func validateWinterOrder(order Order) error {
 	switch order.Type {
-	case game.Move:
+	case Move:
 		return validateWinterMove(order)
-	case game.Build:
+	case Build:
 		return validateBuild(order)
 	}
 
 	return errors.New("invalid order type")
 }
 
-func validateWinterMove(order game.Order) error {
+func validateWinterMove(order Order) error {
 	if order.To.Control != order.Player {
 		return errors.New("must control destination area in winter move")
 	}
 
-	if order.From.Unit.Type == game.Ship && !order.To.IsCoast() {
+	if order.From.Unit.Type == Ship && !order.To.IsCoast() {
 		return errors.New("ship winter move destination must be coast")
 	}
 
@@ -155,21 +153,21 @@ func validateWinterMove(order game.Order) error {
 	return nil
 }
 
-func validateBuild(order game.Order) error {
+func validateBuild(order Order) error {
 	if !order.From.IsEmpty() {
 		return errors.New("cannot build in area already occupied")
 	}
 
 	switch order.Build {
-	case game.Ship:
+	case Ship:
 		if !order.From.IsCoast() {
 			return errors.New("ships can only be built on coast")
 		}
-	case game.Footman:
+	case Footman:
 		break
-	case game.Horse:
+	case Horse:
 		break
-	case game.Catapult:
+	case Catapult:
 		break
 	default:
 		return errors.New("invalid unit type")

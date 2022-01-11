@@ -1,4 +1,4 @@
-package boardconfig
+package boards
 
 import (
 	"encoding/json"

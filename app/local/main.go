@@ -8,9 +8,9 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/immerse-ntnu/hermannia/server/api"
 	"github.com/immerse-ntnu/hermannia/server/app"
 	"github.com/immerse-ntnu/hermannia/server/interfaces"
+	"github.com/immerse-ntnu/hermannia/server/lobby"
 )
 
 // Launches a game server that runs a single lobby and game.
@@ -25,7 +25,7 @@ func main() {
 	createLobby(game)
 	fmt.Println()
 
-	api.RegisterEndpoints(nil)
+	lobby.RegisterEndpoints(nil)
 
 	port := "7000"
 	fmt.Printf("Listening on port %s...", port)
@@ -81,7 +81,7 @@ func createLobby(game interfaces.GameConstructor) {
 		scanner.Scan()
 		lobbyName = scanner.Text()
 
-		_, err := api.NewLobby(lobbyName, game)
+		_, err := lobby.NewLobby(lobbyName, game)
 		if err == nil {
 			break
 		}

@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 
+	"github.com/immerse-ntnu/hermannia/server/boards"
 	"github.com/immerse-ntnu/hermannia/server/game"
-	"github.com/immerse-ntnu/hermannia/server/game/boardconfig"
 )
 
 func printBoard(board game.Board, areas map[string]game.Unit, neighbors bool) {
@@ -102,7 +102,7 @@ func printResolvePrint(board game.Board, areas map[string]game.Unit, round *game
 }
 
 func main() {
-	board, err := boardconfig.ReadBoard("hermannia_5players")
+	board, err := boards.ReadBoard("hermannia_5players")
 
 	if err != nil {
 		fmt.Println(err.Error())

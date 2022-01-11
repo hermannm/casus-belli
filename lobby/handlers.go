@@ -1,4 +1,4 @@
-package api
+package lobby
 
 import (
 	"encoding/json"

@@ -1,8 +1,8 @@
 package app
 
 import (
+	"github.com/immerse-ntnu/hermannia/server/boards"
 	"github.com/immerse-ntnu/hermannia/server/game"
-	"github.com/immerse-ntnu/hermannia/server/game/boardconfig"
 	"github.com/immerse-ntnu/hermannia/server/interfaces"
 )
 
@@ -15,7 +15,7 @@ var Games = map[string]interfaces.GameConstructor{
 // The boardName must correspond to a .json file in ../game/boardconfig.
 func gameConstructor(boardName string) interfaces.GameConstructor {
 	return func(lobby interfaces.Lobby, options interface{}) (interfaces.Game, error) {
-		board, err := boardconfig.ReadBoard(boardName)
+		board, err := boards.ReadBoard(boardName)
 		if err != nil {
 			return nil, err
 		}

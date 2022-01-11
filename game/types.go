@@ -3,8 +3,8 @@ package game
 import (
 	"sync"
 
-	"github.com/immerse-ntnu/hermannia/server/game/messages"
 	"github.com/immerse-ntnu/hermannia/server/interfaces"
+	"github.com/immerse-ntnu/hermannia/server/messages"
 )
 
 type Game struct {

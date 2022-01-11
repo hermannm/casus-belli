@@ -3,8 +3,8 @@ package game
 import (
 	"errors"
 
-	"github.com/immerse-ntnu/hermannia/server/game/messages"
 	"github.com/immerse-ntnu/hermannia/server/interfaces"
+	"github.com/immerse-ntnu/hermannia/server/messages"
 )
 
 func New(board Board, lobby interfaces.Lobby, options GameOptions) interfaces.Game {
