@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"text/tabwriter"
 
 	"github.com/hermannm/ipfinder"
 	"github.com/immerse-ntnu/hermannia/server/app"
@@ -27,19 +28,9 @@ func main() {
 
 	lobby.RegisterEndpoints(nil)
 
-	publicIP, _ := ipfinder.FindPublicIP()
-	localIPs, _ := ipfinder.FindLocalIPs()
-
 	port := "7000"
 
-	fmt.Println("Lobby can now be joined at:")
-	fmt.Printf("%s:%s/join (if port forwarding)\n", publicIP, port)
-	for _, ips := range localIPs {
-		for _, localIP := range ips {
-			fmt.Printf("%s:%s/join (if on the same network)\n", localIP, port)
-		}
-	}
-	fmt.Println()
+	printIPs(port)
 
 	fmt.Println("Listening...")
 	err := http.ListenAndServe(fmt.Sprintf(":%s", port), nil)
@@ -104,4 +95,31 @@ func createLobby(game lobby.GameConstructor) {
 	}
 
 	fmt.Printf("Lobby \"%s\" created!\n", lobbyName)
+}
+
+// CLI utility for printing out IPs that can be used to connect to the lobby.
+func printIPs(port string) {
+	publicIP, publicErr := ipfinder.FindPublicIP()
+	localIPs, localErr := ipfinder.FindLocalIPs()
+
+	fmt.Println("Lobby can now be joined at:")
+
+	writer := tabwriter.NewWriter(os.Stdout, 1, 1, 1, ' ', 0)
+	if publicErr == nil {
+		fmt.Fprintf(writer, "%s:%s/join\t(if port forwarding)\n", publicIP, port)
+	} else {
+		fmt.Printf("[Error finding public IP] %s\n", publicErr.Error())
+	}
+	if localErr == nil {
+		for _, ips := range localIPs {
+			for _, localIP := range ips {
+				fmt.Fprintf(writer, "%s:%s/join\t(if on the same network)\n", localIP, port)
+			}
+		}
+	} else {
+		fmt.Printf("[Error finding local IPs] %s\n", publicErr.Error())
+	}
+	writer.Flush()
+
+	fmt.Println()
 }
