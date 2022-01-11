@@ -3,14 +3,14 @@ package game
 import (
 	"sync"
 
-	"github.com/immerse-ntnu/hermannia/server/interfaces"
+	"github.com/immerse-ntnu/hermannia/server/lobby"
 	"github.com/immerse-ntnu/hermannia/server/messages"
 )
 
 type Game struct {
 	Board    Board
 	Rounds   []*Round
-	Lobby    interfaces.Lobby
+	Lobby    *lobby.Lobby
 	Messages map[Player]*messages.Receiver
 	Options  GameOptions
 }

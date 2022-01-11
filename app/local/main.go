@@ -9,7 +9,6 @@ import (
 	"strconv"
 
 	"github.com/immerse-ntnu/hermannia/server/app"
-	"github.com/immerse-ntnu/hermannia/server/interfaces"
 	"github.com/immerse-ntnu/hermannia/server/lobby"
 )
 
@@ -35,7 +34,7 @@ func main() {
 
 // CLI utility for selecting a game from a list of supported games.
 // Does not return until a valid game selection is made.
-func selectGame(games map[string]interfaces.GameConstructor) interfaces.GameConstructor {
+func selectGame(games map[string]lobby.GameConstructor) lobby.GameConstructor {
 	fmt.Print("Available games:\n")
 
 	gameTitles := make([]string, 0)
@@ -73,7 +72,7 @@ func selectGame(games map[string]interfaces.GameConstructor) interfaces.GameCons
 
 // CLI utility for creating a lobby.
 // Does not return until a valid lobby is created.
-func createLobby(game interfaces.GameConstructor) {
+func createLobby(game lobby.GameConstructor) {
 	var lobbyName string
 	for {
 		fmt.Print("Type name of lobby: ")
@@ -81,7 +80,7 @@ func createLobby(game interfaces.GameConstructor) {
 		scanner.Scan()
 		lobbyName = scanner.Text()
 
-		_, err := lobby.NewLobby(lobbyName, game)
+		_, err := lobby.New(lobbyName, game)
 		if err == nil {
 			break
 		}

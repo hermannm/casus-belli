@@ -3,11 +3,11 @@ package game
 import (
 	"errors"
 
-	"github.com/immerse-ntnu/hermannia/server/interfaces"
+	"github.com/immerse-ntnu/hermannia/server/lobby"
 	"github.com/immerse-ntnu/hermannia/server/messages"
 )
 
-func New(board Board, lobby interfaces.Lobby, options GameOptions) interfaces.Game {
+func New(board Board, lob *lobby.Lobby, options GameOptions) lobby.Game {
 	messages := make(map[Player]*messages.Receiver)
 	for _, area := range board {
 		if area.Home == Uncontrolled {
@@ -22,7 +22,7 @@ func New(board Board, lobby interfaces.Lobby, options GameOptions) interfaces.Ga
 	return &Game{
 		Board:    board,
 		Rounds:   make([]*Round, 0),
-		Lobby:    lobby,
+		Lobby:    lob,
 		Messages: messages,
 		Options:  options,
 	}
@@ -62,8 +62,8 @@ outer:
 // Creates a new message receiver for the given player tag.
 // Adds the receiver to the game, and returns it.
 // Returns error if tag is invalid or already taken.
-func (game *Game) AddPlayer(playerTag string) (interfaces.Receiver, error) {
-	player := Player(playerTag)
+func (game *Game) AddPlayer(playerID string) (lobby.Receiver, error) {
+	player := Player(playerID)
 
 	receiver, ok := game.Messages[player]
 	if !ok {

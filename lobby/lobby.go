@@ -6,7 +6,6 @@ import (
 	"sync"
 
 	"github.com/gorilla/websocket"
-	"github.com/immerse-ntnu/hermannia/server/interfaces"
 )
 
 // Global list of game lobbies.
@@ -15,56 +14,80 @@ var lobbies = make(map[string]*Lobby)
 // A collection of players for a game.
 type Lobby struct {
 	ID   string
-	Game interfaces.Game
+	Game Game
 
 	Mut *sync.Mutex     // Used to synchronize the adding/removal of players.
 	WG  *sync.WaitGroup // Used to wait for the lobby to fill up with players.
 
 	// Maps player IDs (unique to the lobby) to their socket connections for sending and receiving.
-	Connections map[string]*Connection
+	Players map[string]*Player
 }
 
 // A player's connection to a game lobby.
-type Connection struct {
+type Player struct {
 	Socket   *websocket.Conn
 	Active   bool // Whether the connection is initialized/not timed out.
-	Receiver interfaces.Receiver
+	Receiver Receiver
 
 	Mut *sync.Mutex // Used to synchronize reading and setting the Active field.
 }
 
+// Represents a game instance. Used by lobbies to enable different types of games.
+type Game interface {
+	// Takes a player identifier string (unique to this game instance, format depends on the game),
+	// and returns a receiver to handle messages from the player,
+	// or an error if adding the player failed.
+	AddPlayer(playerID string) (Receiver, error)
+
+	// Returns the range of possible player IDs for this game.
+	PlayerIDs() []string
+}
+
+// Signature for functions that construct a game instance.
+// Takes the lobby to which players can connect,
+// and an untyped options parameter that can be parsed by the game instance for use in setup.
+type GameConstructor func(lobby *Lobby, options interface{}) (Game, error)
+
+// Handles incoming messages from a client.
+type Receiver interface {
+	// Takes an unprocessed message in byte format from the client,
+	// and processes it according to the game's implementation.
+	// Called whenever a message is received from the client.
+	HandleMessage(message []byte)
+}
+
 // Returns the player connection in the lobby corresponding to the given player ID,
-// or ok=false if none is found.
-func (lobby *Lobby) GetPlayer(playerID string) (conn interfaces.Connection, ok bool) {
+// or false if none is found.
+func (lobby *Lobby) GetPlayer(playerID string) (*Player, bool) {
 	lobby.Mut.Lock()
 	defer lobby.Mut.Unlock()
-	conn, ok = lobby.Connections[playerID]
-	return conn, ok
+	player, ok := lobby.Players[playerID]
+	return player, ok
 }
 
 // Sets the player connection in the lobby corresponding to the given player ID.
 // Returns an error if no matching player is found.
-func (lobby Lobby) setPlayer(playerID string, conn Connection) error {
+func (lobby Lobby) setPlayer(playerID string, conn Player) error {
 	lobby.Mut.Lock()
 	defer lobby.Mut.Unlock()
 
-	if _, ok := lobby.Connections[playerID]; !ok {
+	if _, ok := lobby.Players[playerID]; !ok {
 		return errors.New("invalid player ID")
 	}
 
-	lobby.Connections[playerID] = &conn
+	lobby.Players[playerID] = &conn
 	return nil
 }
 
 // Returns the Active flag of a connection in a thread-safe manner.
-func (conn *Connection) isActive() bool {
+func (conn *Player) isActive() bool {
 	conn.Mut.Lock()
 	defer conn.Mut.Unlock()
 	return conn.Active
 }
 
 // Sets the Active flag of a connection in a thread-safe manner.
-func (conn *Connection) setActive(active bool) {
+func (conn *Player) setActive(active bool) {
 	conn.Mut.Lock()
 	defer conn.Mut.Unlock()
 	conn.Active = active
@@ -72,7 +95,7 @@ func (conn *Connection) setActive(active bool) {
 
 // Marshals the given message to JSON and sends it over the connection.
 // Returns an error if the connection is inactive, or if the marshaling/sending failed.
-func (conn *Connection) Send(message interface{}) error {
+func (conn *Player) Send(message interface{}) error {
 	if !conn.isActive() {
 		return errors.New("cannot send to inactive connection")
 	}
@@ -81,10 +104,13 @@ func (conn *Connection) Send(message interface{}) error {
 	return err
 }
 
+// Takes an untyped message, and sends it to all players connected to the lobby.
+// Returns a map of player identifiers to potential errors
+// (whole map should be nil in case of no errors).
 func (lobby *Lobby) SendToAll(message interface{}) map[string]error {
 	var errs map[string]error
 
-	for id, conn := range lobby.Connections {
+	for id, conn := range lobby.Players {
 		err := conn.Send(message)
 		if err != nil {
 			if errs == nil {
@@ -100,7 +126,7 @@ func (lobby *Lobby) SendToAll(message interface{}) map[string]error {
 
 // Listens for messages from the connection, and forwards them to the connection's receiver channel.
 // Listens continuously until the connection turns inactive.
-func (conn *Connection) Listen() {
+func (conn *Player) Listen() {
 	for {
 		if !conn.isActive() {
 			return
@@ -117,13 +143,13 @@ func (conn *Connection) Listen() {
 
 // Returns the current connected players in a lobby, and the max number of potential players.
 func (lobby Lobby) PlayerCount() (current int, max int) {
-	for _, conn := range lobby.Connections {
+	for _, conn := range lobby.Players {
 		if conn.isActive() {
 			current++
 		}
 	}
 
-	max = len(lobby.Connections)
+	max = len(lobby.Players)
 
 	return current, max
 }
@@ -132,7 +158,7 @@ func (lobby Lobby) PlayerCount() (current int, max int) {
 func (lobby Lobby) AvailablePlayerIDs() map[string]bool {
 	available := make(map[string]bool)
 
-	for playerID, conn := range lobby.Connections {
+	for playerID, conn := range lobby.Players {
 		if conn.isActive() {
 			available[playerID] = true
 		} else {
@@ -145,7 +171,7 @@ func (lobby Lobby) AvailablePlayerIDs() map[string]bool {
 
 // Creates and registers a new lobby with the given ID and constructed game instance.
 // Returns error if lobby ID is already taken, or if game construction failed.
-func NewLobby(id string, gameConstructor interfaces.GameConstructor) (*Lobby, error) {
+func New(id string, gameConstructor GameConstructor) (*Lobby, error) {
 	if id == "" {
 		return nil, errors.New("lobby name cannot be blank")
 	}
@@ -174,9 +200,9 @@ func NewLobby(id string, gameConstructor interfaces.GameConstructor) (*Lobby, er
 // Takes the given list of player IDs and adds connection slots for each of them in the lobby.
 // Adds the length of the given IDs to the lobby's wait group, so it can be used to wait for the lobby to fill up.
 func (lobby *Lobby) AddPlayerSlots(playerIDs []string) {
-	lobby.Connections = make(map[string]*Connection, len(playerIDs))
+	lobby.Players = make(map[string]*Player, len(playerIDs))
 	for _, playerID := range playerIDs {
-		lobby.Connections[playerID] = &Connection{}
+		lobby.Players[playerID] = &Player{}
 	}
 	var wg sync.WaitGroup
 	wg.Add(len(playerIDs))
@@ -196,10 +222,10 @@ func RegisterLobby(lobby *Lobby) error {
 
 // Removes a lobby from the lobby map and closes its connections.
 func (lobby Lobby) Close() error {
-	for playerID, conn := range lobby.Connections {
+	for playerID, conn := range lobby.Players {
 		conn.Socket.Close()
 		conn.setActive(false)
-		lobby.setPlayer(playerID, Connection{})
+		lobby.setPlayer(playerID, Player{})
 	}
 	delete(lobbies, lobby.ID)
 

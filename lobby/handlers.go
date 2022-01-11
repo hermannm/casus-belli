@@ -7,7 +7,6 @@ import (
 	"net/url"
 
 	"github.com/gorilla/websocket"
-	"github.com/immerse-ntnu/hermannia/server/interfaces"
 )
 
 // Registers handlers for the lobby API endpoints on the given ServeMux.
@@ -33,7 +32,7 @@ func RegisterEndpoints(mux *http.ServeMux) {
 // If nil is passed as the ServeMux, the default http ServeMux is used.
 // The endpoint expects a parameter corresponding to a key in the game constructor map
 // in order to know which type of game to create.
-func RegisterLobbyCreationEndpoints(mux *http.ServeMux, games map[string]interfaces.GameConstructor) {
+func RegisterLobbyCreationEndpoints(mux *http.ServeMux, games map[string]GameConstructor) {
 	if mux == nil {
 		mux = http.DefaultServeMux
 	}
@@ -126,7 +125,7 @@ func addPlayer(res http.ResponseWriter, req *http.Request) {
 
 	playerID := params.Get("player")
 	lobby.Mut.Lock()
-	conn, ok := lobby.Connections[playerID]
+	conn, ok := lobby.Players[playerID]
 	if !ok {
 		http.Error(res, "invalid player ID", http.StatusBadRequest)
 		lobby.Mut.Unlock()
@@ -161,12 +160,12 @@ func addPlayer(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	conn = &Connection{
+	conn = &Player{
 		Socket:   socket,
 		Active:   true,
 		Receiver: receiver,
 	}
-	lobby.Connections[playerID] = conn
+	lobby.Players[playerID] = conn
 	go conn.Listen()
 
 	res.Write([]byte("joined lobby"))
@@ -176,7 +175,7 @@ func addPlayer(res http.ResponseWriter, req *http.Request) {
 }
 
 // Returns a handler for creating lobbies (for servers with public lobby creation).
-func createLobbyHandler(games map[string]interfaces.GameConstructor) http.HandlerFunc {
+func createLobbyHandler(games map[string]GameConstructor) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		params, ok := checkParams(req, "id", "game")
 		if !ok {
@@ -201,7 +200,7 @@ func createLobbyHandler(games map[string]interfaces.GameConstructor) http.Handle
 			return
 		}
 
-		_, err = NewLobby(id, gameConstructor)
+		_, err = New(id, gameConstructor)
 		if err != nil {
 			http.Error(res, "error creating lobby", http.StatusInternalServerError)
 			return
