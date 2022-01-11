@@ -8,6 +8,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/hermannm/ipfinder"
 	"github.com/immerse-ntnu/hermannia/server/app"
 	"github.com/immerse-ntnu/hermannia/server/lobby"
 )
@@ -26,8 +27,21 @@ func main() {
 
 	lobby.RegisterEndpoints(nil)
 
+	publicIP, _ := ipfinder.FindPublicIP()
+	localIPs, _ := ipfinder.FindLocalIPs()
+
 	port := "7000"
-	fmt.Printf("Listening on port %s...\n", port)
+
+	fmt.Println("Lobby can now be joined at:")
+	fmt.Printf("%s:%s/join (if port forwarding)\n", publicIP, port)
+	for _, ips := range localIPs {
+		for _, localIP := range ips {
+			fmt.Printf("%s:%s/join (if on the same network)\n", localIP, port)
+		}
+	}
+	fmt.Println()
+
+	fmt.Println("Listening...")
 	err := http.ListenAndServe(fmt.Sprintf(":%s", port), nil)
 	log.Fatal(err)
 }
