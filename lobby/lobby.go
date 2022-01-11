@@ -23,7 +23,7 @@ type Lobby struct {
 	Players map[string]*Player
 }
 
-// A player's connection to a game lobby.
+// A player connected to a game lobby.
 type Player struct {
 	Socket   *websocket.Conn
 	Active   bool // Whether the connection is initialized/not timed out.
@@ -65,7 +65,9 @@ func New(id string, gameConstructor GameConstructor) (*Lobby, error) {
 	}
 
 	lobby := Lobby{
-		ID: id,
+		ID:  id,
+		Mut: &sync.Mutex{},
+		WG:  &sync.WaitGroup{},
 	}
 
 	game, err := gameConstructor(&lobby, nil)
@@ -85,16 +87,16 @@ func New(id string, gameConstructor GameConstructor) (*Lobby, error) {
 	return &lobby, nil
 }
 
-// Takes the given list of player IDs and adds connection slots for each of them in the lobby.
+// Takes the given list of player IDs and adds slots for each of them in the lobby.
 // Adds the length of the given IDs to the lobby's wait group, so it can be used to wait for the lobby to fill up.
 func (lobby *Lobby) AddPlayerSlots(playerIDs []string) {
 	lobby.Players = make(map[string]*Player, len(playerIDs))
 	for _, playerID := range playerIDs {
-		lobby.Players[playerID] = &Player{}
+		lobby.Players[playerID] = &Player{
+			Mut: &sync.Mutex{},
+		}
 	}
-	var wg sync.WaitGroup
-	wg.Add(len(playerIDs))
-	lobby.WG = &wg
+	lobby.WG.Add(len(playerIDs))
 }
 
 // Registers a lobby in the global list of lobbies.
@@ -108,7 +110,7 @@ func RegisterLobby(lobby *Lobby) error {
 	return nil
 }
 
-// Returns the player connection in the lobby corresponding to the given player ID,
+// Returns the player in the lobby corresponding to the given player ID,
 // or false if none is found.
 func (lobby *Lobby) GetPlayer(playerID string) (*Player, bool) {
 	lobby.Mut.Lock()
@@ -117,9 +119,9 @@ func (lobby *Lobby) GetPlayer(playerID string) (*Player, bool) {
 	return player, ok
 }
 
-// Sets the player connection in the lobby corresponding to the given player ID.
+// Sets the player in the lobby corresponding to the given player ID.
 // Returns an error if no matching player is found.
-func (lobby Lobby) setPlayer(playerID string, conn Player) error {
+func (lobby Lobby) setPlayer(playerID string, player Player) error {
 	lobby.Mut.Lock()
 	defer lobby.Mut.Unlock()
 
@@ -127,32 +129,32 @@ func (lobby Lobby) setPlayer(playerID string, conn Player) error {
 		return errors.New("invalid player ID")
 	}
 
-	lobby.Players[playerID] = &conn
+	lobby.Players[playerID] = &player
 	return nil
 }
 
-// Returns the Active flag of a connection in a thread-safe manner.
-func (conn *Player) isActive() bool {
-	conn.Mut.Lock()
-	defer conn.Mut.Unlock()
-	return conn.Active
+// Returns a player's Active flag in a thread-safe manner.
+func (player *Player) isActive() bool {
+	player.Mut.Lock()
+	defer player.Mut.Unlock()
+	return player.Active
 }
 
-// Sets the Active flag of a connection in a thread-safe manner.
-func (conn *Player) setActive(active bool) {
-	conn.Mut.Lock()
-	defer conn.Mut.Unlock()
-	conn.Active = active
+// Sets a player's Active flag in a thread-safe manner.
+func (player *Player) setActive(active bool) {
+	player.Mut.Lock()
+	defer player.Mut.Unlock()
+	player.Active = active
 }
 
-// Marshals the given message to JSON and sends it over the connection.
-// Returns an error if the connection is inactive, or if the marshaling/sending failed.
-func (conn *Player) Send(message interface{}) error {
-	if !conn.isActive() {
-		return errors.New("cannot send to inactive connection")
+// Marshals the given message to JSON and sends it over the player's socket connection.
+// Returns an error if the player is inactive, or if the marshaling/sending failed.
+func (player *Player) Send(message interface{}) error {
+	if !player.isActive() {
+		return errors.New("cannot send to inactive player")
 	}
 
-	err := conn.Socket.WriteJSON(message)
+	err := player.Socket.WriteJSON(message)
 	return err
 }
 
@@ -162,8 +164,8 @@ func (conn *Player) Send(message interface{}) error {
 func (lobby *Lobby) SendToAll(message interface{}) map[string]error {
 	var errs map[string]error
 
-	for id, conn := range lobby.Players {
-		err := conn.Send(message)
+	for id, player := range lobby.Players {
+		err := player.Send(message)
 		if err != nil {
 			if errs == nil {
 				errs = make(map[string]error)
@@ -176,27 +178,27 @@ func (lobby *Lobby) SendToAll(message interface{}) map[string]error {
 	return errs
 }
 
-// Listens for messages from the connection, and forwards them to the connection's receiver channel.
-// Listens continuously until the connection turns inactive.
-func (conn *Player) Listen() {
+// Listens for messages from the player, and forwards them to the appropriate receiver.
+// Listens continuously until the player turns inactive.
+func (player *Player) Listen() {
 	for {
-		if !conn.isActive() {
+		if !player.isActive() {
 			return
 		}
 
-		_, message, err := conn.Socket.ReadMessage()
+		_, message, err := player.Socket.ReadMessage()
 		if err != nil {
 			continue
 		}
 
-		go conn.Receiver.HandleMessage(message)
+		go player.Receiver.HandleMessage(message)
 	}
 }
 
 // Returns the current connected players in a lobby, and the max number of potential players.
 func (lobby Lobby) PlayerCount() (current int, max int) {
-	for _, conn := range lobby.Players {
-		if conn.isActive() {
+	for _, player := range lobby.Players {
+		if player.isActive() {
 			current++
 		}
 	}
@@ -210,11 +212,11 @@ func (lobby Lobby) PlayerCount() (current int, max int) {
 func (lobby Lobby) AvailablePlayerIDs() map[string]bool {
 	available := make(map[string]bool)
 
-	for playerID, conn := range lobby.Players {
-		if conn.isActive() {
-			available[playerID] = true
+	for id, player := range lobby.Players {
+		if player.isActive() {
+			available[id] = true
 		} else {
-			available[playerID] = false
+			available[id] = false
 		}
 	}
 
@@ -222,11 +224,11 @@ func (lobby Lobby) AvailablePlayerIDs() map[string]bool {
 }
 
 // Removes a lobby from the lobby map and closes its connections.
-func (lobby Lobby) Close() error {
-	for playerID, conn := range lobby.Players {
-		conn.Socket.Close()
-		conn.setActive(false)
-		lobby.setPlayer(playerID, Player{})
+func (lobby *Lobby) Close() error {
+	for id, player := range lobby.Players {
+		player.Socket.Close()
+		player.setActive(false)
+		lobby.setPlayer(id, Player{})
 	}
 	delete(lobbies, lobby.ID)
 

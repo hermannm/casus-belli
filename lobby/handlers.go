@@ -125,13 +125,13 @@ func addPlayer(res http.ResponseWriter, req *http.Request) {
 
 	playerID := params.Get("player")
 	lobby.Mut.Lock()
-	conn, ok := lobby.Players[playerID]
+	player, ok := lobby.Players[playerID]
 	if !ok {
 		http.Error(res, "invalid player ID", http.StatusBadRequest)
 		lobby.Mut.Unlock()
 		return
 	}
-	if conn.isActive() {
+	if player.isActive() {
 		http.Error(res, "player ID already taken", http.StatusConflict)
 		lobby.Mut.Unlock()
 		return
@@ -160,13 +160,13 @@ func addPlayer(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	conn = &Player{
+	player = &Player{
 		Socket:   socket,
 		Active:   true,
 		Receiver: receiver,
 	}
-	lobby.Players[playerID] = conn
-	go conn.Listen()
+	lobby.Players[playerID] = player
+	go player.Listen()
 
 	res.Write([]byte("joined lobby"))
 
