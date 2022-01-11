@@ -56,6 +56,58 @@ type Receiver interface {
 	HandleMessage(message []byte)
 }
 
+// Creates and registers a new lobby with the given ID,
+// and uses the given constructor to construct its game instance.
+// Returns error if lobby ID is already taken, or if game construction failed.
+func New(id string, gameConstructor GameConstructor) (*Lobby, error) {
+	if id == "" {
+		return nil, errors.New("lobby name cannot be blank")
+	}
+
+	lobby := Lobby{
+		ID: id,
+	}
+
+	game, err := gameConstructor(&lobby, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	lobby.Game = game
+	playerIDs := game.PlayerIDs()
+	lobby.AddPlayerSlots(playerIDs)
+
+	err = RegisterLobby(&lobby)
+	if err != nil {
+		return nil, err
+	}
+
+	return &lobby, nil
+}
+
+// Takes the given list of player IDs and adds connection slots for each of them in the lobby.
+// Adds the length of the given IDs to the lobby's wait group, so it can be used to wait for the lobby to fill up.
+func (lobby *Lobby) AddPlayerSlots(playerIDs []string) {
+	lobby.Players = make(map[string]*Player, len(playerIDs))
+	for _, playerID := range playerIDs {
+		lobby.Players[playerID] = &Player{}
+	}
+	var wg sync.WaitGroup
+	wg.Add(len(playerIDs))
+	lobby.WG = &wg
+}
+
+// Registers a lobby in the global list of lobbies.
+// Returns error if lobby with same ID already exists.
+func RegisterLobby(lobby *Lobby) error {
+	if _, ok := lobbies[lobby.ID]; ok {
+		return errors.New("lobby with ID \"" + lobby.ID + "\" already exists")
+	}
+
+	lobbies[lobby.ID] = lobby
+	return nil
+}
+
 // Returns the player connection in the lobby corresponding to the given player ID,
 // or false if none is found.
 func (lobby *Lobby) GetPlayer(playerID string) (*Player, bool) {
@@ -167,57 +219,6 @@ func (lobby Lobby) AvailablePlayerIDs() map[string]bool {
 	}
 
 	return available
-}
-
-// Creates and registers a new lobby with the given ID and constructed game instance.
-// Returns error if lobby ID is already taken, or if game construction failed.
-func New(id string, gameConstructor GameConstructor) (*Lobby, error) {
-	if id == "" {
-		return nil, errors.New("lobby name cannot be blank")
-	}
-
-	lobby := Lobby{
-		ID: id,
-	}
-
-	game, err := gameConstructor(&lobby, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	lobby.Game = game
-	playerIDs := game.PlayerIDs()
-	lobby.AddPlayerSlots(playerIDs)
-
-	err = RegisterLobby(&lobby)
-	if err != nil {
-		return nil, err
-	}
-
-	return &lobby, nil
-}
-
-// Takes the given list of player IDs and adds connection slots for each of them in the lobby.
-// Adds the length of the given IDs to the lobby's wait group, so it can be used to wait for the lobby to fill up.
-func (lobby *Lobby) AddPlayerSlots(playerIDs []string) {
-	lobby.Players = make(map[string]*Player, len(playerIDs))
-	for _, playerID := range playerIDs {
-		lobby.Players[playerID] = &Player{}
-	}
-	var wg sync.WaitGroup
-	wg.Add(len(playerIDs))
-	lobby.WG = &wg
-}
-
-// Registers a lobby in the global list of lobbies.
-// Returns error if lobby with same ID already exists.
-func RegisterLobby(lobby *Lobby) error {
-	if _, ok := lobbies[lobby.ID]; ok {
-		return errors.New("lobby with ID \"" + lobby.ID + "\" already exists")
-	}
-
-	lobbies[lobby.ID] = lobby
-	return nil
 }
 
 // Removes a lobby from the lobby map and closes its connections.
