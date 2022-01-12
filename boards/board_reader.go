@@ -1,12 +1,16 @@
 package boards
 
 import (
+	"embed"
 	"encoding/json"
 	"fmt"
-	"os"
 
 	"github.com/immerse-ntnu/hermannia/server/game"
 )
+
+// boards embeds the json files of boards from this folder.
+//go:embed hermannia_5players.json
+var boards embed.FS
 
 // Utility type for json unmarshaling.
 type board struct {
@@ -34,7 +38,7 @@ type neighbor struct {
 
 // Reads and constructs the board matching the given map name and number of players.
 func ReadBoard(boardName string) (game.Board, error) {
-	content, err := os.ReadFile(fmt.Sprintf("./boards/%s.json", boardName))
+	content, err := boards.ReadFile(fmt.Sprintf("%s.json", boardName))
 	if err != nil {
 		return nil, err
 	}
