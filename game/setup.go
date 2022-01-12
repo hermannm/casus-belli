@@ -7,6 +7,7 @@ import (
 	"github.com/immerse-ntnu/hermannia/server/messages"
 )
 
+// Constructs a game instance. Initializes player slots for each area home tag on the given board.
 func New(board Board, lob *lobby.Lobby, options GameOptions) lobby.Game {
 	messages := make(map[Player]*messages.Receiver)
 	for _, area := range board {

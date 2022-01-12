@@ -37,7 +37,7 @@ func main() {
 	log.Fatal(err)
 }
 
-// CLI utility for selecting a game from a list of supported games.
+// Prompts the user to select a game from a list of supported games.
 // Does not return until a valid game selection is made.
 func selectGame(games map[string]lobby.GameConstructor) lobby.GameConstructor {
 	fmt.Print("Available games:\n")
@@ -76,7 +76,8 @@ func selectGame(games map[string]lobby.GameConstructor) lobby.GameConstructor {
 	return games[selectedTitle]
 }
 
-// CLI utility for creating a lobby.
+// Prompts the user to choose a name for the lobby, then creates it.
+// Constructs the lobby's game instance with the given constructor.
 // Does not return until a valid lobby is created.
 func createLobby(game lobby.GameConstructor) {
 	var lobbyName string
@@ -97,7 +98,7 @@ func createLobby(game lobby.GameConstructor) {
 	fmt.Printf("Lobby \"%s\" created!\n", lobbyName)
 }
 
-// CLI utility for printing out IPs that can be used to connect to the lobby.
+// Prints out IPs that may be used to connect to the lobby.
 func printIPs(port string) {
 	publicIP, publicErr := ipfinder.FindPublicIP()
 	localIPs, localErr := ipfinder.FindLocalIPs()
