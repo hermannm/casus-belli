@@ -124,16 +124,16 @@ func addPlayer(res http.ResponseWriter, req *http.Request) {
 	}
 
 	playerID := params.Get("player")
-	lobby.Mut.Lock()
+	lobby.Lock.Lock()
 	player, ok := lobby.Players[playerID]
 	if !ok {
 		http.Error(res, "invalid player ID", http.StatusBadRequest)
-		lobby.Mut.Unlock()
+		lobby.Lock.Unlock()
 		return
 	}
 	if player.isActive() {
 		http.Error(res, "player ID already taken", http.StatusConflict)
-		lobby.Mut.Unlock()
+		lobby.Lock.Unlock()
 		return
 	}
 
@@ -148,7 +148,7 @@ func addPlayer(res http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		log.Println(err)
 		http.Error(res, "unable to establish socket connection", http.StatusInternalServerError)
-		lobby.Mut.Unlock()
+		lobby.Lock.Unlock()
 		return
 	}
 
@@ -156,7 +156,7 @@ func addPlayer(res http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		log.Println(err)
 		http.Error(res, "unable to join game", http.StatusConflict)
-		lobby.Mut.Unlock()
+		lobby.Lock.Unlock()
 		return
 	}
 
@@ -170,8 +170,8 @@ func addPlayer(res http.ResponseWriter, req *http.Request) {
 
 	res.Write([]byte("joined lobby"))
 
-	lobby.Mut.Unlock()
-	lobby.WG.Done()
+	lobby.Lock.Unlock()
+	lobby.Wait.Done()
 }
 
 // Returns a handler for creating lobbies (for servers with public lobby creation).

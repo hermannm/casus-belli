@@ -16,8 +16,8 @@ type Lobby struct {
 	ID   string
 	Game Game
 
-	Mut *sync.Mutex     // Used to synchronize the adding/removal of players.
-	WG  *sync.WaitGroup // Used to wait for the lobby to fill up with players.
+	Lock *sync.Mutex     // Used to synchronize the adding/removal of players.
+	Wait *sync.WaitGroup // Used to wait for the lobby to fill up with players.
 
 	// Maps player IDs (unique to the lobby) to their socket connections for sending and receiving.
 	Players map[string]*Player
@@ -65,9 +65,9 @@ func New(id string, gameConstructor GameConstructor) (*Lobby, error) {
 	}
 
 	lobby := Lobby{
-		ID:  id,
-		Mut: &sync.Mutex{},
-		WG:  &sync.WaitGroup{},
+		ID:   id,
+		Lock: &sync.Mutex{},
+		Wait: &sync.WaitGroup{},
 	}
 
 	game, err := gameConstructor(&lobby, nil)
@@ -96,7 +96,7 @@ func (lobby *Lobby) AddPlayerSlots(playerIDs []string) {
 			Mut: &sync.Mutex{},
 		}
 	}
-	lobby.WG.Add(len(playerIDs))
+	lobby.Wait.Add(len(playerIDs))
 }
 
 // Registers a lobby in the global list of lobbies.
@@ -113,8 +113,8 @@ func RegisterLobby(lobby *Lobby) error {
 // Returns the player in the lobby corresponding to the given player ID,
 // or false if none is found.
 func (lobby *Lobby) GetPlayer(playerID string) (*Player, bool) {
-	lobby.Mut.Lock()
-	defer lobby.Mut.Unlock()
+	lobby.Lock.Lock()
+	defer lobby.Lock.Unlock()
 	player, ok := lobby.Players[playerID]
 	return player, ok
 }
@@ -122,8 +122,8 @@ func (lobby *Lobby) GetPlayer(playerID string) (*Player, bool) {
 // Sets the player in the lobby corresponding to the given player ID.
 // Returns an error if no matching player is found.
 func (lobby Lobby) setPlayer(playerID string, player Player) error {
-	lobby.Mut.Lock()
-	defer lobby.Mut.Unlock()
+	lobby.Lock.Lock()
+	defer lobby.Lock.Unlock()
 
 	if _, ok := lobby.Players[playerID]; !ok {
 		return errors.New("invalid player ID")

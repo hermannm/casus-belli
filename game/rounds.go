@@ -22,8 +22,8 @@ func (game *Game) NewRound() {
 func (game *Game) ReceiveOrders(orders []Order) {
 	round := game.Rounds[len(game.Rounds)-1]
 
-	round.mut.Lock()
-	defer round.mut.Unlock()
+	round.lock.Lock()
+	defer round.lock.Unlock()
 
 	for _, order := range orders {
 		// If order origin has no unit, or unit of different color,

@@ -22,7 +22,7 @@ type GameOptions struct {
 type Player string
 
 type Round struct {
-	mut          sync.Mutex
+	lock         sync.Mutex
 	Season       Season
 	FirstOrders  []*Order
 	SecondOrders []*Order
