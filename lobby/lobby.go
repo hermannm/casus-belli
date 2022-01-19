@@ -16,8 +16,8 @@ type Lobby struct {
 	ID   string
 	Game Game
 
-	Lock *sync.Mutex     // Used to synchronize the adding/removal of players.
-	Wait *sync.WaitGroup // Used to wait for the lobby to fill up with players.
+	Lock sync.Mutex     // Used to synchronize the adding/removal of players.
+	Wait sync.WaitGroup // Used to wait for the lobby to fill up with players.
 
 	// Maps player IDs (unique to the lobby) to their socket connections for sending and receiving.
 	Players map[string]*Player
@@ -66,8 +66,8 @@ func New(id string, gameConstructor GameConstructor) (*Lobby, error) {
 
 	lobby := Lobby{
 		ID:   id,
-		Lock: &sync.Mutex{},
-		Wait: &sync.WaitGroup{},
+		Lock: sync.Mutex{},
+		Wait: sync.WaitGroup{},
 	}
 
 	game, err := gameConstructor(&lobby, nil)
@@ -121,7 +121,7 @@ func (lobby *Lobby) GetPlayer(playerID string) (*Player, bool) {
 
 // Sets the player in the lobby corresponding to the given player ID.
 // Returns an error if no matching player is found.
-func (lobby Lobby) setPlayer(playerID string, player Player) error {
+func (lobby *Lobby) setPlayer(playerID string, player Player) error {
 	lobby.Lock.Lock()
 	defer lobby.Lock.Unlock()
 
@@ -196,7 +196,7 @@ func (player *Player) Listen() {
 }
 
 // Returns the current connected players in a lobby, and the max number of potential players.
-func (lobby Lobby) PlayerCount() (current int, max int) {
+func (lobby *Lobby) PlayerCount() (current int, max int) {
 	for _, player := range lobby.Players {
 		if player.isActive() {
 			current++
@@ -209,7 +209,7 @@ func (lobby Lobby) PlayerCount() (current int, max int) {
 }
 
 // Returns a map of player IDs to whether they are taken (true if taken).
-func (lobby Lobby) AvailablePlayerIDs() map[string]bool {
+func (lobby *Lobby) AvailablePlayerIDs() map[string]bool {
 	available := make(map[string]bool)
 
 	for id, player := range lobby.Players {
