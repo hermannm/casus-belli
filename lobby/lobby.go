@@ -16,7 +16,7 @@ type Lobby struct {
 	ID   string
 	Game Game
 
-	Lock sync.Mutex     // Used to synchronize the adding/removal of players.
+	Lock sync.RWMutex   // Used to synchronize the adding/removal of players.
 	Wait sync.WaitGroup // Used to wait for the lobby to fill up with players.
 
 	// Maps player IDs (unique to the lobby) to their socket connections for sending and receiving.
@@ -29,7 +29,7 @@ type Player struct {
 	Active   bool // Whether the connection is initialized/not timed out.
 	Receiver Receiver
 
-	Mut *sync.Mutex // Used to synchronize reading and setting the Active field.
+	Lock *sync.RWMutex // Used to synchronize reading and setting the Active field.
 }
 
 // Represents a game instance. Used by lobbies to enable different types of games.
@@ -65,9 +65,7 @@ func New(id string, gameConstructor GameConstructor) (*Lobby, error) {
 	}
 
 	lobby := Lobby{
-		ID:   id,
-		Lock: sync.Mutex{},
-		Wait: sync.WaitGroup{},
+		ID: id,
 	}
 
 	game, err := gameConstructor(&lobby, nil)
@@ -93,7 +91,7 @@ func (lobby *Lobby) AddPlayerSlots(playerIDs []string) {
 	lobby.Players = make(map[string]*Player, len(playerIDs))
 	for _, playerID := range playerIDs {
 		lobby.Players[playerID] = &Player{
-			Mut: &sync.Mutex{},
+			Lock: new(sync.RWMutex),
 		}
 	}
 	lobby.Wait.Add(len(playerIDs))
@@ -113,8 +111,8 @@ func RegisterLobby(lobby *Lobby) error {
 // Returns the player in the lobby corresponding to the given player ID,
 // or false if none is found.
 func (lobby *Lobby) GetPlayer(playerID string) (*Player, bool) {
-	lobby.Lock.Lock()
-	defer lobby.Lock.Unlock()
+	lobby.Lock.RLock()
+	defer lobby.Lock.RUnlock()
 	player, ok := lobby.Players[playerID]
 	return player, ok
 }
@@ -135,15 +133,15 @@ func (lobby *Lobby) setPlayer(playerID string, player Player) error {
 
 // Returns a player's Active flag in a thread-safe manner.
 func (player *Player) isActive() bool {
-	player.Mut.Lock()
-	defer player.Mut.Unlock()
+	player.Lock.RLock()
+	defer player.Lock.RUnlock()
 	return player.Active
 }
 
 // Sets a player's Active flag in a thread-safe manner.
 func (player *Player) setActive(active bool) {
-	player.Mut.Lock()
-	defer player.Mut.Unlock()
+	player.Lock.Lock()
+	defer player.Lock.Unlock()
 	player.Active = active
 }
 
