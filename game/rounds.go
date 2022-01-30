@@ -22,12 +22,12 @@ func (game *Game) NewRound() {
 	}
 	game.Rounds = append(game.Rounds, &round)
 
+	// Waits for submitted orders from each player, then adds them to the round.
 	received := make(chan []Order, len(game.Messages))
 	for player, receiver := range game.Messages {
 		timeout := make(chan struct{})
 		go game.receiveAndValidateOrders(player, receiver, season, received, timeout)
 	}
-
 	for orderSet := range received {
 		game.addOrders(orderSet)
 	}
@@ -62,6 +62,7 @@ func (game *Game) receiveAndValidateOrders(
 			}
 
 			output <- parsed
+			return
 		case <-timeout:
 			return
 		}
