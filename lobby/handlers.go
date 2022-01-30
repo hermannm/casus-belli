@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"sync"
 
 	"github.com/gorilla/websocket"
 )
@@ -164,6 +165,7 @@ func addPlayer(res http.ResponseWriter, req *http.Request) {
 		Socket:   socket,
 		Active:   true,
 		Receiver: receiver,
+		Lock:     new(sync.RWMutex),
 	}
 	lobby.Players[playerID] = player
 	go player.Listen()
