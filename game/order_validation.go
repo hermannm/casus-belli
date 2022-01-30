@@ -4,8 +4,19 @@ import (
 	"errors"
 )
 
+func validateOrderSet(orders []Order, season Season) error {
+	for _, order := range orders {
+		err := validateOrder(order, season)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // Takes a game order, and returns an error if it is invalid.
-func ValidateOrder(order Order, season Season) error {
+func validateOrder(order Order, season Season) error {
 	if order.Player != order.From.Control {
 		return errors.New("must control area that is ordered")
 	}

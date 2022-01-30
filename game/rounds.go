@@ -1,29 +1,105 @@
 package game
 
+import (
+	"errors"
+
+	"github.com/immerse-ntnu/hermannia/server/messages"
+)
+
 // Initializes a new round of the game.
 func (game *Game) NewRound() {
 	var season Season
-
 	if len(game.Rounds) == 0 {
 		season = Winter
 	} else {
 		season = nextSeason(game.Rounds[len(game.Rounds)-1].Season)
 	}
 
-	game.Rounds = append(game.Rounds, &Round{
+	round := Round{
 		Season:       season,
 		FirstOrders:  make([]*Order, 0),
 		SecondOrders: make([]*Order, 0),
-	})
+	}
+	game.Rounds = append(game.Rounds, &round)
+
+	received := make(chan []Order, len(game.Messages))
+	for player, receiver := range game.Messages {
+		timeout := make(chan struct{})
+		go game.receiveAndValidateOrders(player, receiver, season, received, timeout)
+	}
+
+	for orderSet := range received {
+		game.addOrders(orderSet)
+	}
+
+	game.Board.Resolve(&round)
+}
+
+// Waits for the given player to submit orders, then validates them.
+// If valid, sends the order set to the given output channel.
+// If invalid, informs the client and waits for a new order set.
+// Function stops if it receives on the timeout channel.
+func (game *Game) receiveAndValidateOrders(
+	player Player,
+	receiver *messages.Receiver,
+	season Season,
+	output chan<- []Order,
+	timeout <-chan struct{},
+) {
+	for {
+		select {
+		case submitted := <-receiver.Orders:
+			parsed, err := parseSubmittedOrders(submitted.Orders, player, game.Board)
+			if err != nil {
+				game.Lobby.Players[string(player)].Send(err.Error())
+				continue
+			}
+
+			err = validateOrderSet(parsed, season)
+			if err != nil {
+				game.Lobby.Players[string(player)].Send(err.Error())
+				continue
+			}
+
+			output <- parsed
+		case <-timeout:
+			return
+		}
+	}
+}
+
+// Takes a set of orders in the raw message format, and parses them to the game format.
+// Returns the parsed order set, or an error if the parsing failed.
+func parseSubmittedOrders(submitted []messages.Order, player Player, board Board) ([]Order, error) {
+	parsed := make([]Order, 0)
+	for _, submittedOrder := range submitted {
+		fromArea, ok := board[submittedOrder.From]
+		if !ok {
+			return nil, errors.New("invalid order origin area")
+		}
+		toArea, ok := board[submittedOrder.To]
+		if !ok {
+			return nil, errors.New("invalid order destiantion area")
+		}
+
+		parsed = append(parsed, Order{
+			Type:   OrderType(submittedOrder.OrderType),
+			Player: player,
+			From:   fromArea,
+			To:     toArea,
+			Via:    submittedOrder.Via,
+			Build:  UnitType(submittedOrder.Build),
+			Status: Pending,
+		})
+	}
+
+	return parsed, nil
 }
 
 // Receives orders to be processed in the current round.
 // Sorts orders on their sequence in the round.
-func (game *Game) ReceiveOrders(orders []Order) {
+func (game *Game) addOrders(orders []Order) {
 	round := game.Rounds[len(game.Rounds)-1]
-
-	round.lock.Lock()
-	defer round.lock.Unlock()
 
 	for _, order := range orders {
 		// If order origin has no unit, or unit of different color,
