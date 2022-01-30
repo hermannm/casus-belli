@@ -34,6 +34,7 @@ type Board map[string]*Area
 
 type Area struct {
 	Name             string
+	Nation           string
 	Forest           bool
 	Castle           bool
 	Sea              bool

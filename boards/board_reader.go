@@ -14,17 +14,22 @@ var boards embed.FS
 
 // Utility type for json unmarshaling.
 type board struct {
-	Areas     []area     `json:"areas"`
-	Neighbors []neighbor `json:"neighbors"`
+	Nations   map[string][]landArea `json:"nations"`
+	Seas      []sea                 `json:"seas"`
+	Neighbors []neighbor            `json:"neighbors"`
 }
 
 // Utility type for json unmarshaling.
-type area struct {
+type landArea struct {
 	Name   string `json:"name"`
-	Sea    bool   `json:"sea"`
 	Forest bool   `json:"forest"`
 	Castle bool   `json:"castle"`
 	Home   string `json:"home"`
+}
+
+// Utility type for json unmarshaling.
+type sea struct {
+	Name string `json:"name"`
 }
 
 // Utility type for json unmarshaling.
@@ -52,14 +57,28 @@ func ReadBoard(boardName string) (game.Board, error) {
 
 	board := make(game.Board)
 
-	for _, jsonArea := range jsonBoard.Areas {
+	for nation, areas := range jsonBoard.Nations {
+		for _, jsonArea := range areas {
+			area := game.Area{
+				Name:             jsonArea.Name,
+				Nation:           nation,
+				Control:          game.Player(jsonArea.Home),
+				Home:             game.Player(jsonArea.Home),
+				Forest:           jsonArea.Forest,
+				Castle:           jsonArea.Castle,
+				Neighbors:        make([]game.Neighbor, 0),
+				IncomingMoves:    make([]*game.Order, 0),
+				IncomingSupports: make([]*game.Order, 0),
+				Battles:          make([]game.Battle, 0),
+			}
+
+			board[area.Name] = &area
+		}
+	}
+
+	for _, sea := range jsonBoard.Seas {
 		area := game.Area{
-			Name:             jsonArea.Name,
-			Control:          game.Player(jsonArea.Home),
-			Home:             game.Player(jsonArea.Home),
-			Sea:              jsonArea.Sea,
-			Forest:           jsonArea.Forest,
-			Castle:           jsonArea.Castle,
+			Name:             sea.Name,
 			Neighbors:        make([]game.Neighbor, 0),
 			IncomingMoves:    make([]*game.Order, 0),
 			IncomingSupports: make([]*game.Order, 0),

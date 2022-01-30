@@ -1,210 +1,239 @@
 {
-	"areas": [
+	"nations": {
+		"Kyrianna": [
+			{
+				"name": "Kyrie",
+				"castle": true
+			}
+		],
+		"Jazzin": [
+			{
+				"name": "Jazel",
+				"castle": true
+			},
+			{
+				"name": "Jizinne",
+				"forest": true
+			}
+		],
+		"Lusianna": [
+			{
+				"name": "Lomone",
+				"forest": true
+			},
+			{
+				"name": "Limbol",
+				"forest": true
+			},
+			{
+				"name": "Lusía",
+				"castle": true
+			},
+			{
+				"name": "Leil"
+			}
+		],
+		"Wonde": [
+			{
+				"name": "Worp",
+				"forest": true,
+				"home": "green"
+			},
+			{
+				"name": "Winde",
+				"forest": true,
+				"castle": true,
+				"home": "green"
+			}
+		],
+		"Ovo": [
+			{
+				"name": "Ovo",
+				"forest": true
+			}
+		],
+		"Monone": [
+			{
+				"name": "Morone",
+				"home": "red"
+			},
+			{
+				"name": "Monté",
+				"castle": true,
+				"home": "red"
+			}
+		],
+		"Brobomba": [
+			{
+				"name": "Brodo",
+				"forest": true
+			},
+			{
+				"name": "Bom"
+			},
+			{
+				"name": "Bassas",
+				"forest": true,
+				"castle": true
+			}
+		],
+		"Ninnund": [
+			{
+				"name": "Ninin"
+			},
+			{
+				"name": "Nund"
+			}
+		],
+		"Arri": [
+			{
+				"name": "Arra"
+			},
+			{
+				"name": "Amarí"
+			}
+		],
+		"Caleren": [
+			{
+				"name": "Calis",
+				"forest": true,
+				"castle": true
+			},
+			{
+				"name": "Cymere"
+			}
+		],
+		"Pusth": [
+			{
+				"name": "Pesth",
+				"home": "yellow"
+			},
+			{
+				"name": "Purth",
+				"castle": true,
+				"home": "yellow"
+			}
+		],
+		"Rimimar": [
+			{
+				"name": "Rimine"
+			},
+			{
+				"name": "Rama"
+			}
+		],
+		"Zorask": [
+			{
+				"name": "Zona"
+			}
+		],
+		"Titutto": [
+			{
+				"name": "Tond"
+			},
+			{
+				"name": "Tige"
+			},
+			{
+				"name": "Tusser"
+			}
+		],
+		"Dordal": [
+			{
+				"name": "Dalom",
+				"forest": true,
+				"home": "white"
+			},
+			{
+				"name": "Dordel",
+				"castle": true,
+				"home": "white"
+			}
+		],
+		"Hyllerk": [
+			{
+				"name": "Herk",
+				"forest": true
+			},
+			{
+				"name": "Hyll",
+				"castle": true
+			}
+		],
+		"Samsk": [
+			{
+				"name": "Sash",
+				"forest": true
+			},
+			{
+				"name": "Samoje"
+			}
+		],
+		"Fusk": [
+			{
+				"name": "Furie",
+				"castle": true
+			},
+			{
+				"name": "Firril"
+			},
+			{
+				"name": "Fond"
+			}
+		],
+		"Grontenberg": [
+			{
+				"name": "Gron"
+			},
+			{
+				"name": "Gnade"
+			},
+			{
+				"name": "Gewel",
+				"forest": true,
+				"castle": true
+			}
+		],
+		"Erreman": [
+			{
+				"name": "Emman",
+				"forest": true,
+				"home": "black"
+			},
+			{
+				"name": "Erren",
+				"castle": true,
+				"home": "black"
+			}
+		]
+	},
+	"seas": [
 		{
-			"name": "Kyrie",
-			"castle": true
+			"name": "Mare Duna"
 		},
 		{
-			"name": "Jazel",
-			"castle": true
+			"name": "Mare Illa"
 		},
 		{
-			"name": "Jizinne",
-			"forest": true
+			"name": "Mare Hynd"
 		},
 		{
-			"name": "Lomone",
-			"forest": true
+			"name": "Mare Gond"
 		},
 		{
-			"name": "Limbol",
-			"forest": true
+			"name": "Mare Elle"
 		},
 		{
-			"name": "Lusía",
-			"castle": true
+			"name": "Mare Furie"
 		},
 		{
-			"name": "Leil"
+			"name": "Mare Ovond"
 		},
 		{
-			"name": "Worp",
-			"forest": true,
-			"home": "green"
+			"name": "Mare Unna"
 		},
 		{
-			"name": "Winde",
-			"forest": true,
-			"castle": true,
-			"home": "green"
-		},
-		{
-			"name": "Ovo",
-			"forest": true
-		},
-		{
-			"name": "Morone",
-			"home": "red"
-		},
-		{
-			"name": "Monté",
-			"castle": true,
-			"home": "red"
-		},
-		{
-			"name": "Brodo",
-			"forest": true
-		},
-		{
-			"name": "Bom"
-		},
-		{
-			"name": "Bassas",
-			"forest": true,
-			"castle": true
-		},
-		{
-			"name": "Ninin"
-		},
-		{
-			"name": "Nund"
-		},
-		{
-			"name": "Arra"
-		},
-		{
-			"name": "Amarí"
-		},
-		{
-			"name": "Calis",
-			"forest": true,
-			"castle": true
-		},
-		{
-			"name": "Cymere"
-		},
-		{
-			"name": "Pesth",
-			"home": "yellow"
-		},
-		{
-			"name": "Purth",
-			"castle": true,
-			"home": "yellow"
-		},
-		{
-			"name": "Rimine"
-		},
-		{
-			"name": "Rama"
-		},
-		{
-			"name": "Zona"
-		},
-		{
-			"name": "Tond"
-		},
-		{
-			"name": "Tige"
-		},
-		{
-			"name": "Tusser"
-		},
-		{
-			"name": "Dalom",
-			"forest": true,
-			"home": "white"
-		},
-		{
-			"name": "Dordel",
-			"castle": true,
-			"home": "white"
-		},
-		{
-			"name": "Herk",
-			"forest": true
-		},
-		{
-			"name": "Hyll",
-			"castle": true
-		},
-		{
-			"name": "Sash",
-			"forest": true
-		},
-		{
-			"name": "Samoje"
-		},
-		{
-			"name": "Furie",
-			"castle": true
-		},
-		{
-			"name": "Furie",
-			"castle": true
-		},
-		{
-			"name": "Firril"
-		},
-		{
-			"name": "Fond"
-		},
-		{
-			"name": "Gron"
-		},
-		{
-			"name": "Gnade"
-		},
-		{
-			"name": "Gewel",
-			"forest": true,
-			"castle": true
-		},
-		{
-			"name": "Emman",
-			"forest": true,
-			"home": "black"
-		},
-		{
-			"name": "Erren",
-			"castle": true,
-			"home": "black"
-		},
-		{
-			"name": "Mare Duna",
-			"sea": true
-		},
-		{
-			"name": "Mare Illa",
-			"sea": true
-		},
-		{
-			"name": "Mare Hynd",
-			"sea": true
-		},
-		{
-			"name": "Mare Gond",
-			"sea": true
-		},
-		{
-			"name": "Mare Elle",
-			"sea": true
-		},
-		{
-			"name": "Mare Furie",
-			"sea": true
-		},
-		{
-			"name": "Mare Ovond",
-			"sea": true
-		},
-		{
-			"name": "Mare Unna",
-			"sea": true
-		},
-		{
-			"name": "Mare Bøso",
-			"sea": true
+			"name": "Mare Bøso"
 		}
 	],
 	"neighbors": [
