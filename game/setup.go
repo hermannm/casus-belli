@@ -9,14 +9,14 @@ import (
 
 // Constructs a game instance. Initializes player slots for each area home tag on the given board.
 func New(board Board, lob *lobby.Lobby, options GameOptions) lobby.Game {
-	messages := make(map[Player]*messages.Receiver)
+	receivers := make(map[Player]*messages.Receiver)
 	for _, area := range board {
 		if area.Home == Uncontrolled {
 			continue
 		}
 
-		if _, ok := messages[area.Home]; !ok {
-			messages[area.Home] = nil
+		if _, ok := receivers[area.Home]; !ok {
+			receivers[area.Home] = nil
 		}
 	}
 
@@ -24,7 +24,7 @@ func New(board Board, lob *lobby.Lobby, options GameOptions) lobby.Game {
 		Board:    board,
 		Rounds:   make([]*Round, 0),
 		Lobby:    lob,
-		Messages: messages,
+		Messages: receivers,
 		Options:  options,
 	}
 }
@@ -60,8 +60,7 @@ outer:
 	return ids
 }
 
-// Creates a new message receiver for the given player tag.
-// Adds the receiver to the game, and returns it.
+// Creates a new message receiver for the given player tag, and adds it to the game.
 // Returns error if tag is invalid or already taken.
 func (game *Game) AddPlayer(playerID string) (lobby.Receiver, error) {
 	player := Player(playerID)
@@ -76,5 +75,5 @@ func (game *Game) AddPlayer(playerID string) (lobby.Receiver, error) {
 
 	newReceiver := messages.NewReceiver()
 	game.Messages[player] = &newReceiver
-	return &newReceiver, nil
+	return receiver, nil
 }

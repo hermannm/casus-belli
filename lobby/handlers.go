@@ -162,13 +162,12 @@ func addPlayer(res http.ResponseWriter, req *http.Request) {
 	}
 
 	player = &Player{
-		Socket:   socket,
-		Active:   true,
-		Receiver: receiver,
-		Lock:     new(sync.RWMutex),
+		Socket: socket,
+		Active: true,
+		Lock:   new(sync.RWMutex),
 	}
 	lobby.Players[playerID] = player
-	go player.Listen()
+	go player.Listen(receiver)
 
 	res.Write([]byte("joined lobby"))
 

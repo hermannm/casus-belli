@@ -25,9 +25,8 @@ type Lobby struct {
 
 // A player connected to a game lobby.
 type Player struct {
-	Socket   *websocket.Conn
-	Active   bool // Whether the connection is initialized/not timed out.
-	Receiver Receiver
+	Socket *websocket.Conn
+	Active bool // Whether the connection is initialized/not timed out.
 
 	Lock *sync.RWMutex // Used to synchronize reading and setting the Active field.
 }
@@ -43,11 +42,6 @@ type Game interface {
 	PlayerIDs() []string
 }
 
-// Signature for functions that construct a game instance.
-// Takes the lobby to which players can connect,
-// and an untyped options parameter that can be parsed by the game instance for use in setup.
-type GameConstructor func(lobby *Lobby, options interface{}) (Game, error)
-
 // Handles incoming messages from a client.
 type Receiver interface {
 	// Takes an unprocessed message in byte format from the client,
@@ -55,6 +49,11 @@ type Receiver interface {
 	// Called whenever a message is received from the client.
 	HandleMessage(message []byte)
 }
+
+// Signature for functions that construct a game instance.
+// Takes the lobby to which players can connect,
+// and an untyped options parameter that can be parsed by the game instance for use in setup.
+type GameConstructor func(lobby *Lobby, options interface{}) (Game, error)
 
 // Creates and registers a new lobby with the given ID,
 // and uses the given constructor to construct its game instance.
@@ -176,9 +175,9 @@ func (lobby *Lobby) SendToAll(message interface{}) map[string]error {
 	return errs
 }
 
-// Listens for messages from the player, and forwards them to the appropriate receiver.
+// Listens for messages from the player, and forwards them to the given receiver.
 // Listens continuously until the player turns inactive.
-func (player *Player) Listen() {
+func (player *Player) Listen(receiver Receiver) {
 	for {
 		if !player.isActive() {
 			return
@@ -189,7 +188,7 @@ func (player *Player) Listen() {
 			continue
 		}
 
-		go player.Receiver.HandleMessage(message)
+		go receiver.HandleMessage(message)
 	}
 }
 
