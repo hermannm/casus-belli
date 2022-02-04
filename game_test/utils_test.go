@@ -3,7 +3,7 @@ package game_test
 import (
 	"testing"
 
-	. "github.com/immerse-ntnu/hermannia/server/game"
+	. "github.com/hermannm/bfh-server/game"
 )
 
 // Returns an empty, limited example board for testing.

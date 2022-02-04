@@ -5,8 +5,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/immerse-ntnu/hermannia/server/app"
-	"github.com/immerse-ntnu/hermannia/server/lobby"
+	"github.com/hermannm/bfh-server/app"
+	"github.com/hermannm/bfh-server/lobby"
 )
 
 // Launches a game server with a public endpoint for creating lobbies.

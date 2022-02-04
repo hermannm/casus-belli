@@ -1,4 +1,4 @@
-module github.com/immerse-ntnu/hermannia/server
+module github.com/hermannm/bfh-server
 
 go 1.17
 

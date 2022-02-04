@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/immerse-ntnu/hermannia/server/game"
+	"github.com/hermannm/bfh-server/game"
 )
 
 // boards embeds the json files of boards from this folder.

@@ -1,8 +1,8 @@
 package game
 
 import (
-	"github.com/immerse-ntnu/hermannia/server/lobby"
-	"github.com/immerse-ntnu/hermannia/server/messages"
+	"github.com/hermannm/bfh-server/lobby"
+	"github.com/hermannm/bfh-server/messages"
 )
 
 type Game struct {

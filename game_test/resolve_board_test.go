@@ -3,7 +3,7 @@ package game_test
 import (
 	"testing"
 
-	. "github.com/immerse-ntnu/hermannia/server/game"
+	. "github.com/hermannm/bfh-server/game"
 )
 
 // Tests whether units correctly move in circle without outside interference.

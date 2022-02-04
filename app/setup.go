@@ -1,9 +1,9 @@
 package app
 
 import (
-	"github.com/immerse-ntnu/hermannia/server/boards"
-	"github.com/immerse-ntnu/hermannia/server/game"
-	"github.com/immerse-ntnu/hermannia/server/lobby"
+	"github.com/hermannm/bfh-server/boards"
+	"github.com/hermannm/bfh-server/game"
+	"github.com/hermannm/bfh-server/lobby"
 )
 
 // The global overview of games supported by the server.
