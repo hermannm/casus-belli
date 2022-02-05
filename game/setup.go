@@ -3,8 +3,8 @@ package game
 import (
 	"errors"
 
-	"github.com/hermannm/bfh-server/lobby"
-	"github.com/hermannm/bfh-server/messages"
+	"hermannm.dev/bfh-server/lobby"
+	"hermannm.dev/bfh-server/messages"
 )
 
 // Constructs a game instance. Initializes player slots for each area home tag on the given board.

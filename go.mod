@@ -1,4 +1,4 @@
-module github.com/hermannm/bfh-server
+module hermannm.dev/bfh-server
 
 go 1.17
 

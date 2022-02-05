@@ -1,9 +1,9 @@
 package app
 
 import (
-	"github.com/hermannm/bfh-server/boards"
-	"github.com/hermannm/bfh-server/game"
-	"github.com/hermannm/bfh-server/lobby"
+	"hermannm.dev/bfh-server/boards"
+	"hermannm.dev/bfh-server/game"
+	"hermannm.dev/bfh-server/lobby"
 )
 
 // The global overview of games supported by the server.

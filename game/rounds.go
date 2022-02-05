@@ -3,7 +3,7 @@ package game
 import (
 	"errors"
 
-	"github.com/hermannm/bfh-server/messages"
+	"hermannm.dev/bfh-server/messages"
 )
 
 // Initializes a new round of the game.

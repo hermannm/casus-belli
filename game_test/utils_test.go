@@ -3,7 +3,7 @@ package game_test
 import (
 	"testing"
 
-	. "github.com/hermannm/bfh-server/game"
+	. "hermannm.dev/bfh-server/game"
 )
 
 // Returns an empty, limited example board for testing.

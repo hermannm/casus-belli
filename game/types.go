@@ -1,8 +1,8 @@
 package game
 
 import (
-	"github.com/hermannm/bfh-server/lobby"
-	"github.com/hermannm/bfh-server/messages"
+	"hermannm.dev/bfh-server/lobby"
+	"hermannm.dev/bfh-server/messages"
 )
 
 type Game struct {

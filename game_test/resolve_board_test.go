@@ -3,7 +3,7 @@ package game_test
 import (
 	"testing"
 
-	. "github.com/hermannm/bfh-server/game"
+	. "hermannm.dev/bfh-server/game"
 )
 
 // Tests whether units correctly move in circle without outside interference.

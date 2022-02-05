@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 
-	"github.com/hermannm/bfh-server/boards"
-	"github.com/hermannm/bfh-server/game"
+	"hermannm.dev/bfh-server/boards"
+	"hermannm.dev/bfh-server/game"
 )
 
 func printBoard(board game.Board, areas map[string]game.Unit, neighbors bool) {
