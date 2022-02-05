@@ -9,9 +9,9 @@ import (
 	"strconv"
 	"text/tabwriter"
 
-	"github.com/hermannm/ipfinder"
 	"hermannm.dev/bfh-server/app"
 	"hermannm.dev/bfh-server/lobby"
+	"hermannm.dev/ipfinder"
 )
 
 // Launches a game server that runs a single lobby and game.
