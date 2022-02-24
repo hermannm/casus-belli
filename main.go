@@ -82,7 +82,7 @@ func printBoard(board game.Board, areas map[string]game.Unit, neighbors bool) {
 
 func adjustBoard(board game.Board, areas map[string]game.Unit) {
 	for key, unit := range areas {
-		if unit.Type != game.NoUnit {
+		if unit.Type != "" {
 			board[key].Unit = unit
 			if !board[key].Sea {
 				board[key].Control = unit.Player
