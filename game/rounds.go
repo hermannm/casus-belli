@@ -15,24 +15,27 @@ func (game *Game) NewRound() {
 		season = nextSeason(game.Rounds[len(game.Rounds)-1].Season)
 	}
 
-	round := Round{
-		Season:       season,
-		FirstOrders:  make([]*Order, 0),
-		SecondOrders: make([]*Order, 0),
-	}
-	game.Rounds = append(game.Rounds, &round)
-
 	// Waits for submitted orders from each player, then adds them to the round.
 	received := make(chan []Order, len(game.Messages))
 	for player, receiver := range game.Messages {
 		timeout := make(chan struct{})
 		go game.receiveAndValidateOrders(player, receiver, season, received, timeout)
 	}
+	allOrders := make([]Order, 0)
 	for orderSet := range received {
-		game.addOrders(orderSet)
+		allOrders = append(allOrders, orderSet...)
+	}
+	firstOrders, secondOrders := sortOrders(allOrders, game.Board)
+
+	round := Round{
+		Season:       season,
+		FirstOrders:  firstOrders,
+		SecondOrders: secondOrders,
 	}
 
-	game.Board.Resolve(&round)
+	game.Rounds = append(game.Rounds, round)
+
+	game.Board.Resolve(round)
 }
 
 // Waits for the given player to submit orders, then validates them.
@@ -74,44 +77,48 @@ func (game *Game) receiveAndValidateOrders(
 func parseSubmittedOrders(submitted []messages.Order, player Player, board Board) ([]Order, error) {
 	parsed := make([]Order, 0)
 	for _, submittedOrder := range submitted {
-		fromArea, ok := board[submittedOrder.From]
+		_, ok := board[submittedOrder.From]
 		if !ok {
 			return nil, errors.New("invalid order origin area")
 		}
-		toArea, ok := board[submittedOrder.To]
+		_, ok = board[submittedOrder.To]
 		if !ok {
-			return nil, errors.New("invalid order destiantion area")
+			return nil, errors.New("invalid order destination area")
 		}
 
 		parsed = append(parsed, Order{
 			Type:   OrderType(submittedOrder.OrderType),
 			Player: player,
-			From:   fromArea,
-			To:     toArea,
+			From:   submittedOrder.From,
+			To:     submittedOrder.To,
 			Via:    submittedOrder.Via,
 			Build:  UnitType(submittedOrder.Build),
-			Status: Pending,
 		})
 	}
 
 	return parsed, nil
 }
 
-// Receives orders to be processed in the current round.
-// Sorts orders on their sequence in the round.
-func (game *Game) addOrders(orders []Order) {
-	round := game.Rounds[len(game.Rounds)-1]
+// Takes a set of orders, and sorts them into two sets based on their sequence in the round.
+// Also takes the board for deciding the sequence.
+func sortOrders(allOrders []Order, board Board) (firstOrders []Order, secondOrders []Order) {
+	firstOrders = make([]Order, 0)
+	secondOrders = make([]Order, 0)
 
-	for _, order := range orders {
+	for _, order := range allOrders {
+		fromArea := board[order.From]
+
 		// If order origin has no unit, or unit of different color,
 		// then order is a second horse move and should be processed after all others.
-		if order.From.IsEmpty() || order.From.Unit.Player != order.Player {
-			round.SecondOrders = append(round.SecondOrders, &order)
+		if fromArea.IsEmpty() || fromArea.Unit.Player != order.Player {
+			secondOrders = append(secondOrders, order)
 			continue
 		}
 
-		round.FirstOrders = append(round.SecondOrders, &order)
+		firstOrders = append(firstOrders, order)
 	}
+
+	return firstOrders, secondOrders
 }
 
 // Returns the next season given the current season.
