@@ -1,408 +1,237 @@
 package game
 
-// Applies changes to the board given a round of orders.
-func (board Board) Resolve(round *Round) {
+// Adds the round's orders to the board, and resolves them.
+// Returns a list of any potential battles from the round.
+func (board Board) Resolve(round Round) []Battle {
+	battles := make([]Battle, 0)
+
 	switch round.Season {
 	case Winter:
 		board.resolveWinter(round.FirstOrders)
-		board.cleanup()
 	default:
-		board.populateAreaOrders(round.FirstOrders)
-		board.resolveMoves()
-		board.populateAreaOrders(round.SecondOrders)
-		board.resolveMoves()
+		firstBattles := board.resolveOrders(round.FirstOrders)
+		battles = append(battles, firstBattles...)
+
+		secondBattles := board.resolveOrders(round.SecondOrders)
+		battles = append(battles, secondBattles...)
+
 		board.resolveSieges()
-		board.cleanup()
 	}
+
+	board.cleanup()
+
+	return battles
 }
 
-// Resolves moves on the board in order.
-func (board Board) resolveMoves() {
-	board.crossDangerZones()
-	board.cutSupports()
-	board.resolveConflictFreeOrders()
-	board.resolveTransportOrders()
-	board.resolveBorderConflicts()
-	board.resolveMoveCycles()
-	board.resolveConflicts()
+// Resolves results of the given orders on the board.
+func (board Board) resolveOrders(orders []Order) []Battle {
+	battles := make([]Battle, 0)
+
+	board.populateAreaOrders(orders)
+
+	dangerZoneBattles := board.crossDangerZones()
+	battles = append(battles, dangerZoneBattles...)
+
+	singleplayerBattles := board.resolveMoves(false)
+	battles = append(battles, singleplayerBattles...)
+
+	remainingBattles := board.resolveMoves(true)
+	battles = append(battles, remainingBattles...)
+
+	return battles
 }
 
-// Takes a list of orders and adds references to them in the board's areas.
-func (board Board) populateAreaOrders(orders []*Order) {
+// Takes a list of orders, and populates the appropriate areas on the board with those orders.
+// Does not add support orders that have moves against them, as that cancels them.
+func (board Board) populateAreaOrders(orders []Order) {
+	// First adds all orders except supports, so that supports can check IncomingMoves.
 	for _, order := range orders {
-		if from, ok := board[order.From.Name]; ok {
-			from.Order = order
-		}
-
-		if order.To == nil {
+		if order.Type == Support {
 			continue
 		}
 
-		if to, ok := board[order.To.Name]; ok {
-			switch order.Type {
-			case Move:
-				to.IncomingMoves = append(to.IncomingMoves, order)
-			case Support:
-				to.IncomingSupports = append(to.IncomingSupports, order)
+		board.addOrder(order)
+	}
+
+	// Then adds all supports, except in those areas that are attacked.
+	for _, order := range orders {
+		if order.Type != Support || len(board[order.From].IncomingMoves) > 0 {
+			continue
+		}
+
+		board.addOrder(order)
+	}
+}
+
+//
+func (board Board) resolveMoves(playerConflictsAllowed bool) []Battle {
+	battles := make([]Battle, 0)
+
+	battleReceiver := make(chan Battle)
+	processing := make(map[string]struct{})
+	processed := make(map[string]struct{})
+	retreats := make(map[string]Order)
+
+	for {
+	areaLoop:
+		for areaName, area := range board {
+			retreat, hasRetreat := retreats[areaName]
+			if _, skip := processed[areaName]; skip && !hasRetreat {
+				continue
 			}
-		}
-	}
-}
-
-// Finds move orders attempting to cross danger zones to their destinations,
-// and checks if they fail.
-func (board Board) crossDangerZones() {
-	for _, area := range board {
-		if area.Order == nil || area.Order.Type != Move {
-			continue
-		}
-
-		move := area.Order
-
-		destination, adjacent := area.GetNeighbor(move.To.Name, move.Via)
-		if adjacent && destination.DangerZone != "" {
-			move.crossDangerZone()
-		}
-	}
-}
-
-// Removes support orders that are attacked.
-// If not attacked, checks if support is across danger zone, and if it fails.
-func (board Board) cutSupports() {
-	for _, area := range board {
-		if area.Order == nil || area.Order.Type != Support {
-			continue
-		}
-
-		support := area.Order
-
-		if len(area.IncomingMoves) > 0 {
-			support.failSupport()
-			continue
-		}
-
-		destination, adjacent := area.GetNeighbor(support.To.Name, support.Via)
-		if adjacent && destination.DangerZone != "" {
-			support.crossDangerZone()
-		}
-	}
-}
-
-// Goes through areas that can be resolved without PvP battle, and resolves them.
-func (board Board) resolveConflictFreeOrders() {
-	allResolved := false
-	processed := make(map[string]bool)
-
-	// Keeps looping to potentially discover orders that can be resolved after others.
-	for !allResolved {
-		allResolved = true
-
-		for _, area := range board {
-			if processed[area.Name] || !area.IsEmpty() {
+			if _, skip := processing[areaName]; skip {
 				continue
 			}
 
-			if len(area.IncomingMoves) != 1 {
-				processed[area.Name] = true
+			for _, move := range area.IncomingMoves {
+				transportAttacked, dangerZoneCrossings := board.resolveTransports(move, area)
+
+				if dangerZoneCrossings != nil {
+					battles = append(battles, dangerZoneCrossings...)
+				}
+
+				if transportAttacked {
+					if playerConflictsAllowed {
+						continue areaLoop
+					} else {
+						processed[areaName] = struct{}{}
+					}
+				}
+			}
+
+			moveCount := len(area.IncomingMoves)
+			if moveCount == 0 {
+				processed[area.Name] = struct{}{}
+
+				if hasRetreat && area.IsEmpty() {
+					board[areaName] = area.setUnit(retreat.Unit)
+				}
+
 				continue
 			}
 
-			move := area.IncomingMoves[0]
+			board.resolveAreaMoves(
+				area,
+				moveCount,
+				playerConflictsAllowed,
+				battleReceiver,
+				processing,
+				processed,
+			)
+		}
 
-			// Checks if transport-dependent order can be transported without battle.
-			// If it cannot, adds it to 'resolved' map to avoid repeating Transportable calculation.
-			if !area.HasNeighbor(move.To.Name) {
-				transportable, dangerZone := move.Transportable()
+		if len(processing) == 0 {
+			break
+		}
 
-				if !transportable {
-					processed[area.Name] = true
-					continue
-				}
+		battle := <-battleReceiver
 
-				if dangerZone && !move.crossDangerZone() {
-					processed[area.Name] = true
-					continue
-				}
-			}
+		newRetreats := board.resolveBattle(battle)
+		for _, retreat := range newRetreats {
+			retreats[retreat.From] = retreat
+		}
 
-			allResolved = false
+		battles = append(battles, battle)
+	}
 
-			if area.Control == Uncontrolled {
-				area.resolvePvEBattle()
+	return battles
+}
+
+// Finds move and support orders attempting to cross danger zones to their destinations,
+// and fail them if they don't make it across.
+// Returns a battle result for each danger zone crossing.
+func (board Board) crossDangerZones() []Battle {
+	battles := make([]Battle, 0)
+
+	for areaName, area := range board {
+		order := area.Order
+
+		if order.Type != Move || order.Type != Support {
+			continue
+		}
+
+		// Checks if the order tries to cross a danger zone.
+		destination, adjacent := area.GetNeighbor(order.To, order.Via)
+		if !adjacent || destination.DangerZone == "" {
+			continue
+		}
+
+		// Resolves the danger zone crossing.
+		survived, battle := order.crossDangerZone(destination.DangerZone)
+		battles = append(battles, battle)
+
+		// If move fails danger zone crossing, the unit dies.
+		// If support fails crossing, only the order fails.
+		if !survived {
+			if order.Type == Move {
+				board[areaName] = area.setUnit(Unit{})
+				board.removeMove(order)
 			} else {
-				move.moveAndSucceed()
-			}
-			processed[area.Name] = true
-		}
-	}
-}
-
-// Finds transport orders under attack, and resolves their battles.
-func (board Board) resolveTransportOrders() {
-	for _, area := range board {
-		if area.Order != nil &&
-			area.Order.Type == Transport &&
-			len(area.IncomingMoves) > 0 {
-
-			area.resolveBattle()
-		}
-	}
-}
-
-// Finds pairs of areas on the board that are attacking each other,
-// and resolves battles between them.
-func (board Board) resolveBorderConflicts() {
-	processed := make(map[string]bool)
-
-	for _, area1 := range board {
-		if area1.Order == nil ||
-			area1.Order.Type != Move ||
-			processed[area1.Name] {
-
-			continue
-		}
-
-		area2 := area1.Order.To
-
-		if area2.Order == nil ||
-			area2.Order.Type != Move ||
-			area1.Name != area2.Order.To.Name ||
-			processed[area2.Name] {
-
-			continue
-		}
-
-		processed[area1.Name], processed[area2.Name] = true, true
-
-		// If attacks must transport, both must succeed transport for this to still be a border conflict.
-		if !area1.HasNeighbor(area2.Name) {
-			success1 := area1.Order.Transport()
-			success2 := area2.Order.Transport()
-
-			if !success1 || !success2 {
-				continue
-			}
-		}
-
-		resolveBorderBattle(area1, area2)
-	}
-}
-
-// Utility type for storing state of an area in a cycle while resolving it.
-type cycleState struct {
-	unit   Unit
-	order  *Order
-	battle bool
-	winner Player
-	tie    bool
-}
-
-// Resolves cycles of move orders (more than 2 move orders going in circle).
-func (board Board) resolveMoveCycles() {
-	// Sets up a map of already processed areas to avoid re-processing cycles.
-	processed := make(map[string]bool)
-
-	for name, area := range board {
-		if processed[name] {
-			continue
-		}
-
-		cycle := area.discoverCycle(area.Name)
-
-		if cycle == nil {
-			continue
-		}
-
-		// Sets up a map to store the state of areas in a cycle.
-		cycleStates := make(map[string]cycleState)
-
-		for _, cycleArea := range cycle {
-			processed[cycleArea.Order.To.Name] = true
-
-			// Stores the unit and order of the area in the cycleState,
-			// as these may be switched out during resolving.
-			cycleStates[cycleArea.Order.To.Name] = cycleState{
-				unit:  cycleArea.Unit,
-				order: cycleArea.Order,
-			}
-
-			// PvP battle must only be resolved if there is more than 1 incoming move.
-			if len(cycleArea.Order.To.IncomingMoves) < 2 {
-				continue
-			}
-
-			winner, tie := cycleArea.Order.To.resolvePvPBattle(false)
-
-			if state, ok := cycleStates[cycleArea.Order.To.Name]; ok {
-				state.battle = true
-				state.winner = winner
-				state.tie = tie
-
-				cycleStates[cycleArea.Order.To.Name] = state
-			}
-		}
-
-		// Now that all cycle states are stored, changes to the board can be resolved.
-		for _, cycleArea := range cycle {
-			state := cycleStates[cycleArea.Name]
-
-			if !state.battle {
-				// If destination area was uncontrolled, resolve PvE battle before proceeding.
-				if cycleArea.resolvePvEBattleLoss(state.order) {
-					continue
-				}
-
-				cycleArea.removeUnit()
-				state.order.succeedMove()
-
-				cycleArea.Unit = state.unit
-				if state.order.From.Unit == state.unit {
-					state.order.From.Unit = Unit{}
-				}
-
-				state.order.From.Order = nil
-				continue
-			}
-
-			// Ties already handled by resolvePvPBattle.
-			if state.tie {
-				continue
-			}
-
-			for _, move := range area.IncomingMoves {
-				if move.Player != state.winner {
-					move.failMove()
-					move.killAttacker()
-					continue
-				}
-
-				// If move won the PvP battle, but area is uncontrolled, it must also win PvE battle.
-				if cycleArea.resolvePvEBattleLoss(state.order) {
-					continue
-				}
-
-				if move.Player != state.unit.Player {
-					move.moveAndSucceed()
-					continue
-				}
-
-				move.succeedMove()
-				cycleArea.Unit = state.unit
-				if state.order.From.Unit == state.unit {
-					state.order.From.Unit = Unit{}
-				}
+				board.removeSupport(order)
 			}
 		}
 	}
-}
 
-// Recursively finds a cycle of moves starting and ending with the given firstArea name.
-// Assumes that border conflicts (move cycles with just 2 areas) are already solved.
-// Returns a list of pointers to the areas in the cycle, or nil if no cycle was found.
-func (area *Area) discoverCycle(firstArea string) []*Area {
-	if area.Order == nil || area.Order.Type != Move {
-		return nil
-	}
-
-	// The base case: the destination is the beginning of the cycle.
-	if area.Order.To.Name == firstArea {
-		return []*Area{area}
-	}
-
-	// If the base case is not yet reached, pass cycle discovery to the next area in the chain.
-	continuation := area.Order.To.discoverCycle(firstArea)
-	if continuation == nil {
-		return nil
-	} else {
-		return append(continuation, area)
-	}
-}
-
-// Goes through areas that could not be previously resolved due to conflicting orders,
-// and resolves them.
-func (board Board) resolveConflicts() {
-	allResolved := false
-	processed := make(map[string]bool)
-
-	// Keeps looping to potentially discover orders that can be resolved after others.
-	for !allResolved {
-		allResolved = true
-
-		for _, area := range board {
-			if processed[area.Name] {
-				continue
-			}
-
-			for _, move := range area.IncomingMoves {
-				if !move.From.HasNeighbor(move.To.Name) {
-					move.Transport()
-				}
-			}
-
-			if len(area.IncomingMoves) == 0 {
-				processed[area.Name] = true
-				continue
-			}
-
-			if area.Order != nil && area.Order.Type == Move {
-				allResolved = false
-				continue
-			}
-
-			area.resolveBattle()
-			processed[area.Name] = true
-		}
-	}
+	return battles
 }
 
 // Goes through areas with siege orders, and updates the area following the siege.
 func (board Board) resolveSieges() {
-	for _, area := range board {
-		if area.Order == nil || area.Order.Type != Besiege {
+	for areaName, area := range board {
+		if area.Order.IsNone() || area.Order.Type != Besiege {
 			continue
 		}
 
 		area.SiegeCount++
-		area.Order.Status = Success
-		area.Order = nil
-
 		if area.SiegeCount == 2 {
 			area.Control = area.Unit.Player
 			area.SiegeCount = 0
+		}
+
+		board[areaName] = area
+	}
+}
+
+// Resolves winter orders (builds and internal moves) on the board.
+// Assumes they have already been validated.
+func (board Board) resolveWinter(orders []Order) {
+	for _, order := range orders {
+		switch order.Type {
+
+		case Build:
+			from := board[order.From]
+			from.Unit = Unit{
+				Player: order.Player,
+				Type:   order.Build,
+			}
+			board[order.From] = from
+
+		case Move:
+			from := board[order.From]
+			to := board[order.To]
+
+			to.Unit = from.Unit
+			from.Unit = Unit{}
+
+			board[order.From] = from
+			board[order.To] = to
+
 		}
 	}
 }
 
 // Cleans up remaining order references on the board after the round.
 func (board Board) cleanup() {
-	for _, area := range board {
-		if area.Order != nil {
-			area.Order.Status = Success
-			area.Order = nil
-		}
+	for areaName, area := range board {
+		area.Order = Order{}
 
+		if len(area.IncomingMoves) > 0 {
+			area.IncomingMoves = make([]Order, 0)
+		}
 		if len(area.IncomingSupports) > 0 {
-			area.IncomingSupports = make([]*Order, 0)
+			area.IncomingSupports = make([]Order, 0)
 		}
-	}
-}
 
-// Resolves winter orders (builds and internal moves) on the board.
-// Assumes they have already been validated.
-func (board Board) resolveWinter(orders []*Order) {
-	for _, order := range orders {
-		switch order.Type {
-
-		case Build:
-			board[order.From.Name].Unit = Unit{
-				Player: order.Player,
-				Type:   order.Build,
-			}
-
-		case Move:
-			board[order.To.Name].Unit = board[order.From.Name].Unit
-			board[order.From.Name].Unit = Unit{}
-
-		}
+		board[areaName] = area
 	}
 }
