@@ -17,7 +17,7 @@ func setup() (Board, Round) {
 	units := map[string]Unit{
 		"Emman": {Type: Footman, Player: "white"},
 
-		"Limone": {Type: Footman, Player: "green"},
+		"Lomone": {Type: Footman, Player: "green"},
 		"Lusía":  {Type: Footman, Player: "red"},
 
 		"Gron":  {Type: Footman, Player: "white"},
@@ -48,7 +48,7 @@ func setup() (Board, Round) {
 		{Type: Move, From: "Emman", To: "Erren"},
 
 		// PvP battle with defender
-		{Type: Move, From: "Limone", To: "Lusía"},
+		{Type: Move, From: "Lomone", To: "Lusía"},
 
 		// PvP battle, no defender
 		{Type: Move, From: "Gron", To: "Gewel"},
