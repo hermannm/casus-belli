@@ -4,10 +4,12 @@ _The Battle for Hermannia_ is a board game created as a gift by the father of [h
 
 ## Package Structure
 
-- The `game` package contains the game logic for _The Battle for Hermannia_, mainly the resolving of orders.
-- The `boards` package contains the JSON files for the game's boards, and functions for deserializing them.
-- The `lobby` package defines endpoints for finding, creating and joining lobbies, and manages WebSocket connections between players and lobbies. It is agnostic to the type of game played.
-- The `messages` package defines the game-specific types of messages sent between client and server, as well as the logic for sorting incoming messages.
-- The `app` package contains subpackages for each of the server's executables, and the common setup code for them.
-  - The `main` package under `local` sets up a game server with a single, server-created lobby.
-  - The `main` package under `public` sets up a game server where anyone can create their own lobbies through an open endpoint.
+- Package `lobby` defines endpoints for finding, creating and joining lobbies, and manages WebSocket connections between players and lobbies. It is agnostic to the type of game played.
+- Package `game` implements _The Battle for Hermannia_ as a game for `lobby`. It contains all subpackages specific to this game.
+  - Package `board` contains the main game logic, mainly the resolving of orders on the board.
+  - Package `boardsetup` contains the JSON files for the game's boards, and functions for deserializing them.
+  - Package `messages` defines the game-specific types of messages sent between client and server, as well as the logic for sorting incoming messages.
+  - Package `validation` contains functions for validating player input.
+- Package `app` contains subpackages for each of the server's executables, and the common setup code for them.
+  - Package `main` under `local` sets up a game server with a single, server-created lobby.
+  - Package `main` under `public` sets up a game server where anyone can create their own lobbies through an open endpoint.
