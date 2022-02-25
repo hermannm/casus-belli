@@ -1,7 +1,6 @@
 package app
 
 import (
-	"hermannm.dev/bfh-server/boards"
 	"hermannm.dev/bfh-server/game"
 	"hermannm.dev/bfh-server/lobby"
 )
@@ -15,18 +14,11 @@ var Games = map[string]lobby.GameConstructor{
 // The boardName must correspond to a .json file in ../game/boardconfig.
 func gameConstructor(boardName string) lobby.GameConstructor {
 	return func(lob *lobby.Lobby, options interface{}) (lobby.Game, error) {
-		board, err := boards.ReadBoard(boardName)
-		if err != nil {
-			return nil, err
-		}
-
 		gameOptions, ok := options.(game.GameOptions)
 		if !ok {
 			gameOptions = game.DefaultOptions()
 		}
 
-		newGame := game.New(board, lob, gameOptions)
-
-		return newGame, nil
+		return game.New(boardName, lob, gameOptions)
 	}
 }
