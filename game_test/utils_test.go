@@ -136,6 +136,19 @@ func placeUnits(board Board, units map[string]Unit) {
 	}
 }
 
+func attachUnits(orders []Order, units map[string]Unit) {
+	for i, order := range orders {
+		unit, ok := units[order.From]
+		if !ok {
+			continue
+		}
+
+		order.Unit = unit
+		order.Player = unit.Player
+		orders[i] = order
+	}
+}
+
 // Utility type for setting up expected outcomes of a test of board resolving.
 type expectedControl map[string]struct {
 	control Player

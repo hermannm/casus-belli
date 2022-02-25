@@ -8,22 +8,23 @@ import (
 
 // Tests whether units correctly move in circle without outside interference.
 func TestResolveConflictFreeMoveCycle(t *testing.T) {
-	board := mockBoard()
-
 	units := map[string]Unit{
 		"Leil":   {Type: Footman, Player: "red"},
 		"Limbol": {Type: Footman, Player: "green"},
 		"Worp":   {Type: Footman, Player: "yellow"},
 	}
+
+	orders := []Order{
+		{Type: Move, From: "Leil", To: "Limbol"},
+		{Type: Move, From: "Limbol", To: "Worp"},
+		{Type: Move, From: "Worp", To: "Leil"},
+	}
+
+	board := mockBoard()
 	placeUnits(board, units)
 
-	round := Round{
-		FirstOrders: []Order{
-			{Type: Move, Player: "red", From: "Leil", To: "Limbol", Unit: board["Leil"].Unit},
-			{Type: Move, Player: "green", From: "Limbol", To: "Worp", Unit: board["Limbol"].Unit},
-			{Type: Move, Player: "yellow", From: "Worp", To: "Leil", Unit: board["Worp"].Unit},
-		},
-	}
+	attachUnits(orders, units)
+	round := Round{FirstOrders: orders}
 
 	// Runs the resolve function, mutating the board.
 	board.Resolve(round)
