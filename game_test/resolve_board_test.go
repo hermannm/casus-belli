@@ -18,15 +18,15 @@ func TestResolveConflictFreeMoveCycle(t *testing.T) {
 	placeUnits(board, units)
 
 	round := Round{
-		FirstOrders: []*Order{
-			{Type: Move, Player: "red", From: board["Leil"], To: board["Limbol"]},
-			{Type: Move, Player: "green", From: board["Limbol"], To: board["Worp"]},
-			{Type: Move, Player: "yellow", From: board["Worp"], To: board["Leil"]},
+		FirstOrders: []Order{
+			{Type: Move, Player: "red", From: "Leil", To: "Limbol", Unit: board["Leil"].Unit},
+			{Type: Move, Player: "green", From: "Limbol", To: "Worp", Unit: board["Limbol"].Unit},
+			{Type: Move, Player: "yellow", From: "Worp", To: "Leil", Unit: board["Worp"].Unit},
 		},
 	}
 
 	// Runs the resolve function, mutating the board.
-	board.Resolve(&round)
+	board.Resolve(round)
 
 	// Expected: the units have switched places in a circle.
 	expected := expectedControl{
