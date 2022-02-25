@@ -4,7 +4,7 @@ _The Battle for Hermannia_ is a board game created as a gift by the father of [h
 
 ## Package Structure
 
-- Package `lobby` defines endpoints for finding, creating and joining lobbies, and manages WebSocket connections between players and lobbies. It is agnostic to the type of game played.
+- Package `lobby` defines API endpoints for finding, creating and joining game lobbies, and manages WebSocket connections between players and the server. It is agnostic to the type of game played.
 - Package `game` implements _The Battle for Hermannia_ as a game for `lobby`. It contains all subpackages specific to this game.
   - Package `board` contains the main game logic, mainly the resolving of orders on the board.
   - Package `boardsetup` contains the JSON files for the game's boards, and functions for deserializing them.
@@ -13,3 +13,10 @@ _The Battle for Hermannia_ is a board game created as a gift by the father of [h
 - Package `app` contains subpackages for each of the server's executables, and the common setup code for them.
   - Package `main` under `local` sets up a game server with a single, server-created lobby.
   - Package `main` under `public` sets up a game server where anyone can create their own lobbies through an open endpoint.
+
+## Credits
+
+- Tomas H.V. Mørkrid for creating the original board game
+- [Lars-over](https://github.com/Lars-over), [kristley](https://github.com/kristley) and [bjorvik](https://github.com/bjorvik) of [Immerse NTNU](https://github.com/immerse-ntnu) for their support, as well as their work on [the client](https://github.com/immerse-ntnu/bfh-client)
+- [gorilla/websocket](https://github.com/gorilla/websocket) for the Go WebSocket package
+  - _Copyright (c) 2013 The Gorilla WebSocket Authors, [BSD 2-clause license](https://github.com/gorilla/websocket/blob/master/LICENSE)_
