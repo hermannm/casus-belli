@@ -146,7 +146,7 @@ func (board Board) crossDangerZones() []Battle {
 	for areaName, area := range board {
 		order := area.Order
 
-		if order.Type != Move || order.Type != Support {
+		if order.Type != Move && order.Type != Support {
 			continue
 		}
 

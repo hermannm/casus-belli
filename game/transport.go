@@ -120,7 +120,7 @@ func (area Area) transportingNeighbors(board Board, exclude map[string]struct{})
 	transports = make([]Neighbor, 0)
 
 	newExclude = make(map[string]struct{})
-	for excluded, _ := range exclude {
+	for excluded := range exclude {
 		newExclude[excluded] = struct{}{}
 	}
 
