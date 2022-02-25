@@ -1,7 +1,26 @@
 package game
 
+func (battle Battle) areaNames() []string {
+	nameMap := make(map[string]struct{})
+
+	for _, result := range battle.Results {
+		if result.DefenderArea != "" {
+			nameMap[result.DefenderArea] = struct{}{}
+		} else if result.Move.To != "" {
+			nameMap[result.Move.To] = struct{}{}
+		}
+	}
+
+	names := make([]string, 0)
+	for name := range nameMap {
+		names = append(names, name)
+	}
+
+	return names
+}
+
 // Returns whether the battle was between two moves moving against each other.
-func (battle Battle) IsBorderConflict() bool {
+func (battle Battle) isBorderConflict() bool {
 	return len(battle.Results) == 2 &&
 		(battle.Results[0].Move.To == battle.Results[1].Move.From) &&
 		(battle.Results[1].Move.To == battle.Results[0].Move.From)

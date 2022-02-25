@@ -63,7 +63,8 @@ func (board Board) populateAreaOrders(orders []Order) {
 	}
 }
 
-//
+// Resolves moves on the board. Returns any resulting battles.
+// Only resolves battles between players if playerConflictsAllowed is true.
 func (board Board) resolveMoves(playerConflictsAllowed bool) []Battle {
 	battles := make([]Battle, 0)
 
@@ -72,66 +73,80 @@ func (board Board) resolveMoves(playerConflictsAllowed bool) []Battle {
 	processed := make(map[string]struct{})
 	retreats := make(map[string]Order)
 
+outerLoop:
 	for {
-	areaLoop:
-		for areaName, area := range board {
-			retreat, hasRetreat := retreats[areaName]
-			if _, skip := processed[areaName]; skip && !hasRetreat {
-				continue
-			}
-			if _, skip := processing[areaName]; skip {
-				continue
+		select {
+		case battle := <-battleReceiver:
+			battles = append(battles, battle)
+
+			newRetreats := board.resolveBattle(battle)
+			for _, retreat := range newRetreats {
+				retreats[retreat.From] = retreat
 			}
 
-			for _, move := range area.IncomingMoves {
-				transportAttacked, dangerZoneCrossings := board.resolveTransports(move, area)
-
-				if dangerZoneCrossings != nil {
-					battles = append(battles, dangerZoneCrossings...)
+			for _, area := range battle.areaNames() {
+				delete(processing, area)
+			}
+		default:
+		boardLoop:
+			for areaName, area := range board {
+				retreat, hasRetreat := retreats[areaName]
+				if _, skip := processed[areaName]; skip && !hasRetreat {
+					continue
+				}
+				if _, skip := processing[areaName]; skip {
+					continue
+				}
+				if area.Order.Type == Move {
+					continue
 				}
 
-				if transportAttacked {
-					if playerConflictsAllowed {
-						continue areaLoop
-					} else {
-						processed[areaName] = struct{}{}
+				for _, move := range area.IncomingMoves {
+					transportAttacked, dangerZoneCrossings := board.resolveTransports(move, area)
+
+					if dangerZoneCrossings != nil {
+						battles = append(battles, dangerZoneCrossings...)
+					}
+
+					if transportAttacked {
+						if playerConflictsAllowed {
+							continue boardLoop
+						} else {
+							processed[areaName] = struct{}{}
+						}
 					}
 				}
-			}
 
-			moveCount := len(area.IncomingMoves)
-			if moveCount == 0 {
-				processed[area.Name] = struct{}{}
+				moveCount := len(area.IncomingMoves)
+				if moveCount == 0 {
+					processed[area.Name] = struct{}{}
 
-				if hasRetreat && area.IsEmpty() {
-					board[areaName] = area.setUnit(retreat.Unit)
+					if hasRetreat && area.IsEmpty() {
+						board[areaName] = area.setUnit(retreat.Unit)
+						delete(retreats, areaName)
+					}
+
+					continue
 				}
 
-				continue
+				board.resolveAreaMoves(
+					area,
+					moveCount,
+					playerConflictsAllowed,
+					battleReceiver,
+					processing,
+					processed,
+				)
 			}
 
-			board.resolveAreaMoves(
-				area,
-				moveCount,
-				playerConflictsAllowed,
-				battleReceiver,
-				processing,
-				processed,
-			)
+			if len(processing) == 0 {
+				if len(retreats) != 0 {
+					continue
+				}
+
+				break outerLoop
+			}
 		}
-
-		if len(processing) == 0 {
-			break
-		}
-
-		battle := <-battleReceiver
-
-		newRetreats := board.resolveBattle(battle)
-		for _, retreat := range newRetreats {
-			retreats[retreat.From] = retreat
-		}
-
-		battles = append(battles, battle)
 	}
 
 	return battles

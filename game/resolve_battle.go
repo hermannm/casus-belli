@@ -4,7 +4,7 @@ package game
 // Forwards the given battle to the appropriate battle resolver based on its type.
 // Returns any retreating move orders that could not be resolved.
 func (board Board) resolveBattle(battle Battle) (retreats []Order) {
-	if battle.IsBorderConflict() {
+	if battle.isBorderConflict() {
 		return board.resolveBorderBattle(battle)
 	}
 
