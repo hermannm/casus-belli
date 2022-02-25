@@ -45,6 +45,24 @@ func (area Area) HasNeighbor(neighborName string) bool {
 	return false
 }
 
+// Returns whether the area is a land area that borders the sea.
+// Takes the board in order to go through the area's neighbor areas.
+func (area Area) IsCoast(board Board) bool {
+	if area.Sea {
+		return false
+	}
+
+	for _, neighbor := range area.Neighbors {
+		neighborArea := board[neighbor.Name]
+
+		if neighborArea.Sea {
+			return true
+		}
+	}
+
+	return false
+}
+
 // Returns a copy of the area, with its unit set to the given unit.
 func (area Area) setUnit(unit Unit) Area {
 	area.Unit = unit

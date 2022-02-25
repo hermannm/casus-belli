@@ -1,8 +1,6 @@
 package game
 
 import (
-	"errors"
-
 	"hermannm.dev/bfh-server/messages"
 )
 
@@ -52,13 +50,13 @@ func (game *Game) receiveAndValidateOrders(
 	for {
 		select {
 		case submitted := <-receiver.Orders:
-			parsed, err := parseSubmittedOrders(submitted.Orders, player, game.Board)
+			parsed, err := parseSubmittedOrders(submitted.Orders, player)
 			if err != nil {
 				game.Lobby.Players[string(player)].Send(err.Error())
 				continue
 			}
 
-			err = validateOrderSet(parsed, season)
+			err = validateOrderSet(parsed, game.Board, season)
 			if err != nil {
 				game.Lobby.Players[string(player)].Send(err.Error())
 				continue
@@ -74,18 +72,10 @@ func (game *Game) receiveAndValidateOrders(
 
 // Takes a set of orders in the raw message format, and parses them to the game format.
 // Returns the parsed order set, or an error if the parsing failed.
-func parseSubmittedOrders(submitted []messages.Order, player Player, board Board) ([]Order, error) {
+func parseSubmittedOrders(submitted []messages.Order, player Player) ([]Order, error) {
 	parsed := make([]Order, 0)
-	for _, submittedOrder := range submitted {
-		_, ok := board[submittedOrder.From]
-		if !ok {
-			return nil, errors.New("invalid order origin area")
-		}
-		_, ok = board[submittedOrder.To]
-		if !ok {
-			return nil, errors.New("invalid order destination area")
-		}
 
+	for _, submittedOrder := range submitted {
 		parsed = append(parsed, Order{
 			Type:   OrderType(submittedOrder.OrderType),
 			Player: player,
