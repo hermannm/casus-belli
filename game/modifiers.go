@@ -2,69 +2,67 @@ package game
 
 import (
 	"math/rand"
+	"sync"
 	"time"
 )
 
-// Returns modifiers (including dice roll) of defending unit in an area.
-func defenseModifiers(area Area) []Modifier {
+// Returns modifiers (including dice roll) of defending unit in the area.
+// Assumes that the area is not empty.
+func (area Area) defenseModifiers() []Modifier {
 	mods := []Modifier{}
 
 	mods = appendUnitMod(mods, area.Unit.Type)
 
-	mods = append(mods, diceModifier())
+	mods = append(mods, Modifier{
+		Type:  DiceMod,
+		Value: rollDice(),
+	})
 
 	return mods
 }
 
-// Returns modifiers (including dice roll) of attacking unit in an area.
-func attackModifiers(order Order, otherAttackers bool, borderConflict bool, includeDefender bool) []Modifier {
+// Returns modifiers (including dice roll) of move order attacking an area.
+// Other parameters affect which modifiers are added:
+// otherAttackers for whether there are other moves involved in this battle,
+// borderBattle for whether this is a battle between two moves moving against each other,
+// includeDefender for whether a potential defending unit in the area should be included.
+func (move Order) attackModifiers(area Area, otherAttackers bool, borderBattle bool, includeDefender bool) []Modifier {
 	mods := []Modifier{}
 
-	neighbor, hasNeighbor := order.From.GetNeighbor(order.To.Name, order.Via)
+	neighbor, adjacent := area.GetNeighbor(move.From, move.Via)
 
 	// Assumes danger zone checks have been made before battle,
 	// and thus adds surprise modifier to attacker coming across such zones.
-	if hasNeighbor && neighbor.DangerZone != "" {
+	if adjacent && neighbor.DangerZone != "" {
 		mods = append(mods, Modifier{
 			Type:  SurpriseMod,
-			Value: +1,
+			Value: 1,
 		})
 	}
 
 	// Terrain modifiers should be added if:
 	// - Area is uncontrolled, and this unit is the only attacker.
 	// - Destination is controlled and defended, and this is not a border conflict.
-	if (order.To.Control == Uncontrolled && !otherAttackers) ||
-		(!order.To.IsEmpty() &&
-			order.To.Control == order.To.Unit.Player &&
-			!borderConflict &&
-			includeDefender) {
+	if (!area.IsControlled() && !otherAttackers) ||
+		(area.IsControlled() && !area.IsEmpty() && includeDefender && !borderBattle) {
 
-		if order.To.Forest {
+		if area.Forest {
 			mods = append(mods, Modifier{
 				Type:  ForestMod,
 				Value: -1,
 			})
 		}
 
-		if order.To.Castle {
+		if area.Castle {
 			mods = append(mods, Modifier{
 				Type:  CastleMod,
 				Value: -1,
 			})
 		}
 
-		if hasNeighbor {
-			// Attacker takes penalty for moving across river or from sea.
-			if neighbor.River || (order.From.Sea && !order.To.Sea) {
-				mods = append(mods, Modifier{
-					Type:  WaterMod,
-					Value: -1,
-				})
-			}
-		} else {
-			// If origin and destination are not neighbors, then attacker is transported,
-			// and takes penalty for moving across water.
+		// If origin area is not adjacent to destination, the move is transported and takes water penalty.
+		// Moves across rivers or from sea to land also take this penalty.
+		if !adjacent || neighbor.AcrossWater {
 			mods = append(mods, Modifier{
 				Type:  WaterMod,
 				Value: -1,
@@ -73,21 +71,24 @@ func attackModifiers(order Order, otherAttackers bool, borderConflict bool, incl
 	}
 
 	// Catapults get a bonus only in attacks on castle areas.
-	if order.From.Unit.Type == Catapult && order.To.Castle {
+	if move.Unit.Type == Catapult && area.Castle {
 		mods = append(mods, Modifier{
 			Type:  UnitMod,
 			Value: +1,
 		})
 	} else {
-		mods = appendUnitMod(mods, order.From.Unit.Type)
+		mods = appendUnitMod(mods, move.Unit.Type)
 	}
 
-	mods = append(mods, diceModifier())
+	mods = append(mods, Modifier{
+		Type:  DiceMod,
+		Value: rollDice(),
+	})
 
 	return mods
 }
 
-// Appends unit modifier to the list if given unit type provides a modifier.
+// Appends unit modifier to the given list if given unit type provides a modifier.
 func appendUnitMod(mods []Modifier, unitType UnitType) []Modifier {
 	switch unitType {
 	case Footman:
@@ -100,14 +101,6 @@ func appendUnitMod(mods []Modifier, unitType UnitType) []Modifier {
 	}
 }
 
-// Rolls dice and wraps result in a modifier.
-func diceModifier() Modifier {
-	return Modifier{
-		Type:  DiceMod,
-		Value: rollDice(),
-	}
-}
-
 // Returns a pseudo-random integer between 1 and 6.
 func rollDice() int {
 	// Uses nanoseconds since 1970 as random seed generator, to approach random outcome.
@@ -116,73 +109,115 @@ func rollDice() int {
 	return rand.Intn(6) + 1
 }
 
-// Calls support from support orders to the given area.
-// Appends support modifiers to receiving players' modifier lists in the given map.
-func appendSupportMods(mods map[Player][]Modifier, area Area, moves []*Order, includeDefender bool) {
-	for _, support := range area.IncomingSupports {
-		supported := callSupport(support, area, moves, includeDefender)
+// Message sent from callSupport to appendSupportMods.
+type supportDeclaration struct {
+	from Player // The player with the support order.
+	to   Player // The player that the support order wishes to support.
+}
 
-		if _, isPlayer := mods[supported]; isPlayer {
-			mods[supported] = append(mods[supported], Modifier{
+// Calls support from support orders to the given area.
+// Appends support modifiers to receiving players' results in the given map,
+// but only if the result is tied to a move order to the area.
+// Calls support to defender in the area if includeDefender is true.
+func appendSupportMods(results map[Player]Result, area Area, includeDefender bool) {
+	supports := area.IncomingSupports
+	supportCount := len(supports)
+	supportReceiver := make(chan supportDeclaration, supportCount)
+	var wg sync.WaitGroup
+	wg.Add(supportCount)
+
+	// Finds the moves going to this area.
+	moves := []Order{}
+	for _, result := range results {
+		if result.DefenderArea != "" {
+			continue
+		}
+		if result.Move.To == area.Name {
+			moves = append(moves, result.Move)
+		}
+	}
+
+	// Starts a goroutine to call support for each support order to the area.
+	for _, support := range supports {
+		go callSupport(support, area, moves, includeDefender, supportReceiver, wg)
+	}
+
+	// Waits until all support calls are done, then closes the channel to range over it.
+	wg.Wait()
+	close(supportReceiver)
+
+	for support := range supportReceiver {
+		if support.to == "" {
+			continue
+		}
+
+		if result, isPlayer := results[support.to]; isPlayer {
+			result.Parts = append(result.Parts, Modifier{
 				Type:        SupportMod,
 				Value:       1,
-				SupportFrom: support.Player,
+				SupportFrom: support.from,
 			})
+			results[support.to] = result
 		}
 	}
 }
 
-// Returns which player a given support order supports in a battle.
-// If the support order's player matches a player in the battle, support is automatically given.
-// If support is not given to any player in the battle, returns "".
+// Finds out which player a given support order supports in a battle.
+// Sends the resulting support declaration to the given supportReceiver, and decrements the wait group by 1.
+//
+// If the support order's player matches a player in the battle, support is automatically given to themselves.
+// If support is not given to any player in the battle, the to field on the declaration is "".
 //
 // TODO: Implement asking player who to support if they are not involved themselves.
-func callSupport(support *Order, area Area, moves []*Order, includeDefender bool) Player {
-	if !area.IsEmpty() && area.Unit.Player == support.Player && includeDefender {
-		return support.Player
+func callSupport(
+	support Order,
+	area Area,
+	moves []Order,
+	includeDefender bool,
+	supportReceiver chan<- supportDeclaration,
+	wg sync.WaitGroup,
+) {
+	defer wg.Done()
+
+	if includeDefender && !area.IsEmpty() && area.Unit.Player == support.Player {
+		supportReceiver <- supportDeclaration{
+			from: support.Player,
+			to:   support.Player,
+		}
+		return
 	}
 
 	for _, move := range moves {
-		if support.Player == move.From.Unit.Player {
-			return support.Player
+		if support.Player == move.Player {
+			supportReceiver <- supportDeclaration{
+				from: support.Player,
+				to:   support.Player,
+			}
+			return
 		}
 	}
 
-	return ""
+	// If support is not declared, support is given to nobody.
+	supportReceiver <- supportDeclaration{
+		from: support.Player,
+		to:   Player(""),
+	}
 }
 
-// Constructs battle results from players' modifiers.
-func battleResults(playerMods map[Player][]Modifier) (
-	battle Battle,
-	winner Result,
-	tie bool,
-) {
-	for player, mods := range playerMods {
-		total := sumModifiers(mods)
+// Calculates totals for each of the given results, and returns them as a list.
+func calculateTotals(resultsMap map[Player]Result) []Result {
+	results := make([]Result, 0)
 
-		result := Result{
-			Total:  sumModifiers(mods),
-			Parts:  mods,
-			Player: player,
+	for _, result := range resultsMap {
+		total := 0
+		for _, mod := range result.Parts {
+			total += mod.Value
 		}
 
-		if total > winner.Total {
-			winner = result
-			tie = false
-		} else if total == winner.Total {
-			tie = true
-		}
+		result.Total = total
 
-		battle = append(battle, result)
+		results = append(results, result)
 	}
 
-	return battle, winner, tie
-}
-
-func sumModifiers(mods []Modifier) int {
-	total := 0
-	for _, mod := range mods {
-		total += mod.Value
-	}
-	return total
+	return results
 }

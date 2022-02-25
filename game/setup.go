@@ -22,7 +22,7 @@ func New(board Board, lob *lobby.Lobby, options GameOptions) lobby.Game {
 
 	return &Game{
 		Board:    board,
-		Rounds:   make([]*Round, 0),
+		Rounds:   make([]Round, 0),
 		Lobby:    lob,
 		Messages: receivers,
 		Options:  options,

@@ -1,102 +1,205 @@
 package game
 
-// Fails transport-dependent move if it cannot transport.
-// Returns true if the transport did not fail.
-func (order *Order) Transport() bool {
-	transportable, dangerZone := order.Transportable()
+// Resolves transport of the given move to the given destination if it requires transport.
+// If transported, returns whether the transport path is attacked,
+// and a list of danger zones that the order must cross to transport, if any.
+func (board Board) resolveTransports(move Order, destination Area) (
+	transportAttacked bool,
+	dangerZoneCrossings []Battle,
+) {
+	adjacent := destination.HasNeighbor(move.From)
+	if adjacent {
+		return false, nil
+	}
+
+	from := board[move.From]
+	if from.Sea {
+		return false, nil
+	}
+
+	transportable, transportAttacked, dangerZones := from.transportable(
+		move.To,
+		board,
+		make(map[string]struct{}),
+	)
 
 	if !transportable {
-		order.failMove()
-		return false
+		board.removeMove(move)
+		return false, nil
 	}
 
-	if dangerZone {
-		return order.crossDangerZone()
+	// If transport is attacked, delays the resolving of danger zone crossings.
+	if transportAttacked {
+		return transportAttacked, nil
 	}
 
-	return true
+	survivedAll := true
+	for _, dangerZone := range dangerZones {
+		survived, battle := move.crossDangerZone(dangerZone)
+		dangerZoneCrossings = append(dangerZoneCrossings, battle)
+		if !survived {
+			survivedAll = false
+		}
+	}
+	if !survivedAll {
+		board.removeMove(move)
+		return false, dangerZoneCrossings
+	}
+
+	return transportAttacked, dangerZoneCrossings
 }
 
-// Checks if a transport-dependent move can be transported.
-// If transportable, also returns whether transport must pass danger zone.
-func (order Order) Transportable() (
-	transportable bool,
-	dangerZone bool,
-) {
-	transportable, dangerZone = order.From.canNeighborsTransport(order.To.Name, make(map[string]bool))
-
-	return transportable, dangerZone
+// Stores status of a path of transport orders to destination.
+type transportPath struct {
+	attacked    bool
+	dangerZones []string
 }
 
-// Checks if a land unit can be transported to destination.
+// Checks if a unit from the area can be transported to an area with the same name as the given destination.
 // Takes a map of area names to exclude, to enable recursion.
-// Returns whether the unit can be transported, and if so, whether it must pass through danger zone.
-func (area Area) canNeighborsTransport(destination string, exclude map[string]bool) (
+// Returns whether the unit can be transported, and if so, whether the transports are attacked,
+// as well as any potential danger zones the transported unit must cross.
+func (area Area) transportable(destination string, board Board, exclude map[string]struct{}) (
 	transportable bool,
-	dangerZone bool,
+	transportAttacked bool,
+	dangerZones []string,
 ) {
-	dangerZone = true
+	transportingNeighbors, newExclude := area.transportingNeighbors(board, exclude)
 
-	transportingNeighbors, newExclude := area.transportingNeighbors(exclude)
+	// Declares a list of potential transport paths to destination, in order to compare them.
+	var paths []transportPath
 
-	for _, transport := range transportingNeighbors {
-		// Transports either happen when resolving conflict-free orders,
-		// in which case it should not allow transports under attack,
-		// or after transport battles are resolved,
-		// in which case there should no longer be any transports under attack.
-		if len(transport.Area.IncomingMoves) > 0 {
-			continue
+	// Goes through the area's transporting neighbors to find potential transport paths through them.
+	for _, transportNeighbor := range transportingNeighbors {
+		transportArea := board[transportNeighbor.Name]
+
+		attacked := len(transportArea.IncomingMoves) > 0
+		destAdjacent, destDangerZone := area.findDestination(destination)
+
+		// Recursively calls this function on the transporting neighbor,
+		// in order to find potential transport chains.
+		nextTransportable, nextTransportAttacked, nextDangerZones := transportArea.transportable(
+			destination,
+			board,
+			newExclude,
+		)
+
+		var subPaths []transportPath
+		if destAdjacent {
+			subPaths = append(subPaths, transportPath{
+				attacked:    attacked,
+				dangerZones: []string{destDangerZone},
+			})
+		}
+		if nextTransportable {
+			subPaths = append(subPaths, transportPath{
+				attacked:    attacked || nextTransportAttacked,
+				dangerZones: nextDangerZones,
+			})
 		}
 
-		if transport.Area.HasNeighbor(destination) {
-			transportable = true
-
-			if transport.DangerZone == "" {
-				dangerZone = false
-			}
-
-			continue
-		}
-
-		canTransport, danger := transport.Area.canNeighborsTransport(destination, newExclude)
-
-		if canTransport {
-			transportable = true
-
-			if !danger && transport.DangerZone == "" {
-				dangerZone = false
-			}
+		// If both this neighbor and potential subpaths can transport, finds the best one.
+		// This is for the niche edge case of there being a danger zone between this
+		// transport and the destination, in which case a longer subpath may be better.
+		bestPath, ok := bestTransportPath(subPaths)
+		if ok {
+			paths = append(paths, bestPath)
 		}
 	}
 
-	return transportable, dangerZone
+	bestPath, transportable := bestTransportPath(paths)
+	return transportable, bestPath.attacked, bestPath.dangerZones
 }
 
-// Finds an area's friendly neighbors that offer transports.
-// Takes a map of area names to exclude, and returns it with the transporting neighbors added.
-func (area Area) transportingNeighbors(exclude map[string]bool) ([]Neighbor, map[string]bool) {
-	neighbors := make([]Neighbor, 0)
-	newExclude := make(map[string]bool)
-	for k, v := range exclude {
-		newExclude[k] = v
+// Finds the given area's friendly neighbors that offer transports.
+// Takes a map of area names to exclude, and returns a copy of it with the transporting neighbors added.
+func (area Area) transportingNeighbors(board Board, exclude map[string]struct{}) (
+	transports []Neighbor,
+	newExclude map[string]struct{},
+) {
+	transports = make([]Neighbor, 0)
+
+	newExclude = make(map[string]struct{})
+	for excluded := range exclude {
+		newExclude[excluded] = struct{}{}
 	}
 
 	if area.IsEmpty() {
-		return neighbors, newExclude
+		return transports, newExclude
 	}
 
 	for _, neighbor := range area.Neighbors {
-		if neighbor.Area.Order == nil ||
-			neighbor.Area.Order.Type != Transport ||
-			neighbor.Area.Unit.Player != area.Unit.Player ||
-			exclude[neighbor.Area.Name] {
+		neighborArea := board[neighbor.Name]
+		_, excluded := exclude[neighbor.Name]
 
+		if excluded ||
+			neighborArea.Order.Type != Transport ||
+			neighborArea.Unit.Player != area.Unit.Player {
 			continue
 		}
 
-		neighbors = append(neighbors, neighbor)
-		newExclude[neighbor.Area.Name] = true
+		transports = append(transports, neighbor)
+		newExclude[neighbor.Name] = struct{}{}
 	}
 
-	return neighbors, newExclude
+	return transports, newExclude
+}
+
+// Returns whether the area is adjacent to the given destination,
+// and whether a move to it must pass through a danger zone.
+func (area Area) findDestination(destination string) (
+	adjacent bool,
+	dangerZone string,
+) {
+	for _, neighbor := range area.Neighbors {
+		if neighbor.Name == destination {
+			// If destination is already found to be adjacent but only through a danger zone,
+			// checks if there is a different path to it without a danger zone.
+			if adjacent {
+				if dangerZone != "" {
+					dangerZone = neighbor.DangerZone
+				}
+				continue
+			}
+
+			adjacent = true
+			dangerZone = neighbor.DangerZone
+		}
+	}
+
+	return adjacent, dangerZone
+}
+
+// From the given paths, returns the best path.
+// Prioritizes paths that are not attacked first,
+// then paths that have to cross the fewest danger zones.
+//
+// If the given path list contains no paths, returns transportable = false.
+func bestTransportPath(paths []transportPath) (
+	bestPath transportPath,
+	transportable bool,
+) {
+	if len(paths) == 0 {
+		return transportPath{}, false
+	}
+
+	bestPath = paths[0]
+
+	for _, path := range paths[1:] {
+		if bestPath.attacked {
+			if path.attacked {
+				if len(path.dangerZones) < len(bestPath.dangerZones) {
+					bestPath = path
+				}
+			} else {
+				bestPath = path
+			}
+		} else if !path.attacked {
+			if len(path.dangerZones) < len(bestPath.dangerZones) {
+				bestPath = path
+			}
+		}
+	}
+
+	return bestPath, true
 }

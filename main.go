@@ -38,9 +38,9 @@ func printBoard(board game.Board, areas map[string]game.Unit, neighbors bool) {
 		if neighbors {
 			fmt.Println("\nNEIGHBORS:")
 			for _, neighbor := range area.Neighbors {
-				neighborString := neighbor.Area.Name
-				if neighbor.River {
-					neighborString += " (river)"
+				neighborString := neighbor.Name
+				if neighbor.AcrossWater {
+					neighborString += " (across water)"
 				}
 				if neighbor.Cliffs {
 					neighborString += " (cliffs)"
@@ -52,46 +52,24 @@ func printBoard(board game.Board, areas map[string]game.Unit, neighbors bool) {
 			}
 		}
 
-		if len(area.Battles) > 0 {
-			fmt.Println("\nBATTLES:")
-			for _, battle := range area.Battles {
-				battleString := ""
-
-				for _, result := range battle {
-					resultString := fmt.Sprintf("%s: %d ( ", result.Player, result.Total)
-
-					for _, mod := range result.Parts {
-						resultString += fmt.Sprintf("%d %s ", mod.Value, mod.Type)
-						if mod.SupportFrom != "" {
-							resultString += string(mod.SupportFrom) + " "
-						}
-					}
-
-					resultString += ") "
-
-					battleString += resultString
-				}
-
-				fmt.Println(battleString)
-			}
-		}
-
 		fmt.Print("\n-----------------------------------\n\n")
 	}
 }
 
 func adjustBoard(board game.Board, areas map[string]game.Unit) {
-	for key, unit := range areas {
-		if unit.Type != game.NoUnit {
-			board[key].Unit = unit
-			if !board[key].Sea {
-				board[key].Control = unit.Player
+	for areaName, unit := range areas {
+		if unit.Type != "" {
+			area := board[areaName]
+			area.Unit = unit
+			if !area.Sea {
+				area.Control = unit.Player
 			}
+			board[areaName] = area
 		}
 	}
 }
 
-func printResolvePrint(board game.Board, areas map[string]game.Unit, round *game.Round) {
+func printResolvePrint(board game.Board, areas map[string]game.Unit, round game.Round) {
 	fmt.Print("---BEFORE---\n\n")
 	printBoard(board, areas, false)
 
@@ -144,44 +122,50 @@ func testTransportWithDangerZone(board game.Board) {
 
 	round := game.Round{
 		Season: game.Spring,
-		FirstOrders: []*game.Order{
+		FirstOrders: []game.Order{
 			{
 				Type:   game.Move,
 				Player: "green",
-				From:   board["Winde"],
-				To:     board["Fond"],
+				From:   "Winde",
+				To:     "Fond",
+				Unit:   board["Winde"].Unit,
 			},
 			{
 				Type:   game.Transport,
 				Player: "green",
-				From:   board["Mare Gond"],
+				From:   "Mare Gond",
+				Unit:   board["Mare Gond"].Unit,
 			},
 			{
 				Type:   game.Transport,
 				Player: "green",
-				From:   board["Mare Elle"],
+				From:   "Mare Elle",
+				Unit:   board["Mare Elle"].Unit,
 			},
 			{
 				Type:   game.Transport,
 				Player: "green",
-				From:   board["Mare Ovond"],
-			},
-			{
-				Type:   game.Move,
-				Player: "red",
-				From:   board["Mare Duna"],
-				To:     board["Mare Gond"],
+				From:   "Mare Ovond",
+				Unit:   board["Mare Ovond"].Unit,
 			},
 			{
 				Type:   game.Move,
 				Player: "red",
-				From:   board["Mare Furie"],
-				To:     board["Mare Elle"],
+				From:   "Mare Duna",
+				To:     "Mare Gond",
+				Unit:   board["Mare Gond"].Unit,
+			},
+			{
+				Type:   game.Move,
+				Player: "red",
+				From:   "Mare Furie",
+				To:     "Mare Elle",
+				Unit:   board["Mare Furie"].Unit,
 			},
 		},
 	}
 
-	printResolvePrint(board, areas, &round)
+	printResolvePrint(board, areas, round)
 }
 
 func testTransportBattle(board game.Board) {
@@ -205,26 +189,29 @@ func testTransportBattle(board game.Board) {
 
 	round := game.Round{
 		Season: game.Spring,
-		FirstOrders: []*game.Order{
+		FirstOrders: []game.Order{
 			{
 				Type:   game.Move,
 				Player: "green",
-				From:   board["Worp"],
-				To:     board["Zona"],
+				From:   "Worp",
+				To:     "Zona",
+				Unit:   board["Worp"].Unit,
 			},
 			{
 				Type:   game.Transport,
 				Player: "green",
-				From:   board["Mare Gond"],
+				From:   "Mare Gond",
+				Unit:   board["Mare Gond"].Unit,
 			},
 			{
 				Type:   game.Move,
 				Player: "red",
-				From:   board["Mare Elle"],
-				To:     board["Mare Gond"],
+				From:   "Mare Elle",
+				To:     "Mare Gond",
+				Unit:   board["Mare Gond"].Unit,
 			},
 		},
 	}
 
-	printResolvePrint(board, areas, &round)
+	printResolvePrint(board, areas, round)
 }

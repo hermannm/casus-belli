@@ -58,21 +58,20 @@ func ReadBoard(boardName string) (game.Board, error) {
 	board := make(game.Board)
 
 	for nation, areas := range jsonBoard.Nations {
-		for _, jsonArea := range areas {
+		for _, landArea := range areas {
 			area := game.Area{
-				Name:             jsonArea.Name,
+				Name:             landArea.Name,
 				Nation:           nation,
-				Control:          game.Player(jsonArea.Home),
-				Home:             game.Player(jsonArea.Home),
-				Forest:           jsonArea.Forest,
-				Castle:           jsonArea.Castle,
+				Control:          game.Player(landArea.Home),
+				Home:             game.Player(landArea.Home),
+				Forest:           landArea.Forest,
+				Castle:           landArea.Castle,
 				Neighbors:        make([]game.Neighbor, 0),
-				IncomingMoves:    make([]*game.Order, 0),
-				IncomingSupports: make([]*game.Order, 0),
-				Battles:          make([]game.Battle, 0),
+				IncomingMoves:    make([]game.Order, 0),
+				IncomingSupports: make([]game.Order, 0),
 			}
 
-			board[area.Name] = &area
+			board[area.Name] = area
 		}
 	}
 
@@ -80,38 +79,37 @@ func ReadBoard(boardName string) (game.Board, error) {
 		area := game.Area{
 			Name:             sea.Name,
 			Neighbors:        make([]game.Neighbor, 0),
-			IncomingMoves:    make([]*game.Order, 0),
-			IncomingSupports: make([]*game.Order, 0),
-			Battles:          make([]game.Battle, 0),
+			IncomingMoves:    make([]game.Order, 0),
+			IncomingSupports: make([]game.Order, 0),
 		}
 
-		board[area.Name] = &area
+		board[area.Name] = area
 	}
 
-	for _, jsonNeighbor := range jsonBoard.Neighbors {
-		area1, ok1 := board[jsonNeighbor.Area1]
-		area2, ok2 := board[jsonNeighbor.Area2]
+	for _, neighbor := range jsonBoard.Neighbors {
+		area1, ok1 := board[neighbor.Area1]
+		area2, ok2 := board[neighbor.Area2]
 
 		if !ok1 || !ok2 {
 			return nil, fmt.Errorf(
 				"error in board config: neighbor relation %s <-> %s",
-				jsonNeighbor.Area1,
-				jsonNeighbor.Area2,
+				neighbor.Area1,
+				neighbor.Area2,
 			)
 		}
 
 		area1.Neighbors = append(area1.Neighbors, game.Neighbor{
-			Area:       area2,
-			River:      jsonNeighbor.River,
-			Cliffs:     jsonNeighbor.Cliffs,
-			DangerZone: jsonNeighbor.DangerZone,
+			Name:        area2.Name,
+			AcrossWater: neighbor.River || (area1.Sea && !area2.Sea),
+			Cliffs:      neighbor.Cliffs,
+			DangerZone:  neighbor.DangerZone,
 		})
 
 		area2.Neighbors = append(area2.Neighbors, game.Neighbor{
-			Area:       area1,
-			River:      jsonNeighbor.River,
-			Cliffs:     jsonNeighbor.Cliffs,
-			DangerZone: jsonNeighbor.DangerZone,
+			Name:        area1.Name,
+			AcrossWater: neighbor.River || (area2.Sea && !area1.Sea),
+			Cliffs:      neighbor.Cliffs,
+			DangerZone:  neighbor.DangerZone,
 		})
 	}
 

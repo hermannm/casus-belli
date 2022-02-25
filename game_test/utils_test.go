@@ -10,7 +10,7 @@ import (
 func mockBoard() Board {
 	board := Board{}
 
-	areas := []*Area{
+	areas := []Area{
 		{Name: "Lusía", Castle: true},
 		{Name: "Lomone", Forest: true},
 		{Name: "Limbol", Forest: true},
@@ -95,26 +95,31 @@ func mockBoard() Board {
 	}
 
 	for _, area := range areas {
-		area.Battles = make([]Battle, 0)
 		area.Neighbors = make([]Neighbor, 0)
-		area.IncomingMoves = make([]*Order, 0)
-		area.IncomingSupports = make([]*Order, 0)
+		area.IncomingMoves = make([]Order, 0)
+		area.IncomingSupports = make([]Order, 0)
 		board[area.Name] = area
 	}
 
 	for _, neighbor := range neighbors {
-		board[neighbor.a1].Neighbors = append(board[neighbor.a1].Neighbors, Neighbor{
-			Area:       board[neighbor.a2],
-			River:      neighbor.river,
-			Cliffs:     neighbor.cliffs,
-			DangerZone: neighbor.dangerZone,
+		area1 := board[neighbor.a1]
+		area2 := board[neighbor.a2]
+
+		area1.Neighbors = append(area1.Neighbors, Neighbor{
+			Name:        neighbor.a2,
+			AcrossWater: neighbor.river || (area1.Sea && !area2.Sea),
+			Cliffs:      neighbor.cliffs,
+			DangerZone:  neighbor.dangerZone,
 		})
-		board[neighbor.a2].Neighbors = append(board[neighbor.a2].Neighbors, Neighbor{
-			Area:       board[neighbor.a1],
-			River:      neighbor.river,
-			Cliffs:     neighbor.cliffs,
-			DangerZone: neighbor.dangerZone,
+		board[neighbor.a1] = area1
+
+		area2.Neighbors = append(area2.Neighbors, Neighbor{
+			Name:        neighbor.a1,
+			AcrossWater: neighbor.river || (area2.Sea && !area1.Sea),
+			Cliffs:      neighbor.cliffs,
+			DangerZone:  neighbor.dangerZone,
 		})
+		board[neighbor.a2] = area2
 	}
 
 	return board
@@ -123,9 +128,11 @@ func mockBoard() Board {
 // Utility function for placing units on a map.
 // Takes a map of area names to units to be placed there.
 func placeUnits(board Board, units map[string]Unit) {
-	for area, unit := range units {
-		board[area].Unit = unit
-		board[area].Control = unit.Player
+	for areaName, unit := range units {
+		area := board[areaName]
+		area.Unit = unit
+		area.Control = unit.Player
+		board[areaName] = area
 	}
 }
 
