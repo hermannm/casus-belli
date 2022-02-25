@@ -1,4 +1,4 @@
-package game
+package board
 
 // Resolves transport of the given move to the given destination if it requires transport.
 // If transported, returns whether the transport path is attacked,

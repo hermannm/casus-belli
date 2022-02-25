@@ -1,4 +1,4 @@
-package game
+package board
 
 // Resolves the board areas touched by the moves in the given cycle.
 //

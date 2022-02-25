@@ -1,4 +1,4 @@
-package game
+package board
 
 // Checks whether the order is initialized.
 func (order Order) IsNone() bool {

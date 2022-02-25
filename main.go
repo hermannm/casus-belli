@@ -3,12 +3,12 @@ package main
 import (
 	"fmt"
 
-	"hermannm.dev/bfh-server/boards"
-	"hermannm.dev/bfh-server/game"
+	"hermannm.dev/bfh-server/game/board"
+	"hermannm.dev/bfh-server/game/boardsetup"
 )
 
-func printBoard(board game.Board, areas map[string]game.Unit, neighbors bool) {
-	for _, area := range board {
+func printBoard(brd board.Board, areas map[string]board.Unit, neighbors bool) {
+	for _, area := range brd {
 		if _, ok := areas[area.Name]; !ok {
 			continue
 		}
@@ -56,162 +56,162 @@ func printBoard(board game.Board, areas map[string]game.Unit, neighbors bool) {
 	}
 }
 
-func adjustBoard(board game.Board, areas map[string]game.Unit) {
+func adjustBoard(brd board.Board, areas map[string]board.Unit) {
 	for areaName, unit := range areas {
 		if unit.Type != "" {
-			area := board[areaName]
+			area := brd[areaName]
 			area.Unit = unit
 			if !area.Sea {
 				area.Control = unit.Player
 			}
-			board[areaName] = area
+			brd[areaName] = area
 		}
 	}
 }
 
-func printResolvePrint(board game.Board, areas map[string]game.Unit, round game.Round) {
+func printResolvePrint(brd board.Board, areas map[string]board.Unit, round board.Round) {
 	fmt.Print("---BEFORE---\n\n")
-	printBoard(board, areas, false)
+	printBoard(brd, areas, false)
 
-	board.Resolve(round)
+	brd.Resolve(round)
 
 	fmt.Print("---AFTER---\n\n")
-	printBoard(board, areas, false)
+	printBoard(brd, areas, false)
 }
 
 func main() {
-	board, err := boards.ReadBoard("hermannia_5players")
+	brd, err := boardsetup.ReadBoard("hermannia_5players")
 
 	if err != nil {
 		fmt.Println(err.Error())
 	}
 
-	testTransportWithDangerZone(board)
+	testTransportWithDangerZone(brd)
 }
 
-func testTransportWithDangerZone(board game.Board) {
-	areas := map[string]game.Unit{
+func testTransportWithDangerZone(brd board.Board) {
+	areas := map[string]board.Unit{
 		"Winde": {
-			Type:   game.Footman,
+			Type:   board.Footman,
 			Player: "green",
 		},
 		"Mare Gond": {
-			Type:   game.Ship,
+			Type:   board.Ship,
 			Player: "green",
 		},
 		"Mare Elle": {
-			Type:   game.Ship,
+			Type:   board.Ship,
 			Player: "green",
 		},
 		"Mare Ovond": {
-			Type:   game.Ship,
+			Type:   board.Ship,
 			Player: "green",
 		},
 		"Mare Duna": {
-			Type:   game.Ship,
+			Type:   board.Ship,
 			Player: "red",
 		},
 		"Mare Furie": {
-			Type:   game.Ship,
+			Type:   board.Ship,
 			Player: "red",
 		},
 		"Fond": {},
 	}
 
-	adjustBoard(board, areas)
+	adjustBoard(brd, areas)
 
-	round := game.Round{
-		Season: game.Spring,
-		FirstOrders: []game.Order{
+	round := board.Round{
+		Season: board.Spring,
+		FirstOrders: []board.Order{
 			{
-				Type:   game.Move,
+				Type:   board.Move,
 				Player: "green",
 				From:   "Winde",
 				To:     "Fond",
-				Unit:   board["Winde"].Unit,
+				Unit:   brd["Winde"].Unit,
 			},
 			{
-				Type:   game.Transport,
+				Type:   board.Transport,
 				Player: "green",
 				From:   "Mare Gond",
-				Unit:   board["Mare Gond"].Unit,
+				Unit:   brd["Mare Gond"].Unit,
 			},
 			{
-				Type:   game.Transport,
+				Type:   board.Transport,
 				Player: "green",
 				From:   "Mare Elle",
-				Unit:   board["Mare Elle"].Unit,
+				Unit:   brd["Mare Elle"].Unit,
 			},
 			{
-				Type:   game.Transport,
+				Type:   board.Transport,
 				Player: "green",
 				From:   "Mare Ovond",
-				Unit:   board["Mare Ovond"].Unit,
+				Unit:   brd["Mare Ovond"].Unit,
 			},
 			{
-				Type:   game.Move,
+				Type:   board.Move,
 				Player: "red",
 				From:   "Mare Duna",
 				To:     "Mare Gond",
-				Unit:   board["Mare Gond"].Unit,
+				Unit:   brd["Mare Gond"].Unit,
 			},
 			{
-				Type:   game.Move,
+				Type:   board.Move,
 				Player: "red",
 				From:   "Mare Furie",
 				To:     "Mare Elle",
-				Unit:   board["Mare Furie"].Unit,
+				Unit:   brd["Mare Furie"].Unit,
 			},
 		},
 	}
 
-	printResolvePrint(board, areas, round)
+	printResolvePrint(brd, areas, round)
 }
 
-func testTransportBattle(board game.Board) {
-	areas := map[string]game.Unit{
+func testTransportBattle(brd board.Board) {
+	areas := map[string]board.Unit{
 		"Worp": {
-			Type:   game.Footman,
+			Type:   board.Footman,
 			Player: "green",
 		},
 		"Mare Gond": {
-			Type:   game.Ship,
+			Type:   board.Ship,
 			Player: "green",
 		},
 		"Mare Elle": {
-			Type:   game.Ship,
+			Type:   board.Ship,
 			Player: "red",
 		},
 		"Zona": {},
 	}
 
-	adjustBoard(board, areas)
+	adjustBoard(brd, areas)
 
-	round := game.Round{
-		Season: game.Spring,
-		FirstOrders: []game.Order{
+	round := board.Round{
+		Season: board.Spring,
+		FirstOrders: []board.Order{
 			{
-				Type:   game.Move,
+				Type:   board.Move,
 				Player: "green",
 				From:   "Worp",
 				To:     "Zona",
-				Unit:   board["Worp"].Unit,
+				Unit:   brd["Worp"].Unit,
 			},
 			{
-				Type:   game.Transport,
+				Type:   board.Transport,
 				Player: "green",
 				From:   "Mare Gond",
-				Unit:   board["Mare Gond"].Unit,
+				Unit:   brd["Mare Gond"].Unit,
 			},
 			{
-				Type:   game.Move,
+				Type:   board.Move,
 				Player: "red",
 				From:   "Mare Elle",
 				To:     "Mare Gond",
-				Unit:   board["Mare Gond"].Unit,
+				Unit:   brd["Mare Gond"].Unit,
 			},
 		},
 	}
 
-	printResolvePrint(board, areas, round)
+	printResolvePrint(brd, areas, round)
 }

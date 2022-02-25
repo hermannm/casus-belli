@@ -1,4 +1,4 @@
-package game
+package board
 
 func (battle Battle) areaNames() []string {
 	nameMap := make(map[string]struct{})

@@ -1,8 +1,8 @@
-package game
+package board
 
 import (
+	"hermannm.dev/bfh-server/game/messages"
 	"hermannm.dev/bfh-server/lobby"
-	"hermannm.dev/bfh-server/messages"
 )
 
 type Game struct {

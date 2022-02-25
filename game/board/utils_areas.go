@@ -1,4 +1,4 @@
-package game
+package board
 
 // Checks whether the area contains a unit.
 func (area Area) IsEmpty() bool {

@@ -1,4 +1,4 @@
-package game
+package board
 
 // Adds the round's orders to the board, and resolves them.
 // Returns a list of any potential battles from the round.

@@ -1,4 +1,4 @@
-package game
+package board
 
 // Resolves moves to the given area on the board.
 // Assumes that the area has incoming moves (moveCount > 0).

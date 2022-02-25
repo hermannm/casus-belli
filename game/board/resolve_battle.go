@@ -1,4 +1,4 @@
-package game
+package board
 
 // Resolves effects of the given battle on the board.
 // Forwards the given battle to the appropriate battle resolver based on its type.

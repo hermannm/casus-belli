@@ -3,30 +3,52 @@ package game
 import (
 	"errors"
 
+	"hermannm.dev/bfh-server/game/board"
+	"hermannm.dev/bfh-server/game/boardsetup"
+	"hermannm.dev/bfh-server/game/messages"
 	"hermannm.dev/bfh-server/lobby"
-	"hermannm.dev/bfh-server/messages"
 )
 
+type Game struct {
+	Board    board.Board
+	Rounds   []board.Round
+	Lobby    *lobby.Lobby
+	Messages map[string]*messages.Receiver
+	Options  GameOptions
+}
+
+type GameOptions struct {
+	Thrones bool // Whether the game has the "Raven, Sword and Throne" expansion enabled.
+}
+
 // Constructs a game instance. Initializes player slots for each area home tag on the given board.
-func New(board Board, lob *lobby.Lobby, options GameOptions) lobby.Game {
-	receivers := make(map[Player]*messages.Receiver)
-	for _, area := range board {
-		if area.Home == Uncontrolled {
+func New(boardName string, lob *lobby.Lobby, options GameOptions) (lobby.Game, error) {
+	brd, err := boardsetup.ReadBoard(boardName)
+	if err != nil {
+		return nil, err
+	}
+
+	receivers := make(map[string]*messages.Receiver)
+	for _, area := range brd {
+		areaHome := string(area.Home)
+		if areaHome == "" {
 			continue
 		}
 
-		if _, ok := receivers[area.Home]; !ok {
-			receivers[area.Home] = nil
+		if _, ok := receivers[areaHome]; !ok {
+			receivers[areaHome] = nil
 		}
 	}
 
-	return &Game{
-		Board:    board,
-		Rounds:   make([]Round, 0),
+	game := Game{
+		Board:    brd,
+		Rounds:   make([]board.Round, 0),
 		Lobby:    lob,
 		Messages: receivers,
 		Options:  options,
 	}
+
+	return &game, nil
 }
 
 func DefaultOptions() GameOptions {
@@ -40,17 +62,16 @@ func DefaultOptions() GameOptions {
 func (game Game) PlayerIDs() []string {
 	ids := make([]string, 0)
 
-outer:
+outerLoop:
 	for _, area := range game.Board {
-		if area.Home == Uncontrolled {
+		potentialID := string(area.Home)
+		if potentialID == "" {
 			continue
 		}
 
-		potentialID := string(area.Home)
-
 		for _, id := range ids {
 			if potentialID == id {
-				continue outer
+				continue outerLoop
 			}
 		}
 
@@ -63,9 +84,7 @@ outer:
 // Creates a new message receiver for the given player tag, and adds it to the game.
 // Returns error if tag is invalid or already taken.
 func (game *Game) AddPlayer(playerID string) (lobby.Receiver, error) {
-	player := Player(playerID)
-
-	receiver, ok := game.Messages[player]
+	receiver, ok := game.Messages[playerID]
 	if !ok {
 		return nil, errors.New("invalid player tag")
 	}
@@ -74,6 +93,6 @@ func (game *Game) AddPlayer(playerID string) (lobby.Receiver, error) {
 	}
 
 	newReceiver := messages.NewReceiver()
-	game.Messages[player] = &newReceiver
+	game.Messages[playerID] = &newReceiver
 	return receiver, nil
 }

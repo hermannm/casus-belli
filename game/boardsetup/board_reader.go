@@ -1,11 +1,11 @@
-package boards
+package boardsetup
 
 import (
 	"embed"
 	"encoding/json"
 	"fmt"
 
-	"hermannm.dev/bfh-server/game"
+	"hermannm.dev/bfh-server/game/board"
 )
 
 // boards embeds the json files of boards from this folder.
@@ -13,7 +13,7 @@ import (
 var boards embed.FS
 
 // Utility type for json unmarshaling.
-type board struct {
+type jsonBoard struct {
 	Nations   map[string][]landArea `json:"nations"`
 	Seas      []sea                 `json:"seas"`
 	Neighbors []neighbor            `json:"neighbors"`
@@ -42,53 +42,53 @@ type neighbor struct {
 }
 
 // Reads and constructs the board matching the given map name and number of players.
-func ReadBoard(boardName string) (game.Board, error) {
+func ReadBoard(boardName string) (board.Board, error) {
 	content, err := boards.ReadFile(fmt.Sprintf("%s.json", boardName))
 	if err != nil {
 		return nil, err
 	}
 
-	var jsonBoard board
+	var jsonBrd jsonBoard
 
-	err = json.Unmarshal(content, &jsonBoard)
+	err = json.Unmarshal(content, &jsonBrd)
 	if err != nil {
 		return nil, err
 	}
 
-	board := make(game.Board)
+	brd := make(board.Board)
 
-	for nation, areas := range jsonBoard.Nations {
+	for nation, areas := range jsonBrd.Nations {
 		for _, landArea := range areas {
-			area := game.Area{
+			area := board.Area{
 				Name:             landArea.Name,
 				Nation:           nation,
-				Control:          game.Player(landArea.Home),
-				Home:             game.Player(landArea.Home),
+				Control:          board.Player(landArea.Home),
+				Home:             board.Player(landArea.Home),
 				Forest:           landArea.Forest,
 				Castle:           landArea.Castle,
-				Neighbors:        make([]game.Neighbor, 0),
-				IncomingMoves:    make([]game.Order, 0),
-				IncomingSupports: make([]game.Order, 0),
+				Neighbors:        make([]board.Neighbor, 0),
+				IncomingMoves:    make([]board.Order, 0),
+				IncomingSupports: make([]board.Order, 0),
 			}
 
-			board[area.Name] = area
+			brd[area.Name] = area
 		}
 	}
 
-	for _, sea := range jsonBoard.Seas {
-		area := game.Area{
+	for _, sea := range jsonBrd.Seas {
+		area := board.Area{
 			Name:             sea.Name,
-			Neighbors:        make([]game.Neighbor, 0),
-			IncomingMoves:    make([]game.Order, 0),
-			IncomingSupports: make([]game.Order, 0),
+			Neighbors:        make([]board.Neighbor, 0),
+			IncomingMoves:    make([]board.Order, 0),
+			IncomingSupports: make([]board.Order, 0),
 		}
 
-		board[area.Name] = area
+		brd[area.Name] = area
 	}
 
-	for _, neighbor := range jsonBoard.Neighbors {
-		area1, ok1 := board[neighbor.Area1]
-		area2, ok2 := board[neighbor.Area2]
+	for _, neighbor := range jsonBrd.Neighbors {
+		area1, ok1 := brd[neighbor.Area1]
+		area2, ok2 := brd[neighbor.Area2]
 
 		if !ok1 || !ok2 {
 			return nil, fmt.Errorf(
@@ -98,14 +98,14 @@ func ReadBoard(boardName string) (game.Board, error) {
 			)
 		}
 
-		area1.Neighbors = append(area1.Neighbors, game.Neighbor{
+		area1.Neighbors = append(area1.Neighbors, board.Neighbor{
 			Name:        area2.Name,
 			AcrossWater: neighbor.River || (area1.Sea && !area2.Sea),
 			Cliffs:      neighbor.Cliffs,
 			DangerZone:  neighbor.DangerZone,
 		})
 
-		area2.Neighbors = append(area2.Neighbors, game.Neighbor{
+		area2.Neighbors = append(area2.Neighbors, board.Neighbor{
 			Name:        area1.Name,
 			AcrossWater: neighbor.River || (area2.Sea && !area1.Sea),
 			Cliffs:      neighbor.Cliffs,
@@ -113,5 +113,5 @@ func ReadBoard(boardName string) (game.Board, error) {
 		})
 	}
 
-	return board, nil
+	return brd, nil
 }

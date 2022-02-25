@@ -3,7 +3,7 @@ package game_test
 import (
 	"testing"
 
-	. "hermannm.dev/bfh-server/game"
+	. "hermannm.dev/bfh-server/game/board"
 )
 
 func BenchmarkBoardResolve(b *testing.B) {

@@ -1,31 +1,33 @@
 package game
 
 import (
-	"hermannm.dev/bfh-server/messages"
+	"hermannm.dev/bfh-server/game/board"
+	"hermannm.dev/bfh-server/game/messages"
+	"hermannm.dev/bfh-server/game/validation"
 )
 
 // Initializes a new round of the game.
 func (game *Game) NewRound() {
-	var season Season
+	var season board.Season
 	if len(game.Rounds) == 0 {
-		season = Winter
+		season = board.Winter
 	} else {
 		season = nextSeason(game.Rounds[len(game.Rounds)-1].Season)
 	}
 
 	// Waits for submitted orders from each player, then adds them to the round.
-	received := make(chan []Order, len(game.Messages))
+	received := make(chan []board.Order, len(game.Messages))
 	for player, receiver := range game.Messages {
 		timeout := make(chan struct{})
 		go game.receiveAndValidateOrders(player, receiver, season, received, timeout)
 	}
-	allOrders := make([]Order, 0)
+	allOrders := make([]board.Order, 0)
 	for orderSet := range received {
 		allOrders = append(allOrders, orderSet...)
 	}
 	firstOrders, secondOrders := sortOrders(allOrders, game.Board)
 
-	round := Round{
+	round := board.Round{
 		Season:       season,
 		FirstOrders:  firstOrders,
 		SecondOrders: secondOrders,
@@ -41,24 +43,24 @@ func (game *Game) NewRound() {
 // If invalid, informs the client and waits for a new order set.
 // Function stops if it receives on the timeout channel.
 func (game *Game) receiveAndValidateOrders(
-	player Player,
+	playerID string,
 	receiver *messages.Receiver,
-	season Season,
-	output chan<- []Order,
+	season board.Season,
+	output chan<- []board.Order,
 	timeout <-chan struct{},
 ) {
 	for {
 		select {
 		case submitted := <-receiver.Orders:
-			parsed, err := parseSubmittedOrders(submitted.Orders, player)
+			parsed, err := parseSubmittedOrders(submitted.Orders, playerID)
 			if err != nil {
-				game.Lobby.Players[string(player)].Send(err.Error())
+				game.Lobby.Players[playerID].Send(err.Error())
 				continue
 			}
 
-			err = validateOrderSet(parsed, game.Board, season)
+			err = validation.ValidateOrderSet(parsed, game.Board, season)
 			if err != nil {
-				game.Lobby.Players[string(player)].Send(err.Error())
+				game.Lobby.Players[playerID].Send(err.Error())
 				continue
 			}
 
@@ -72,17 +74,17 @@ func (game *Game) receiveAndValidateOrders(
 
 // Takes a set of orders in the raw message format, and parses them to the game format.
 // Returns the parsed order set, or an error if the parsing failed.
-func parseSubmittedOrders(submitted []messages.Order, player Player) ([]Order, error) {
-	parsed := make([]Order, 0)
+func parseSubmittedOrders(submitted []messages.Order, playerID string) ([]board.Order, error) {
+	parsed := make([]board.Order, 0)
 
 	for _, submittedOrder := range submitted {
-		parsed = append(parsed, Order{
-			Type:   OrderType(submittedOrder.OrderType),
-			Player: player,
+		parsed = append(parsed, board.Order{
+			Type:   board.OrderType(submittedOrder.OrderType),
+			Player: board.Player(playerID),
 			From:   submittedOrder.From,
 			To:     submittedOrder.To,
 			Via:    submittedOrder.Via,
-			Build:  UnitType(submittedOrder.Build),
+			Build:  board.UnitType(submittedOrder.Build),
 		})
 	}
 
@@ -91,12 +93,12 @@ func parseSubmittedOrders(submitted []messages.Order, player Player) ([]Order, e
 
 // Takes a set of orders, and sorts them into two sets based on their sequence in the round.
 // Also takes the board for deciding the sequence.
-func sortOrders(allOrders []Order, board Board) (firstOrders []Order, secondOrders []Order) {
-	firstOrders = make([]Order, 0)
-	secondOrders = make([]Order, 0)
+func sortOrders(allOrders []board.Order, brd board.Board) (firstOrders []board.Order, secondOrders []board.Order) {
+	firstOrders = make([]board.Order, 0)
+	secondOrders = make([]board.Order, 0)
 
 	for _, order := range allOrders {
-		fromArea := board[order.From]
+		fromArea := brd[order.From]
 
 		// If order origin has no unit, or unit of different color,
 		// then order is a second horse move and should be processed after all others.
@@ -112,17 +114,17 @@ func sortOrders(allOrders []Order, board Board) (firstOrders []Order, secondOrde
 }
 
 // Returns the next season given the current season.
-func nextSeason(season Season) Season {
+func nextSeason(season board.Season) board.Season {
 	switch season {
-	case Winter:
-		return Spring
-	case Spring:
-		return Summer
-	case Summer:
-		return Fall
-	case Fall:
-		return Winter
+	case board.Winter:
+		return board.Spring
+	case board.Spring:
+		return board.Summer
+	case board.Summer:
+		return board.Fall
+	case board.Fall:
+		return board.Winter
 	default:
-		return Winter
+		return board.Winter
 	}
 }
