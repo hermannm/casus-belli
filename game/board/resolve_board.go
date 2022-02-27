@@ -97,9 +97,6 @@ outerLoop:
 				if _, skip := processing[areaName]; skip {
 					continue
 				}
-				if area.Order.Type == Move {
-					continue
-				}
 
 				for _, move := range area.IncomingMoves {
 					transportAttacked, dangerZoneCrossings := board.resolveTransports(move, area)

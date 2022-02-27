@@ -64,7 +64,7 @@ func (board Board) resolveAreaMoves(
 
 	// If the destination area has an outgoing move order,
 	// that must be resolved first.
-	if !area.Order.IsNone() && area.Order.Type == Move {
+	if area.Order.Type == Move {
 		return
 	}
 
