@@ -28,7 +28,7 @@ func main() {
 
 	lobby.RegisterEndpoints(nil)
 
-	port := "7000"
+	port := "8000"
 
 	printIPs(port)
 

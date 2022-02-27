@@ -16,7 +16,7 @@ func main() {
 	lobby.RegisterEndpoints(nil)
 	lobby.RegisterLobbyCreationEndpoints(nil, app.Games)
 
-	port := "7000"
+	port := "8000"
 	fmt.Printf("Listening on port %s...\n", port)
 	err := http.ListenAndServe(fmt.Sprintf(":%s", port), nil)
 	log.Fatal(err)
