@@ -1,6 +1,7 @@
 package lobby
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 	"sync"
@@ -155,24 +156,19 @@ func (player *Player) Send(message interface{}) error {
 	return err
 }
 
-// Takes an untyped message, and sends it to all players connected to the lobby.
-// Returns a map of player identifiers to potential errors
-// (whole map should be nil in case of no errors).
-func (lobby *Lobby) SendToAll(message interface{}) map[string]error {
-	var errs map[string]error
-
-	for id, player := range lobby.Players {
-		err := player.Send(message)
-		if err != nil {
-			if errs == nil {
-				errs = make(map[string]error)
-			}
-
-			errs[id] = err
-		}
+// Marshals the given message to JSON and sends it to all connected players.
+// Returns an error if it failed to marshal or send to at least one of the players.
+func (lobby *Lobby) SendToAll(message interface{}) error {
+	marshaledMsg, err := json.Marshal(message)
+	if err != nil {
+		return err
 	}
 
-	return errs
+	for _, player := range lobby.Players {
+		err = player.Socket.WriteMessage(websocket.TextMessage, marshaledMsg)
+	}
+
+	return err
 }
 
 // Listens for messages from the player, and forwards them to the given receiver.
