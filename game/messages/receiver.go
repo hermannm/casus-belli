@@ -33,7 +33,7 @@ func NewReceiver() Receiver {
 }
 
 // Takes a message in byte format, deserializes it, and sends it to the appropriate channel on the receiver.
-func (receiver *Receiver) HandleMessage(rawMessage []byte) {
+func (receiver Receiver) HandleMessage(rawMessage []byte) {
 	var baseMessage Base
 
 	err := json.Unmarshal(rawMessage, &baseMessage)

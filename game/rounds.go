@@ -42,9 +42,9 @@ func (game *Game) NewRound() {
 // If valid, sends the order set to the given output channel.
 // If invalid, informs the client and waits for a new order set.
 // Function stops if it receives on the timeout channel.
-func (game *Game) receiveAndValidateOrders(
+func (game Game) receiveAndValidateOrders(
 	playerID string,
-	receiver *messages.Receiver,
+	receiver messages.Receiver,
 	season board.Season,
 	output chan<- []board.Order,
 	timeout <-chan struct{},

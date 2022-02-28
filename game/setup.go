@@ -13,7 +13,7 @@ type Game struct {
 	Board    board.Board
 	Rounds   []board.Round
 	Lobby    *lobby.Lobby
-	Messages map[string]*messages.Receiver
+	Messages map[string]messages.Receiver
 	Options  GameOptions
 }
 
@@ -28,7 +28,7 @@ func New(boardName string, lob *lobby.Lobby, options GameOptions) (lobby.Game, e
 		return nil, err
 	}
 
-	receivers := make(map[string]*messages.Receiver)
+	receivers := make(map[string]messages.Receiver)
 	for _, area := range brd {
 		areaHome := string(area.Home)
 		if areaHome == "" {
@@ -36,7 +36,7 @@ func New(boardName string, lob *lobby.Lobby, options GameOptions) (lobby.Game, e
 		}
 
 		if _, ok := receivers[areaHome]; !ok {
-			receivers[areaHome] = nil
+			receivers[areaHome] = messages.NewReceiver()
 		}
 	}
 
@@ -83,16 +83,11 @@ outerLoop:
 
 // Creates a new message receiver for the given player tag, and adds it to the game.
 // Returns error if tag is invalid or already taken.
-func (game *Game) AddPlayer(playerID string) (lobby.Receiver, error) {
+func (game Game) AddPlayer(playerID string) (lobby.Receiver, error) {
 	receiver, ok := game.Messages[playerID]
 	if !ok {
 		return nil, errors.New("invalid player tag")
 	}
-	if receiver != nil {
-		return nil, errors.New("player already exists")
-	}
 
-	newReceiver := messages.NewReceiver()
-	game.Messages[playerID] = &newReceiver
 	return receiver, nil
 }
