@@ -1,22 +1,5 @@
 package board
 
-import (
-	"hermannm.dev/bfh-server/game/messages"
-	"hermannm.dev/bfh-server/lobby"
-)
-
-type Game struct {
-	Board    Board
-	Rounds   []Round
-	Lobby    *lobby.Lobby
-	Messages map[Player]*messages.Receiver
-	Options  GameOptions
-}
-
-type GameOptions struct {
-	Thrones bool // Whether the game has the "Raven, Sword and Throne" expansion enabled.
-}
-
 type Player string
 
 type Round struct {
