@@ -15,69 +15,69 @@ func BenchmarkBoardResolve(b *testing.B) {
 
 func setup() (Board, Round) {
 	units := map[string]Unit{
-		"Emman": {Type: Footman, Player: "white"},
+		"Emman": {Type: UnitFootman, Player: "white"},
 
-		"Lomone": {Type: Footman, Player: "green"},
-		"Lusía":  {Type: Footman, Player: "red"},
+		"Lomone": {Type: UnitFootman, Player: "green"},
+		"Lusía":  {Type: UnitFootman, Player: "red"},
 
-		"Gron":  {Type: Footman, Player: "white"},
-		"Gnade": {Type: Footman, Player: "black"},
+		"Gron":  {Type: UnitFootman, Player: "white"},
+		"Gnade": {Type: UnitFootman, Player: "black"},
 
-		"Firril": {Type: Footman, Player: "black"},
+		"Firril": {Type: UnitFootman, Player: "black"},
 
-		"Ovo":       {Type: Footman, Player: "green"},
-		"Mare Elle": {Type: Ship, Player: "green"},
+		"Ovo":       {Type: UnitFootman, Player: "green"},
+		"Mare Elle": {Type: UnitShip, Player: "green"},
 
-		"Winde":      {Type: Footman, Player: "green"},
-		"Mare Gond":  {Type: Ship, Player: "green"},
-		"Mare Ovond": {Type: Ship, Player: "green"},
-		"Mare Unna":  {Type: Ship, Player: "black"},
+		"Winde":      {Type: UnitFootman, Player: "green"},
+		"Mare Gond":  {Type: UnitShip, Player: "green"},
+		"Mare Ovond": {Type: UnitShip, Player: "green"},
+		"Mare Unna":  {Type: UnitShip, Player: "black"},
 
-		"Tusser": {Type: Footman, Player: "white"},
-		"Tige":   {Type: Footman, Player: "black"},
+		"Tusser": {Type: UnitFootman, Player: "white"},
+		"Tige":   {Type: UnitFootman, Player: "black"},
 
-		"Tond": {Type: Footman, Player: "green"},
+		"Tond": {Type: UnitFootman, Player: "green"},
 
-		"Leil":   {Type: Footman, Player: "red"},
-		"Limbol": {Type: Footman, Player: "green"},
-		"Worp":   {Type: Footman, Player: "yellow"},
+		"Leil":   {Type: UnitFootman, Player: "red"},
+		"Limbol": {Type: UnitFootman, Player: "green"},
+		"Worp":   {Type: UnitFootman, Player: "yellow"},
 	}
 
 	orders := []Order{
 		// Auto-success
-		{Type: Move, From: "Emman", To: "Erren"},
+		{Type: OrderMove, From: "Emman", To: "Erren"},
 
 		// PvP battle with defender
-		{Type: Move, From: "Lomone", To: "Lusía"},
+		{Type: OrderMove, From: "Lomone", To: "Lusía"},
 
 		// PvP battle, no defender
-		{Type: Move, From: "Gron", To: "Gewel"},
-		{Type: Move, From: "Gnade", To: "Gewel"},
+		{Type: OrderMove, From: "Gron", To: "Gewel"},
+		{Type: OrderMove, From: "Gnade", To: "Gewel"},
 
 		// PvE battle
-		{Type: Move, From: "Firril", To: "Furie"},
+		{Type: OrderMove, From: "Firril", To: "Furie"},
 
 		// PvE battle, transport not attacked
-		{Type: Move, From: "Ovo", To: "Zona"},
-		{Type: Transport, From: "Mare Elle"},
+		{Type: OrderMove, From: "Ovo", To: "Zona"},
+		{Type: OrderTransport, From: "Mare Elle"},
 
 		// PvE battle, transport attacked
-		{Type: Move, From: "Winde", To: "Fond"},
-		{Type: Transport, From: "Mare Gond"},
-		{Type: Transport, From: "Mare Ovond"},
-		{Type: Move, From: "Mare Unna", To: "Mare Ovond"},
+		{Type: OrderMove, From: "Winde", To: "Fond"},
+		{Type: OrderTransport, From: "Mare Gond"},
+		{Type: OrderTransport, From: "Mare Ovond"},
+		{Type: OrderMove, From: "Mare Unna", To: "Mare Ovond"},
 
 		// Border battle
-		{Type: Move, From: "Tusser", To: "Tige"},
-		{Type: Move, From: "Tige", To: "Tusser"},
+		{Type: OrderMove, From: "Tusser", To: "Tige"},
+		{Type: OrderMove, From: "Tige", To: "Tusser"},
 
 		// Danger zone, dependent move
-		{Type: Move, From: "Tond", To: "Tige"},
+		{Type: OrderMove, From: "Tond", To: "Tige"},
 
 		// Move cycle
-		{Type: Move, From: "Leil", To: "Limbol"},
-		{Type: Move, From: "Limbol", To: "Worp"},
-		{Type: Move, From: "Worp", To: "Leil"},
+		{Type: OrderMove, From: "Leil", To: "Limbol"},
+		{Type: OrderMove, From: "Limbol", To: "Worp"},
+		{Type: OrderMove, From: "Worp", To: "Leil"},
 	}
 
 	board := mockBoard()

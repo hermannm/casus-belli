@@ -10,7 +10,7 @@ import (
 func (game *Game) NewRound() {
 	var season board.Season
 	if len(game.Rounds) == 0 {
-		season = board.Winter
+		season = board.SeasonWinter
 	} else {
 		season = nextSeason(game.Rounds[len(game.Rounds)-1].Season)
 	}
@@ -116,15 +116,15 @@ func sortOrders(allOrders []board.Order, brd board.Board) (firstOrders []board.O
 // Returns the next season given the current season.
 func nextSeason(season board.Season) board.Season {
 	switch season {
-	case board.Winter:
-		return board.Spring
-	case board.Spring:
-		return board.Summer
-	case board.Summer:
-		return board.Fall
-	case board.Fall:
-		return board.Winter
+	case board.SeasonWinter:
+		return board.SeasonSpring
+	case board.SeasonSpring:
+		return board.SeasonSummer
+	case board.SeasonSummer:
+		return board.SeasonFall
+	case board.SeasonFall:
+		return board.SeasonWinter
 	default:
-		return board.Winter
+		return board.SeasonWinter
 	}
 }

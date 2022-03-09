@@ -92,27 +92,27 @@ func main() {
 func testTransportWithDangerZone(brd board.Board) {
 	areas := map[string]board.Unit{
 		"Winde": {
-			Type:   board.Footman,
+			Type:   board.UnitFootman,
 			Player: "green",
 		},
 		"Mare Gond": {
-			Type:   board.Ship,
+			Type:   board.UnitShip,
 			Player: "green",
 		},
 		"Mare Elle": {
-			Type:   board.Ship,
+			Type:   board.UnitShip,
 			Player: "green",
 		},
 		"Mare Ovond": {
-			Type:   board.Ship,
+			Type:   board.UnitShip,
 			Player: "green",
 		},
 		"Mare Duna": {
-			Type:   board.Ship,
+			Type:   board.UnitShip,
 			Player: "red",
 		},
 		"Mare Furie": {
-			Type:   board.Ship,
+			Type:   board.UnitShip,
 			Player: "red",
 		},
 		"Fond": {},
@@ -121,42 +121,42 @@ func testTransportWithDangerZone(brd board.Board) {
 	adjustBoard(brd, areas)
 
 	round := board.Round{
-		Season: board.Spring,
+		Season: board.SeasonSpring,
 		FirstOrders: []board.Order{
 			{
-				Type:   board.Move,
+				Type:   board.OrderMove,
 				Player: "green",
 				From:   "Winde",
 				To:     "Fond",
 				Unit:   brd["Winde"].Unit,
 			},
 			{
-				Type:   board.Transport,
+				Type:   board.OrderTransport,
 				Player: "green",
 				From:   "Mare Gond",
 				Unit:   brd["Mare Gond"].Unit,
 			},
 			{
-				Type:   board.Transport,
+				Type:   board.OrderTransport,
 				Player: "green",
 				From:   "Mare Elle",
 				Unit:   brd["Mare Elle"].Unit,
 			},
 			{
-				Type:   board.Transport,
+				Type:   board.OrderTransport,
 				Player: "green",
 				From:   "Mare Ovond",
 				Unit:   brd["Mare Ovond"].Unit,
 			},
 			{
-				Type:   board.Move,
+				Type:   board.OrderMove,
 				Player: "red",
 				From:   "Mare Duna",
 				To:     "Mare Gond",
 				Unit:   brd["Mare Gond"].Unit,
 			},
 			{
-				Type:   board.Move,
+				Type:   board.OrderMove,
 				Player: "red",
 				From:   "Mare Furie",
 				To:     "Mare Elle",
@@ -171,15 +171,15 @@ func testTransportWithDangerZone(brd board.Board) {
 func testTransportBattle(brd board.Board) {
 	areas := map[string]board.Unit{
 		"Worp": {
-			Type:   board.Footman,
+			Type:   board.UnitFootman,
 			Player: "green",
 		},
 		"Mare Gond": {
-			Type:   board.Ship,
+			Type:   board.UnitShip,
 			Player: "green",
 		},
 		"Mare Elle": {
-			Type:   board.Ship,
+			Type:   board.UnitShip,
 			Player: "red",
 		},
 		"Zona": {},
@@ -188,23 +188,23 @@ func testTransportBattle(brd board.Board) {
 	adjustBoard(brd, areas)
 
 	round := board.Round{
-		Season: board.Spring,
+		Season: board.SeasonSpring,
 		FirstOrders: []board.Order{
 			{
-				Type:   board.Move,
+				Type:   board.OrderMove,
 				Player: "green",
 				From:   "Worp",
 				To:     "Zona",
 				Unit:   brd["Worp"].Unit,
 			},
 			{
-				Type:   board.Transport,
+				Type:   board.OrderTransport,
 				Player: "green",
 				From:   "Mare Gond",
 				Unit:   brd["Mare Gond"].Unit,
 			},
 			{
-				Type:   board.Move,
+				Type:   board.OrderMove,
 				Player: "red",
 				From:   "Mare Elle",
 				To:     "Mare Gond",

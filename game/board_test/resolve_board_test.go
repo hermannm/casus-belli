@@ -9,15 +9,15 @@ import (
 // Tests whether units correctly move in circle without outside interference.
 func TestResolveConflictFreeMoveCycle(t *testing.T) {
 	units := map[string]Unit{
-		"Leil":   {Type: Footman, Player: "red"},
-		"Limbol": {Type: Footman, Player: "green"},
-		"Worp":   {Type: Footman, Player: "yellow"},
+		"Leil":   {Type: UnitFootman, Player: "red"},
+		"Limbol": {Type: UnitFootman, Player: "green"},
+		"Worp":   {Type: UnitFootman, Player: "yellow"},
 	}
 
 	orders := []Order{
-		{Type: Move, From: "Leil", To: "Limbol"},
-		{Type: Move, From: "Limbol", To: "Worp"},
-		{Type: Move, From: "Worp", To: "Leil"},
+		{Type: OrderMove, From: "Leil", To: "Limbol"},
+		{Type: OrderMove, From: "Limbol", To: "Worp"},
+		{Type: OrderMove, From: "Worp", To: "Leil"},
 	}
 
 	board := mockBoard()

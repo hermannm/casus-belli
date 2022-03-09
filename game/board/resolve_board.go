@@ -6,7 +6,7 @@ func (board Board) Resolve(round Round) []Battle {
 	battles := make([]Battle, 0)
 
 	switch round.Season {
-	case Winter:
+	case SeasonWinter:
 		board.resolveWinter(round.FirstOrders)
 	default:
 		firstBattles := board.resolveOrders(round.FirstOrders)
@@ -46,7 +46,7 @@ func (board Board) resolveOrders(orders []Order) []Battle {
 func (board Board) populateAreaOrders(orders []Order) {
 	// First adds all orders except supports, so that supports can check IncomingMoves.
 	for _, order := range orders {
-		if order.Type == Support {
+		if order.Type == OrderSupport {
 			continue
 		}
 
@@ -55,7 +55,7 @@ func (board Board) populateAreaOrders(orders []Order) {
 
 	// Then adds all supports, except in those areas that are attacked.
 	for _, order := range orders {
-		if order.Type != Support || len(board[order.From].IncomingMoves) > 0 {
+		if order.Type != OrderSupport || len(board[order.From].IncomingMoves) > 0 {
 			continue
 		}
 
@@ -158,7 +158,7 @@ func (board Board) crossDangerZones() []Battle {
 	for areaName, area := range board {
 		order := area.Order
 
-		if order.Type != Move && order.Type != Support {
+		if order.Type != OrderMove && order.Type != OrderSupport {
 			continue
 		}
 
@@ -175,7 +175,7 @@ func (board Board) crossDangerZones() []Battle {
 		// If move fails danger zone crossing, the unit dies.
 		// If support fails crossing, only the order fails.
 		if !survived {
-			if order.Type == Move {
+			if order.Type == OrderMove {
 				board[areaName] = area.setUnit(Unit{})
 				board.removeMove(order)
 			} else {
@@ -190,7 +190,7 @@ func (board Board) crossDangerZones() []Battle {
 // Goes through areas with siege orders, and updates the area following the siege.
 func (board Board) resolveSieges() {
 	for areaName, area := range board {
-		if area.Order.IsNone() || area.Order.Type != Besiege {
+		if area.Order.IsNone() || area.Order.Type != OrderBesiege {
 			continue
 		}
 
@@ -210,7 +210,7 @@ func (board Board) resolveWinter(orders []Order) {
 	for _, order := range orders {
 		switch order.Type {
 
-		case Build:
+		case OrderBuild:
 			from := board[order.From]
 			from.Unit = Unit{
 				Player: order.Player,
@@ -218,7 +218,7 @@ func (board Board) resolveWinter(orders []Order) {
 			}
 			board[order.From] = from
 
-		case Move:
+		case OrderMove:
 			from := board[order.From]
 			to := board[order.To]
 

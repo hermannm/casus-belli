@@ -133,7 +133,7 @@ func (area Area) transportingNeighbors(board Board, exclude map[string]struct{})
 		_, excluded := exclude[neighbor.Name]
 
 		if excluded ||
-			neighborArea.Order.Type != Transport ||
+			neighborArea.Order.Type != OrderTransport ||
 			neighborArea.Unit.Player != area.Unit.Player {
 			continue
 		}

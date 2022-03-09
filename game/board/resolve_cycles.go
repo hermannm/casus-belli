@@ -50,7 +50,7 @@ func (board Board) resolveCycle(
 // Returns the list of moves in the cycle, or nil if no cycle was found.
 // Also returns whether any area in the cycle is attacked from outside the cycle.
 func (board Board) discoverCycle(order Order, firstAreaName string) (cycle []Order, outsideAttackers bool) {
-	if order.IsNone() || order.Type != Move {
+	if order.IsNone() || order.Type != OrderMove {
 		return nil, false
 	}
 
@@ -78,13 +78,13 @@ func (board Board) discoverCycle(order Order, firstAreaName string) (cycle []Ord
 // as well as whether the two moves are from the same player.
 func (board Board) discoverTwoWayCycle(area1 Area) (isCycle bool, area2 Area, samePlayer bool) {
 	order1 := area1.Order
-	if order1.Type != Move {
+	if order1.Type != OrderMove {
 		return false, Area{}, false
 	}
 
 	area2 = board[area1.Order.To]
 	order2 := area2.Order
-	if order2.Type != Move {
+	if order2.Type != OrderMove {
 		return false, Area{}, false
 	}
 

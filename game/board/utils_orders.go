@@ -39,7 +39,7 @@ func (board Board) removeOriginUnit(move Order) {
 // Returns whether the order succeeded, and the resulting battle for use by the client.
 func (order Order) crossDangerZone(dangerZone string) (survived bool, result Battle) {
 	diceMod := Modifier{
-		Type:  DiceMod,
+		Type:  ModifierDice,
 		Value: rollDice(),
 	}
 
@@ -69,9 +69,9 @@ func (board Board) addOrder(order Order) {
 
 	to := board[order.To]
 	switch order.Type {
-	case Move:
+	case OrderMove:
 		to.IncomingMoves = append(to.IncomingMoves, order)
-	case Support:
+	case OrderSupport:
 		to.IncomingSupports = append(to.IncomingSupports, order)
 	}
 	board[order.To] = to

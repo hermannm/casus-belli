@@ -14,7 +14,7 @@ func (area Area) defenseModifiers() []Modifier {
 	mods = appendUnitMod(mods, area.Unit.Type)
 
 	mods = append(mods, Modifier{
-		Type:  DiceMod,
+		Type:  ModifierDice,
 		Value: rollDice(),
 	})
 
@@ -35,7 +35,7 @@ func (move Order) attackModifiers(area Area, otherAttackers bool, borderBattle b
 	// and thus adds surprise modifier to attacker coming across such zones.
 	if adjacent && neighbor.DangerZone != "" {
 		mods = append(mods, Modifier{
-			Type:  SurpriseMod,
+			Type:  ModifierSurprise,
 			Value: 1,
 		})
 	}
@@ -48,14 +48,14 @@ func (move Order) attackModifiers(area Area, otherAttackers bool, borderBattle b
 
 		if area.Forest {
 			mods = append(mods, Modifier{
-				Type:  ForestMod,
+				Type:  ModifierForest,
 				Value: -1,
 			})
 		}
 
 		if area.Castle {
 			mods = append(mods, Modifier{
-				Type:  CastleMod,
+				Type:  ModifierCastle,
 				Value: -1,
 			})
 		}
@@ -64,16 +64,16 @@ func (move Order) attackModifiers(area Area, otherAttackers bool, borderBattle b
 		// Moves across rivers or from sea to land also take this penalty.
 		if !adjacent || neighbor.AcrossWater {
 			mods = append(mods, Modifier{
-				Type:  WaterMod,
+				Type:  ModifierWater,
 				Value: -1,
 			})
 		}
 	}
 
 	// Catapults get a bonus only in attacks on castle areas.
-	if move.Unit.Type == Catapult && area.Castle {
+	if move.Unit.Type == UnitCatapult && area.Castle {
 		mods = append(mods, Modifier{
-			Type:  UnitMod,
+			Type:  ModifierUnit,
 			Value: +1,
 		})
 	} else {
@@ -81,7 +81,7 @@ func (move Order) attackModifiers(area Area, otherAttackers bool, borderBattle b
 	}
 
 	mods = append(mods, Modifier{
-		Type:  DiceMod,
+		Type:  ModifierDice,
 		Value: rollDice(),
 	})
 
@@ -91,9 +91,9 @@ func (move Order) attackModifiers(area Area, otherAttackers bool, borderBattle b
 // Appends unit modifier to the given list if given unit type provides a modifier.
 func appendUnitMod(mods []Modifier, unitType UnitType) []Modifier {
 	switch unitType {
-	case Footman:
+	case UnitFootman:
 		return append(mods, Modifier{
-			Type:  UnitMod,
+			Type:  ModifierUnit,
 			Value: +1,
 		})
 	default:
@@ -153,7 +153,7 @@ func appendSupportMods(results map[Player]Result, area Area, includeDefender boo
 
 		if result, isPlayer := results[support.to]; isPlayer {
 			result.Parts = append(result.Parts, Modifier{
-				Type:        SupportMod,
+				Type:        ModifierSupport,
 				Value:       1,
 				SupportFrom: support.from,
 			})

@@ -111,36 +111,36 @@ const DangerZoneRequirement int = 3
 
 // Valid values for a round's season.
 const (
-	Winter Season = "winter"
-	Spring Season = "spring"
-	Summer Season = "summer"
-	Fall   Season = "fall"
+	SeasonWinter Season = "winter"
+	SeasonSpring Season = "spring"
+	SeasonSummer Season = "summer"
+	SeasonFall   Season = "fall"
 )
 
 // Valid values for a player unit's type.
 const (
-	Footman  UnitType = "footman"
-	Horse    UnitType = "horse"
-	Ship     UnitType = "ship"
-	Catapult UnitType = "catapult"
+	UnitFootman  UnitType = "footman"
+	UnitHorse    UnitType = "horse"
+	UnitShip     UnitType = "ship"
+	UnitCatapult UnitType = "catapult"
 )
 
 // Valid values for a player-submitted order's type.
 const (
-	Move      OrderType = "move"
-	Support   OrderType = "support"
-	Transport OrderType = "transport"
-	Besiege   OrderType = "besiege"
-	Build     OrderType = "build"
+	OrderMove      OrderType = "move"
+	OrderSupport   OrderType = "support"
+	OrderTransport OrderType = "transport"
+	OrderBesiege   OrderType = "besiege"
+	OrderBuild     OrderType = "build"
 )
 
 // Valid values for a result modifier's type.
 const (
-	DiceMod     ModifierType = "dice"
-	UnitMod     ModifierType = "unit"
-	ForestMod   ModifierType = "forest"
-	CastleMod   ModifierType = "castle"
-	WaterMod    ModifierType = "water"
-	SurpriseMod ModifierType = "surprise"
-	SupportMod  ModifierType = "support"
+	ModifierDice     ModifierType = "dice"
+	ModifierUnit     ModifierType = "unit"
+	ModifierForest   ModifierType = "forest"
+	ModifierCastle   ModifierType = "castle"
+	ModifierWater    ModifierType = "water"
+	ModifierSurprise ModifierType = "surprise"
+	ModifierSupport  ModifierType = "support"
 )

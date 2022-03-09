@@ -26,7 +26,7 @@ func validateOrder(order board.Order, b board.Board, season board.Season) error 
 	}
 
 	switch season {
-	case board.Winter:
+	case board.SeasonWinter:
 		return validateWinterOrder(order, from, b)
 	default:
 		return validateNonWinterOrder(order, from, b)
@@ -39,13 +39,13 @@ func validateNonWinterOrder(order board.Order, from board.Area, b board.Board) e
 	}
 
 	switch order.Type {
-	case board.Move:
+	case board.OrderMove:
 		fallthrough
-	case board.Support:
+	case board.OrderSupport:
 		return validateMoveOrSupport(order, from, b)
-	case board.Besiege:
+	case board.OrderBesiege:
 		fallthrough
-	case board.Transport:
+	case board.OrderTransport:
 		return validateBesiegeOrTransport(order, from)
 	default:
 		return errors.New("invalid order type")
@@ -66,7 +66,7 @@ func validateMoveOrSupport(order board.Order, from board.Area, b board.Board) er
 		return errors.New("destination not adjacent to origin")
 	}
 
-	if from.Unit.Type == board.Ship {
+	if from.Unit.Type == board.UnitShip {
 		if !(to.Sea || to.IsCoast(b)) {
 			return errors.New("ship order destination must be sea or coast")
 		}
@@ -77,9 +77,9 @@ func validateMoveOrSupport(order board.Order, from board.Area, b board.Board) er
 	}
 
 	switch order.Type {
-	case board.Move:
+	case board.OrderMove:
 		return validateMove(order, from, to)
-	case board.Support:
+	case board.OrderSupport:
 		return validateSupport(order, from, to)
 	}
 
@@ -91,7 +91,7 @@ func validateMove(order board.Order, from board.Area, to board.Area) error {
 		secondHorseMove := false
 
 		for _, firstOrder := range from.IncomingMoves {
-			if from.Unit.Type == board.Horse &&
+			if from.Unit.Type == board.UnitHorse &&
 				order.To == order.From &&
 				firstOrder.Player == order.Player {
 
@@ -117,9 +117,9 @@ func validateBesiegeOrTransport(order board.Order, from board.Area) error {
 	}
 
 	switch order.Type {
-	case board.Besiege:
+	case board.OrderBesiege:
 		return validateBesiege(order, from)
-	case board.Transport:
+	case board.OrderTransport:
 		return validateTransport(order, from)
 	default:
 		return errors.New("invalid order type")
@@ -135,7 +135,7 @@ func validateBesiege(order board.Order, from board.Area) error {
 		return errors.New("besieged area cannot already be controlled")
 	}
 
-	if from.Unit.Type == board.Ship {
+	if from.Unit.Type == board.UnitShip {
 		return errors.New("ships cannot besiege")
 	}
 
@@ -143,7 +143,7 @@ func validateBesiege(order board.Order, from board.Area) error {
 }
 
 func validateTransport(order board.Order, from board.Area) error {
-	if from.Unit.Type != board.Ship {
+	if from.Unit.Type != board.UnitShip {
 		return errors.New("only ships can transport")
 	}
 
@@ -152,9 +152,9 @@ func validateTransport(order board.Order, from board.Area) error {
 
 func validateWinterOrder(order board.Order, from board.Area, b board.Board) error {
 	switch order.Type {
-	case board.Move:
+	case board.OrderMove:
 		return validateWinterMove(order, from, b)
-	case board.Build:
+	case board.OrderBuild:
 		return validateBuild(order, from, b)
 	}
 
@@ -175,7 +175,7 @@ func validateWinterMove(order board.Order, from board.Area, b board.Board) error
 		return errors.New("must control destination area in winter move")
 	}
 
-	if from.Unit.Type == board.Ship && !to.IsCoast(b) {
+	if from.Unit.Type == board.UnitShip && !to.IsCoast(b) {
 		return errors.New("ship winter move destination must be coast")
 	}
 
@@ -192,15 +192,15 @@ func validateBuild(order board.Order, from board.Area, b board.Board) error {
 	}
 
 	switch order.Build {
-	case board.Ship:
+	case board.UnitShip:
 		if !from.IsCoast(b) {
 			return errors.New("ships can only be built on coast")
 		}
-	case board.Footman:
+	case board.UnitFootman:
 		break
-	case board.Horse:
+	case board.UnitHorse:
 		break
-	case board.Catapult:
+	case board.UnitCatapult:
 		break
 	default:
 		return errors.New("invalid unit type")
