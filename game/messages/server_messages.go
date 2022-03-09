@@ -1,10 +1,10 @@
 package messages
 
-// Message from server to client.
+// Messages from server to client.
 const (
-	AskSupportType         = "askSupport"
-	OrdersReceivedType     = "ordersReceived"
-	OrdersConfirmationType = "ordersConfirmation"
+	MessageAskSupport         = "askSupport"
+	MessageOrdersReceived     = "ordersReceived"
+	MessageOrdersConfirmation = "ordersConfirmation"
 )
 
 // Message sent from server when asking a supporting player who to support in an embattled area.

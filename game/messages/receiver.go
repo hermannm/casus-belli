@@ -48,7 +48,7 @@ func (receiver Receiver) HandleMessage(rawMessage []byte) {
 
 	switch baseMessage.Type {
 
-	case SubmitOrdersType:
+	case MessageSubmitOrders:
 		var ordersMessage SubmitOrders
 		err := json.Unmarshal(rawMessage, &ordersMessage)
 		if err != nil {
@@ -58,7 +58,7 @@ func (receiver Receiver) HandleMessage(rawMessage []byte) {
 
 		receiver.Orders <- ordersMessage
 
-	case GiveSupportType:
+	case MessageGiveSupport:
 		var supportMessage GiveSupport
 		err := json.Unmarshal(rawMessage, &supportMessage)
 		if err != nil {
@@ -68,7 +68,7 @@ func (receiver Receiver) HandleMessage(rawMessage []byte) {
 
 		receiver.Support <- supportMessage
 
-	case QuitType:
+	case MessageQuit:
 		var quitMessage Quit
 		err := json.Unmarshal(rawMessage, &quitMessage)
 		if err != nil {
@@ -78,7 +78,7 @@ func (receiver Receiver) HandleMessage(rawMessage []byte) {
 
 		receiver.Quit <- quitMessage
 
-	case KickType:
+	case MessageKick:
 		var kickMessage Kick
 		err := json.Unmarshal(rawMessage, &kickMessage)
 		if err != nil {
@@ -88,7 +88,7 @@ func (receiver Receiver) HandleMessage(rawMessage []byte) {
 
 		receiver.Kick <- kickMessage
 
-	case WinterVoteType:
+	case MessageWinterVote:
 		var winterVoteMessage WinterVote
 		err := json.Unmarshal(rawMessage, &winterVoteMessage)
 		if err != nil {
@@ -98,7 +98,7 @@ func (receiver Receiver) HandleMessage(rawMessage []byte) {
 
 		receiver.WinterVote <- winterVoteMessage
 
-	case SwordType:
+	case MessageSword:
 		var swordMessage Sword
 		err := json.Unmarshal(rawMessage, &swordMessage)
 		if err != nil {
@@ -108,7 +108,7 @@ func (receiver Receiver) HandleMessage(rawMessage []byte) {
 
 		receiver.Sword <- swordMessage
 
-	case RavenType:
+	case MessageRaven:
 		var ravenMessage Raven
 		err := json.Unmarshal(rawMessage, &ravenMessage)
 		if err != nil {

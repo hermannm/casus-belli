@@ -1,18 +1,18 @@
 package messages
 
-// Message from client to server.
+// Messages from client to server.
 const (
-	SubmitOrdersType = "submitOrders"
-	GiveSupportType  = "giveSupport"
-	QuitType         = "quit"
-	KickType         = "kick"
+	MessageSubmitOrders = "submitOrders"
+	MessageGiveSupport  = "giveSupport"
+	MessageQuit         = "quit"
+	MessageKick         = "kick"
 )
 
-// Client message used for the throne expansion.
+// Client messages used for the throne expansion.
 const (
-	WinterVoteType = "winterVote"
-	SwordType      = "sword"
-	RavenType      = "raven"
+	MessageWinterVote = "winterVote"
+	MessageSword      = "sword"
+	MessageRaven      = "raven"
 )
 
 // Message sent from client when submitting orders.
