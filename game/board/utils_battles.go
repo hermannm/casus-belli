@@ -40,7 +40,7 @@ func (battle Battle) parseResults() (winners []Player, losers []Player) {
 
 		// Checks that order meets the requirement for crossing the danger zone.
 		if battle.DangerZone != "" {
-			if result.Total >= DangerZoneRequirement {
+			if result.Total >= RequirementDangerZone {
 				return []Player{result.Move.Player}, make([]Player, 0)
 			} else {
 				return make([]Player, 0), []Player{result.Move.Player}
@@ -48,7 +48,7 @@ func (battle Battle) parseResults() (winners []Player, losers []Player) {
 		}
 
 		// Checks that order meets the requirement for conquering the neutral area.
-		if result.Total >= ConquerRequirement {
+		if result.Total >= RequirementConquer {
 			return []Player{result.Move.Player}, make([]Player, 0)
 		} else {
 			return make([]Player, 0), []Player{result.Move.Player}

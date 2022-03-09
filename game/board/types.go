@@ -103,15 +103,20 @@ type Modifier struct {
 // The source of a modifier.
 type ModifierType string
 
-// Number to beat when attempting to conquer a neutral area.
-const ConquerRequirement int = 4
-
-// Number to beat when attempting to cross a danger zone.
-const DangerZoneRequirement int = 3
-
-// Valid values for a round's season.
+// Numbers to beat in different types of battles.
 const (
-	SeasonWinter Season = "winter"
+	// Number to beat when attempting to conquer a neutral area.
+	RequirementConquer int = 4
+
+	// Number to beat when attempting to cross a danger zone.
+	RequirementDangerZone int = 3
+)
+
+// Rounds where only build and internal move orders are allowed.
+const SeasonWinter Season = "winter"
+
+// Rounds where only move, support, transport and besiege orders are allowed.
+const (
 	SeasonSpring Season = "spring"
 	SeasonSummer Season = "summer"
 	SeasonFall   Season = "fall"
@@ -119,28 +124,58 @@ const (
 
 // Valid values for a player unit's type.
 const (
-	UnitFootman  UnitType = "footman"
-	UnitHorse    UnitType = "horse"
-	UnitShip     UnitType = "ship"
+	// A land unit that gets a +1 modifier in battle.
+	UnitFootman UnitType = "footman"
+
+	// A land unit that moves 2 areas at a time.
+	UnitHorse UnitType = "horse"
+
+	// A unit that can move into sea areas and coastal areas.
+	UnitShip UnitType = "ship"
+
+	// A land unit that instantly conquers neutral castles, and gets a +1 modifier in attacks on castles.
 	UnitCatapult UnitType = "catapult"
 )
 
 // Valid values for a player-submitted order's type.
 const (
-	OrderMove      OrderType = "move"
-	OrderSupport   OrderType = "support"
+	// An order for a unit to move from one area to another.
+	// Includes internal moves in winter.
+	OrderMove OrderType = "move"
+
+	// An order for a unit to support battle in an adjacent area.
+	OrderSupport OrderType = "support"
+
+	// For ship unit at sea: an order to transport a land unit across the sea.
 	OrderTransport OrderType = "transport"
-	OrderBesiege   OrderType = "besiege"
-	OrderBuild     OrderType = "build"
+
+	// For land unit in unconquered castle area: an order to besiege the castle.
+	OrderBesiege OrderType = "besiege"
+
+	// For player-controlled area in winter: an order for what type of unit to build in the area.
+	OrderBuild OrderType = "build"
 )
 
 // Valid values for a result modifier's type.
 const (
-	ModifierDice     ModifierType = "dice"
-	ModifierUnit     ModifierType = "unit"
-	ModifierForest   ModifierType = "forest"
-	ModifierCastle   ModifierType = "castle"
-	ModifierWater    ModifierType = "water"
+	// Bonus from a random dice roll.
+	ModifierDice ModifierType = "dice"
+
+	// Bonus for the type of unit.
+	ModifierUnit ModifierType = "unit"
+
+	// Penalty for attacking a neutral or defended forested area.
+	ModifierForest ModifierType = "forest"
+
+	// Penalty for attacking a neutral or defended castle area.
+	ModifierCastle ModifierType = "castle"
+
+	// Penalty for attacking across a river, from the sea, or across a transport.
+	ModifierWater ModifierType = "water"
+
+	// Bonus for attacking across a danger zone and surviving.
 	ModifierSurprise ModifierType = "surprise"
-	ModifierSupport  ModifierType = "support"
+
+	// Bonus from supporting player in a battle.
+	ModifierSupport ModifierType = "support"
 )
