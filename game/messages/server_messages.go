@@ -43,12 +43,16 @@ type OrderWithStatus struct {
 	Status string `json:"status"`
 }
 
-type Battle []Result
+type Battle struct {
+	Results    []Result
+	DangerZone string
+}
 
 type Result struct {
-	Total  int
-	Parts  []Modifier
-	Player string
+	Total        int
+	Parts        []Modifier
+	Move         Order
+	DefenderArea string
 }
 
 type Modifier struct {
