@@ -5,9 +5,14 @@ type Player string
 
 // A set of player-submitted orders for a round of the game.
 type Round struct {
-	Season       Season  // Affects the type of orders that can be played in the round.
-	FirstOrders  []Order // The main set of orders for the round.
-	SecondOrders []Order // Set of orders that are known to be executed after the first orders (e.g. horse moves).
+	// Affects the type of orders that can be played in the round.
+	Season Season `json:"season"`
+
+	// The main set of orders for the round.
+	FirstOrders []Order `json:"firstOrders"`
+
+	// Set of orders that are known to be executed after the first orders (e.g. horse moves).
+	SecondOrders []Order `json:"secondOrders"`
 }
 
 // Current season of a round (affects the type of orders that can be played).
@@ -19,37 +24,68 @@ type Board map[string]Area
 
 // An area on the board map.
 type Area struct {
-	Name      string     // Name of the area on the board.
-	Neighbors []Neighbor // Adjacent areas.
+	// Name of the area on the board.
+	Name string `json:"name"`
 
-	Sea bool // Whether the area is a sea area that can only have ship units.
+	// Adjacent areas.
+	Neighbors []Neighbor `json:"neighbors"`
 
-	Forest bool   // For land areas: affects the difficulty of conquering the area.
-	Castle bool   // For land areas: affects the difficulty of conquering the area, and the points gained from it.
-	Nation string // For land areas: the collection of areas that the area belongs to (affects units gained from conquering).
-	Home   Player // For land areas that are a starting area for a player.
+	// Whether the area is a sea area that can only have ship units.
+	Sea bool `json:"sea"`
 
-	Unit       Unit   // The unit that currently occupies the area.
-	Control    Player // The player that currently controls the area.
-	SiegeCount int    // For land areas with castles: the number of times an occupying unit has besieged the castle.
+	// For land areas: affects the difficulty of conquering the area.
+	Forest bool `json:"forest"`
 
-	Order            Order   // Order for the occupying unit in the area. Resets every round.
-	IncomingMoves    []Order // Incoming move orders to the area. Resets every round.
-	IncomingSupports []Order // Incoming support orders to the area. Resets every round.
+	// For land areas: affects the difficulty of conquering the area, and the points gained from it.
+	Castle bool `json:"castle"`
+
+	// For land areas: the collection of areas that the area belongs to (affects units gained from conquering).
+	Nation string `json:"nation"`
+
+	// For land areas that are a starting area for a player.
+	Home Player `json:"home,omitempty"`
+
+	// The unit that currently occupies the area.
+	Unit Unit `json:"unit"`
+
+	// The player that currently controls the area.
+	Control Player `json:"control,omitempty"`
+
+	// For land areas with castles: the number of times an occupying unit has besieged the castle.
+	SiegeCount int `json:"siegeCount"`
+
+	// Order for the occupying unit in the area. Resets every round.
+	Order Order `json:"-"` // Excluded from JSON responses.
+
+	// Incoming move orders to the area. Resets every round.
+	IncomingMoves []Order `json:"-"` // Excluded from JSON responses.
+
+	// Incoming support orders to the area. Resets every round.
+	IncomingSupports []Order `json:"-"` // Excluded from JSON responses.
 }
 
 // The relationship between two adjacent areas.
 type Neighbor struct {
-	Name        string // Name of the adjacent area.
-	AcrossWater bool   // Whether a river separates the two areas.
-	Cliffs      bool   // Whether coast between neighboring land areas have cliffs (impassable to ships).
-	DangerZone  string // If not "": the name of the danger zone that the neighboring area lies across (requires check to pass).
+	// Name of the adjacent area.
+	Name string `json:"name"`
+
+	// Whether a river separates the two areas.
+	AcrossWater bool `json:"acrossWater"`
+
+	// Whether coast between neighboring land areas have cliffs (impassable to ships).
+	Cliffs bool `json:"cliffs"`
+
+	// If not "": the name of the danger zone that the neighboring area lies across (requires check to pass).
+	DangerZone string `json:"dangerZone"`
 }
 
 // A player unit on the board.
 type Unit struct {
-	Type   UnitType // Affects how the unit moves and its battle capabilities.
-	Player Player   // The player owning the unit.
+	// Affects how the unit moves and its battle capabilities.
+	Type UnitType `json:"unit"`
+
+	// The player owning the unit.
+	Player Player `json:"player"`
 }
 
 // Type of player unit on the board (affects how it moves and its battle capabilities).
@@ -58,16 +94,26 @@ type UnitType string
 
 // An order submitted by a player for one of their units in a given round.
 type Order struct {
-	Type   OrderType // The type of order submitted. Restricted by unit type and area.
-	Player Player    // The player submitting the order.
-	Unit   Unit      // The unit the order affects.
-	From   string    // Name of the area where the order is placed.
+	// The type of order submitted. Restricted by unit type and area.
+	Type OrderType `json:"type"`
 
-	To string // For move and support orders: name of destination area.
+	// The player submitting the order.
+	Player Player `json:"player"`
 
-	Via string // For move orders: name of DangerZone the order tries to pass through, if any.
+	// The unit the order affects.
+	Unit Unit `json:"unit"`
 
-	Build UnitType // For build orders: type of unit to build.
+	// Name of the area where the order is placed.
+	From string `json:"from"`
+
+	// For move and support orders: name of destination area.
+	To string `json:"to"`
+
+	// For move orders: name of DangerZone the order tries to pass through, if any.
+	Via string `json:"via"`
+
+	// For build orders: type of unit to build.
+	Build UnitType `json:"build"`
 }
 
 // Type of submitted order (restricted by unit type and area).
@@ -80,24 +126,37 @@ type Battle struct {
 	// The dice and modifier results of the battle.
 	// If length is one, the battle was a neutral conquer attempt.
 	// If length is more than one, the battle was between players.
-	Results []Result
+	Results []Result `json:"results"`
 
-	DangerZone string // In case of danger zone crossing: name of the danger zone.
+	// In case of danger zone crossing: name of the danger zone.
+	DangerZone string `json:"dangerZone"`
 }
 
 // Dice and modifier result for a battle.
 type Result struct {
-	Total        int        // The sum of the dice roll and modifiers.
-	Parts        []Modifier // The modifiers comprising the result, including the dice roll.
-	Move         Order      // If result of a move order to the battle: the move order in question.
-	DefenderArea string     // If result of a defending unit in an area: the name of the area.
+	// The sum of the dice roll and modifiers.
+	Total int `json:"total"`
+
+	// The modifiers comprising the result, including the dice roll.
+	Parts []Modifier `json:"parts"`
+
+	// If result of a move order to the battle: the move order in question.
+	Move Order `json:"move"`
+
+	// If result of a defending unit in an area: the name of the area.
+	DefenderArea string `json:"defenderArea"`
 }
 
 // A typed number that adds to a player's result in a battle.
 type Modifier struct {
-	Type        ModifierType // The source of the modifier.
-	Value       int          // The positive or negative number that modifies the result total.
-	SupportFrom Player       // If modifier was from a support: the supporting player.
+	// The source of the modifier.
+	Type ModifierType `json:"type"`
+
+	// The positive or negative number that modifies the result total.
+	Value int `json:"value"`
+
+	// If modifier was from a support: the supporting player.
+	SupportFrom Player `json:"supportFrom"`
 }
 
 // The source of a modifier.
