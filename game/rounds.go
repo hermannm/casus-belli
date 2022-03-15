@@ -7,35 +7,44 @@ import (
 )
 
 // Initializes a new round of the game.
-func (game *Game) NewRound() {
+func (game *Game) Start() {
 	var season board.Season
-	if len(game.Rounds) == 0 {
-		season = board.SeasonWinter
-	} else {
-		season = nextSeason(game.Rounds[len(game.Rounds)-1].Season)
-	}
+	var winner board.Player
 
-	// Waits for submitted orders from each player, then adds them to the round.
-	received := make(chan []board.Order, len(game.Messages))
-	for player, receiver := range game.Messages {
-		timeout := make(chan struct{})
-		go game.receiveAndValidateOrders(player, receiver, season, received, timeout)
-	}
-	allOrders := make([]board.Order, 0)
-	for orderSet := range received {
-		allOrders = append(allOrders, orderSet...)
-	}
-	firstOrders, secondOrders := sortOrders(allOrders, game.Board)
+	for winner == "" {
+		season = nextSeason(season)
 
-	round := board.Round{
-		Season:       season,
-		FirstOrders:  firstOrders,
-		SecondOrders: secondOrders,
+		// Waits for submitted orders from each player, then adds them to the round.
+		received := make(chan []board.Order, len(game.Messages))
+		for player, receiver := range game.Messages {
+			timeout := make(chan struct{})
+			go game.receiveAndValidateOrders(player, receiver, season, received, timeout)
+		}
+		allOrders := make([]board.Order, 0)
+		for orderSet := range received {
+			allOrders = append(allOrders, orderSet...)
+		}
+		firstOrders, secondOrders := sortOrders(allOrders, game.Board)
+
+		round := board.Round{
+			Season:       season,
+			FirstOrders:  firstOrders,
+			SecondOrders: secondOrders,
+		}
+
+		game.Rounds = append(game.Rounds, round)
+
+		battles := game.Board.Resolve(round)
+
+		for _, battle := range battles {
+			game.Lobby.SendToAll(messages.BattleResult{
+				Base: messages.Base{
+					Type: messages.MessageBattleResult,
+				},
+				Battle: battle,
+			})
+		}
 	}
-
-	game.Rounds = append(game.Rounds, round)
-
-	game.Board.Resolve(round)
 }
 
 // Waits for the given player to submit orders, then validates them.
@@ -52,19 +61,16 @@ func (game Game) receiveAndValidateOrders(
 	for {
 		select {
 		case submitted := <-receiver.Orders:
-			parsed, err := parseSubmittedOrders(submitted.Orders, playerID)
+			orders := submitted.Orders
+			addOrderPlayer(orders, playerID)
+
+			err := validation.ValidateOrderSet(orders, game.Board, season)
 			if err != nil {
 				game.Lobby.Players[playerID].Send(err.Error())
 				continue
 			}
 
-			err = validation.ValidateOrderSet(parsed, game.Board, season)
-			if err != nil {
-				game.Lobby.Players[playerID].Send(err.Error())
-				continue
-			}
-
-			output <- parsed
+			output <- orders
 			return
 		case <-timeout:
 			return
@@ -72,23 +78,13 @@ func (game Game) receiveAndValidateOrders(
 	}
 }
 
-// Takes a set of orders in the raw message format, and parses them to the game format.
-// Returns the parsed order set, or an error if the parsing failed.
-func parseSubmittedOrders(submitted []messages.Order, playerID string) ([]board.Order, error) {
-	parsed := make([]board.Order, 0)
-
-	for _, submittedOrder := range submitted {
-		parsed = append(parsed, board.Order{
-			Type:   board.OrderType(submittedOrder.OrderType),
-			Player: board.Player(playerID),
-			From:   submittedOrder.From,
-			To:     submittedOrder.To,
-			Via:    submittedOrder.Via,
-			Build:  board.UnitType(submittedOrder.Build),
-		})
+// Takes a set of orders, and mutates it by adding the given player ID
+// to the Player field on every order.
+func addOrderPlayer(orders []board.Order, playerID string) {
+	for i, order := range orders {
+		order.Player = board.Player(playerID)
+		orders[i] = order
 	}
-
-	return parsed, nil
 }
 
 // Takes a set of orders, and sorts them into two sets based on their sequence in the round.

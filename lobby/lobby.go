@@ -41,6 +41,9 @@ type Game interface {
 
 	// Returns the range of possible player IDs for this game.
 	PlayerIDs() []string
+
+	// Starts the game.
+	Start()
 }
 
 // Handles incoming messages from a client.
