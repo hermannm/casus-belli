@@ -101,7 +101,9 @@ type Order struct {
 	Player Player `json:"player"`
 
 	// The unit the order affects.
-	Unit Unit `json:"unit"`
+	// Excluded from JSON messages, as clients can deduce this from the From field.
+	// Server includes this field on the order to keep track of units between battles.
+	Unit Unit `json:"-"`
 
 	// Name of the area where the order is placed.
 	From string `json:"from"`

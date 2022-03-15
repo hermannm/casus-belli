@@ -1,62 +1,52 @@
 package messages
 
+import (
+	"hermannm.dev/bfh-server/game/board"
+)
+
 // Messages from server to client.
 const (
 	MessageAskSupport         = "askSupport"
 	MessageOrdersReceived     = "ordersReceived"
 	MessageOrdersConfirmation = "ordersConfirmation"
+	MessageBattleResult       = "battleResult"
 )
 
 // Message sent from server when asking a supporting player who to support in an embattled area.
 type AskSupport struct {
-	Base
-	From     string   `json:"from"`
-	To       string   `json:"to"`
-	Battlers []string `json:"battlers"` // List of possible players to support in the battle.
+	Base // Type: MessageAskSupport.
+
+	// The area from which support is asked, where the asked player should have a support order.
+	From string `json:"from"`
+
+	// The embattled area that the player is asked to support.
+	To string `json:"to"`
+
+	// List of possible players to support in the battle.
+	Battlers []string `json:"battlers"`
 }
 
 // Message sent from server to all clients when valid orders are received from all players.
 type OrdersReceived struct {
-	Base
-	Orders map[string][]Order `json:"orders"` // Maps a player's ID to their submitted orders.
+	Base // Type: MessageOrdersReceived.
+
+	// Maps a player's ID to their submitted orders.
+	Orders map[string][]board.Order `json:"orders"`
 }
 
 // Message sent from server to all clients when valid orders are received from a player.
 // Used to show who the server is waiting for.
 type OrdersConfirmation struct {
-	Base
-	Player string `json:"player"` // The player who submitted orders.
+	Base // Type: MessageOrdersConfirmation.
+
+	// The player who submitted orders.
+	Player string `json:"player"`
 }
 
-// Message sent from server to all clients when the results for a round are calculated.
-type RoundResult struct {
-	Base
-	// Maps a player's ID to their submitted orders, now with added Status field.
-	Orders map[string][]OrderWithStatus `json:"orders"`
-	// Maps area names to the chronological list of battles that took place in that area.
-	Battles map[string][]Battle `json:"battles"`
-}
+// Message sent from server to all clients when a battle result is calculated.
+type BattleResult struct {
+	Base // Type: MessageBattleResult.
 
-// Order message with added Status field for showing the server's calculated result.
-type OrderWithStatus struct {
-	Order
-	Status string `json:"status"`
-}
-
-type Battle struct {
-	Results    []Result
-	DangerZone string
-}
-
-type Result struct {
-	Total        int
-	Parts        []Modifier
-	Move         Order
-	DefenderArea string
-}
-
-type Modifier struct {
-	Type        string
-	Value       int
-	SupportFrom string
+	// The relevant battle result.
+	Battle board.Battle `json:"battle"`
 }
