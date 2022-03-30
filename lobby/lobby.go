@@ -57,7 +57,7 @@ type Receiver interface {
 // Signature for functions that construct a game instance.
 // Takes the lobby to which players can connect,
 // and an untyped options parameter that can be parsed by the game instance for use in setup.
-type GameConstructor func(lobby *Lobby, options interface{}) (Game, error)
+type GameConstructor func(lobby *Lobby, options any) (Game, error)
 
 // Creates and registers a new lobby with the given ID,
 // and uses the given constructor to construct its game instance.
@@ -150,7 +150,7 @@ func (player *Player) setActive(active bool) {
 
 // Marshals the given message to JSON and sends it over the player's socket connection.
 // Returns an error if the player is inactive, or if the marshaling/sending failed.
-func (player *Player) Send(message interface{}) error {
+func (player *Player) Send(message any) error {
 	if !player.isActive() {
 		return errors.New("cannot send to inactive player")
 	}
@@ -161,7 +161,7 @@ func (player *Player) Send(message interface{}) error {
 
 // Marshals the given message to JSON and sends it to all connected players.
 // Returns an error if it failed to marshal or send to at least one of the players.
-func (lobby *Lobby) SendToAll(message interface{}) error {
+func (lobby *Lobby) SendToAll(message any) error {
 	marshaledMsg, err := json.Marshal(message)
 	if err != nil {
 		return err
