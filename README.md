@@ -10,9 +10,10 @@ _The Battle for Hermannia_ is a board game created as a gift by the father of [h
   - Package `boardsetup` contains the JSON files for the game's boards, and functions for deserializing them.
   - Package `messages` defines the game-specific types of messages sent between client and server, as well as the logic for sorting incoming messages.
   - Package `validation` contains functions for validating player input.
-- Package `app` contains subpackages for each of the server's executables, and the common setup code for them.
+- `cmd` contains packages for each of the server's executables.
   - Package `main` under `local` sets up a game server with a single, server-created lobby.
   - Package `main` under `public` sets up a game server where anyone can create their own lobbies through an open endpoint.
+- Package `server` at the project root contains the common setup code for the server's executables.
 
 ## Credits
 

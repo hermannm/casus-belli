@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"text/tabwriter"
 
-	"hermannm.dev/bfh-server/app"
+	server "hermannm.dev/bfh-server"
 	"hermannm.dev/bfh-server/lobby"
 	"hermannm.dev/ipfinder"
 )
@@ -20,7 +20,7 @@ func main() {
 	fmt.Println("Server started...")
 	fmt.Println()
 
-	game := selectGame(app.Games)
+	game := selectGame(server.Games)
 	fmt.Println()
 
 	createLobby(game)

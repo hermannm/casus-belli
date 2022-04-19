@@ -1,4 +1,4 @@
-package app
+package server
 
 import (
 	"hermannm.dev/bfh-server/game"
