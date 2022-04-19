@@ -29,7 +29,7 @@ func New(boardName string, lob *lobby.Lobby, options GameOptions) (lobby.Game, e
 	}
 
 	receivers := make(map[string]messages.Receiver)
-	for _, area := range brd {
+	for _, area := range brd.Areas {
 		areaHome := string(area.Home)
 		if areaHome == "" {
 			continue
@@ -63,7 +63,7 @@ func (game Game) PlayerIDs() []string {
 	ids := make([]string, 0)
 
 outerLoop:
-	for _, area := range game.Board {
+	for _, area := range game.Board.Areas {
 		potentialID := string(area.Home)
 		if potentialID == "" {
 			continue

@@ -19,7 +19,7 @@ func (board Board) resolveCycle(
 
 	// First, resolves non-conflicting cycle moves.
 	for _, move := range cycle {
-		to := board[move.To]
+		to := board.Areas[move.To]
 
 		if (to.IsControlled() || to.Sea) && len(to.IncomingMoves) == 1 {
 			board.succeedMove(move)
@@ -54,7 +54,7 @@ func (board Board) discoverCycle(order Order, firstAreaName string) (cycle []Ord
 		return nil, false
 	}
 
-	to := board[order.To]
+	to := board.Areas[order.To]
 
 	// The cycle has outside attackers if more than just this order in the cycle is attacking the destination.
 	outsideAttackers = len(to.IncomingMoves) > 1
@@ -82,7 +82,7 @@ func (board Board) discoverTwoWayCycle(area1 Area) (isCycle bool, area2 Area, sa
 		return false, Area{}, false
 	}
 
-	area2 = board[area1.Order.To]
+	area2 = board.Areas[area1.Order.To]
 	order2 := area2.Order
 	if order2.Type != OrderMove {
 		return false, Area{}, false

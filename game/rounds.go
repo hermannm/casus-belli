@@ -34,7 +34,8 @@ func (game *Game) Start() {
 
 		game.Rounds = append(game.Rounds, round)
 
-		battles := game.Board.Resolve(round)
+		battles, newWinner := game.Board.Resolve(round)
+		winner = newWinner
 
 		for _, battle := range battles {
 			game.Lobby.SendToAll(messages.BattleResult{
@@ -94,7 +95,7 @@ func sortOrders(allOrders []board.Order, brd board.Board) (firstOrders []board.O
 	secondOrders = make([]board.Order, 0)
 
 	for _, order := range allOrders {
-		fromArea := brd[order.From]
+		fromArea := brd.Areas[order.From]
 
 		// If order origin has no unit, or unit of different color,
 		// then order is a second horse move and should be processed after all others.

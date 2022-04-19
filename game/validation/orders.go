@@ -6,9 +6,9 @@ import (
 	"hermannm.dev/bfh-server/game/board"
 )
 
-func ValidateOrderSet(orders []board.Order, b board.Board, season board.Season) error {
+func ValidateOrderSet(orders []board.Order, brd board.Board, season board.Season) error {
 	for _, order := range orders {
-		err := validateOrder(order, b, season)
+		err := validateOrder(order, brd, season)
 		if err != nil {
 			return err
 		}
@@ -18,8 +18,8 @@ func ValidateOrderSet(orders []board.Order, b board.Board, season board.Season) 
 }
 
 // Takes a game order, and returns an error if it is invalid.
-func validateOrder(order board.Order, b board.Board, season board.Season) error {
-	from := b[order.From]
+func validateOrder(order board.Order, brd board.Board, season board.Season) error {
+	from := brd.Areas[order.From]
 
 	if order.Player != from.Control {
 		return errors.New("must control area that is ordered")
@@ -27,13 +27,13 @@ func validateOrder(order board.Order, b board.Board, season board.Season) error 
 
 	switch season {
 	case board.SeasonWinter:
-		return validateWinterOrder(order, from, b)
+		return validateWinterOrder(order, from, brd)
 	default:
-		return validateNonWinterOrder(order, from, b)
+		return validateNonWinterOrder(order, from, brd)
 	}
 }
 
-func validateNonWinterOrder(order board.Order, from board.Area, b board.Board) error {
+func validateNonWinterOrder(order board.Order, from board.Area, brd board.Board) error {
 	if order.Build != "" {
 		return errors.New("units can only be built in winter")
 	}
@@ -42,7 +42,7 @@ func validateNonWinterOrder(order board.Order, from board.Area, b board.Board) e
 	case board.OrderMove:
 		fallthrough
 	case board.OrderSupport:
-		return validateMoveOrSupport(order, from, b)
+		return validateMoveOrSupport(order, from, brd)
 	case board.OrderBesiege:
 		fallthrough
 	case board.OrderTransport:
@@ -52,12 +52,12 @@ func validateNonWinterOrder(order board.Order, from board.Area, b board.Board) e
 	}
 }
 
-func validateMoveOrSupport(order board.Order, from board.Area, b board.Board) error {
+func validateMoveOrSupport(order board.Order, from board.Area, brd board.Board) error {
 	if order.To == "" {
 		return errors.New("mvoes and supports must have destination")
 	}
 
-	to, ok := b[order.To]
+	to, ok := brd.Areas[order.To]
 	if !ok {
 		return errors.New("invalid order destination")
 	}
@@ -67,7 +67,7 @@ func validateMoveOrSupport(order board.Order, from board.Area, b board.Board) er
 	}
 
 	if from.Unit.Type == board.UnitShip {
-		if !(to.Sea || to.IsCoast(b)) {
+		if !(to.Sea || to.IsCoast(brd)) {
 			return errors.New("ship order destination must be sea or coast")
 		}
 	} else {
@@ -150,23 +150,23 @@ func validateTransport(order board.Order, from board.Area) error {
 	return nil
 }
 
-func validateWinterOrder(order board.Order, from board.Area, b board.Board) error {
+func validateWinterOrder(order board.Order, from board.Area, brd board.Board) error {
 	switch order.Type {
 	case board.OrderMove:
-		return validateWinterMove(order, from, b)
+		return validateWinterMove(order, from, brd)
 	case board.OrderBuild:
-		return validateBuild(order, from, b)
+		return validateBuild(order, from, brd)
 	}
 
 	return errors.New("invalid order type")
 }
 
-func validateWinterMove(order board.Order, from board.Area, b board.Board) error {
+func validateWinterMove(order board.Order, from board.Area, brd board.Board) error {
 	if order.To == "" {
 		return errors.New("winter move orders must have destination")
 	}
 
-	to, ok := b[order.To]
+	to, ok := brd.Areas[order.To]
 	if !ok {
 		return errors.New("invalid order destination")
 	}
@@ -175,7 +175,7 @@ func validateWinterMove(order board.Order, from board.Area, b board.Board) error
 		return errors.New("must control destination area in winter move")
 	}
 
-	if from.Unit.Type == board.UnitShip && !to.IsCoast(b) {
+	if from.Unit.Type == board.UnitShip && !to.IsCoast(brd) {
 		return errors.New("ship winter move destination must be coast")
 	}
 
@@ -186,14 +186,14 @@ func validateWinterMove(order board.Order, from board.Area, b board.Board) error
 	return nil
 }
 
-func validateBuild(order board.Order, from board.Area, b board.Board) error {
+func validateBuild(order board.Order, from board.Area, brd board.Board) error {
 	if !from.IsEmpty() {
 		return errors.New("cannot build in area already occupied")
 	}
 
 	switch order.Build {
 	case board.UnitShip:
-		if !from.IsCoast(b) {
+		if !from.IsCoast(brd) {
 			return errors.New("ships can only be built on coast")
 		}
 	case board.UnitFootman:

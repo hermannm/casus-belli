@@ -3,6 +3,7 @@ package boardsetup
 import (
 	"embed"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"hermannm.dev/bfh-server/game/board"
@@ -14,9 +15,10 @@ var boards embed.FS
 
 // Utility type for json unmarshaling.
 type jsonBoard struct {
-	Nations   map[string][]landArea `json:"nations"`
-	Seas      []sea                 `json:"seas"`
-	Neighbors []neighbor            `json:"neighbors"`
+	WinningCastleCount int                   `json:"winningCastleCount"`
+	Nations            map[string][]landArea `json:"nations"`
+	Seas               []sea                 `json:"seas"`
+	Neighbors          []neighbor            `json:"neighbors"`
 }
 
 // Utility type for json unmarshaling.
@@ -45,17 +47,24 @@ type neighbor struct {
 func ReadBoard(boardName string) (board.Board, error) {
 	content, err := boards.ReadFile(fmt.Sprintf("%s.json", boardName))
 	if err != nil {
-		return nil, err
+		return board.Board{}, err
 	}
 
 	var jsonBrd jsonBoard
 
 	err = json.Unmarshal(content, &jsonBrd)
 	if err != nil {
-		return nil, err
+		return board.Board{}, err
 	}
 
-	brd := make(board.Board)
+	if jsonBrd.WinningCastleCount <= 0 {
+		return board.Board{}, errors.New("invalid winningCastleCount in board config")
+	}
+
+	brd := board.Board{
+		Areas:              make(map[string]board.Area),
+		WinningCastleCount: jsonBrd.WinningCastleCount,
+	}
 
 	for nation, areas := range jsonBrd.Nations {
 		for _, landArea := range areas {
@@ -71,7 +80,7 @@ func ReadBoard(boardName string) (board.Board, error) {
 				IncomingSupports: make([]board.Order, 0),
 			}
 
-			brd[area.Name] = area
+			brd.Areas[area.Name] = area
 		}
 	}
 
@@ -83,15 +92,15 @@ func ReadBoard(boardName string) (board.Board, error) {
 			IncomingSupports: make([]board.Order, 0),
 		}
 
-		brd[area.Name] = area
+		brd.Areas[area.Name] = area
 	}
 
 	for _, neighbor := range jsonBrd.Neighbors {
-		area1, ok1 := brd[neighbor.Area1]
-		area2, ok2 := brd[neighbor.Area2]
+		area1, ok1 := brd.Areas[neighbor.Area1]
+		area2, ok2 := brd.Areas[neighbor.Area2]
 
 		if !ok1 || !ok2 {
-			return nil, fmt.Errorf(
+			return board.Board{}, fmt.Errorf(
 				"error in board config: neighbor relation %s <-> %s",
 				neighbor.Area1,
 				neighbor.Area2,

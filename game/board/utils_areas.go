@@ -53,7 +53,7 @@ func (area Area) IsCoast(board Board) bool {
 	}
 
 	for _, neighbor := range area.Neighbors {
-		neighborArea := board[neighbor.Name]
+		neighborArea := board.Areas[neighbor.Name]
 
 		if neighborArea.Sea {
 			return true

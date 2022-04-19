@@ -8,7 +8,7 @@ import (
 )
 
 func printBoard(brd board.Board, areas map[string]board.Unit, neighbors bool) {
-	for _, area := range brd {
+	for _, area := range brd.Areas {
 		if _, ok := areas[area.Name]; !ok {
 			continue
 		}
@@ -59,12 +59,12 @@ func printBoard(brd board.Board, areas map[string]board.Unit, neighbors bool) {
 func adjustBoard(brd board.Board, areas map[string]board.Unit) {
 	for areaName, unit := range areas {
 		if unit.Type != "" {
-			area := brd[areaName]
+			area := brd.Areas[areaName]
 			area.Unit = unit
 			if !area.Sea {
 				area.Control = unit.Player
 			}
-			brd[areaName] = area
+			brd.Areas[areaName] = area
 		}
 	}
 }
@@ -128,39 +128,39 @@ func testTransportWithDangerZone(brd board.Board) {
 				Player: "green",
 				From:   "Winde",
 				To:     "Fond",
-				Unit:   brd["Winde"].Unit,
+				Unit:   brd.Areas["Winde"].Unit,
 			},
 			{
 				Type:   board.OrderTransport,
 				Player: "green",
 				From:   "Mare Gond",
-				Unit:   brd["Mare Gond"].Unit,
+				Unit:   brd.Areas["Mare Gond"].Unit,
 			},
 			{
 				Type:   board.OrderTransport,
 				Player: "green",
 				From:   "Mare Elle",
-				Unit:   brd["Mare Elle"].Unit,
+				Unit:   brd.Areas["Mare Elle"].Unit,
 			},
 			{
 				Type:   board.OrderTransport,
 				Player: "green",
 				From:   "Mare Ovond",
-				Unit:   brd["Mare Ovond"].Unit,
+				Unit:   brd.Areas["Mare Ovond"].Unit,
 			},
 			{
 				Type:   board.OrderMove,
 				Player: "red",
 				From:   "Mare Duna",
 				To:     "Mare Gond",
-				Unit:   brd["Mare Gond"].Unit,
+				Unit:   brd.Areas["Mare Gond"].Unit,
 			},
 			{
 				Type:   board.OrderMove,
 				Player: "red",
 				From:   "Mare Furie",
 				To:     "Mare Elle",
-				Unit:   brd["Mare Furie"].Unit,
+				Unit:   brd.Areas["Mare Furie"].Unit,
 			},
 		},
 	}
@@ -195,20 +195,20 @@ func testTransportBattle(brd board.Board) {
 				Player: "green",
 				From:   "Worp",
 				To:     "Zona",
-				Unit:   brd["Worp"].Unit,
+				Unit:   brd.Areas["Worp"].Unit,
 			},
 			{
 				Type:   board.OrderTransport,
 				Player: "green",
 				From:   "Mare Gond",
-				Unit:   brd["Mare Gond"].Unit,
+				Unit:   brd.Areas["Mare Gond"].Unit,
 			},
 			{
 				Type:   board.OrderMove,
 				Player: "red",
 				From:   "Mare Elle",
 				To:     "Mare Gond",
-				Unit:   brd["Mare Gond"].Unit,
+				Unit:   brd.Areas["Mare Gond"].Unit,
 			},
 		},
 	}

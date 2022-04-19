@@ -8,7 +8,9 @@ import (
 
 // Returns an empty, limited example board for testing.
 func mockBoard() Board {
-	board := Board{}
+	board := Board{
+		WinningCastleCount: 5,
+	}
 
 	areas := []Area{
 		{Name: "Lusía", Castle: true},
@@ -98,12 +100,12 @@ func mockBoard() Board {
 		area.Neighbors = make([]Neighbor, 0)
 		area.IncomingMoves = make([]Order, 0)
 		area.IncomingSupports = make([]Order, 0)
-		board[area.Name] = area
+		board.Areas[area.Name] = area
 	}
 
 	for _, neighbor := range neighbors {
-		area1 := board[neighbor.a1]
-		area2 := board[neighbor.a2]
+		area1 := board.Areas[neighbor.a1]
+		area2 := board.Areas[neighbor.a2]
 
 		area1.Neighbors = append(area1.Neighbors, Neighbor{
 			Name:        neighbor.a2,
@@ -111,7 +113,7 @@ func mockBoard() Board {
 			Cliffs:      neighbor.cliffs,
 			DangerZone:  neighbor.dangerZone,
 		})
-		board[neighbor.a1] = area1
+		board.Areas[neighbor.a1] = area1
 
 		area2.Neighbors = append(area2.Neighbors, Neighbor{
 			Name:        neighbor.a1,
@@ -119,7 +121,7 @@ func mockBoard() Board {
 			Cliffs:      neighbor.cliffs,
 			DangerZone:  neighbor.dangerZone,
 		})
-		board[neighbor.a2] = area2
+		board.Areas[neighbor.a2] = area2
 	}
 
 	return board
@@ -129,10 +131,10 @@ func mockBoard() Board {
 // Takes a map of area names to units to be placed there.
 func placeUnits(board Board, units map[string]Unit) {
 	for areaName, unit := range units {
-		area := board[areaName]
+		area := board.Areas[areaName]
 		area.Unit = unit
 		area.Control = unit.Player
-		board[areaName] = area
+		board.Areas[areaName] = area
 	}
 }
 
@@ -156,7 +158,7 @@ type expectedControl map[string]struct {
 }
 
 func checkExpectedControl(board Board, expected expectedControl, t *testing.T) {
-	for name, area := range board {
+	for name, area := range board.Areas {
 		expectation, ok := expected[name]
 		if !ok {
 			continue

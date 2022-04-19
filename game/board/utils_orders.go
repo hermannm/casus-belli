@@ -12,14 +12,14 @@ func (order Order) IsNone() bool {
 // Then removes references to this move on the board,
 // and removes any potential order from the destination area.
 func (board Board) succeedMove(move Order) {
-	to := board[move.To]
+	to := board.Areas[move.To]
 
 	to = to.setUnit(move.Unit)
 	to = to.setOrder(Order{})
 	if !to.Sea {
 		to = to.setControl(move.Player)
 	}
-	board[move.To] = to
+	board.Areas[move.To] = to
 
 	board.removeOriginUnit(move)
 
@@ -28,10 +28,10 @@ func (board Board) succeedMove(move Order) {
 
 // Removes the move order's unit from its origin area, if it still exists.
 func (board Board) removeOriginUnit(move Order) {
-	from := board[move.From]
+	from := board.Areas[move.From]
 
 	if move.Unit == from.Unit {
-		board[move.From] = from.setUnit(Unit{})
+		board.Areas[move.From] = from.setUnit(Unit{})
 	}
 }
 
@@ -61,26 +61,26 @@ func (order Order) crossDangerZone(dangerZone string) (survived bool, result Bat
 }
 
 func (board Board) addOrder(order Order) {
-	board[order.From] = board[order.From].setOrder(order)
+	board.Areas[order.From] = board.Areas[order.From].setOrder(order)
 
 	if order.To == "" {
 		return
 	}
 
-	to := board[order.To]
+	to := board.Areas[order.To]
 	switch order.Type {
 	case OrderMove:
 		to.IncomingMoves = append(to.IncomingMoves, order)
 	case OrderSupport:
 		to.IncomingSupports = append(to.IncomingSupports, order)
 	}
-	board[order.To] = to
+	board.Areas[order.To] = to
 }
 
 // Removes the given move order from the areas on the board.
 func (board Board) removeMove(move Order) {
-	board[move.From] = board[move.From].setOrder(Order{})
-	board[move.To] = board[move.To].removeIncomingMove(move)
+	board.Areas[move.From] = board.Areas[move.From].setOrder(Order{})
+	board.Areas[move.To] = board.Areas[move.To].removeIncomingMove(move)
 }
 
 // Returns the given area with the given order removed from its list of incoming moves.
@@ -98,8 +98,8 @@ func (area Area) removeIncomingMove(move Order) Area {
 
 // Removes the given support order from the areas on the board.
 func (board Board) removeSupport(support Order) {
-	board[support.From] = board[support.From].setOrder(Order{})
-	board[support.To] = board[support.To].removeIncomingSupport(support)
+	board.Areas[support.From] = board.Areas[support.From].setOrder(Order{})
+	board.Areas[support.To] = board.Areas[support.To].removeIncomingSupport(support)
 }
 
 // Returns the given area with the given order removed from its list of incoming supports.
@@ -118,7 +118,7 @@ func (area Area) removeIncomingSupport(support Order) Area {
 // Attempts to move the unit of the given move order back to its origin.
 // Returns whether the retreat succeeded.
 func (board Board) attemptRetreat(move Order) bool {
-	from := board[move.From]
+	from := board.Areas[move.From]
 
 	if from.Unit == move.Unit {
 		return true
@@ -128,6 +128,6 @@ func (board Board) attemptRetreat(move Order) bool {
 		return false
 	}
 
-	board[move.From] = from.setUnit(move.Unit)
+	board.Areas[move.From] = from.setUnit(move.Unit)
 	return true
 }

@@ -44,7 +44,7 @@ func (board Board) resolveBorderBattle(battle Battle) (retreats []Order) {
 	for _, move := range []Order{move1, move2} {
 		if move.Player == winner {
 			// If destination area is uncontrolled, the player must win a singleplayer battle there before taking control.
-			if board[move.To].IsControlled() {
+			if board.Areas[move.To].IsControlled() {
 				board.succeedMove(move)
 			}
 		} else {
@@ -109,7 +109,7 @@ func (board Board) resolveMultiplayerBattle(battle Battle) (retreats []Order) {
 			continue
 		}
 
-		if board[move.To].IsControlled() {
+		if board.Areas[move.To].IsControlled() {
 			board.succeedMove(move)
 		}
 	}

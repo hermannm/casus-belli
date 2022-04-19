@@ -30,7 +30,7 @@ func (board Board) resolveAreaMoves(
 			for _, cycleArea := range [2]Area{area, area2} {
 				cycleArea = cycleArea.setUnit(Unit{})
 				cycleArea = cycleArea.setOrder(Order{})
-				board[cycleArea.Name] = cycleArea
+				board.Areas[cycleArea.Name] = cycleArea
 			}
 		} else {
 			// If the moves are from different players, they battle in the middle.

@@ -1,724 +1,729 @@
 {
-	"nations": {
-		"Kyrianna": [
-			{
-				"name": "Kyrie",
-				"castle": true
-			}
-		],
-		"Jazzin": [
-			{
-				"name": "Jazel",
-				"castle": true
-			},
-			{
-				"name": "Jizinne",
-				"forest": true
-			}
-		],
-		"Lusianna": [
-			{
-				"name": "Lomone",
-				"forest": true
-			},
-			{
-				"name": "Limbol",
-				"forest": true
-			},
-			{
-				"name": "Lusía",
-				"castle": true
-			},
-			{
-				"name": "Leil"
-			}
-		],
-		"Wonde": [
-			{
-				"name": "Worp",
-				"forest": true,
-				"home": "green"
-			},
-			{
-				"name": "Winde",
-				"forest": true,
-				"castle": true,
-				"home": "green"
-			}
-		],
-		"Ovo": [
-			{
-				"name": "Ovo",
-				"forest": true
-			}
-		],
-		"Monone": [
-			{
-				"name": "Morone",
-				"home": "red"
-			},
-			{
-				"name": "Monté",
-				"castle": true,
-				"home": "red"
-			}
-		],
-		"Brobomba": [
-			{
-				"name": "Brodo",
-				"forest": true
-			},
-			{
-				"name": "Bom"
-			},
-			{
-				"name": "Bassas",
-				"forest": true,
-				"castle": true
-			}
-		],
-		"Ninnund": [
-			{
-				"name": "Ninin"
-			},
-			{
-				"name": "Nund"
-			}
-		],
-		"Arri": [
-			{
-				"name": "Arra"
-			},
-			{
-				"name": "Amarí"
-			}
-		],
-		"Caleren": [
-			{
-				"name": "Calis",
-				"forest": true,
-				"castle": true
-			},
-			{
-				"name": "Cymere"
-			}
-		],
-		"Pusth": [
-			{
-				"name": "Pesth",
-				"home": "yellow"
-			},
-			{
-				"name": "Purth",
-				"castle": true,
-				"home": "yellow"
-			}
-		],
-		"Rimimar": [
-			{
-				"name": "Rimine"
-			},
-			{
-				"name": "Rama"
-			}
-		],
-		"Zorask": [
-			{
-				"name": "Zona"
-			}
-		],
-		"Titutto": [
-			{
-				"name": "Tond"
-			},
-			{
-				"name": "Tige"
-			},
-			{
-				"name": "Tusser"
-			}
-		],
-		"Dordal": [
-			{
-				"name": "Dalom",
-				"forest": true,
-				"home": "white"
-			},
-			{
-				"name": "Dordel",
-				"castle": true,
-				"home": "white"
-			}
-		],
-		"Hyllerk": [
-			{
-				"name": "Herk",
-				"forest": true
-			},
-			{
-				"name": "Hyll",
-				"castle": true
-			}
-		],
-		"Samsk": [
-			{
-				"name": "Sash",
-				"forest": true
-			},
-			{
-				"name": "Samoje"
-			}
-		],
-		"Fusk": [
-			{
-				"name": "Furie",
-				"castle": true
-			},
-			{
-				"name": "Firril"
-			},
-			{
-				"name": "Fond"
-			}
-		],
-		"Grontenberg": [
-			{
-				"name": "Gron"
-			},
-			{
-				"name": "Gnade"
-			},
-			{
-				"name": "Gewel",
-				"forest": true,
-				"castle": true
-			}
-		],
-		"Erreman": [
-			{
-				"name": "Emman",
-				"forest": true,
-				"home": "black"
-			},
-			{
-				"name": "Erren",
-				"castle": true,
-				"home": "black"
-			}
-		]
-	},
-	"seas": [
-		{
-			"name": "Mare Duna"
-		},
-		{
-			"name": "Mare Illa"
-		},
-		{
-			"name": "Mare Hynd"
-		},
-		{
-			"name": "Mare Gond"
-		},
-		{
-			"name": "Mare Elle"
-		},
-		{
-			"name": "Mare Furie"
-		},
-		{
-			"name": "Mare Ovond"
-		},
-		{
-			"name": "Mare Unna"
-		},
-		{
-			"name": "Mare Bøso"
-		}
-	],
-	"neighbors": [
-		{
-			"area1": "Kyrie",
-			"area2": "Mare Hynd"
-		}, {
-			"area1": "Kyrie",
-			"area2": "Mare Illa"
-		}, {
-			"area1": "Jazel",
-			"area2": "Mare Illa"
-		}, {
-			"area1": "Jazel",
-			"area2": "Mare Duna"
-		}, {
-			"area1": "Jazel",
-			"area2": "Jizinne"
-		},
-		{
-			"area1": "Jizinne",
-			"area2": "Mare Duna"
-		},
-		{
-			"area1": "Lomone",
-			"area2": "Mare Illa"
-		},
-		{
-			"area1": "Lomone",
-			"area2": "Mare Duna"
-		},
-		{
-			"area1": "Lomone",
-			"area2": "Lusía"
-		},
-		{
-			"area1": "Lomone",
-			"area2": "Limbol"
-		},
-		{
-			"area1": "Limbol",
-			"area2": "Mare Duna"
-		},
-		{
-			"area1": "Limbol",
-			"area2": "Lusía"
-		},
-		{
-			"area1": "Limbol",
-			"area2": "Leil"
-		},
-		{
-			"area1": "Limbol",
-			"area2": "Worp"
-		},
-		{
-			"area1": "Lusía",
-			"area2": "Leil"
-		},
-		{
-			"area1": "Lusía",
-			"area2": "Morone",
-			"river": true
-		},
-		{
-			"area1": "Lusía",
-			"area2": "Brodo",
-			"river": true
-		},
-		{
-			"area1": "Leil",
-			"area2": "Brodo",
-			"river": true
-		},
-		{
-			"area1": "Leil",
-			"area2": "Bassas",
-			"river": true
-		},
-		{
-			"area1": "Leil",
-			"area2": "Ovo",
-			"river": true
-		},
-		{
-			"area1": "Leil",
-			"area2": "Worp"
-		},
-		{
-			"area1": "Leil",
-			"area2": "Winde"
-		},
-		{
-			"area1": "Worp",
-			"area2": "Mare Duna"
-		},
-		{
-			"area1": "Worp",
-			"area2": "Mare Gond"
-		},
-		{
-			"area1": "Worp",
-			"area2": "Winde"
-		},
-		{
-			"area1": "Winde",
-			"area2": "Ovo",
-			"river": true
-		},
-		{
-			"area1": "Winde",
-			"area2": "Mare Elle"
-		},
-		{
-			"area1": "Winde",
-			"area2": "Mare Gond"
-		},
-		{
-			"area1": "Ovo",
-			"area2": "Bassas",
-			"river": true
-		},
-		{
-			"area1": "Ovo",
-			"area2": "Nund",
-			"river": true
-		},
-		{
-			"area1": "Ovo",
-			"area2": "Mare Elle"
-		},
-		{
-			"area1": "Morone",
-			"area2": "Monté"
-		},
-		{
-			"area1": "Morone",
-			"area2": "Brodo"
-		},
-		{
-			"area1": "Monté",
-			"area2": "Arra",
-			"dangerZone": "Xanadu"
-		},
-		{
-			"area1": "Monté",
-			"area2": "Bom"
-		},
-		{
-			"area1": "Monté",
-			"area2": "Brodo"
-		},
-		{
-			"area1": "Brodo",
-			"area2": "Bom"
-		},
-		{
-			"area1": "Brodo",
-			"area2": "Bassas"
-		},
-		{
-			"area1": "Bom",
-			"area2": "Calis"
-		},
-		{
-			"area1": "Bom",
-			"area2": "Ninin"
-		},
-		{
-			"area1": "Bom",
-			"area2": "Bassas"
-		},
-		{
-			"area1": "Bassas",
-			"area2": "Ninin"
-		},
-		{
-			"area1": "Ninin",
-			"area2": "Calis",
-			"cliffs": true
-		},
-		{
-			"area1": "Ninin",
-			"area2": "Mare Furie"
-		},
-		{
-			"area1": "Ninin",
-			"area2": "Nund",
-			"cliffs": true
-		},
-		{
-			"area1": "Nund",
-			"area2": "Mare Elle"
-		},
-		{
-			"area1": "Arra",
-			"area2": "Amarí"
-		},
-		{
-			"area1": "Amarí",
-			"area2": "Pesth"
-		},
-		{
-			"area1": "Amarí",
-			"area2": "Calis"
-		},
-		{
-			"area1": "Calis",
-			"area2": "Pesth"
-		},
-		{
-			"area1": "Calis",
-			"area2": "Cymere"
-		},
-		{
-			"area1": "Calis",
-			"area2": "Mare Furie"
-		},
-		{
-			"area1": "Cymere",
-			"area2": "Pesth"
-		},
-		{
-			"area1": "Cymere",
-			"area2": "Mare Furie"
-		},
-		{
-			"area1": "Pesth",
-			"area2": "Purth"
-		},
-		{
-			"area1": "Pesth",
-			"area2": "Mare Furie"
-		},
-		{
-			"area1": "Purth",
-			"area2": "Mare Hynd"
-		},
-		{
-			"area1": "Purth",
-			"area2": "Mare Furie"
-		},
-		{
-			"area1": "Rimine",
-			"area2": "Mare Hynd"
-		},
-		{
-			"area1": "Rimine",
-			"area2": "Mare Furie"
-		},
-		{
-			"area1": "Rama",
-			"area2": "Mare Furie"
-		},
-		{
-			"area1": "Rama",
-			"area2": "Mare Elle"
-		},
-		{
-			"area1": "Zona",
-			"area2": "Mare Elle"
-		},
-		{
-			"area1": "Zona",
-			"area2": "Mare Gond"
-		},
-		{
-			"area1": "Tond",
-			"area2": "Mare Gond"
-		},
-		{
-			"area1": "Tond",
-			"area2": "Mare Elle"
-		},
-		{
-			"area1": "Tond",
-			"area2": "Tige",
-			"dangerZone": "Bankene",
-			"river": true
-		},
-		{
-			"area1": "Tond",
-			"area2": "Mare Ovond"
-		},
-		{
-			"area1": "Tige",
-			"area2": "Mare Elle"
-		},
-		{
-			"area1": "Tige",
-			"area2": "Dalom"
-		},
-		{
-			"area1": "Tige",
-			"area2": "Tusser"
-		},
-		{
-			"area1": "Tige",
-			"area2": "Mare Ovond"
-		},
-		{
-			"area1": "Tusser",
-			"area2": "Dalom"
-		},
-		{
-			"area1": "Tusser",
-			"area2": "Gron",
-			"dangerZone": "Shangrila"
-		},
-		{
-			"area1": "Dalom",
-			"area2": "Mare Elle"
-		},
-		{
-			"area1": "Dalom",
-			"area2": "Dordel"
-		},
-		{
-			"area1": "Dalom",
-			"area2": "Herk"
-		},
-		{
-			"area1": "Dordel",
-			"area2": "Mare Elle"
-		},
-		{
-			"area1": "Dordel",
-			"area2": "Mare Furie"
-		},
-		{
-			"area1": "Dordel",
-			"area2": "Herk"
-		},
-		{
-			"area1": "Herk",
-			"area2": "Hyll"
-		},
-		{
-			"area1": "Hyll",
-			"area2": "Mare Furie"
-		},
-		{
-			"area1": "Hyll",
-			"area2": "Samoje"
-		},
-		{
-			"area1": "Sash",
-			"area2": "Mare Furie"
-		},
-		{
-			"area1": "Sash",
-			"area2": "Mare Bøso"
-		},
-		{
-			"area1": "Samoje",
-			"area2": "Mare Furie"
-		},
-		{
-			"area1": "Samoje",
-			"area2": "Mare Bøso"
-		},
-		{
-			"area1": "Samoje",
-			"area2": "Erren",
-			"cliffs": true
-		},
-		{
-			"area1": "Furie",
-			"area2": "Mare Ovond"
-		},
-		{
-			"area1": "Furie",
-			"area2": "Firril"
-		},
-		{
-			"area1": "Firril",
-			"area2": "Gron"
-		},
-		{
-			"area1": "Firril",
-			"area2": "Gnade"
-		},
-		{
-			"area1": "Firril",
-			"area2": "Fond"
-		},
-		{
-			"area1": "Firril",
-			"area2": "Mare Ovond"
-		},
-		{
-			"area1": "Fond",
-			"area2": "Mare Unna"
-		},
-		{
-			"area1": "Fond",
-			"area2": "Mare Ovond"
-		},
-		{
-			"area1": "Gron",
-			"area2": "Emman"
-		},
-		{
-			"area1": "Gron",
-			"area2": "Gewel"
-		},
-		{
-			"area1": "Gron",
-			"area2": "Gnade"
-		},
-		{
-			"area1": "Gnade",
-			"area2": "Gewel"
-		},
-		{
-			"area1": "Gewel",
-			"area2": "Emman",
-			"cliffs": true
-		},
-		{
-			"area1": "Gewel",
-			"area2": "Mare Unna"
-		},
-		{
-			"area1": "Emman",
-			"area2": "Erren",
-			"cliffs": true
-		},
-		{
-			"area1": "Emman",
-			"area2": "Mare Unna"
-		},
-		{
-			"area1": "Erren",
-			"area2": "Mare Bøso"
-		},
-		{
-			"area1": "Mare Duna",
-			"area2": "Mare Illa"
-		},
-		{
-			"area1": "Mare Duna",
-			"area2": "Mare Gond"
-		},
-		{
-			"area1": "Mare Illa",
-			"area2": "Mare Hynd"
-		},
-		{
-			"area1": "Mare Hynd",
-			"area2": "Mare Furie"
-		},
-		{
-			"area1": "Mare Gond",
-			"area2": "Mare Elle"
-		},
-		{
-			"area1": "Mare Gond",
-			"area2": "Mare Ovond"
-		},
-		{
-			"area1": "Mare Elle",
-			"area2": "Mare Furie"
-		},
-		{
-			"area1": "Mare Elle",
-			"area2": "Mare Furie",
-			"dangerZone": "Tennene"
-		},
-		{
-			"area1": "Mare Elle",
-			"area2": "Mare Ovond",
-			"dangerZone": "Bankene"
-		},
-		{
-			"area1": "Mare Furie",
-			"area2": "Mare Bøso"
-		},
-		{
-			"area1": "Mare Ovond",
-			"area2": "Mare Unna"
-		},
-		{
-			"area1": "Mare Unna",
-			"area2": "Mare Bøso"
-		}
-	]
+  "winningCastleCount": 5,
+  "nations": {
+    "Kyrianna": [
+      {
+        "name": "Kyrie",
+        "castle": true
+      }
+    ],
+    "Jazzin": [
+      {
+        "name": "Jazel",
+        "castle": true
+      },
+      {
+        "name": "Jizinne",
+        "forest": true
+      }
+    ],
+    "Lusianna": [
+      {
+        "name": "Lomone",
+        "forest": true
+      },
+      {
+        "name": "Limbol",
+        "forest": true
+      },
+      {
+        "name": "Lusía",
+        "castle": true
+      },
+      {
+        "name": "Leil"
+      }
+    ],
+    "Wonde": [
+      {
+        "name": "Worp",
+        "forest": true,
+        "home": "green"
+      },
+      {
+        "name": "Winde",
+        "forest": true,
+        "castle": true,
+        "home": "green"
+      }
+    ],
+    "Ovo": [
+      {
+        "name": "Ovo",
+        "forest": true
+      }
+    ],
+    "Monone": [
+      {
+        "name": "Morone",
+        "home": "red"
+      },
+      {
+        "name": "Monté",
+        "castle": true,
+        "home": "red"
+      }
+    ],
+    "Brobomba": [
+      {
+        "name": "Brodo",
+        "forest": true
+      },
+      {
+        "name": "Bom"
+      },
+      {
+        "name": "Bassas",
+        "forest": true,
+        "castle": true
+      }
+    ],
+    "Ninnund": [
+      {
+        "name": "Ninin"
+      },
+      {
+        "name": "Nund"
+      }
+    ],
+    "Arri": [
+      {
+        "name": "Arra"
+      },
+      {
+        "name": "Amarí"
+      }
+    ],
+    "Caleren": [
+      {
+        "name": "Calis",
+        "forest": true,
+        "castle": true
+      },
+      {
+        "name": "Cymere"
+      }
+    ],
+    "Pusth": [
+      {
+        "name": "Pesth",
+        "home": "yellow"
+      },
+      {
+        "name": "Purth",
+        "castle": true,
+        "home": "yellow"
+      }
+    ],
+    "Rimimar": [
+      {
+        "name": "Rimine"
+      },
+      {
+        "name": "Rama"
+      }
+    ],
+    "Zorask": [
+      {
+        "name": "Zona"
+      }
+    ],
+    "Titutto": [
+      {
+        "name": "Tond"
+      },
+      {
+        "name": "Tige"
+      },
+      {
+        "name": "Tusser"
+      }
+    ],
+    "Dordal": [
+      {
+        "name": "Dalom",
+        "forest": true,
+        "home": "white"
+      },
+      {
+        "name": "Dordel",
+        "castle": true,
+        "home": "white"
+      }
+    ],
+    "Hyllerk": [
+      {
+        "name": "Herk",
+        "forest": true
+      },
+      {
+        "name": "Hyll",
+        "castle": true
+      }
+    ],
+    "Samsk": [
+      {
+        "name": "Sash",
+        "forest": true
+      },
+      {
+        "name": "Samoje"
+      }
+    ],
+    "Fusk": [
+      {
+        "name": "Furie",
+        "castle": true
+      },
+      {
+        "name": "Firril"
+      },
+      {
+        "name": "Fond"
+      }
+    ],
+    "Grontenberg": [
+      {
+        "name": "Gron"
+      },
+      {
+        "name": "Gnade"
+      },
+      {
+        "name": "Gewel",
+        "forest": true,
+        "castle": true
+      }
+    ],
+    "Erreman": [
+      {
+        "name": "Emman",
+        "forest": true,
+        "home": "black"
+      },
+      {
+        "name": "Erren",
+        "castle": true,
+        "home": "black"
+      }
+    ]
+  },
+  "seas": [
+    {
+      "name": "Mare Duna"
+    },
+    {
+      "name": "Mare Illa"
+    },
+    {
+      "name": "Mare Hynd"
+    },
+    {
+      "name": "Mare Gond"
+    },
+    {
+      "name": "Mare Elle"
+    },
+    {
+      "name": "Mare Furie"
+    },
+    {
+      "name": "Mare Ovond"
+    },
+    {
+      "name": "Mare Unna"
+    },
+    {
+      "name": "Mare Bøso"
+    }
+  ],
+  "neighbors": [
+    {
+      "area1": "Kyrie",
+      "area2": "Mare Hynd"
+    },
+    {
+      "area1": "Kyrie",
+      "area2": "Mare Illa"
+    },
+    {
+      "area1": "Jazel",
+      "area2": "Mare Illa"
+    },
+    {
+      "area1": "Jazel",
+      "area2": "Mare Duna"
+    },
+    {
+      "area1": "Jazel",
+      "area2": "Jizinne"
+    },
+    {
+      "area1": "Jizinne",
+      "area2": "Mare Duna"
+    },
+    {
+      "area1": "Lomone",
+      "area2": "Mare Illa"
+    },
+    {
+      "area1": "Lomone",
+      "area2": "Mare Duna"
+    },
+    {
+      "area1": "Lomone",
+      "area2": "Lusía"
+    },
+    {
+      "area1": "Lomone",
+      "area2": "Limbol"
+    },
+    {
+      "area1": "Limbol",
+      "area2": "Mare Duna"
+    },
+    {
+      "area1": "Limbol",
+      "area2": "Lusía"
+    },
+    {
+      "area1": "Limbol",
+      "area2": "Leil"
+    },
+    {
+      "area1": "Limbol",
+      "area2": "Worp"
+    },
+    {
+      "area1": "Lusía",
+      "area2": "Leil"
+    },
+    {
+      "area1": "Lusía",
+      "area2": "Morone",
+      "river": true
+    },
+    {
+      "area1": "Lusía",
+      "area2": "Brodo",
+      "river": true
+    },
+    {
+      "area1": "Leil",
+      "area2": "Brodo",
+      "river": true
+    },
+    {
+      "area1": "Leil",
+      "area2": "Bassas",
+      "river": true
+    },
+    {
+      "area1": "Leil",
+      "area2": "Ovo",
+      "river": true
+    },
+    {
+      "area1": "Leil",
+      "area2": "Worp"
+    },
+    {
+      "area1": "Leil",
+      "area2": "Winde"
+    },
+    {
+      "area1": "Worp",
+      "area2": "Mare Duna"
+    },
+    {
+      "area1": "Worp",
+      "area2": "Mare Gond"
+    },
+    {
+      "area1": "Worp",
+      "area2": "Winde"
+    },
+    {
+      "area1": "Winde",
+      "area2": "Ovo",
+      "river": true
+    },
+    {
+      "area1": "Winde",
+      "area2": "Mare Elle"
+    },
+    {
+      "area1": "Winde",
+      "area2": "Mare Gond"
+    },
+    {
+      "area1": "Ovo",
+      "area2": "Bassas",
+      "river": true
+    },
+    {
+      "area1": "Ovo",
+      "area2": "Nund",
+      "river": true
+    },
+    {
+      "area1": "Ovo",
+      "area2": "Mare Elle"
+    },
+    {
+      "area1": "Morone",
+      "area2": "Monté"
+    },
+    {
+      "area1": "Morone",
+      "area2": "Brodo"
+    },
+    {
+      "area1": "Monté",
+      "area2": "Arra",
+      "dangerZone": "Xanadu"
+    },
+    {
+      "area1": "Monté",
+      "area2": "Bom"
+    },
+    {
+      "area1": "Monté",
+      "area2": "Brodo"
+    },
+    {
+      "area1": "Brodo",
+      "area2": "Bom"
+    },
+    {
+      "area1": "Brodo",
+      "area2": "Bassas"
+    },
+    {
+      "area1": "Bom",
+      "area2": "Calis"
+    },
+    {
+      "area1": "Bom",
+      "area2": "Ninin"
+    },
+    {
+      "area1": "Bom",
+      "area2": "Bassas"
+    },
+    {
+      "area1": "Bassas",
+      "area2": "Ninin"
+    },
+    {
+      "area1": "Ninin",
+      "area2": "Calis",
+      "cliffs": true
+    },
+    {
+      "area1": "Ninin",
+      "area2": "Mare Furie"
+    },
+    {
+      "area1": "Ninin",
+      "area2": "Nund",
+      "cliffs": true
+    },
+    {
+      "area1": "Nund",
+      "area2": "Mare Elle"
+    },
+    {
+      "area1": "Arra",
+      "area2": "Amarí"
+    },
+    {
+      "area1": "Amarí",
+      "area2": "Pesth"
+    },
+    {
+      "area1": "Amarí",
+      "area2": "Calis"
+    },
+    {
+      "area1": "Calis",
+      "area2": "Pesth"
+    },
+    {
+      "area1": "Calis",
+      "area2": "Cymere"
+    },
+    {
+      "area1": "Calis",
+      "area2": "Mare Furie"
+    },
+    {
+      "area1": "Cymere",
+      "area2": "Pesth"
+    },
+    {
+      "area1": "Cymere",
+      "area2": "Mare Furie"
+    },
+    {
+      "area1": "Pesth",
+      "area2": "Purth"
+    },
+    {
+      "area1": "Pesth",
+      "area2": "Mare Furie"
+    },
+    {
+      "area1": "Purth",
+      "area2": "Mare Hynd"
+    },
+    {
+      "area1": "Purth",
+      "area2": "Mare Furie"
+    },
+    {
+      "area1": "Rimine",
+      "area2": "Mare Hynd"
+    },
+    {
+      "area1": "Rimine",
+      "area2": "Mare Furie"
+    },
+    {
+      "area1": "Rama",
+      "area2": "Mare Furie"
+    },
+    {
+      "area1": "Rama",
+      "area2": "Mare Elle"
+    },
+    {
+      "area1": "Zona",
+      "area2": "Mare Elle"
+    },
+    {
+      "area1": "Zona",
+      "area2": "Mare Gond"
+    },
+    {
+      "area1": "Tond",
+      "area2": "Mare Gond"
+    },
+    {
+      "area1": "Tond",
+      "area2": "Mare Elle"
+    },
+    {
+      "area1": "Tond",
+      "area2": "Tige",
+      "dangerZone": "Bankene",
+      "river": true
+    },
+    {
+      "area1": "Tond",
+      "area2": "Mare Ovond"
+    },
+    {
+      "area1": "Tige",
+      "area2": "Mare Elle"
+    },
+    {
+      "area1": "Tige",
+      "area2": "Dalom"
+    },
+    {
+      "area1": "Tige",
+      "area2": "Tusser"
+    },
+    {
+      "area1": "Tige",
+      "area2": "Mare Ovond"
+    },
+    {
+      "area1": "Tusser",
+      "area2": "Dalom"
+    },
+    {
+      "area1": "Tusser",
+      "area2": "Gron",
+      "dangerZone": "Shangrila"
+    },
+    {
+      "area1": "Dalom",
+      "area2": "Mare Elle"
+    },
+    {
+      "area1": "Dalom",
+      "area2": "Dordel"
+    },
+    {
+      "area1": "Dalom",
+      "area2": "Herk"
+    },
+    {
+      "area1": "Dordel",
+      "area2": "Mare Elle"
+    },
+    {
+      "area1": "Dordel",
+      "area2": "Mare Furie"
+    },
+    {
+      "area1": "Dordel",
+      "area2": "Herk"
+    },
+    {
+      "area1": "Herk",
+      "area2": "Hyll"
+    },
+    {
+      "area1": "Hyll",
+      "area2": "Mare Furie"
+    },
+    {
+      "area1": "Hyll",
+      "area2": "Samoje"
+    },
+    {
+      "area1": "Sash",
+      "area2": "Mare Furie"
+    },
+    {
+      "area1": "Sash",
+      "area2": "Mare Bøso"
+    },
+    {
+      "area1": "Samoje",
+      "area2": "Mare Furie"
+    },
+    {
+      "area1": "Samoje",
+      "area2": "Mare Bøso"
+    },
+    {
+      "area1": "Samoje",
+      "area2": "Erren",
+      "cliffs": true
+    },
+    {
+      "area1": "Furie",
+      "area2": "Mare Ovond"
+    },
+    {
+      "area1": "Furie",
+      "area2": "Firril"
+    },
+    {
+      "area1": "Firril",
+      "area2": "Gron"
+    },
+    {
+      "area1": "Firril",
+      "area2": "Gnade"
+    },
+    {
+      "area1": "Firril",
+      "area2": "Fond"
+    },
+    {
+      "area1": "Firril",
+      "area2": "Mare Ovond"
+    },
+    {
+      "area1": "Fond",
+      "area2": "Mare Unna"
+    },
+    {
+      "area1": "Fond",
+      "area2": "Mare Ovond"
+    },
+    {
+      "area1": "Gron",
+      "area2": "Emman"
+    },
+    {
+      "area1": "Gron",
+      "area2": "Gewel"
+    },
+    {
+      "area1": "Gron",
+      "area2": "Gnade"
+    },
+    {
+      "area1": "Gnade",
+      "area2": "Gewel"
+    },
+    {
+      "area1": "Gewel",
+      "area2": "Emman",
+      "cliffs": true
+    },
+    {
+      "area1": "Gewel",
+      "area2": "Mare Unna"
+    },
+    {
+      "area1": "Emman",
+      "area2": "Erren",
+      "cliffs": true
+    },
+    {
+      "area1": "Emman",
+      "area2": "Mare Unna"
+    },
+    {
+      "area1": "Erren",
+      "area2": "Mare Bøso"
+    },
+    {
+      "area1": "Mare Duna",
+      "area2": "Mare Illa"
+    },
+    {
+      "area1": "Mare Duna",
+      "area2": "Mare Gond"
+    },
+    {
+      "area1": "Mare Illa",
+      "area2": "Mare Hynd"
+    },
+    {
+      "area1": "Mare Hynd",
+      "area2": "Mare Furie"
+    },
+    {
+      "area1": "Mare Gond",
+      "area2": "Mare Elle"
+    },
+    {
+      "area1": "Mare Gond",
+      "area2": "Mare Ovond"
+    },
+    {
+      "area1": "Mare Elle",
+      "area2": "Mare Furie"
+    },
+    {
+      "area1": "Mare Elle",
+      "area2": "Mare Furie",
+      "dangerZone": "Tennene"
+    },
+    {
+      "area1": "Mare Elle",
+      "area2": "Mare Ovond",
+      "dangerZone": "Bankene"
+    },
+    {
+      "area1": "Mare Furie",
+      "area2": "Mare Bøso"
+    },
+    {
+      "area1": "Mare Ovond",
+      "area2": "Mare Unna"
+    },
+    {
+      "area1": "Mare Unna",
+      "area2": "Mare Bøso"
+    }
+  ]
 }

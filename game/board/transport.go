@@ -12,7 +12,7 @@ func (board Board) resolveTransports(move Order, destination Area) (
 		return false, nil
 	}
 
-	from := board[move.From]
+	from := board.Areas[move.From]
 	if from.Sea {
 		return false, nil
 	}
@@ -71,7 +71,7 @@ func (area Area) transportable(destination string, board Board, exclude map[stri
 
 	// Goes through the area's transporting neighbors to find potential transport paths through them.
 	for _, transportNeighbor := range transportingNeighbors {
-		transportArea := board[transportNeighbor.Name]
+		transportArea := board.Areas[transportNeighbor.Name]
 
 		attacked := len(transportArea.IncomingMoves) > 0
 		destAdjacent, destDangerZone := area.findDestination(destination)
@@ -129,7 +129,7 @@ func (area Area) transportingNeighbors(board Board, exclude map[string]struct{})
 	}
 
 	for _, neighbor := range area.Neighbors {
-		neighborArea := board[neighbor.Name]
+		neighborArea := board.Areas[neighbor.Name]
 		_, excluded := exclude[neighbor.Name]
 
 		if excluded ||

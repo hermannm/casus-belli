@@ -2,8 +2,8 @@ package board
 
 // Adds the round's orders to the board, and resolves them.
 // Returns a list of any potential battles from the round.
-func (board Board) Resolve(round Round) []Battle {
-	battles := make([]Battle, 0)
+func (board Board) Resolve(round Round) (battles []Battle, winner Player) {
+	battles = make([]Battle, 0)
 
 	switch round.Season {
 	case SeasonWinter:
@@ -16,11 +16,13 @@ func (board Board) Resolve(round Round) []Battle {
 		battles = append(battles, secondBattles...)
 
 		board.resolveSieges()
+
+		winner = board.resolveWinner()
 	}
 
 	board.cleanup()
 
-	return battles
+	return battles, winner
 }
 
 // Resolves results of the given orders on the board.
@@ -55,7 +57,7 @@ func (board Board) populateAreaOrders(orders []Order) {
 
 	// Then adds all supports, except in those areas that are attacked.
 	for _, order := range orders {
-		if order.Type != OrderSupport || len(board[order.From].IncomingMoves) > 0 {
+		if order.Type != OrderSupport || len(board.Areas[order.From].IncomingMoves) > 0 {
 			continue
 		}
 
@@ -89,7 +91,7 @@ outerLoop:
 			}
 		default:
 		boardLoop:
-			for areaName, area := range board {
+			for areaName, area := range board.Areas {
 				retreat, hasRetreat := retreats[areaName]
 				if _, skip := processed[areaName]; skip && !hasRetreat {
 					continue
@@ -119,7 +121,7 @@ outerLoop:
 					processed[area.Name] = struct{}{}
 
 					if hasRetreat && area.IsEmpty() {
-						board[areaName] = area.setUnit(retreat.Unit)
+						board.Areas[areaName] = area.setUnit(retreat.Unit)
 						delete(retreats, areaName)
 					}
 
@@ -155,7 +157,7 @@ outerLoop:
 func (board Board) crossDangerZones() []Battle {
 	battles := make([]Battle, 0)
 
-	for areaName, area := range board {
+	for areaName, area := range board.Areas {
 		order := area.Order
 
 		if order.Type != OrderMove && order.Type != OrderSupport {
@@ -176,7 +178,7 @@ func (board Board) crossDangerZones() []Battle {
 		// If support fails crossing, only the order fails.
 		if !survived {
 			if order.Type == OrderMove {
-				board[areaName] = area.setUnit(Unit{})
+				board.Areas[areaName] = area.setUnit(Unit{})
 				board.removeMove(order)
 			} else {
 				board.removeSupport(order)
@@ -189,7 +191,7 @@ func (board Board) crossDangerZones() []Battle {
 
 // Goes through areas with siege orders, and updates the area following the siege.
 func (board Board) resolveSieges() {
-	for areaName, area := range board {
+	for areaName, area := range board.Areas {
 		if area.Order.IsNone() || area.Order.Type != OrderBesiege {
 			continue
 		}
@@ -200,8 +202,40 @@ func (board Board) resolveSieges() {
 			area.SiegeCount = 0
 		}
 
-		board[areaName] = area
+		board.Areas[areaName] = area
 	}
+}
+
+// Goes through the board to check if any player has met the board's winning castle count.
+// If there is a winner, and there is no tie, returns the tag of that player.
+// Otherwise, returns "".
+func (board Board) resolveWinner() Player {
+	castleCount := make(map[Player]int)
+
+	for _, area := range board.Areas {
+		if area.Castle && area.IsControlled() {
+			castleCount[area.Control]++
+		}
+	}
+
+	tie := false
+	highestCount := 0
+	var highestCountPlayer Player
+	for player, count := range castleCount {
+		if count > highestCount {
+			highestCount = count
+			highestCountPlayer = player
+			tie = false
+		} else if count == highestCount {
+			tie = true
+		}
+	}
+
+	if !tie && highestCount > board.WinningCastleCount {
+		return highestCountPlayer
+	}
+
+	return ""
 }
 
 // Resolves winter orders (builds and internal moves) on the board.
@@ -211,22 +245,22 @@ func (board Board) resolveWinter(orders []Order) {
 		switch order.Type {
 
 		case OrderBuild:
-			from := board[order.From]
+			from := board.Areas[order.From]
 			from.Unit = Unit{
 				Player: order.Player,
 				Type:   order.Build,
 			}
-			board[order.From] = from
+			board.Areas[order.From] = from
 
 		case OrderMove:
-			from := board[order.From]
-			to := board[order.To]
+			from := board.Areas[order.From]
+			to := board.Areas[order.To]
 
 			to.Unit = from.Unit
 			from.Unit = Unit{}
 
-			board[order.From] = from
-			board[order.To] = to
+			board.Areas[order.From] = from
+			board.Areas[order.To] = to
 
 		}
 	}
@@ -234,7 +268,7 @@ func (board Board) resolveWinter(orders []Order) {
 
 // Cleans up remaining order references on the board after the round.
 func (board Board) cleanup() {
-	for areaName, area := range board {
+	for areaName, area := range board.Areas {
 		area.Order = Order{}
 
 		if len(area.IncomingMoves) > 0 {
@@ -244,6 +278,6 @@ func (board Board) cleanup() {
 			area.IncomingSupports = make([]Order, 0)
 		}
 
-		board[areaName] = area
+		board.Areas[areaName] = area
 	}
 }

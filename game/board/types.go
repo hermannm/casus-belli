@@ -19,8 +19,14 @@ type Round struct {
 // See Season constants for possible values.
 type Season string
 
-// A map of area names to areas.
-type Board map[string]Area
+// A pre-configured board used for the game.
+type Board struct {
+	// Areas on the board that player units can move to.
+	Areas map[string]Area `json:"area"`
+
+	// The number of castles to capture to win a game round on this board.
+	WinningCastleCount int `json:"winningCastleCount"`
+}
 
 // An area on the board map.
 type Area struct {
