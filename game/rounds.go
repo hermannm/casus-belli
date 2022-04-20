@@ -11,6 +11,7 @@ func (game *Game) Start() {
 	var season board.Season
 	var winner board.Player
 
+	// Starts new rounds until there is a winner.
 	for winner == "" {
 		season = nextSeason(season)
 
@@ -46,6 +47,13 @@ func (game *Game) Start() {
 			})
 		}
 	}
+
+	game.Lobby.SendToAll(messages.Winner{
+		Base: messages.Base{
+			Type: messages.MessageWinner,
+		},
+		Winner: string(winner),
+	})
 }
 
 // Waits for the given player to submit orders, then validates them.
