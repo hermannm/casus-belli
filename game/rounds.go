@@ -4,6 +4,7 @@ import (
 	"hermannm.dev/bfh-server/game/board"
 	"hermannm.dev/bfh-server/game/messages"
 	"hermannm.dev/bfh-server/game/validation"
+	"hermannm.dev/bfh-server/lobby"
 )
 
 // Initializes a new round of the game.
@@ -40,19 +41,14 @@ func (game *Game) Start() {
 
 		for _, battle := range battles {
 			game.Lobby.SendToAll(messages.BattleResult{
-				Base: messages.Base{
-					Type: messages.MessageBattleResult,
-				},
-				Battle: battle,
+				Message: lobby.Message{Type: messages.MessageBattleResult}, Battle: battle,
 			})
 		}
 	}
 
 	game.Lobby.SendToAll(messages.Winner{
-		Base: messages.Base{
-			Type: messages.MessageWinner,
-		},
-		Winner: string(winner),
+		Message: lobby.Message{Type: messages.MessageWinner},
+		Winner:  string(winner),
 	})
 }
 

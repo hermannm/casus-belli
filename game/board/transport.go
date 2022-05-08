@@ -112,7 +112,8 @@ func (area Area) transportable(destination string, board Board, exclude map[stri
 }
 
 // Finds the given area's friendly neighbors that offer transports.
-// Takes a map of area names to exclude, and returns a copy of it with the transporting neighbors added.
+// Takes a map of area names to exclude,
+// and returns a copy of it with the transporting neighbors added.
 func (area Area) transportingNeighbors(board Board, exclude map[string]struct{}) (
 	transports []Neighbor,
 	newExclude map[string]struct{},

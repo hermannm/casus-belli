@@ -46,14 +46,6 @@ type Game interface {
 	Start()
 }
 
-// Handles incoming messages from a client.
-type Receiver interface {
-	// Takes an unprocessed message in byte format from the client,
-	// and processes it according to the game's implementation.
-	// Called whenever a message is received from the client.
-	HandleMessage(message []byte)
-}
-
 // Signature for functions that construct a game instance.
 // Takes the lobby to which players can connect,
 // and an untyped options parameter that can be parsed by the game instance for use in setup.
@@ -172,23 +164,6 @@ func (lobby *Lobby) SendToAll(message any) error {
 	}
 
 	return err
-}
-
-// Listens for messages from the player, and forwards them to the given receiver.
-// Listens continuously until the player turns inactive.
-func (player *Player) Listen(receiver Receiver) {
-	for {
-		if !player.isActive() {
-			return
-		}
-
-		_, message, err := player.Socket.ReadMessage()
-		if err != nil {
-			continue
-		}
-
-		go receiver.HandleMessage(message)
-	}
 }
 
 // Returns the current connected players in a lobby, and the max number of potential players.

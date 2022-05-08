@@ -2,6 +2,7 @@ package messages
 
 import (
 	"hermannm.dev/bfh-server/game/board"
+	"hermannm.dev/bfh-server/lobby"
 )
 
 // Messages from client to server.
@@ -21,7 +22,7 @@ const (
 
 // Message sent from client when submitting orders.
 type SubmitOrders struct {
-	Base // Type: MessageSubmitOrders.
+	lobby.Message // Type: MessageSubmitOrders.
 
 	// List of submitted orders.
 	Orders []board.Order `json:"orders"`
@@ -30,7 +31,7 @@ type SubmitOrders struct {
 // Message sent from client when declaring who to support with their support order.
 // Forwarded by server to all clients to show who were given support.
 type GiveSupport struct {
-	Base // Type: MessageGiveSupport.
+	lobby.Message // Type: MessageGiveSupport.
 
 	// Name of the area in which the support order is placed.
 	From string `json:"from"`
@@ -44,12 +45,12 @@ type GiveSupport struct {
 
 // Message sent from client when they want to quit the game.
 type Quit struct {
-	Base // Type: MessageQuit.
+	lobby.Message // Type: MessageQuit.
 }
 
 // Message sent from client when they vote to kick another player.
 type Kick struct {
-	Base // Type: MessageKick.
+	lobby.Message // Type: MessageKick.
 
 	// ID of the player to votekick.
 	Player string `json:"player"`
@@ -58,7 +59,7 @@ type Kick struct {
 // Message passed from the client during winter council voting.
 // Used for the throne expansion.
 type WinterVote struct {
-	Base // Type: MessageWinterVote
+	lobby.Message // Type: MessageWinterVote
 
 	// ID of the player that the submitting player votes for.
 	Player string `json:"player"`
@@ -67,7 +68,7 @@ type WinterVote struct {
 // Message passed from the client with the sword to declare where they want to use it.
 // Used for the throne expansion.
 type Sword struct {
-	Base // Type: MessageSword.
+	lobby.Message // Type: MessageSword.
 
 	// Name of the area in which the player wants to use the sword in battle.
 	Area string `json:"area"`
@@ -79,7 +80,7 @@ type Sword struct {
 // Message passed from the client with the raven when they want to spy on another player's orders.
 // Used for the throne expansion.
 type Raven struct {
-	Base // Type: MessageRaven.
+	lobby.Message // Type: MessageRaven.
 
 	// ID of the player on whom to spy.
 	Player string `json:"player"`
