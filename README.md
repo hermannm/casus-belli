@@ -1,6 +1,6 @@
-# BfH Server
+# BfH Game Server
 
-_The Battle for Hermannia_ is a board game created as a gift by the father of [hermannm](https://github.com/hermannm), a developer of this project. This digital edition of _Hermannia_ is an online multiplayer implementation of the game. It consists of this server, written in Go, as well as a Unity client at [immerse-ntnu/bfh-client](https://github.com/immerse-ntnu/bfh-client).
+_The Battle for Hermannia_ is a board game created as a gift by the father of [hermannm](https://github.com/hermannm), a developer of this project. This digital edition of _Hermannia_ is an online multiplayer implementation of the game. It consists of this server, written in Go, as well as a Unity client at [`immerse-ntnu/bfh-client`](https://github.com/immerse-ntnu/bfh-client).
 
 ## Package Structure
 
@@ -18,6 +18,6 @@ _The Battle for Hermannia_ is a board game created as a gift by the father of [h
 ## Credits
 
 - Tomas H.V. Mørkrid for creating the original board game
-- [Lars-over](https://github.com/Lars-over), [kristley](https://github.com/kristley) and [bjorvik](https://github.com/bjorvik) of [Immerse NTNU](https://github.com/immerse-ntnu) for their support, as well as their work on [the client](https://github.com/immerse-ntnu/bfh-client)
+- [Lars-over](https://github.com/Lars-over), [kristley](https://github.com/kristley), [bjorvik](https://github.com/bjorvik) and [ragnsol](https://github.com/ragnsol) of [Immerse NTNU](https://github.com/immerse-ntnu) for their support, as well as their work on [the client](https://github.com/immerse-ntnu/bfh-client)
 - [gorilla/websocket](https://github.com/gorilla/websocket) for the Go WebSocket package
   - _Copyright (c) 2013 The Gorilla WebSocket Authors, [BSD 2-clause license](https://github.com/gorilla/websocket/blob/master/LICENSE)_
