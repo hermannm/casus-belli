@@ -18,6 +18,6 @@ _The Battle for Hermannia_ is a board game created as a gift by the father of [h
 ## Credits
 
 - Tomas H.V. Mørkrid for creating the original board game
-- [Lars-over](https://github.com/Lars-over), [kristley](https://github.com/kristley), [bjorvik](https://github.com/bjorvik) and [ragnsol](https://github.com/ragnsol) of [Immerse NTNU](https://github.com/immerse-ntnu) for their support, as well as their work on [the client](https://github.com/immerse-ntnu/bfh-client)
+- [Lars-over](https://github.com/Lars-over), [kristley](https://github.com/kristley), [bjorvik](https://github.com/bjorvik) and [ragnsol](https://github.com/ragnsol) of [Immerse NTNU](https://github.com/immerse-ntnu) for their support, as well as their work on the [game client](https://github.com/immerse-ntnu/bfh-client)
 - [gorilla/websocket](https://github.com/gorilla/websocket) for the Go WebSocket package
   - _Copyright (c) 2013 The Gorilla WebSocket Authors, [BSD 2-clause license](https://github.com/gorilla/websocket/blob/master/LICENSE)_
