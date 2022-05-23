@@ -5,13 +5,13 @@ import (
 	"hermannm.dev/bfh-server/lobby"
 )
 
-// The global overview of games supported by the server.
+// The global overview of games configured for this server.
 var Games = map[string]lobby.GameConstructor{
-	"The Battle for Hermannia (5 players)": gameConstructor("hermannia_5players"),
+	"The Battle for Hermannia (5 players)": gameConstructor("bfh_5players"),
 }
 
-// Returns a function to construct new game instances with the given boardName.
-// The boardName must correspond to a .json file in ../game/boardconfig.
+// Returns a constructor for new game instances with the given boardName.
+// The boardName must correspond to a .json file in game/boardsetup/.
 func gameConstructor(boardName string) lobby.GameConstructor {
 	return func(lob *lobby.Lobby, options any) (lobby.Game, error) {
 		gameOptions, ok := options.(game.GameOptions)

@@ -10,7 +10,7 @@ import (
 )
 
 // boards embeds the json files of boards from this folder.
-//go:embed hermannia_5players.json
+//go:embed bfh_5players.json
 var boards embed.FS
 
 // Utility type for json unmarshaling.
