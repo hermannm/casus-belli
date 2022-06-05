@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 
-	"hermannm.dev/bfh-server/lobby"
+	"hermannm.dev/bfh-server/gameserver"
 )
 
 // The Receiver handles messages coming from client, and parses them
@@ -36,7 +36,7 @@ func NewReceiver() Receiver {
 
 // Takes a partly deserialized base message, checks it type, and further deserializes the given raw
 // message to pass it to the appropriate channel on the receiver.
-func (receiver Receiver) HandleMessage(baseMessage lobby.Message, rawMessage []byte) {
+func (receiver Receiver) HandleMessage(baseMessage gameserver.Message, rawMessage []byte) {
 	switch baseMessage.Type {
 	case MessageSubmitOrders:
 		var ordersMessage SubmitOrders

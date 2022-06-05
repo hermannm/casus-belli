@@ -4,7 +4,7 @@ import (
 	"hermannm.dev/bfh-server/game/board"
 	"hermannm.dev/bfh-server/game/messages"
 	"hermannm.dev/bfh-server/game/validation"
-	"hermannm.dev/bfh-server/lobby"
+	"hermannm.dev/bfh-server/gameserver"
 )
 
 // Initializes a new round of the game.
@@ -40,16 +40,11 @@ func (game *Game) Start() {
 		winner = newWinner
 
 		for _, battle := range battles {
-			game.Lobby.SendToAll(messages.BattleResult{
-				Message: lobby.Message{Type: messages.MessageBattleResult}, Battle: battle,
-			})
+			messages.SendBattleResult(game.Lobby, battle)
 		}
 	}
 
-	game.Lobby.SendToAll(messages.Winner{
-		Message: lobby.Message{Type: messages.MessageWinner},
-		Winner:  string(winner),
-	})
+	messages.SendWinner(game.Lobby, string(winner))
 }
 
 // Waits for the given player to submit orders, then validates them.
@@ -71,7 +66,9 @@ func (game Game) receiveAndValidateOrders(
 
 			err := validation.ValidateOrderSet(orders, game.Board, season)
 			if err != nil {
-				game.Lobby.Players[playerID].Send(err.Error())
+				if player, ok := game.Lobby.GetPlayer(playerID); ok {
+					gameserver.SendError(player, err.Error())
+				}
 				continue
 			}
 
