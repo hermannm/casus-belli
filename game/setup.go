@@ -6,15 +6,19 @@ import (
 	"hermannm.dev/bfh-server/game/board"
 	"hermannm.dev/bfh-server/game/boardsetup"
 	"hermannm.dev/bfh-server/game/messages"
-	"hermannm.dev/bfh-server/gameserver"
 )
 
 type Game struct {
 	Board    board.Board
 	Rounds   []board.Round
-	Lobby    gameserver.Lobby
+	Lobby    Lobby
 	Messages map[string]messages.Receiver
 	Options  GameOptions
+}
+
+type Lobby interface {
+	Send(msg any) error
+	GetPlayer(playerID string) (player interface{ Send(msg any) error }, ok bool)
 }
 
 type GameOptions struct {
@@ -22,7 +26,7 @@ type GameOptions struct {
 }
 
 // Constructs a game instance. Initializes player slots for each area home tag on the given board.
-func New(boardName string, lob gameserver.Lobby, options GameOptions) (gameserver.Game, error) {
+func New(boardName string, lob Lobby, options GameOptions) (*Game, error) {
 	brd, err := boardsetup.ReadBoard(boardName)
 	if err != nil {
 		return nil, err
@@ -83,7 +87,9 @@ outerLoop:
 
 // Creates a new message receiver for the given player tag, and adds it to the game.
 // Returns error if tag is invalid or already taken.
-func (game Game) AddPlayer(playerID string) (gameserver.MessageReceiver, error) {
+func (game Game) AddPlayer(playerID string) (interface {
+	HandleMessage(msgType string, msg []byte)
+}, error) {
 	receiver, ok := game.Messages[playerID]
 	if !ok {
 		return nil, errors.New("invalid player tag")

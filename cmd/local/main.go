@@ -10,7 +10,6 @@ import (
 	"text/tabwriter"
 
 	server "hermannm.dev/bfh-server"
-	"hermannm.dev/bfh-server/gameserver"
 	"hermannm.dev/bfh-server/lobby"
 	"hermannm.dev/ipfinder"
 )
@@ -40,7 +39,7 @@ func main() {
 
 // Prompts the user to select a game from a list of supported games.
 // Does not return until a valid game selection is made.
-func selectGame(games map[string]gameserver.GameConstructor) gameserver.GameConstructor {
+func selectGame(games map[string]lobby.GameConstructor) lobby.GameConstructor {
 	fmt.Print("Available games:\n")
 
 	gameTitles := make([]string, 0)
@@ -80,7 +79,7 @@ func selectGame(games map[string]gameserver.GameConstructor) gameserver.GameCons
 // Prompts the user to choose a name for the lobby, then creates it.
 // Constructs the lobby's game instance with the given constructor.
 // Does not return until a valid lobby is created.
-func createLobby(game gameserver.GameConstructor) {
+func createLobby(game lobby.GameConstructor) {
 	var lobbyName string
 	for {
 		fmt.Print("Type name of lobby: ")

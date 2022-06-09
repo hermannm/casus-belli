@@ -2,7 +2,6 @@ package messages
 
 import (
 	"hermannm.dev/bfh-server/game/board"
-	"hermannm.dev/bfh-server/gameserver"
 )
 
 // Messages from client to server.
@@ -22,7 +21,7 @@ const (
 
 // Message sent from client when submitting orders.
 type SubmitOrders struct {
-	gameserver.Message // Type: MessageSubmitOrders.
+	Type string `json:"type"` // MessageSubmitOrders
 
 	// List of submitted orders.
 	Orders []board.Order `json:"orders"`
@@ -31,7 +30,7 @@ type SubmitOrders struct {
 // Message sent from client when declaring who to support with their support order.
 // Forwarded by server to all clients to show who were given support.
 type GiveSupport struct {
-	gameserver.Message // Type: MessageGiveSupport.
+	Type string `json:"type"` // MessageGiveSupport
 
 	// Name of the area in which the support order is placed.
 	From string `json:"from"`
@@ -45,12 +44,12 @@ type GiveSupport struct {
 
 // Message sent from client when they want to quit the game.
 type Quit struct {
-	gameserver.Message // Type: MessageQuit.
+	Type string `json:"type"` // MessageQuit
 }
 
 // Message sent from client when they vote to kick another player.
 type Kick struct {
-	gameserver.Message // Type: MessageKick.
+	Type string `json:"type"` // MessageKick
 
 	// ID of the player to votekick.
 	Player string `json:"player"`
@@ -59,7 +58,7 @@ type Kick struct {
 // Message passed from the client during winter council voting.
 // Used for the throne expansion.
 type WinterVote struct {
-	gameserver.Message // Type: MessageWinterVote
+	Type string `json:"type"` // MessageWinterVote
 
 	// ID of the player that the submitting player votes for.
 	Player string `json:"player"`
@@ -68,7 +67,7 @@ type WinterVote struct {
 // Message passed from the client with the sword to declare where they want to use it.
 // Used for the throne expansion.
 type Sword struct {
-	gameserver.Message // Type: MessageSword.
+	Type string `json:"type"` // MessageSword
 
 	// Name of the area in which the player wants to use the sword in battle.
 	Area string `json:"area"`
@@ -80,7 +79,7 @@ type Sword struct {
 // Message passed from the client with the raven when they want to spy on another player's orders.
 // Used for the throne expansion.
 type Raven struct {
-	gameserver.Message // Type: MessageRaven.
+	Type string `json:"type"` // MessageRaven
 
 	// ID of the player on whom to spy.
 	Player string `json:"player"`

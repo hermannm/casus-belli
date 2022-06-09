@@ -7,7 +7,6 @@ import (
 	"sync"
 
 	"github.com/gorilla/websocket"
-	"hermannm.dev/bfh-server/gameserver"
 )
 
 // Global list of game lobbies.
@@ -16,7 +15,7 @@ var lobbies = make(map[string]*Lobby)
 // A collection of players for a game.
 type Lobby struct {
 	ID   string
-	Game gameserver.Game
+	Game Game
 
 	Lock sync.RWMutex   // Used to synchronize the adding/removal of players.
 	Wait sync.WaitGroup // Used to wait for the lobby to fill up with players.
@@ -33,10 +32,31 @@ type Player struct {
 	Lock *sync.RWMutex // Used to synchronize reading and setting the Active field.
 }
 
+// Represents a game instance. Used by lobbies to enable different types of games.
+type Game interface {
+	// Takes a player identifier string (unique to this game instance, format depends on the game),
+	// and returns a receiver to handle messages from the player,
+	// or an error if adding the player failed.
+	AddPlayer(playerID string) (interface {
+		HandleMessage(msgType string, msg []byte)
+	}, error)
+
+	// Returns the range of possible player IDs for this game.
+	PlayerIDs() []string
+
+	// Starts the game.
+	Start()
+}
+
+// Signature for functions that construct a game instance.
+// Takes the lobby to which players can connect,
+// and an untyped options parameter that can be parsed by the game instance for use in setup.
+type GameConstructor func(lobby *Lobby, options any) (Game, error)
+
 // Creates and registers a new lobby with the given ID,
 // and uses the given constructor to construct its game instance.
 // Returns error if lobby ID is already taken, or if game construction failed.
-func New(id string, gameConstructor gameserver.GameConstructor) (*Lobby, error) {
+func New(id string, gameConstructor GameConstructor) (*Lobby, error) {
 	if id == "" {
 		return nil, errors.New("lobby name cannot be blank")
 	}
@@ -87,7 +107,7 @@ func RegisterLobby(lobby *Lobby) error {
 
 // Returns the player in the lobby corresponding to the given player ID,
 // or false if none is found.
-func (lobby *Lobby) GetPlayer(playerID string) (gameserver.Player, bool) {
+func (lobby *Lobby) GetPlayer(playerID string) (interface{ Send(msg any) error }, bool) {
 	lobby.Lock.RLock()
 	defer lobby.Lock.RUnlock()
 	player, ok := lobby.Players[playerID]
@@ -124,19 +144,19 @@ func (player *Player) setActive(active bool) {
 
 // Marshals the given message to JSON and sends it over the player's socket connection.
 // Returns an error if the player is inactive, or if the marshaling/sending failed.
-func (player *Player) Send(message any) error {
+func (player *Player) Send(msg any) error {
 	if !player.isActive() {
 		return errors.New("cannot send to inactive player")
 	}
 
-	err := player.Socket.WriteJSON(message)
+	err := player.Socket.WriteJSON(msg)
 	return err
 }
 
 // Marshals the given message to JSON and sends it to all connected players.
 // Returns an error if it failed to marshal or send to at least one of the players.
-func (lobby *Lobby) Send(message any) error {
-	marshaledMsg, err := json.Marshal(message)
+func (lobby *Lobby) Send(msg any) error {
+	marshaledMsg, err := json.Marshal(msg)
 	if err != nil {
 		return err
 	}

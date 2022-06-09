@@ -8,7 +8,6 @@ import (
 	"sync"
 
 	"github.com/gorilla/websocket"
-	"hermannm.dev/bfh-server/gameserver"
 )
 
 // Registers handlers for the lobby API endpoints on the given ServeMux.
@@ -35,7 +34,7 @@ func RegisterEndpoints(mux *http.ServeMux) {
 // The endpoint expects a parameter corresponding to a key in the game constructor map
 // in order to know which type of game to create.
 func RegisterLobbyCreationEndpoints(
-	mux *http.ServeMux, games map[string]gameserver.GameConstructor,
+	mux *http.ServeMux, games map[string]GameConstructor,
 ) {
 	if mux == nil {
 		mux = http.DefaultServeMux
@@ -179,7 +178,7 @@ func addPlayer(res http.ResponseWriter, req *http.Request) {
 }
 
 // Returns a handler for creating lobbies (for servers with public lobby creation).
-func createLobbyHandler(games map[string]gameserver.GameConstructor) http.HandlerFunc {
+func createLobbyHandler(games map[string]GameConstructor) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		params, ok := checkParams(req, "id", "game")
 		if !ok {

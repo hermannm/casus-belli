@@ -3,8 +3,6 @@ package messages
 import (
 	"encoding/json"
 	"errors"
-
-	"hermannm.dev/bfh-server/gameserver"
 )
 
 // The Receiver handles messages coming from client, and parses them
@@ -36,11 +34,11 @@ func NewReceiver() Receiver {
 
 // Takes a partly deserialized base message, checks it type, and further deserializes the given raw
 // message to pass it to the appropriate channel on the receiver.
-func (receiver Receiver) HandleMessage(baseMessage gameserver.Message, rawMessage []byte) {
-	switch baseMessage.Type {
+func (receiver Receiver) HandleMessage(msgType string, rawMsg []byte) {
+	switch msgType {
 	case MessageSubmitOrders:
 		var ordersMessage SubmitOrders
-		err := json.Unmarshal(rawMessage, &ordersMessage)
+		err := json.Unmarshal(rawMsg, &ordersMessage)
 		if err != nil {
 			receiver.Errors <- err
 			return
@@ -49,7 +47,7 @@ func (receiver Receiver) HandleMessage(baseMessage gameserver.Message, rawMessag
 		receiver.Orders <- ordersMessage
 	case MessageGiveSupport:
 		var supportMessage GiveSupport
-		err := json.Unmarshal(rawMessage, &supportMessage)
+		err := json.Unmarshal(rawMsg, &supportMessage)
 		if err != nil {
 			receiver.Errors <- err
 			return
@@ -58,7 +56,7 @@ func (receiver Receiver) HandleMessage(baseMessage gameserver.Message, rawMessag
 		receiver.Support <- supportMessage
 	case MessageQuit:
 		var quitMessage Quit
-		err := json.Unmarshal(rawMessage, &quitMessage)
+		err := json.Unmarshal(rawMsg, &quitMessage)
 		if err != nil {
 			receiver.Errors <- err
 			return
@@ -67,7 +65,7 @@ func (receiver Receiver) HandleMessage(baseMessage gameserver.Message, rawMessag
 		receiver.Quit <- quitMessage
 	case MessageKick:
 		var kickMessage Kick
-		err := json.Unmarshal(rawMessage, &kickMessage)
+		err := json.Unmarshal(rawMsg, &kickMessage)
 		if err != nil {
 			receiver.Errors <- err
 			return
@@ -76,7 +74,7 @@ func (receiver Receiver) HandleMessage(baseMessage gameserver.Message, rawMessag
 		receiver.Kick <- kickMessage
 	case MessageWinterVote:
 		var winterVoteMessage WinterVote
-		err := json.Unmarshal(rawMessage, &winterVoteMessage)
+		err := json.Unmarshal(rawMsg, &winterVoteMessage)
 		if err != nil {
 			receiver.Errors <- err
 			return
@@ -85,7 +83,7 @@ func (receiver Receiver) HandleMessage(baseMessage gameserver.Message, rawMessag
 		receiver.WinterVote <- winterVoteMessage
 	case MessageSword:
 		var swordMessage Sword
-		err := json.Unmarshal(rawMessage, &swordMessage)
+		err := json.Unmarshal(rawMsg, &swordMessage)
 		if err != nil {
 			receiver.Errors <- err
 			return
@@ -94,7 +92,7 @@ func (receiver Receiver) HandleMessage(baseMessage gameserver.Message, rawMessag
 		receiver.Sword <- swordMessage
 	case MessageRaven:
 		var ravenMessage Raven
-		err := json.Unmarshal(rawMessage, &ravenMessage)
+		err := json.Unmarshal(rawMsg, &ravenMessage)
 		if err != nil {
 			receiver.Errors <- err
 			return
@@ -102,7 +100,7 @@ func (receiver Receiver) HandleMessage(baseMessage gameserver.Message, rawMessag
 
 		receiver.Raven <- ravenMessage
 	default:
-		receiver.Errors <- errors.New("unrecognized message type: " + baseMessage.Type)
+		receiver.Errors <- errors.New("unrecognized message type: " + msgType)
 		return
 	}
 }
