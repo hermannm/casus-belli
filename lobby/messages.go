@@ -6,9 +6,9 @@ import (
 
 // Lobby-specific messages from client to server.
 const (
-	MessageError     = "error"
-	MessageReady     = "ready"
-	MessageStartGame = "startGame"
+	MsgError     = "error"
+	MsgReady     = "ready"
+	MsgStartGame = "startGame"
 )
 
 // Base for all messages.
@@ -18,19 +18,19 @@ type Message struct {
 
 // Message sent from server when an error occurs.
 type ErrorMessage struct {
-	Type  string `json:"type"` // MessageError
+	Type  string `json:"type"` // MsgError
 	Error string `json:"error"`
 }
 
 // Message sent from client to mark themselves as ready to start the game.
 type ReadyMessage struct {
-	Type  string `json:"type"` // MessageReady
+	Type  string `json:"type"` // MsgReady
 	Ready bool   `json:"ready"`
 }
 
 // Message sent from lobby host to start the game once all players are ready.
 type StartGameMessage struct {
-	Type string `json:"type"` // MessageStartGame
+	Type string `json:"type"` // MsgStartGame
 }
 
 // Listens for messages from the player, and forwards them to the given receiver.
@@ -52,7 +52,7 @@ func (player *Player) Listen(msgHandler interface {
 
 		err = json.Unmarshal(msg, &baseMsg)
 		if err != nil || baseMsg.Type == "" {
-			player.Send(ErrorMessage{Type: MessageError, Error: "error in deserializing message"})
+			player.Send(ErrorMessage{Type: MsgError, Error: "error in deserializing message"})
 			return
 		}
 

@@ -40,12 +40,12 @@ func (game *Game) Start() {
 
 		for _, battle := range battles {
 			game.Lobby.Send(messages.BattleResult{
-				Type: messages.MessageBattleResult, Battle: battle,
+				Type: messages.MsgBattleResult, Battle: battle,
 			})
 		}
 	}
 
-	game.Lobby.Send(messages.Winner{Type: messages.MessageWinner, Winner: string(winner)})
+	game.Lobby.Send(messages.Winner{Type: messages.MsgWinner, Winner: string(winner)})
 }
 
 // Waits for the given player to submit orders, then validates them.
@@ -68,7 +68,7 @@ func (game Game) receiveAndValidateOrders(
 			err := validation.ValidateOrderSet(orders, game.Board, season)
 			if err != nil {
 				if player, ok := game.Lobby.GetPlayer(playerID); ok {
-					player.Send(messages.Error{Type: messages.MessageError, Error: err.Error()})
+					player.Send(messages.Error{Type: messages.MsgError, Error: err.Error()})
 				}
 				continue
 			}

@@ -6,22 +6,22 @@ import (
 
 // Messages from client to server.
 const (
-	MessageSubmitOrders = "submitOrders"
-	MessageGiveSupport  = "giveSupport"
-	MessageQuit         = "quit"
-	MessageKick         = "kick"
+	MsgSubmitOrders = "submitOrders"
+	MsgGiveSupport  = "giveSupport"
+	MsgQuit         = "quit"
+	MsgKick         = "kick"
 )
 
 // Client messages used for the throne expansion.
 const (
-	MessageWinterVote = "winterVote"
-	MessageSword      = "sword"
-	MessageRaven      = "raven"
+	MsgWinterVote = "winterVote"
+	MsgSword      = "sword"
+	MsgRaven      = "raven"
 )
 
 // Message sent from client when submitting orders.
 type SubmitOrders struct {
-	Type string `json:"type"` // MessageSubmitOrders
+	Type string `json:"type"` // MsgSubmitOrders
 
 	// List of submitted orders.
 	Orders []board.Order `json:"orders"`
@@ -30,7 +30,7 @@ type SubmitOrders struct {
 // Message sent from client when declaring who to support with their support order.
 // Forwarded by server to all clients to show who were given support.
 type GiveSupport struct {
-	Type string `json:"type"` // MessageGiveSupport
+	Type string `json:"type"` // MsgGiveSupport
 
 	// Name of the area in which the support order is placed.
 	From string `json:"from"`
@@ -44,12 +44,12 @@ type GiveSupport struct {
 
 // Message sent from client when they want to quit the game.
 type Quit struct {
-	Type string `json:"type"` // MessageQuit
+	Type string `json:"type"` // MsgQuit
 }
 
 // Message sent from client when they vote to kick another player.
 type Kick struct {
-	Type string `json:"type"` // MessageKick
+	Type string `json:"type"` // MsgKick
 
 	// ID of the player to votekick.
 	Player string `json:"player"`
@@ -58,7 +58,7 @@ type Kick struct {
 // Message passed from the client during winter council voting.
 // Used for the throne expansion.
 type WinterVote struct {
-	Type string `json:"type"` // MessageWinterVote
+	Type string `json:"type"` // MsgWinterVote
 
 	// ID of the player that the submitting player votes for.
 	Player string `json:"player"`
@@ -67,7 +67,7 @@ type WinterVote struct {
 // Message passed from the client with the sword to declare where they want to use it.
 // Used for the throne expansion.
 type Sword struct {
-	Type string `json:"type"` // MessageSword
+	Type string `json:"type"` // MsgSword
 
 	// Name of the area in which the player wants to use the sword in battle.
 	Area string `json:"area"`
@@ -79,7 +79,7 @@ type Sword struct {
 // Message passed from the client with the raven when they want to spy on another player's orders.
 // Used for the throne expansion.
 type Raven struct {
-	Type string `json:"type"` // MessageRaven
+	Type string `json:"type"` // MsgRaven
 
 	// ID of the player on whom to spy.
 	Player string `json:"player"`
