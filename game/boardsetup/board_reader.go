@@ -17,7 +17,7 @@ var boards embed.FS
 type jsonBoard struct {
 	WinningCastleCount int                   `json:"winningCastleCount"`
 	Nations            map[string][]landArea `json:"nations"`
-	Seas               []sea                 `json:"seas"`
+	Seas               []seaArea             `json:"seas"`
 	Neighbors          []neighbor            `json:"neighbors"`
 }
 
@@ -30,7 +30,7 @@ type landArea struct {
 }
 
 // Utility type for json unmarshaling.
-type sea struct {
+type seaArea struct {
 	Name string `json:"name"`
 }
 

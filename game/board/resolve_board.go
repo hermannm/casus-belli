@@ -128,14 +128,7 @@ outerLoop:
 					continue
 				}
 
-				board.resolveAreaMoves(
-					area,
-					moveCount,
-					playerConflictsAllowed,
-					battleReceiver,
-					processing,
-					processed,
-				)
+				board.resolveAreaMoves(area, moveCount, playerConflictsAllowed, battleReceiver, processing, processed)
 			}
 
 			if len(processing) == 0 {
@@ -238,12 +231,10 @@ func (board Board) resolveWinner() Player {
 	return ""
 }
 
-// Resolves winter orders (builds and internal moves) on the board.
-// Assumes they have already been validated.
+// Resolves winter orders (builds and internal moves) on the board. Assumes they have already been validated.
 func (board Board) resolveWinter(orders []Order) {
 	for _, order := range orders {
 		switch order.Type {
-
 		case OrderBuild:
 			from := board.Areas[order.From]
 			from.Unit = Unit{
@@ -251,7 +242,6 @@ func (board Board) resolveWinter(orders []Order) {
 				Type:   order.Build,
 			}
 			board.Areas[order.From] = from
-
 		case OrderMove:
 			from := board.Areas[order.From]
 			to := board.Areas[order.To]
@@ -261,7 +251,6 @@ func (board Board) resolveWinter(orders []Order) {
 
 			board.Areas[order.From] = from
 			board.Areas[order.To] = to
-
 		}
 	}
 }

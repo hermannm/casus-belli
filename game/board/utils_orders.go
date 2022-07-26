@@ -38,20 +38,11 @@ func (board Board) removeOriginUnit(move Order) {
 // Rolls dice to see if order makes it across danger zone.
 // Returns whether the order succeeded, and the resulting battle for use by the client.
 func (order Order) crossDangerZone(dangerZone string) (survived bool, result Battle) {
-	diceMod := Modifier{
-		Type:  ModifierDice,
-		Value: rollDice(),
-	}
+	diceMod := Modifier{Type: ModifierDice, Value: rollDice()}
 
 	// Records crossing attempt as a battle, so clients can see dice roll.
 	battle := Battle{
-		Results: []Result{
-			{
-				Total: diceMod.Value,
-				Parts: []Modifier{diceMod},
-				Move:  order,
-			},
-		},
+		Results:    []Result{{Total: diceMod.Value, Parts: []Modifier{diceMod}, Move: order}},
 		DangerZone: dangerZone,
 	}
 

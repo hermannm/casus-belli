@@ -148,10 +148,7 @@ func (area Area) transportingNeighbors(board Board, exclude map[string]struct{})
 
 // Returns whether the area is adjacent to the given destination,
 // and whether a move to it must pass through a danger zone.
-func (area Area) findDestination(destination string) (
-	adjacent bool,
-	dangerZone string,
-) {
+func (area Area) findDestination(destination string) (adjacent bool, dangerZone string) {
 	for _, neighbor := range area.Neighbors {
 		if neighbor.Name == destination {
 			// If destination is already found to be adjacent but only through a danger zone,
@@ -172,14 +169,10 @@ func (area Area) findDestination(destination string) (
 }
 
 // From the given paths, returns the best path.
-// Prioritizes paths that are not attacked first,
-// then paths that have to cross the fewest danger zones.
+// Prioritizes paths that are not attacked first, then paths that have to cross the fewest danger zones.
 //
 // If the given path list contains no paths, returns transportable = false.
-func bestTransportPath(paths []transportPath) (
-	bestPath transportPath,
-	transportable bool,
-) {
+func bestTransportPath(paths []transportPath) (bestPath transportPath, transportable bool) {
 	if len(paths) == 0 {
 		return transportPath{}, false
 	}

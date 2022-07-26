@@ -77,8 +77,8 @@ func (board Board) resolveSingleplayerBattle(battle Battle) (retreats []Order) {
 	return nil
 }
 
-// Resolves effects on hte board from the given multiplayer battle.
-// Assumes that the battle has at least 1 winner
+// Resolves effects on the board from the given multiplayer battle.
+// Assumes that the battle has at least 1 winner.
 // Returns any retreating move orders that could not be resolved.
 func (board Board) resolveMultiplayerBattle(battle Battle) (retreats []Order) {
 	winners, losers := battle.parseResults()

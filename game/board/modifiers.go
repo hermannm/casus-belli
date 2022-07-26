@@ -10,14 +10,8 @@ import (
 // Assumes that the area is not empty.
 func (area Area) defenseModifiers() []Modifier {
 	mods := []Modifier{}
-
 	mods = appendUnitMod(mods, area.Unit.Type)
-
-	mods = append(mods, Modifier{
-		Type:  ModifierDice,
-		Value: rollDice(),
-	})
-
+	mods = append(mods, Modifier{Type: ModifierDice, Value: rollDice()})
 	return mods
 }
 
@@ -34,10 +28,7 @@ func (move Order) attackModifiers(area Area, otherAttackers bool, borderBattle b
 	// Assumes danger zone checks have been made before battle,
 	// and thus adds surprise modifier to attacker coming across such zones.
 	if adjacent && neighbor.DangerZone != "" {
-		mods = append(mods, Modifier{
-			Type:  ModifierSurprise,
-			Value: 1,
-		})
+		mods = append(mods, Modifier{Type: ModifierSurprise, Value: 1})
 	}
 
 	// Terrain modifiers should be added if:
@@ -47,43 +38,28 @@ func (move Order) attackModifiers(area Area, otherAttackers bool, borderBattle b
 		(area.IsControlled() && !area.IsEmpty() && includeDefender && !borderBattle) {
 
 		if area.Forest {
-			mods = append(mods, Modifier{
-				Type:  ModifierForest,
-				Value: -1,
-			})
+			mods = append(mods, Modifier{Type: ModifierForest, Value: -1})
 		}
 
 		if area.Castle {
-			mods = append(mods, Modifier{
-				Type:  ModifierCastle,
-				Value: -1,
-			})
+			mods = append(mods, Modifier{Type: ModifierCastle, Value: -1})
 		}
 
 		// If origin area is not adjacent to destination, the move is transported and takes water penalty.
 		// Moves across rivers or from sea to land also take this penalty.
 		if !adjacent || neighbor.AcrossWater {
-			mods = append(mods, Modifier{
-				Type:  ModifierWater,
-				Value: -1,
-			})
+			mods = append(mods, Modifier{Type: ModifierWater, Value: -1})
 		}
 	}
 
 	// Catapults get a bonus only in attacks on castle areas.
 	if move.Unit.Type == UnitCatapult && area.Castle {
-		mods = append(mods, Modifier{
-			Type:  ModifierUnit,
-			Value: +1,
-		})
+		mods = append(mods, Modifier{Type: ModifierUnit, Value: +1})
 	} else {
 		mods = appendUnitMod(mods, move.Unit.Type)
 	}
 
-	mods = append(mods, Modifier{
-		Type:  ModifierDice,
-		Value: rollDice(),
-	})
+	mods = append(mods, Modifier{Type: ModifierDice, Value: rollDice()})
 
 	return mods
 }
@@ -92,10 +68,7 @@ func (move Order) attackModifiers(area Area, otherAttackers bool, borderBattle b
 func appendUnitMod(mods []Modifier, unitType UnitType) []Modifier {
 	switch unitType {
 	case UnitFootman:
-		return append(mods, Modifier{
-			Type:  ModifierUnit,
-			Value: +1,
-		})
+		return append(mods, Modifier{Type: ModifierUnit, Value: +1})
 	default:
 		return mods
 	}
@@ -152,11 +125,7 @@ func appendSupportMods(results map[Player]Result, area Area, includeDefender boo
 		}
 
 		if result, isPlayer := results[support.to]; isPlayer {
-			result.Parts = append(result.Parts, Modifier{
-				Type:        ModifierSupport,
-				Value:       1,
-				SupportFrom: support.from,
-			})
+			result.Parts = append(result.Parts, Modifier{Type: ModifierSupport, Value: 1, SupportFrom: support.from})
 			results[support.to] = result
 		}
 	}
@@ -180,28 +149,19 @@ func callSupport(
 	defer wg.Done()
 
 	if includeDefender && !area.IsEmpty() && area.Unit.Player == support.Player {
-		supportReceiver <- supportDeclaration{
-			from: support.Player,
-			to:   support.Player,
-		}
+		supportReceiver <- supportDeclaration{from: support.Player, to: support.Player}
 		return
 	}
 
 	for _, move := range moves {
 		if support.Player == move.Player {
-			supportReceiver <- supportDeclaration{
-				from: support.Player,
-				to:   support.Player,
-			}
+			supportReceiver <- supportDeclaration{from: support.Player, to: support.Player}
 			return
 		}
 	}
 
 	// If support is not declared, support is given to nobody.
-	supportReceiver <- supportDeclaration{
-		from: support.Player,
-		to:   Player(""),
-	}
+	supportReceiver <- supportDeclaration{from: support.Player, to: Player("")}
 }
 
 // Calculates totals for each of the given results, and returns them as a list.

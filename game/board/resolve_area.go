@@ -1,13 +1,10 @@
 package board
 
-// Resolves moves to the given area on the board.
-// Assumes that the area has incoming moves (moveCount > 0).
+// Resolves moves to the given area on the board. Assumes that the area has incoming moves (moveCount > 0).
 //
-// Immediately resolves areas that do not require battle,
-// and adds them to the given processed map.
+// Immediately resolves areas that do not require battle, and adds them to the given processed map.
 //
-// Adds embattled areas to the given processing map,
-// and forwards them to appropriate battle calculators,
+// Adds embattled areas to the given processing map, and forwards them to appropriate battle calculation functions,
 // which send results to the given battleReceiver.
 //
 // Skips areas that have outgoing moves, unless they are part of a move cycle.
@@ -20,8 +17,7 @@ func (board Board) resolveAreaMoves(
 	processing map[string]struct{},
 	processed map[string]struct{},
 ) {
-	// Finds out if the move is part of a two-way cycle
-	// (moves moving against each other), and resolves it.
+	// Finds out if the move is part of a two-way cycle (moves moving against each other), and resolves it.
 	twoWayCycle, area2, samePlayer := board.discoverTwoWayCycle(area)
 	if twoWayCycle {
 		if samePlayer {
@@ -77,17 +73,12 @@ func (board Board) resolveAreaMoves(
 // Sends the resulting battle to the given battleReceiver.
 func (area Area) calculateSingleplayerBattle(move Order, battleReceiver chan<- Battle) {
 	results := map[Player]Result{
-		move.Player: {
-			Parts: move.attackModifiers(area, false, false, true),
-			Move:  move,
-		},
+		move.Player: {Parts: move.attackModifiers(area, false, false, true), Move: move},
 	}
 
 	appendSupportMods(results, area, false)
 
-	battleReceiver <- Battle{
-		Results: calculateTotals(results),
-	}
+	battleReceiver <- Battle{Results: calculateTotals(results)}
 }
 
 // Calculates battle when attacked area is defended or has multiple attackers.
@@ -97,24 +88,16 @@ func (area Area) calculateMultiplayerBattle(includeDefender bool, battleReceiver
 	results := make(map[Player]Result)
 
 	for _, move := range area.IncomingMoves {
-		results[move.Player] = Result{
-			Parts: move.attackModifiers(area, true, false, includeDefender),
-			Move:  move,
-		}
+		results[move.Player] = Result{Parts: move.attackModifiers(area, true, false, includeDefender), Move: move}
 	}
 
 	if !area.IsEmpty() && includeDefender {
-		results[area.Unit.Player] = Result{
-			Parts:        area.defenseModifiers(),
-			DefenderArea: area.Name,
-		}
+		results[area.Unit.Player] = Result{Parts: area.defenseModifiers(), DefenderArea: area.Name}
 	}
 
 	appendSupportMods(results, area, includeDefender)
 
-	battleReceiver <- Battle{
-		Results: calculateTotals(results),
-	}
+	battleReceiver <- Battle{Results: calculateTotals(results)}
 }
 
 // Calculates battle when units from two areas attack each other simultaneously.
@@ -123,20 +106,12 @@ func calculateBorderBattle(area1 Area, area2 Area, battleReceiver chan<- Battle)
 	move1 := area1.Order
 	move2 := area2.Order
 	results := map[Player]Result{
-		move1.Player: {
-			Parts: move1.attackModifiers(area2, true, true, false),
-			Move:  move1,
-		},
-		move2.Player: {
-			Parts: move2.attackModifiers(area1, true, true, false),
-			Move:  move2,
-		},
+		move1.Player: {Parts: move1.attackModifiers(area2, true, true, false), Move: move1},
+		move2.Player: {Parts: move2.attackModifiers(area1, true, true, false), Move: move2},
 	}
 
 	appendSupportMods(results, area2, false)
 	appendSupportMods(results, area1, false)
 
-	battleReceiver <- Battle{
-		Results: calculateTotals(results),
-	}
+	battleReceiver <- Battle{Results: calculateTotals(results)}
 }

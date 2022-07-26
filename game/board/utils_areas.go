@@ -11,8 +11,7 @@ func (area Area) IsControlled() bool {
 }
 
 // Returns an area's neighbor of the given name, and whether it was found.
-// If the area has several neighbor relations to the area,
-// returns the one matching the provided 'via' string
+// If the area has several neighbor relations to the area, returns the one matching the provided 'via' string
 // (currently the name of the neighbor relation's danger zone).
 func (area Area) GetNeighbor(neighborName string, via string) (Neighbor, bool) {
 	neighbor := Neighbor{}
