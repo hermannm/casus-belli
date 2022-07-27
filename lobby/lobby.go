@@ -37,17 +37,18 @@ type Player struct {
 // Represents a game instance. Used by lobbies to enable different types of games.
 type Game interface {
 	// Takes a player identifier string (unique to this game instance, format depends on the game),
-	// and returns a receiver to handle messages from the player,
-	// or an error if adding the player failed.
-	AddPlayer(playerID string) (interface {
-		HandleMessage(msgType string, msg []byte)
-	}, error)
+	// and returns a receiver to handle messages from the player, or an error if adding the player failed.
+	AddPlayer(playerID string) (MessageReceiver, error)
 
 	// Returns the range of possible player IDs for this game.
 	PlayerIDs() []string
 
 	// Starts the game.
 	Start()
+}
+
+type MessageReceiver interface {
+	ReceiveMessage(msgType string, msg []byte)
 }
 
 // Signature for functions that construct a game instance.

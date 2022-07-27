@@ -39,7 +39,7 @@ func NewReceiver(areaNames []string) Receiver {
 
 // Takes a partly deserialized base message, checks it type, and further deserializes the given raw
 // message to pass it to the appropriate channel on the receiver.
-func (receiver Receiver) HandleMessage(msgType string, rawMsg []byte) {
+func (receiver Receiver) ReceiveMessage(msgType string, rawMsg []byte) {
 	switch msgType {
 	case MsgSubmitOrders:
 		var ordersMessage SubmitOrders

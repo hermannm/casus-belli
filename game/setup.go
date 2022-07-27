@@ -6,6 +6,7 @@ import (
 	"hermannm.dev/bfh-server/game/board"
 	"hermannm.dev/bfh-server/game/boardsetup"
 	"hermannm.dev/bfh-server/game/messages"
+	"hermannm.dev/bfh-server/lobby"
 )
 
 type Game struct {
@@ -32,16 +33,15 @@ func New(boardName string, lob Lobby, options GameOptions) (*Game, error) {
 		return nil, err
 	}
 
-	receivers := make(map[string]messages.Receiver)
+	playerIDs := playerIDsFromBoard(brd)
+	areaNames := make([]string, 0)
 	for _, area := range brd.Areas {
-		areaHome := string(area.Home)
-		if areaHome == "" {
-			continue
-		}
+		areaNames = append(areaNames, area.Name)
+	}
 
-		if _, ok := receivers[areaHome]; !ok {
-			receivers[areaHome] = messages.NewReceiver()
-		}
+	receivers := make(map[string]messages.Receiver)
+	for _, playerID := range playerIDs {
+		receivers[playerID] = messages.NewReceiver(areaNames)
 	}
 
 	game := Game{
@@ -64,10 +64,25 @@ func DefaultOptions() GameOptions {
 // Dynamically finds the possible player IDs for the game
 // by going through the board and finding all the different Home values.
 func (game Game) PlayerIDs() []string {
+	return playerIDsFromBoard(game.Board)
+}
+
+// Creates a new message receiver for the given player tag, and adds it to the game.
+// Returns error if tag is invalid or already taken.
+func (game Game) AddPlayer(playerID string) (lobby.MessageReceiver, error) {
+	receiver, ok := game.Messages[playerID]
+	if !ok {
+		return nil, errors.New("invalid player tag")
+	}
+
+	return receiver, nil
+}
+
+func playerIDsFromBoard(brd board.Board) []string {
 	ids := make([]string, 0)
 
 outerLoop:
-	for _, area := range game.Board.Areas {
+	for _, area := range brd.Areas {
 		potentialID := string(area.Home)
 		if potentialID == "" {
 			continue
@@ -83,17 +98,4 @@ outerLoop:
 	}
 
 	return ids
-}
-
-// Creates a new message receiver for the given player tag, and adds it to the game.
-// Returns error if tag is invalid or already taken.
-func (game Game) AddPlayer(playerID string) (interface {
-	HandleMessage(msgType string, msg []byte)
-}, error) {
-	receiver, ok := game.Messages[playerID]
-	if !ok {
-		return nil, errors.New("invalid player tag")
-	}
-
-	return receiver, nil
 }

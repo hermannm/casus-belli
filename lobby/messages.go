@@ -35,9 +35,7 @@ type StartGameMessage struct {
 
 // Listens for messages from the player, and forwards them to the given receiver.
 // Listens continuously until the player turns inactive.
-func (player *Player) Listen(msgHandler interface {
-	HandleMessage(msgType string, msg []byte)
-}) {
+func (player *Player) Listen(receiver MessageReceiver) {
 	for {
 		if !player.isActive() {
 			return
@@ -56,6 +54,6 @@ func (player *Player) Listen(msgHandler interface {
 			return
 		}
 
-		go msgHandler.HandleMessage(baseMsg.Type, msg)
+		go receiver.ReceiveMessage(baseMsg.Type, msg)
 	}
 }
