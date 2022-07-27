@@ -35,9 +35,6 @@ type GiveSupport struct {
 	// Name of the area in which the support order is placed.
 	From string `json:"from"`
 
-	// Name of the area to which the support order is going.
-	To string `json:"to"`
-
 	// ID of the player in the destination area to support.
 	Player string `json:"player"`
 }

@@ -27,9 +27,6 @@ type SupportRequest struct {
 	// The area from which support is asked, where the asked player should have a support order.
 	SupportingArea string `json:"supportingArea"`
 
-	// The embattled area that the player is asked to support.
-	EmbattledArea string `json:"embattledArea"`
-
 	// List of possible players to support in the battle.
 	Battlers []string `json:"battlers"`
 }
