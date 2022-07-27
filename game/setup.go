@@ -1,7 +1,7 @@
 package game
 
 import (
-	"errors"
+	"fmt"
 
 	"hermannm.dev/bfh-server/game/board"
 	"hermannm.dev/bfh-server/game/boardsetup"
@@ -10,16 +10,10 @@ import (
 )
 
 type Game struct {
-	Board    board.Board
-	Rounds   []board.Round
-	Lobby    Lobby
-	Messages map[string]messages.Receiver
-	Options  GameOptions
-}
-
-type Lobby interface {
-	Send(msg any) error
-	GetPlayer(playerID string) (player interface{ Send(msg any) error }, ok bool)
+	Board      board.Board
+	Rounds     []board.Round
+	Options    GameOptions
+	msgHandler messages.Handler
 }
 
 type GameOptions struct {
@@ -27,32 +21,18 @@ type GameOptions struct {
 }
 
 // Constructs a game instance. Initializes player slots for each area home tag on the given board.
-func New(boardName string, lob Lobby, options GameOptions) (*Game, error) {
+func New(boardName string, options GameOptions, msgSender messages.Sender) (*Game, error) {
 	brd, err := boardsetup.ReadBoard(boardName)
 	if err != nil {
 		return nil, err
 	}
 
-	playerIDs := playerIDsFromBoard(brd)
-	areaNames := make([]string, 0)
-	for _, area := range brd.Areas {
-		areaNames = append(areaNames, area.Name)
-	}
-
-	receivers := make(map[string]messages.Receiver)
-	for _, playerID := range playerIDs {
-		receivers[playerID] = messages.NewReceiver(areaNames)
-	}
-
-	game := Game{
-		Board:    brd,
-		Rounds:   make([]board.Round, 0),
-		Lobby:    lob,
-		Messages: receivers,
-		Options:  options,
-	}
-
-	return &game, nil
+	return &Game{
+		Board:      brd,
+		Rounds:     make([]board.Round, 0),
+		Options:    options,
+		msgHandler: messages.NewHandler(msgSender),
+	}, nil
 }
 
 func DefaultOptions() GameOptions {
@@ -70,11 +50,15 @@ func (game Game) PlayerIDs() []string {
 // Creates a new message receiver for the given player tag, and adds it to the game.
 // Returns error if tag is invalid or already taken.
 func (game Game) AddPlayer(playerID string) (lobby.MessageReceiver, error) {
-	receiver, ok := game.Messages[playerID]
-	if !ok {
-		return nil, errors.New("invalid player tag")
+	areaNames := make([]string, 0)
+	for _, area := range game.Board.Areas {
+		areaNames = append(areaNames, area.Name)
 	}
 
+	receiver, err := game.msgHandler.AddReceiver(playerID, areaNames)
+	if err != nil {
+		return nil, fmt.Errorf("failed to add player: %w", err)
+	}
 	return receiver, nil
 }
 

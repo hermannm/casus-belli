@@ -35,7 +35,7 @@ func (game *Game) Start() {
 
 		game.Rounds = append(game.Rounds, round)
 
-		battles, newWinner := game.Board.Resolve(round)
+		battles, newWinner := game.Board.Resolve(round, game.msgHandler)
 		winner = newWinner
 
 		for _, battle := range battles {

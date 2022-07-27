@@ -85,6 +85,20 @@ func New(id string, gameConstructor GameConstructor) (*Lobby, error) {
 	return &lobby, nil
 }
 
+func (lobby *Lobby) ActivePlayers() []string {
+	lobby.lock.RLock()
+	defer lobby.lock.RUnlock()
+
+	activePlayers := make([]string, 0)
+	for playerID, player := range lobby.players {
+		if player.isActive() {
+			activePlayers = append(activePlayers, playerID)
+		}
+	}
+
+	return activePlayers
+}
+
 // Marshals the given message to JSON and sends it to all connected players.
 // Returns an error if it failed to marshal or send to at least one of the players.
 func (lobby *Lobby) SendMessageToAll(msg any) error {

@@ -19,6 +19,6 @@ func gameConstructor(boardName string) lobby.GameConstructor {
 			gameOptions = game.DefaultOptions()
 		}
 
-		return game.New(boardName, lob, gameOptions)
+		return game.New(boardName, gameOptions, lob)
 	}
 }
