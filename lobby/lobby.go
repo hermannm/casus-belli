@@ -3,6 +3,7 @@ package lobby
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"sync"
 
@@ -26,6 +27,7 @@ type Lobby struct {
 
 // A player connected to a game lobby.
 type Player struct {
+	id     string
 	socket *websocket.Conn
 	active bool // Whether the connection is initialized/not timed out.
 
@@ -80,6 +82,48 @@ func New(id string, gameConstructor GameConstructor) (*Lobby, error) {
 	}
 
 	return &lobby, nil
+}
+
+// Marshals the given message to JSON and sends it to all connected players.
+// Returns an error if it failed to marshal or send to at least one of the players.
+func (lobby *Lobby) SendMessageToAll(msg any) error {
+	marshaledMsg, err := json.Marshal(msg)
+	if err != nil {
+		return err
+	}
+
+	for _, player := range lobby.players {
+		err = player.socket.WriteMessage(websocket.TextMessage, marshaledMsg)
+	}
+
+	return err
+}
+
+func (lobby *Lobby) SendMessage(to string, msg any) error {
+	player, ok := lobby.getPlayer(to)
+	if !ok {
+		return fmt.Errorf("failed to send message to player with id %s: player not found", to)
+	}
+
+	err := player.send(msg)
+	return err
+}
+
+// Marshals the given message to JSON and sends it over the player's socket connection.
+// Returns an error if the player is inactive, or if the marshaling/sending failed.
+func (player *Player) send(msg any) error {
+	player.lock.RLock()
+	defer player.lock.RUnlock()
+
+	if !player.active {
+		return fmt.Errorf("failed to send message to player with id %s: player inactive", player.id)
+	}
+
+	err := player.socket.WriteJSON(msg)
+	if err != nil {
+		return fmt.Errorf("failed to send message to player with id %s: %w", player.id, err)
+	}
+	return nil
 }
 
 // Takes the given list of player IDs and adds slots for each of them in the lobby.
@@ -142,32 +186,6 @@ func (player *Player) setActive(active bool) {
 	player.active = active
 }
 
-// Marshals the given message to JSON and sends it over the player's socket connection.
-// Returns an error if the player is inactive, or if the marshaling/sending failed.
-func (player *Player) Send(msg any) error {
-	if !player.isActive() {
-		return errors.New("cannot send to inactive player")
-	}
-
-	err := player.socket.WriteJSON(msg)
-	return err
-}
-
-// Marshals the given message to JSON and sends it to all connected players.
-// Returns an error if it failed to marshal or send to at least one of the players.
-func (lobby *Lobby) SendMessageToAll(msg any) error {
-	marshaledMsg, err := json.Marshal(msg)
-	if err != nil {
-		return err
-	}
-
-	for _, player := range lobby.players {
-		err = player.socket.WriteMessage(websocket.TextMessage, marshaledMsg)
-	}
-
-	return err
-}
-
 // Returns the current connected players in a lobby, and the max number of potential players.
 func (lobby *Lobby) playerCount() (current int, max int) {
 	for _, player := range lobby.players {
@@ -201,7 +219,7 @@ func (lobby *Lobby) close() error {
 	for id, player := range lobby.players {
 		player.socket.Close()
 		player.setActive(false)
-		lobby.setPlayer(id, Player{})
+		delete(lobby.players, id)
 	}
 	delete(lobbies, lobby.id)
 

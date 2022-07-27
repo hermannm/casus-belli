@@ -162,6 +162,7 @@ func addPlayer(res http.ResponseWriter, req *http.Request) {
 	}
 
 	player = &Player{
+		id:     playerID,
 		socket: socket,
 		active: true,
 		lock:   new(sync.RWMutex),

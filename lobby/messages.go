@@ -52,7 +52,7 @@ func (player *Player) Listen(msgHandler interface {
 
 		err = json.Unmarshal(msg, &baseMsg)
 		if err != nil || baseMsg.Type == "" {
-			player.Send(ErrorMessage{Type: MsgError, Error: "error in deserializing message"})
+			player.send(ErrorMessage{Type: MsgError, Error: "error in deserializing message"})
 			return
 		}
 
