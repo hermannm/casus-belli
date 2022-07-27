@@ -9,7 +9,7 @@ import (
 // to the appropriate message type channel for use by the game instance.
 type Receiver struct {
 	Orders     chan SubmitOrders
-	Support    chan GiveSupport
+	Support    map[string]chan GiveSupport
 	Quit       chan Quit
 	Kick       chan Kick
 	WinterVote chan WinterVote
@@ -19,10 +19,15 @@ type Receiver struct {
 }
 
 // Initializes a new receiver with empty channels.
-func NewReceiver() Receiver {
+func NewReceiver(areaNames []string) Receiver {
+	supportChans := make(map[string]chan GiveSupport)
+	for _, areaName := range areaNames {
+		supportChans[areaName] = make(chan GiveSupport, 1)
+	}
+
 	return Receiver{
 		Orders:     make(chan SubmitOrders),
-		Support:    make(chan GiveSupport),
+		Support:    supportChans,
 		Quit:       make(chan Quit),
 		Kick:       make(chan Kick),
 		WinterVote: make(chan WinterVote),
@@ -53,7 +58,7 @@ func (receiver Receiver) HandleMessage(msgType string, rawMsg []byte) {
 			return
 		}
 
-		receiver.Support <- supportMessage
+		receiver.Support[supportMessage.From] <- supportMessage
 	case MsgQuit:
 		var quitMessage Quit
 		err := json.Unmarshal(rawMsg, &quitMessage)
