@@ -2,17 +2,17 @@ package board
 
 // Adds the round's orders to the board, and resolves them.
 // Returns a list of any potential battles from the round.
-func (board Board) Resolve(round Round) (battles []Battle, winner Player) {
+func (board Board) Resolve(round Round, msgHandler MessageHandler) (battles []Battle, winner Player) {
 	battles = make([]Battle, 0)
 
 	switch round.Season {
 	case SeasonWinter:
 		board.resolveWinter(round.FirstOrders)
 	default:
-		firstBattles := board.resolveOrders(round.FirstOrders)
+		firstBattles := board.resolveOrders(round.FirstOrders, msgHandler)
 		battles = append(battles, firstBattles...)
 
-		secondBattles := board.resolveOrders(round.SecondOrders)
+		secondBattles := board.resolveOrders(round.SecondOrders, msgHandler)
 		battles = append(battles, secondBattles...)
 
 		board.resolveSieges()
@@ -26,7 +26,7 @@ func (board Board) Resolve(round Round) (battles []Battle, winner Player) {
 }
 
 // Resolves results of the given orders on the board.
-func (board Board) resolveOrders(orders []Order) []Battle {
+func (board Board) resolveOrders(orders []Order, msgHandler MessageHandler) []Battle {
 	battles := make([]Battle, 0)
 
 	board.populateAreaOrders(orders)
@@ -34,10 +34,10 @@ func (board Board) resolveOrders(orders []Order) []Battle {
 	dangerZoneBattles := board.crossDangerZones()
 	battles = append(battles, dangerZoneBattles...)
 
-	singleplayerBattles := board.resolveMoves(false)
+	singleplayerBattles := board.resolveMoves(false, msgHandler)
 	battles = append(battles, singleplayerBattles...)
 
-	remainingBattles := board.resolveMoves(true)
+	remainingBattles := board.resolveMoves(true, msgHandler)
 	battles = append(battles, remainingBattles...)
 
 	return battles
@@ -67,7 +67,7 @@ func (board Board) populateAreaOrders(orders []Order) {
 
 // Resolves moves on the board. Returns any resulting battles.
 // Only resolves battles between players if playerConflictsAllowed is true.
-func (board Board) resolveMoves(playerConflictsAllowed bool) []Battle {
+func (board Board) resolveMoves(playerConflictsAllowed bool, msgHandler MessageHandler) []Battle {
 	battles := make([]Battle, 0)
 
 	battleReceiver := make(chan Battle)
@@ -128,7 +128,15 @@ outerLoop:
 					continue
 				}
 
-				board.resolveAreaMoves(area, moveCount, playerConflictsAllowed, battleReceiver, processing, processed)
+				board.resolveAreaMoves(
+					area,
+					moveCount,
+					playerConflictsAllowed,
+					battleReceiver,
+					processing,
+					processed,
+					msgHandler,
+				)
 			}
 
 			if len(processing) == 0 {

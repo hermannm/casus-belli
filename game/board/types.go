@@ -1,5 +1,10 @@
 package board
 
+type MessageHandler interface {
+	SendSupportRequest(to Player, supportingArea string, battlers []Player) error
+	AwaitSupport(from Player, fromArea string) (Player, error)
+}
+
 // Unique tag for a player in the game.
 type Player string
 
@@ -178,6 +183,8 @@ const (
 	// Number to beat when attempting to cross a danger zone.
 	RequirementDangerZone int = 3
 )
+
+const PlayerNone Player = ""
 
 // Rounds where only build and internal move orders are allowed.
 const SeasonWinter Season = "winter"

@@ -16,6 +16,7 @@ func (board Board) resolveAreaMoves(
 	battleReceiver chan Battle,
 	processing map[string]struct{},
 	processed map[string]struct{},
+	msgHandler MessageHandler,
 ) {
 	// Finds out if the move is part of a two-way cycle (moves moving against each other), and resolves it.
 	twoWayCycle, area2, samePlayer := board.discoverTwoWayCycle(area)
@@ -30,7 +31,7 @@ func (board Board) resolveAreaMoves(
 			}
 		} else {
 			// If the moves are from different players, they battle in the middle.
-			go calculateBorderBattle(area, area2, battleReceiver)
+			go calculateBorderBattle(area, area2, battleReceiver, msgHandler)
 			processing[area.Name], processing[area2.Name] = struct{}{}, struct{}{}
 			return
 		}
@@ -38,7 +39,7 @@ func (board Board) resolveAreaMoves(
 		// If there is a cycle longer than 2 moves, forwards the resolving to 'resolveCycle'.
 		cycle, _ := board.discoverCycle(area.Order, area.Name)
 		if cycle != nil {
-			board.resolveCycle(cycle, playerConflictsAllowed, battleReceiver, processing, processed)
+			board.resolveCycle(cycle, playerConflictsAllowed, battleReceiver, processing, processed, msgHandler)
 			return
 		}
 	}
@@ -53,7 +54,7 @@ func (board Board) resolveAreaMoves(
 			return
 		}
 
-		go area.calculateSingleplayerBattle(move, battleReceiver)
+		go area.calculateSingleplayerBattle(move, battleReceiver, msgHandler)
 		processing[area.Name] = struct{}{}
 		return
 	}
@@ -65,18 +66,18 @@ func (board Board) resolveAreaMoves(
 	}
 
 	// If the function has not returned yet, then it must be a multiplayer battle.
-	go area.calculateMultiplayerBattle(!area.IsEmpty(), battleReceiver)
+	go area.calculateMultiplayerBattle(!area.IsEmpty(), battleReceiver, msgHandler)
 	processing[area.Name] = struct{}{}
 }
 
 // Calculates battle between a single attacker and an unconquered area.
 // Sends the resulting battle to the given battleReceiver.
-func (area Area) calculateSingleplayerBattle(move Order, battleReceiver chan<- Battle) {
+func (area Area) calculateSingleplayerBattle(move Order, battleReceiver chan<- Battle, msgHandler MessageHandler) {
 	results := map[Player]Result{
 		move.Player: {Parts: move.attackModifiers(area, false, false, true), Move: move},
 	}
 
-	appendSupportMods(results, area, false)
+	appendSupportMods(results, area, false, msgHandler)
 
 	battleReceiver <- Battle{Results: calculateTotals(results)}
 }
@@ -84,7 +85,11 @@ func (area Area) calculateSingleplayerBattle(move Order, battleReceiver chan<- B
 // Calculates battle when attacked area is defended or has multiple attackers.
 // Takes in parameter for whether to account for defender in battle (most often true).
 // Sends the resulting battle to the given battleReceiver.
-func (area Area) calculateMultiplayerBattle(includeDefender bool, battleReceiver chan<- Battle) {
+func (area Area) calculateMultiplayerBattle(
+	includeDefender bool,
+	battleReceiver chan<- Battle,
+	msgHandler MessageHandler,
+) {
 	results := make(map[Player]Result)
 
 	for _, move := range area.IncomingMoves {
@@ -95,14 +100,14 @@ func (area Area) calculateMultiplayerBattle(includeDefender bool, battleReceiver
 		results[area.Unit.Player] = Result{Parts: area.defenseModifiers(), DefenderArea: area.Name}
 	}
 
-	appendSupportMods(results, area, includeDefender)
+	appendSupportMods(results, area, includeDefender, msgHandler)
 
 	battleReceiver <- Battle{Results: calculateTotals(results)}
 }
 
 // Calculates battle when units from two areas attack each other simultaneously.
 // Sends the resulting battle to the given battleReceiver.
-func calculateBorderBattle(area1 Area, area2 Area, battleReceiver chan<- Battle) {
+func calculateBorderBattle(area1 Area, area2 Area, battleReceiver chan<- Battle, msgHandler MessageHandler) {
 	move1 := area1.Order
 	move2 := area2.Order
 	results := map[Player]Result{
@@ -110,8 +115,8 @@ func calculateBorderBattle(area1 Area, area2 Area, battleReceiver chan<- Battle)
 		move2.Player: {Parts: move2.attackModifiers(area1, true, true, false), Move: move2},
 	}
 
-	appendSupportMods(results, area2, false)
-	appendSupportMods(results, area1, false)
+	appendSupportMods(results, area2, false, msgHandler)
+	appendSupportMods(results, area1, false, msgHandler)
 
 	battleReceiver <- Battle{Results: calculateTotals(results)}
 }

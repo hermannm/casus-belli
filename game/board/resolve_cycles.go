@@ -14,6 +14,7 @@ func (board Board) resolveCycle(
 	battleReceiver chan<- Battle,
 	processing map[string]struct{},
 	processed map[string]struct{},
+	msgHandler MessageHandler,
 ) {
 	battleAreas := make([]Area, 0)
 
@@ -34,10 +35,10 @@ func (board Board) resolveCycle(
 	// Skips multiplayer battles if player conflicts are not allowed.
 	for _, area := range battleAreas {
 		if len(area.IncomingMoves) == 1 {
-			go area.calculateSingleplayerBattle(area.IncomingMoves[0], battleReceiver)
+			go area.calculateSingleplayerBattle(area.IncomingMoves[0], battleReceiver, msgHandler)
 			processing[area.Name] = struct{}{}
 		} else if playerConflictsAllowed {
-			go area.calculateMultiplayerBattle(false, battleReceiver)
+			go area.calculateMultiplayerBattle(false, battleReceiver, msgHandler)
 			processing[area.Name] = struct{}{}
 		} else {
 			processed[area.Name] = struct{}{}

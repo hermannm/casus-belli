@@ -1,6 +1,8 @@
 package board
 
 import (
+	"fmt"
+	"log"
 	"math/rand"
 	"sync"
 	"time"
@@ -92,7 +94,7 @@ type supportDeclaration struct {
 // Appends support modifiers to receiving players' results in the given map,
 // but only if the result is tied to a move order to the area.
 // Calls support to defender in the area if includeDefender is true.
-func appendSupportMods(results map[Player]Result, area Area, includeDefender bool) {
+func appendSupportMods(results map[Player]Result, area Area, includeDefender bool, msgHandler MessageHandler) {
 	supports := area.IncomingSupports
 	supportCount := len(supports)
 	supportReceiver := make(chan supportDeclaration, supportCount)
@@ -112,7 +114,7 @@ func appendSupportMods(results map[Player]Result, area Area, includeDefender boo
 
 	// Starts a goroutine to call support for each support order to the area.
 	for _, support := range supports {
-		go callSupport(support, area, moves, includeDefender, supportReceiver, wg)
+		go callSupport(support, area, moves, includeDefender, supportReceiver, wg, msgHandler)
 	}
 
 	// Waits until all support calls are done, then closes the channel to range over it.
@@ -145,6 +147,7 @@ func callSupport(
 	includeDefender bool,
 	supportReceiver chan<- supportDeclaration,
 	wg sync.WaitGroup,
+	msgHandler MessageHandler,
 ) {
 	defer wg.Done()
 
@@ -160,8 +163,29 @@ func callSupport(
 		}
 	}
 
-	// If support is not declared, support is given to nobody.
-	supportReceiver <- supportDeclaration{from: support.Player, to: Player("")}
+	battlers := make([]Player, 0)
+	for _, move := range moves {
+		battlers = append(battlers, move.Player)
+	}
+	if includeDefender && !area.IsEmpty() {
+		battlers = append(battlers, area.Unit.Player)
+	}
+
+	err := msgHandler.SendSupportRequest(support.Player, area.Name, battlers)
+	if err != nil {
+		log.Println(fmt.Errorf("failed to send support request: %w", err))
+		supportReceiver <- supportDeclaration{from: support.Player, to: PlayerNone}
+		return
+	}
+
+	supported, err := msgHandler.AwaitSupport(support.Player, area.Name)
+	if err != nil {
+		log.Println(fmt.Errorf("failed to receive support declaration from player %s: %w", support.Player, err))
+		supportReceiver <- supportDeclaration{from: support.Player, to: PlayerNone}
+		return
+	}
+
+	supportReceiver <- supportDeclaration{from: support.Player, to: supported}
 }
 
 // Calculates totals for each of the given results, and returns them as a list.
