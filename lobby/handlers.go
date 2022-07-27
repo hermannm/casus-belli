@@ -80,8 +80,8 @@ func getLobby(res http.ResponseWriter, req *http.Request) {
 	}
 
 	info, err := json.Marshal(lobbyInfo{
-		ID:                 lobby.ID,
-		AvailablePlayerIDs: lobby.AvailablePlayerIDs(),
+		ID:                 lobby.id,
+		AvailablePlayerIDs: lobby.availablePlayerIDs(),
 	})
 	if err != nil {
 		http.Error(res, "could not serialize lobby", http.StatusInternalServerError)
@@ -97,8 +97,8 @@ func getLobbies(res http.ResponseWriter, req *http.Request) {
 
 	for _, lobby := range lobbies {
 		lobbyInfoList = append(lobbyInfoList, lobbyInfo{
-			ID:                 lobby.ID,
-			AvailablePlayerIDs: lobby.AvailablePlayerIDs(),
+			ID:                 lobby.id,
+			AvailablePlayerIDs: lobby.availablePlayerIDs(),
 		})
 	}
 
@@ -125,16 +125,16 @@ func addPlayer(res http.ResponseWriter, req *http.Request) {
 	}
 
 	playerID := params.Get("player")
-	lobby.Lock.Lock()
-	player, ok := lobby.Players[playerID]
+	lobby.lock.Lock()
+	player, ok := lobby.players[playerID]
 	if !ok {
 		http.Error(res, "invalid player ID", http.StatusBadRequest)
-		lobby.Lock.Unlock()
+		lobby.lock.Unlock()
 		return
 	}
 	if player.isActive() {
 		http.Error(res, "player ID already taken", http.StatusConflict)
-		lobby.Lock.Unlock()
+		lobby.lock.Unlock()
 		return
 	}
 
@@ -149,30 +149,30 @@ func addPlayer(res http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		log.Println(err)
 		http.Error(res, "unable to establish socket connection", http.StatusInternalServerError)
-		lobby.Lock.Unlock()
+		lobby.lock.Unlock()
 		return
 	}
 
-	receiver, err := lobby.Game.AddPlayer(playerID)
+	receiver, err := lobby.game.AddPlayer(playerID)
 	if err != nil {
 		log.Println(err)
 		http.Error(res, "unable to join game", http.StatusConflict)
-		lobby.Lock.Unlock()
+		lobby.lock.Unlock()
 		return
 	}
 
 	player = &Player{
-		Socket: socket,
-		Active: true,
-		Lock:   new(sync.RWMutex),
+		socket: socket,
+		active: true,
+		lock:   new(sync.RWMutex),
 	}
-	lobby.Players[playerID] = player
+	lobby.players[playerID] = player
 	go player.Listen(receiver)
 
 	res.Write([]byte("joined lobby"))
 
-	lobby.Lock.Unlock()
-	lobby.Wait.Done()
+	lobby.lock.Unlock()
+	lobby.wg.Done()
 }
 
 type lobbyCreationHandler struct {

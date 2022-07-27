@@ -14,22 +14,22 @@ var lobbies = make(map[string]*Lobby)
 
 // A collection of players for a game.
 type Lobby struct {
-	ID   string
-	Game Game
+	id   string
+	game Game
 
-	Lock sync.RWMutex   // Used to synchronize the adding/removal of players.
-	Wait sync.WaitGroup // Used to wait for the lobby to fill up with players.
+	lock sync.RWMutex   // Used to synchronize the adding/removal of players.
+	wg   sync.WaitGroup // Used to wait for the lobby to fill up with players.
 
 	// Maps player IDs (unique to the lobby) to their socket connections for sending and receiving.
-	Players map[string]*Player
+	players map[string]*Player
 }
 
 // A player connected to a game lobby.
 type Player struct {
-	Socket *websocket.Conn
-	Active bool // Whether the connection is initialized/not timed out.
+	socket *websocket.Conn
+	active bool // Whether the connection is initialized/not timed out.
 
-	Lock *sync.RWMutex // Used to synchronize reading and setting the Active field.
+	lock *sync.RWMutex // Used to synchronize reading and setting the Active field.
 }
 
 // Represents a game instance. Used by lobbies to enable different types of games.
@@ -62,7 +62,7 @@ func New(id string, gameConstructor GameConstructor) (*Lobby, error) {
 	}
 
 	lobby := Lobby{
-		ID: id,
+		id: id,
 	}
 
 	game, err := gameConstructor(&lobby, nil)
@@ -70,11 +70,11 @@ func New(id string, gameConstructor GameConstructor) (*Lobby, error) {
 		return nil, err
 	}
 
-	lobby.Game = game
+	lobby.game = game
 	playerIDs := game.PlayerIDs()
-	lobby.AddPlayerSlots(playerIDs)
+	lobby.addPlayerSlots(playerIDs)
 
-	err = RegisterLobby(&lobby)
+	err = registerLobby(&lobby)
 	if err != nil {
 		return nil, err
 	}
@@ -84,62 +84,62 @@ func New(id string, gameConstructor GameConstructor) (*Lobby, error) {
 
 // Takes the given list of player IDs and adds slots for each of them in the lobby.
 // Adds the length of the given IDs to the lobby's wait group, so it can be used to wait for the lobby to fill up.
-func (lobby *Lobby) AddPlayerSlots(playerIDs []string) {
-	lobby.Players = make(map[string]*Player, len(playerIDs))
+func (lobby *Lobby) addPlayerSlots(playerIDs []string) {
+	lobby.players = make(map[string]*Player, len(playerIDs))
 	for _, playerID := range playerIDs {
-		lobby.Players[playerID] = &Player{
-			Lock: new(sync.RWMutex),
+		lobby.players[playerID] = &Player{
+			lock: new(sync.RWMutex),
 		}
 	}
-	lobby.Wait.Add(len(playerIDs))
+	lobby.wg.Add(len(playerIDs))
 }
 
 // Registers a lobby in the global list of lobbies.
 // Returns error if lobby with same ID already exists.
-func RegisterLobby(lobby *Lobby) error {
-	if _, ok := lobbies[lobby.ID]; ok {
-		return errors.New("lobby with ID \"" + lobby.ID + "\" already exists")
+func registerLobby(lobby *Lobby) error {
+	if _, ok := lobbies[lobby.id]; ok {
+		return errors.New("lobby with ID \"" + lobby.id + "\" already exists")
 	}
 
-	lobbies[lobby.ID] = lobby
+	lobbies[lobby.id] = lobby
 	return nil
 }
 
 // Returns the player in the lobby corresponding to the given player ID,
 // or false if none is found.
-func (lobby *Lobby) GetPlayer(playerID string) (interface{ Send(msg any) error }, bool) {
-	lobby.Lock.RLock()
-	defer lobby.Lock.RUnlock()
-	player, ok := lobby.Players[playerID]
+func (lobby *Lobby) getPlayer(playerID string) (*Player, bool) {
+	lobby.lock.RLock()
+	defer lobby.lock.RUnlock()
+	player, ok := lobby.players[playerID]
 	return player, ok
 }
 
 // Sets the player in the lobby corresponding to the given player ID.
 // Returns an error if no matching player is found.
 func (lobby *Lobby) setPlayer(playerID string, player Player) error {
-	lobby.Lock.Lock()
-	defer lobby.Lock.Unlock()
+	lobby.lock.Lock()
+	defer lobby.lock.Unlock()
 
-	if _, ok := lobby.Players[playerID]; !ok {
+	if _, ok := lobby.players[playerID]; !ok {
 		return errors.New("invalid player ID")
 	}
 
-	lobby.Players[playerID] = &player
+	lobby.players[playerID] = &player
 	return nil
 }
 
 // Returns a player's Active flag in a thread-safe manner.
 func (player *Player) isActive() bool {
-	player.Lock.RLock()
-	defer player.Lock.RUnlock()
-	return player.Active
+	player.lock.RLock()
+	defer player.lock.RUnlock()
+	return player.active
 }
 
 // Sets a player's Active flag in a thread-safe manner.
 func (player *Player) setActive(active bool) {
-	player.Lock.Lock()
-	defer player.Lock.Unlock()
-	player.Active = active
+	player.lock.Lock()
+	defer player.lock.Unlock()
+	player.active = active
 }
 
 // Marshals the given message to JSON and sends it over the player's socket connection.
@@ -149,43 +149,43 @@ func (player *Player) Send(msg any) error {
 		return errors.New("cannot send to inactive player")
 	}
 
-	err := player.Socket.WriteJSON(msg)
+	err := player.socket.WriteJSON(msg)
 	return err
 }
 
 // Marshals the given message to JSON and sends it to all connected players.
 // Returns an error if it failed to marshal or send to at least one of the players.
-func (lobby *Lobby) Send(msg any) error {
+func (lobby *Lobby) SendMessageToAll(msg any) error {
 	marshaledMsg, err := json.Marshal(msg)
 	if err != nil {
 		return err
 	}
 
-	for _, player := range lobby.Players {
-		err = player.Socket.WriteMessage(websocket.TextMessage, marshaledMsg)
+	for _, player := range lobby.players {
+		err = player.socket.WriteMessage(websocket.TextMessage, marshaledMsg)
 	}
 
 	return err
 }
 
 // Returns the current connected players in a lobby, and the max number of potential players.
-func (lobby *Lobby) PlayerCount() (current int, max int) {
-	for _, player := range lobby.Players {
+func (lobby *Lobby) playerCount() (current int, max int) {
+	for _, player := range lobby.players {
 		if player.isActive() {
 			current++
 		}
 	}
 
-	max = len(lobby.Players)
+	max = len(lobby.players)
 
 	return current, max
 }
 
 // Returns a map of player IDs to whether they are taken (true if taken).
-func (lobby *Lobby) AvailablePlayerIDs() map[string]bool {
+func (lobby *Lobby) availablePlayerIDs() map[string]bool {
 	available := make(map[string]bool)
 
-	for id, player := range lobby.Players {
+	for id, player := range lobby.players {
 		if player.isActive() {
 			available[id] = true
 		} else {
@@ -197,13 +197,13 @@ func (lobby *Lobby) AvailablePlayerIDs() map[string]bool {
 }
 
 // Removes a lobby from the lobby map and closes its connections.
-func (lobby *Lobby) Close() error {
-	for id, player := range lobby.Players {
-		player.Socket.Close()
+func (lobby *Lobby) close() error {
+	for id, player := range lobby.players {
+		player.socket.Close()
 		player.setActive(false)
 		lobby.setPlayer(id, Player{})
 	}
-	delete(lobbies, lobby.ID)
+	delete(lobbies, lobby.id)
 
 	return nil
 }

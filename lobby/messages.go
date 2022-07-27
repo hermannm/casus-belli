@@ -43,7 +43,7 @@ func (player *Player) Listen(msgHandler interface {
 			return
 		}
 
-		_, msg, err := player.Socket.ReadMessage()
+		_, msg, err := player.socket.ReadMessage()
 		if err != nil {
 			continue
 		}
