@@ -36,7 +36,6 @@ func (h Handler) AddReceiver(playerID string, areaNames []string) (Receiver, err
 		WinterVote: make(chan WinterVote),
 		Sword:      make(chan Sword),
 		Raven:      make(chan Raven),
-		Errors:     make(chan error),
 	}
 
 	h.receivers[playerID] = r

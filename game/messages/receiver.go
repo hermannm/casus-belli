@@ -2,8 +2,8 @@ package messages
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
+	"log"
 
 	"hermannm.dev/bfh-server/game/board"
 )
@@ -18,79 +18,71 @@ type Receiver struct {
 	WinterVote chan WinterVote
 	Sword      chan Sword
 	Raven      chan Raven
-	Errors     chan error
 }
 
 // Takes a partly deserialized base message, checks it type, and further deserializes the given raw
 // message to pass it to the appropriate channel on the receiver.
 func (r Receiver) ReceiveMessage(msgType string, rawMsg []byte) {
+	var err error // Error declared here in order to handle it after the switch.
+
 	switch msgType {
 	case MsgSubmitOrders:
-		var ordersMessage SubmitOrders
-		err := json.Unmarshal(rawMsg, &ordersMessage)
-		if err != nil {
-			r.Errors <- err
+		var msg SubmitOrders
+		err = json.Unmarshal(rawMsg, &msg)
+		if err == nil {
+			r.Orders <- msg
 			return
 		}
-
-		r.Orders <- ordersMessage
 	case MsgGiveSupport:
-		var supportMessage GiveSupport
-		err := json.Unmarshal(rawMsg, &supportMessage)
-		if err != nil {
-			r.Errors <- err
-			return
+		var msg GiveSupport
+		err = json.Unmarshal(rawMsg, &msg)
+		if err == nil {
+			supportChan, ok := r.Support[msg.From]
+			if ok {
+				supportChan <- msg
+			} else {
+				err = fmt.Errorf("support receiver uninitialized for area %s", msg.From)
+			}
 		}
-
-		r.Support[supportMessage.From] <- supportMessage
 	case MsgQuit:
-		var quitMessage Quit
-		err := json.Unmarshal(rawMsg, &quitMessage)
-		if err != nil {
-			r.Errors <- err
+		var msg Quit
+		err = json.Unmarshal(rawMsg, &msg)
+		if err == nil {
+			r.Quit <- msg
 			return
 		}
-
-		r.Quit <- quitMessage
 	case MsgKick:
 		var kickMessage Kick
-		err := json.Unmarshal(rawMsg, &kickMessage)
-		if err != nil {
-			r.Errors <- err
+		err = json.Unmarshal(rawMsg, &kickMessage)
+		if err == nil {
+			r.Kick <- kickMessage
 			return
 		}
-
-		r.Kick <- kickMessage
 	case MsgWinterVote:
 		var winterVoteMessage WinterVote
-		err := json.Unmarshal(rawMsg, &winterVoteMessage)
-		if err != nil {
-			r.Errors <- err
+		err = json.Unmarshal(rawMsg, &winterVoteMessage)
+		if err == nil {
+			r.WinterVote <- winterVoteMessage
 			return
 		}
-
-		r.WinterVote <- winterVoteMessage
 	case MsgSword:
 		var swordMessage Sword
-		err := json.Unmarshal(rawMsg, &swordMessage)
-		if err != nil {
-			r.Errors <- err
+		err = json.Unmarshal(rawMsg, &swordMessage)
+		if err == nil {
+			r.Sword <- swordMessage
 			return
 		}
-
-		r.Sword <- swordMessage
 	case MsgRaven:
 		var ravenMessage Raven
-		err := json.Unmarshal(rawMsg, &ravenMessage)
-		if err != nil {
-			r.Errors <- err
+		err = json.Unmarshal(rawMsg, &ravenMessage)
+		if err == nil {
+			r.Raven <- ravenMessage
 			return
 		}
+	}
 
-		r.Raven <- ravenMessage
-	default:
-		r.Errors <- errors.New("unrecognized message type: " + msgType)
-		return
+	if err != nil {
+		log.Println(fmt.Errorf("failed to parse message of type %s: %w", msgType, err))
 	}
 }
 
