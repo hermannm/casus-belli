@@ -163,29 +163,29 @@ func callSupport(
 		}
 	}
 
-	battlers := make([]Player, 0)
+	battlers := make([]string, 0)
 	for _, move := range moves {
-		battlers = append(battlers, move.Player)
+		battlers = append(battlers, string(move.Player))
 	}
 	if includeDefender && !area.IsEmpty() {
-		battlers = append(battlers, area.Unit.Player)
+		battlers = append(battlers, string(area.Unit.Player))
 	}
 
-	err := msgHandler.SendSupportRequest(support.Player, area.Name, battlers)
+	err := msgHandler.SendSupportRequest(string(support.Player), area.Name, battlers)
 	if err != nil {
 		log.Println(fmt.Errorf("failed to send support request: %w", err))
 		supportReceiver <- supportDeclaration{from: support.Player, to: PlayerNone}
 		return
 	}
 
-	supported, err := msgHandler.AwaitSupport(support.Player, area.Name)
+	supported, err := msgHandler.ReceiveSupport(string(support.Player), area.Name)
 	if err != nil {
 		log.Println(fmt.Errorf("failed to receive support declaration from player %s: %w", support.Player, err))
 		supportReceiver <- supportDeclaration{from: support.Player, to: PlayerNone}
 		return
 	}
 
-	supportReceiver <- supportDeclaration{from: support.Player, to: supported}
+	supportReceiver <- supportDeclaration{from: support.Player, to: Player(supported)}
 }
 
 // Calculates totals for each of the given results, and returns them as a list.

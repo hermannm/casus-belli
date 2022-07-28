@@ -1,8 +1,8 @@
 package board
 
 type MessageHandler interface {
-	SendSupportRequest(to Player, supportingArea string, battlers []Player) error
-	AwaitSupport(from Player, fromArea string) (Player, error)
+	SendSupportRequest(to string, supportingArea string, battlers []string) error
+	ReceiveSupport(from string, fromArea string) (supportTo string, err error)
 }
 
 // Unique tag for a player in the game.
