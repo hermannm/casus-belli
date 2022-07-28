@@ -31,8 +31,6 @@ func (h Handler) AddReceiver(playerID string, areaNames []string) (Receiver, err
 	r := Receiver{
 		Orders:     make(chan SubmitOrders),
 		Support:    supportChans,
-		Quit:       make(chan Quit),
-		Kick:       make(chan Kick),
 		WinterVote: make(chan WinterVote),
 		Sword:      make(chan Sword),
 		Raven:      make(chan Raven),

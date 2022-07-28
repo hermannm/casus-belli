@@ -73,8 +73,6 @@ type Winner struct {
 const (
 	MsgSubmitOrders = "submitOrders"
 	MsgGiveSupport  = "giveSupport"
-	MsgQuit         = "quit"
-	MsgKick         = "kick"
 )
 
 // Client messages used for the throne expansion.
@@ -101,19 +99,6 @@ type GiveSupport struct {
 	From string `json:"from"`
 
 	// ID of the player in the destination area to support.
-	Player string `json:"player"`
-}
-
-// Message sent from client when they want to quit the game.
-type Quit struct {
-	Type string `json:"type"` // MsgQuit
-}
-
-// Message sent from client when they vote to kick another player.
-type Kick struct {
-	Type string `json:"type"` // MsgKick
-
-	// ID of the player to votekick.
 	Player string `json:"player"`
 }
 

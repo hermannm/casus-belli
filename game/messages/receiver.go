@@ -13,8 +13,6 @@ import (
 type Receiver struct {
 	Orders     chan SubmitOrders
 	Support    map[string]chan GiveSupport
-	Quit       chan Quit
-	Kick       chan Kick
 	WinterVote chan WinterVote
 	Sword      chan Sword
 	Raven      chan Raven
@@ -43,20 +41,6 @@ func (r Receiver) ReceiveMessage(msgType string, rawMsg []byte) {
 			} else {
 				err = fmt.Errorf("support receiver uninitialized for area %s", msg.From)
 			}
-		}
-	case MsgQuit:
-		var msg Quit
-		err = json.Unmarshal(rawMsg, &msg)
-		if err == nil {
-			r.Quit <- msg
-			return
-		}
-	case MsgKick:
-		var kickMessage Kick
-		err = json.Unmarshal(rawMsg, &kickMessage)
-		if err == nil {
-			r.Kick <- kickMessage
-			return
 		}
 	case MsgWinterVote:
 		var winterVoteMessage WinterVote
