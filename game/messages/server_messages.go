@@ -8,6 +8,7 @@ import (
 const (
 	MsgError              = "error"
 	MsgSupportRequest     = "supportRequest"
+	MsgOrderRequest       = "orderRequest"
 	MsgOrdersReceived     = "ordersReceived"
 	MsgOrdersConfirmation = "ordersConfirmation"
 	MsgBattleResult       = "battleResult"
@@ -29,6 +30,10 @@ type SupportRequest struct {
 
 	// List of possible players to support in the battle.
 	Battlers []string `json:"battlers"`
+}
+
+type OrderRequest struct {
+	Type string `json:"type"`
 }
 
 // Message sent from server to all clients when valid orders are received from all players.
