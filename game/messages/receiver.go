@@ -3,6 +3,7 @@ package messages
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 )
 
 // The Receiver handles messages coming from client, and parses them
@@ -108,4 +109,27 @@ func (receiver Receiver) ReceiveMessage(msgType string, rawMsg []byte) {
 		receiver.Errors <- errors.New("unrecognized message type: " + msgType)
 		return
 	}
+}
+
+func (handler Handler) AddReceiver(playerID string, areaNames []string) (Receiver, error) {
+	_, exists := handler.receivers[playerID]
+	if exists {
+		return Receiver{}, fmt.Errorf("message receiver for player id %s already exists", playerID)
+	}
+
+	receiver := NewReceiver(areaNames)
+	handler.receivers[playerID] = receiver
+	return receiver, nil
+}
+
+func (handler Handler) RemoveReceiver(playerID string) {
+	delete(handler.receivers, playerID)
+}
+
+func (handler Handler) ReceiverIDs() []string {
+	ids := make([]string, 0)
+	for id := range handler.receivers {
+		ids = append(ids, id)
+	}
+	return ids
 }
