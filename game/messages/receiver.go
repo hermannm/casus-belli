@@ -23,7 +23,7 @@ type Receiver struct {
 func NewReceiver(areaNames []string) Receiver {
 	supportChans := make(map[string]chan GiveSupport)
 	for _, areaName := range areaNames {
-		supportChans[areaName] = make(chan GiveSupport, 1)
+		supportChans[areaName] = make(chan GiveSupport)
 	}
 
 	return Receiver{
