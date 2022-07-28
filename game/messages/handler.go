@@ -23,17 +23,17 @@ func (h Handler) AddReceiver(playerID string, areaNames []string) (Receiver, err
 		return Receiver{}, fmt.Errorf("message receiver for player id %s already exists", playerID)
 	}
 
-	supportChans := make(map[string]chan GiveSupport)
+	supportChans := make(map[string]chan giveSupportMsg)
 	for _, areaName := range areaNames {
-		supportChans[areaName] = make(chan GiveSupport)
+		supportChans[areaName] = make(chan giveSupportMsg)
 	}
 
 	r := Receiver{
-		Orders:     make(chan SubmitOrders),
+		Orders:     make(chan submitOrdersMsg),
 		Support:    supportChans,
-		WinterVote: make(chan WinterVote),
-		Sword:      make(chan Sword),
-		Raven:      make(chan Raven),
+		WinterVote: make(chan winterVoteMsg),
+		Sword:      make(chan swordMsg),
+		Raven:      make(chan ravenMsg),
 	}
 
 	h.receivers[playerID] = r

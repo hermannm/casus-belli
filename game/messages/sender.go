@@ -13,14 +13,14 @@ type Sender interface {
 }
 
 func (h Handler) SendError(to string, errMsg string) {
-	err := h.sender.SendMessage(to, Error{Type: MsgError, Error: errMsg})
+	err := h.sender.SendMessage(to, errorMsg{Type: msgError, Error: errMsg})
 	if err != nil {
 		log.Println(fmt.Errorf("failed to send error message to player %s: %w", to, err))
 	}
 }
 
 func (h Handler) SendOrderRequest(to string) error {
-	err := h.sender.SendMessage(to, OrderRequest{Type: MsgOrderRequest})
+	err := h.sender.SendMessage(to, orderRequestMsg{Type: msgOrderRequest})
 	if err != nil {
 		return fmt.Errorf("failed to send order request message to player %s: %w", to, err)
 	}
@@ -28,8 +28,8 @@ func (h Handler) SendOrderRequest(to string) error {
 }
 
 func (h Handler) SendSupportRequest(to string, supportingArea string, battlers []string) error {
-	err := h.sender.SendMessage(to, SupportRequest{
-		Type:           MsgSupportRequest,
+	err := h.sender.SendMessage(to, supportRequestMsg{
+		Type:           msgSupportRequest,
 		SupportingArea: supportingArea,
 		Battlers:       battlers,
 	})
@@ -40,7 +40,7 @@ func (h Handler) SendSupportRequest(to string, supportingArea string, battlers [
 }
 
 func (h Handler) SendBattleResult(battle board.Battle) error {
-	err := h.sender.SendMessageToAll(BattleResult{Type: MsgBattleResult, Battle: battle})
+	err := h.sender.SendMessageToAll(battleResultMsg{Type: msgBattleResult, Battle: battle})
 	if err != nil {
 		return fmt.Errorf("failed to send battle result message: %w", err)
 	}
@@ -48,7 +48,7 @@ func (h Handler) SendBattleResult(battle board.Battle) error {
 }
 
 func (h Handler) SendWinner(winner string) error {
-	err := h.sender.SendMessageToAll(Winner{Type: MsgWinner, Winner: winner})
+	err := h.sender.SendMessageToAll(winnerMsg{Type: msgWinner, Winner: winner})
 	if err != nil {
 		return fmt.Errorf("failed to send winner message: %w", err)
 	}

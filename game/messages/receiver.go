@@ -11,11 +11,11 @@ import (
 // The Receiver handles messages coming from client, and parses them
 // to the appropriate message type channel for use by the game instance.
 type Receiver struct {
-	Orders     chan SubmitOrders
-	Support    map[string]chan GiveSupport
-	WinterVote chan WinterVote
-	Sword      chan Sword
-	Raven      chan Raven
+	Orders     chan submitOrdersMsg
+	Support    map[string]chan giveSupportMsg
+	WinterVote chan winterVoteMsg
+	Sword      chan swordMsg
+	Raven      chan ravenMsg
 }
 
 // Takes a partly deserialized base message, checks it type, and further deserializes the given raw
@@ -24,15 +24,15 @@ func (r Receiver) ReceiveMessage(msgType string, rawMsg []byte) {
 	var err error // Error declared here in order to handle it after the switch.
 
 	switch msgType {
-	case MsgSubmitOrders:
-		var msg SubmitOrders
+	case msgSubmitOrders:
+		var msg submitOrdersMsg
 		err = json.Unmarshal(rawMsg, &msg)
 		if err == nil {
 			r.Orders <- msg
 			return
 		}
-	case MsgGiveSupport:
-		var msg GiveSupport
+	case msgGiveSupport:
+		var msg giveSupportMsg
 		err = json.Unmarshal(rawMsg, &msg)
 		if err == nil {
 			supportChan, ok := r.Support[msg.From]
@@ -42,25 +42,25 @@ func (r Receiver) ReceiveMessage(msgType string, rawMsg []byte) {
 				err = fmt.Errorf("support receiver uninitialized for area %s", msg.From)
 			}
 		}
-	case MsgWinterVote:
-		var winterVoteMessage WinterVote
-		err = json.Unmarshal(rawMsg, &winterVoteMessage)
+	case msgWinterVote:
+		var msg winterVoteMsg
+		err = json.Unmarshal(rawMsg, &msg)
 		if err == nil {
-			r.WinterVote <- winterVoteMessage
+			r.WinterVote <- msg
 			return
 		}
-	case MsgSword:
-		var swordMessage Sword
-		err = json.Unmarshal(rawMsg, &swordMessage)
+	case msgSword:
+		var msg swordMsg
+		err = json.Unmarshal(rawMsg, &msg)
 		if err == nil {
-			r.Sword <- swordMessage
+			r.Sword <- msg
 			return
 		}
-	case MsgRaven:
-		var ravenMessage Raven
-		err = json.Unmarshal(rawMsg, &ravenMessage)
+	case msgRaven:
+		var msg ravenMsg
+		err = json.Unmarshal(rawMsg, &msg)
 		if err == nil {
-			r.Raven <- ravenMessage
+			r.Raven <- msg
 			return
 		}
 	}
