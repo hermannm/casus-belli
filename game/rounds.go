@@ -1,6 +1,9 @@
 package game
 
 import (
+	"fmt"
+	"log"
+
 	"hermannm.dev/bfh-server/game/board"
 	"hermannm.dev/bfh-server/game/messages"
 	"hermannm.dev/bfh-server/game/validation"
@@ -16,10 +19,10 @@ func (game *Game) Start() {
 		season = nextSeason(season)
 
 		// Waits for submitted orders from each player, then adds them to the round.
-		received := make(chan []board.Order, len(game.Messages))
-		for player, receiver := range game.Messages {
-			timeout := make(chan struct{})
-			go game.receiveAndValidateOrders(player, receiver, season, received, timeout)
+		players := game.msgHandler.ReceiverIDs()
+		received := make(chan []board.Order, len(players))
+		for _, player := range players {
+			go game.receiveAndValidateOrders(player, season, received, game.msgHandler)
 		}
 		allOrders := make([]board.Order, 0)
 		for orderSet := range received {
@@ -39,13 +42,14 @@ func (game *Game) Start() {
 		winner = newWinner
 
 		for _, battle := range battles {
-			game.Lobby.Send(messages.BattleResult{
-				Type: messages.MsgBattleResult, Battle: battle,
-			})
+			err := game.msgHandler.SendBattleResult(battle)
+			if err != nil {
+				log.Println(err)
+			}
 		}
 	}
 
-	game.Lobby.Send(messages.Winner{Type: messages.MsgWinner, Winner: string(winner)})
+	game.msgHandler.SendWinner(string(winner))
 }
 
 // Waits for the given player to submit orders, then validates them.
@@ -53,31 +57,36 @@ func (game *Game) Start() {
 // If invalid, informs the client and waits for a new order set.
 // Function stops if it receives on the timeout channel.
 func (game Game) receiveAndValidateOrders(
-	playerID string,
-	receiver messages.Receiver,
+	player string,
 	season board.Season,
 	output chan<- []board.Order,
-	timeout <-chan struct{},
+	msgHandler messages.Handler,
 ) {
 	for {
-		select {
-		case submitted := <-receiver.Orders:
-			orders := submitted.Orders
-			addOrderPlayer(orders, playerID)
-
-			err := validation.ValidateOrderSet(orders, game.Board, season)
-			if err != nil {
-				if player, ok := game.Lobby.GetPlayer(playerID); ok {
-					player.Send(messages.Error{Type: messages.MsgError, Error: err.Error()})
-				}
-				continue
-			}
-
-			output <- orders
-			return
-		case <-timeout:
+		err := msgHandler.SendOrderRequest(player)
+		if err != nil {
+			log.Println(err)
+			output <- make([]board.Order, 0)
 			return
 		}
+
+		orders, err := msgHandler.ReceiveOrders(player)
+		if err != nil {
+			log.Println(err)
+			output <- make([]board.Order, 0)
+			return
+		}
+
+		addOrderPlayer(orders, player)
+
+		err = validation.ValidateOrderSet(orders, game.Board, season)
+		if err != nil {
+			log.Println(err)
+			msgHandler.SendError(player, fmt.Sprintf("Invalid order set: %s", err.Error()))
+			continue
+		}
+
+		output <- orders
 	}
 }
 
