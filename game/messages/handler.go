@@ -2,9 +2,6 @@ package messages
 
 import (
 	"fmt"
-	"log"
-
-	"hermannm.dev/bfh-server/game/board"
 )
 
 type Handler struct {
@@ -20,74 +17,40 @@ func NewHandler(s Sender) Handler {
 	}
 }
 
-func (h Handler) SendError(to string, errMsg string) {
-	err := h.sender.SendMessage(to, Error{Type: MsgError, Error: errMsg})
-	if err != nil {
-		log.Println(fmt.Errorf("failed to send error message to player %s: %w", to, err))
+func (h Handler) AddReceiver(playerID string, areaNames []string) (Receiver, error) {
+	_, exists := h.receivers[playerID]
+	if exists {
+		return Receiver{}, fmt.Errorf("message receiver for player id %s already exists", playerID)
 	}
+
+	supportChans := make(map[string]chan GiveSupport)
+	for _, areaName := range areaNames {
+		supportChans[areaName] = make(chan GiveSupport)
+	}
+
+	r := Receiver{
+		Orders:     make(chan SubmitOrders),
+		Support:    supportChans,
+		Quit:       make(chan Quit),
+		Kick:       make(chan Kick),
+		WinterVote: make(chan WinterVote),
+		Sword:      make(chan Sword),
+		Raven:      make(chan Raven),
+		Errors:     make(chan error),
+	}
+
+	h.receivers[playerID] = r
+	return r, nil
 }
 
-func (h Handler) SendOrderRequest(to string) error {
-	err := h.sender.SendMessage(to, OrderRequest{Type: MsgOrderRequest})
-	if err != nil {
-		return fmt.Errorf("failed to send order request message to player %s: %w", to, err)
-	}
-	return nil
+func (h Handler) RemoveReceiver(playerID string) {
+	delete(h.receivers, playerID)
 }
 
-func (h Handler) SendSupportRequest(to string, supportingArea string, battlers []string) error {
-	err := h.sender.SendMessage(to, SupportRequest{
-		Type:           MsgSupportRequest,
-		SupportingArea: supportingArea,
-		Battlers:       battlers,
-	})
-	if err != nil {
-		return fmt.Errorf("failed to send support request message to player %s: %w", to, err)
+func (h Handler) ReceiverIDs() []string {
+	ids := make([]string, 0)
+	for id := range h.receivers {
+		ids = append(ids, id)
 	}
-	return nil
-}
-
-func (h Handler) SendBattleResult(battle board.Battle) error {
-	err := h.sender.SendMessageToAll(BattleResult{Type: MsgBattleResult, Battle: battle})
-	if err != nil {
-		return fmt.Errorf("failed to send battle result message: %w", err)
-	}
-	return nil
-}
-
-func (h Handler) SendWinner(winner string) error {
-	err := h.sender.SendMessageToAll(Winner{Type: MsgWinner, Winner: winner})
-	if err != nil {
-		return fmt.Errorf("failed to send winner message: %w", err)
-	}
-	return nil
-}
-
-func (h Handler) ReceiveOrders(from string) ([]board.Order, error) {
-	receiver, ok := h.receivers[from]
-	if !ok {
-		return nil, fmt.Errorf("failed to get order message from player %s: receiver not found", from)
-	}
-
-	orders := <-receiver.Orders
-	return orders.Orders, nil
-}
-
-func (h Handler) ReceiveSupport(from string, supportingArea string) (supportTo string, err error) {
-	receiver, ok := h.receivers[from]
-	if !ok {
-		return "", fmt.Errorf("failed to get support message from player %s: receiver not found", from)
-	}
-
-	supportChan, ok := receiver.Support[supportingArea]
-	if !ok {
-		return "", fmt.Errorf(
-			"failed to get support message from player %s: support receiver uninitialized for area %s",
-			from,
-			supportingArea,
-		)
-	}
-
-	support := <-supportChan
-	return support.Player, nil
+	return ids
 }
