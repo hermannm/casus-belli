@@ -27,7 +27,7 @@ func TestResolveConflictFreeMoveCycle(t *testing.T) {
 	round := Round{FirstOrders: orders}
 
 	// Runs the resolve function, mutating the board.
-	board.Resolve(round)
+	board.Resolve(round, mockMessageHandler{})
 
 	// Expected: the units have switched places in a circle.
 	expected := expectedControl{

@@ -172,3 +172,13 @@ func checkExpectedControl(board Board, expected expectedControl, t *testing.T) {
 		}
 	}
 }
+
+type mockMessageHandler struct{}
+
+func (mockMessageHandler) SendSupportRequest(to string, supportingArea string, battlers []string) error {
+	return nil
+}
+
+func (mockMessageHandler) ReceiveSupport(from string, fromArea string) (supportTo string, err error) {
+	return "", nil
+}
