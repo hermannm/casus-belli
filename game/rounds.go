@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"hermannm.dev/bfh-server/game/board"
-	"hermannm.dev/bfh-server/game/messages"
 	"hermannm.dev/bfh-server/game/validation"
 )
 
@@ -19,10 +18,10 @@ func (game *Game) Start() {
 		season = nextSeason(season)
 
 		// Waits for submitted orders from each player, then adds them to the round.
-		players := game.msgHandler.ReceiverIDs()
+		players := game.messenger.ReceiverIDs()
 		received := make(chan []board.Order, len(players))
 		for _, player := range players {
-			go game.receiveAndValidateOrders(player, season, received, game.msgHandler)
+			go game.receiveAndValidateOrders(player, season, received)
 		}
 		allOrders := make([]board.Order, 0)
 		for orderSet := range received {
@@ -38,39 +37,33 @@ func (game *Game) Start() {
 
 		game.Rounds = append(game.Rounds, round)
 
-		battles, newWinner := game.Board.Resolve(round, game.msgHandler)
+		battles, newWinner := game.Board.Resolve(round, game.messenger)
 		winner = newWinner
 
 		for _, battle := range battles {
-			err := game.msgHandler.SendBattleResult(battle)
+			err := game.messenger.SendBattleResult(battle)
 			if err != nil {
 				log.Println(err)
 			}
 		}
 	}
 
-	game.msgHandler.SendWinner(winner)
+	game.messenger.SendWinner(winner)
 }
 
 // Waits for the given player to submit orders, then validates them.
 // If valid, sends the order set to the given output channel.
 // If invalid, informs the client and waits for a new order set.
-// Function stops if it receives on the timeout channel.
-func (game Game) receiveAndValidateOrders(
-	player string,
-	season board.Season,
-	output chan<- []board.Order,
-	msgHandler messages.Handler,
-) {
+func (game Game) receiveAndValidateOrders(player string, season board.Season, output chan<- []board.Order) {
 	for {
-		err := msgHandler.SendOrderRequest(player)
+		err := game.messenger.SendOrderRequest(player)
 		if err != nil {
 			log.Println(err)
 			output <- make([]board.Order, 0)
 			return
 		}
 
-		orders, err := msgHandler.ReceiveOrders(player)
+		orders, err := game.messenger.ReceiveOrders(player)
 		if err != nil {
 			log.Println(err)
 			output <- make([]board.Order, 0)
@@ -82,7 +75,7 @@ func (game Game) receiveAndValidateOrders(
 		err = validation.ValidateOrderSet(orders, game.Board, season)
 		if err != nil {
 			log.Println(err)
-			msgHandler.SendError(player, fmt.Sprintf("Invalid order set: %s", err.Error()))
+			game.messenger.SendError(player, fmt.Sprintf("Invalid order set: %s", err.Error()))
 			continue
 		}
 

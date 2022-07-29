@@ -10,10 +10,10 @@ import (
 )
 
 type Game struct {
-	Board      board.Board
-	Rounds     []board.Round
-	Options    GameOptions
-	msgHandler messages.Handler
+	Board     board.Board
+	Rounds    []board.Round
+	Options   GameOptions
+	messenger messages.Messenger
 }
 
 type GameOptions struct {
@@ -28,10 +28,10 @@ func New(boardName string, options GameOptions, msgSender messages.Sender) (*Gam
 	}
 
 	return &Game{
-		Board:      brd,
-		Rounds:     make([]board.Round, 0),
-		Options:    options,
-		msgHandler: messages.NewHandler(msgSender),
+		Board:     brd,
+		Rounds:    make([]board.Round, 0),
+		Options:   options,
+		messenger: messages.NewMessenger(msgSender),
 	}, nil
 }
 
@@ -55,7 +55,7 @@ func (game Game) AddPlayer(playerID string) (lobby.MessageReceiver, error) {
 		areaNames = append(areaNames, area.Name)
 	}
 
-	receiver, err := game.msgHandler.AddReceiver(playerID, areaNames)
+	receiver, err := game.messenger.AddReceiver(playerID, areaNames)
 	if err != nil {
 		return nil, fmt.Errorf("failed to add player: %w", err)
 	}

@@ -70,8 +70,8 @@ func (receiver Receiver) ReceiveMessage(msgType string, rawMsg []byte) {
 	}
 }
 
-func (handler Handler) ReceiveOrders(from string) ([]board.Order, error) {
-	receiver, ok := handler.receivers[from]
+func (messenger Messenger) ReceiveOrders(from string) ([]board.Order, error) {
+	receiver, ok := messenger.receivers[from]
 	if !ok {
 		return nil, fmt.Errorf("failed to get order message from player %s: receiver not found", from)
 	}
@@ -80,8 +80,8 @@ func (handler Handler) ReceiveOrders(from string) ([]board.Order, error) {
 	return orders.Orders, nil
 }
 
-func (handler Handler) ReceiveSupport(from string, supportingArea string) (supportTo string, err error) {
-	receiver, ok := handler.receivers[from]
+func (messenger Messenger) ReceiveSupport(from string, supportingArea string) (supportTo string, err error) {
+	receiver, ok := messenger.receivers[from]
 	if !ok {
 		return "", fmt.Errorf("failed to get support message from player %s: receiver not found", from)
 	}

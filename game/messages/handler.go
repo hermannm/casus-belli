@@ -4,21 +4,21 @@ import (
 	"fmt"
 )
 
-type Handler struct {
+type Messenger struct {
 	sender    Sender
 	receivers map[string]Receiver
 }
 
-func NewHandler(sender Sender) Handler {
+func NewMessenger(sender Sender) Messenger {
 	receivers := make(map[string]Receiver)
-	return Handler{
+	return Messenger{
 		sender:    sender,
 		receivers: receivers,
 	}
 }
 
-func (handler Handler) AddReceiver(playerID string, areaNames []string) (Receiver, error) {
-	_, exists := handler.receivers[playerID]
+func (messenger Messenger) AddReceiver(playerID string, areaNames []string) (Receiver, error) {
+	_, exists := messenger.receivers[playerID]
 	if exists {
 		return Receiver{}, fmt.Errorf("message receiver for player id %s already exists", playerID)
 	}
@@ -36,17 +36,17 @@ func (handler Handler) AddReceiver(playerID string, areaNames []string) (Receive
 		Raven:      make(chan ravenMsg),
 	}
 
-	handler.receivers[playerID] = receiver
+	messenger.receivers[playerID] = receiver
 	return receiver, nil
 }
 
-func (handler Handler) RemoveReceiver(playerID string) {
-	delete(handler.receivers, playerID)
+func (messenger Messenger) RemoveReceiver(playerID string) {
+	delete(messenger.receivers, playerID)
 }
 
-func (handler Handler) ReceiverIDs() []string {
+func (messenger Messenger) ReceiverIDs() []string {
 	ids := make([]string, 0)
-	for id := range handler.receivers {
+	for id := range messenger.receivers {
 		ids = append(ids, id)
 	}
 	return ids

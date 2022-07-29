@@ -93,7 +93,7 @@ type supportDeclaration struct {
 // Appends support modifiers to receiving players' results in the given map,
 // but only if the result is tied to a move order to the area.
 // Calls support to defender in the area if includeDefender is true.
-func appendSupportMods(results map[string]Result, area Area, includeDefender bool, msgHandler MessageHandler) {
+func appendSupportMods(results map[string]Result, area Area, includeDefender bool, messenger Messenger) {
 	supports := area.IncomingSupports
 	supportCount := len(supports)
 	supportReceiver := make(chan supportDeclaration, supportCount)
@@ -113,7 +113,7 @@ func appendSupportMods(results map[string]Result, area Area, includeDefender boo
 
 	// Starts a goroutine to call support for each support order to the area.
 	for _, support := range supports {
-		go callSupport(support, area, moves, includeDefender, supportReceiver, wg, msgHandler)
+		go callSupport(support, area, moves, includeDefender, supportReceiver, wg, messenger)
 	}
 
 	// Waits until all support calls are done, then closes the channel to range over it.
@@ -146,7 +146,7 @@ func callSupport(
 	includeDefender bool,
 	supportReceiver chan<- supportDeclaration,
 	wg sync.WaitGroup,
-	msgHandler MessageHandler,
+	messenger Messenger,
 ) {
 	defer wg.Done()
 
@@ -170,14 +170,14 @@ func callSupport(
 		battlers = append(battlers, area.Unit.Player)
 	}
 
-	err := msgHandler.SendSupportRequest(support.Player, area.Name, battlers)
+	err := messenger.SendSupportRequest(support.Player, area.Name, battlers)
 	if err != nil {
 		log.Println(fmt.Errorf("failed to send support request: %w", err))
 		supportReceiver <- supportDeclaration{fromPlayer: support.Player, toPlayer: ""}
 		return
 	}
 
-	supported, err := msgHandler.ReceiveSupport(support.Player, area.Name)
+	supported, err := messenger.ReceiveSupport(support.Player, area.Name)
 	if err != nil {
 		log.Println(fmt.Errorf("failed to receive support declaration from player %s: %w", support.Player, err))
 		supportReceiver <- supportDeclaration{fromPlayer: support.Player, toPlayer: ""}

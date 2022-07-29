@@ -1,6 +1,6 @@
 package board
 
-type MessageHandler interface {
+type Messenger interface {
 	SendSupportRequest(to string, supportingArea string, battlers []string) error
 	ReceiveSupport(from string, fromArea string) (supportTo string, err error)
 }
