@@ -27,6 +27,22 @@ func (handler Handler) SendOrderRequest(to string) error {
 	return nil
 }
 
+func (handler Handler) SendOrdersReceived(playerOrders map[string][]board.Order) error {
+	err := handler.sender.SendMessageToAll(ordersReceivedMsg{Type: msgOrdersReceived, Orders: playerOrders})
+	if err != nil {
+		return fmt.Errorf("failed to send orders received message: %w", err)
+	}
+	return nil
+}
+
+func (handler Handler) SendOrdersConfirmation(player string) error {
+	err := handler.sender.SendMessageToAll(ordersConfirmationMsg{Type: msgOrdersConfirmation, Player: player})
+	if err != nil {
+		return fmt.Errorf("failed to send orders confirmation message: %w", err)
+	}
+	return nil
+}
+
 func (handler Handler) SendSupportRequest(to string, supportingArea string, battlers []string) error {
 	err := handler.sender.SendMessage(to, supportRequestMsg{
 		Type:           msgSupportRequest,
