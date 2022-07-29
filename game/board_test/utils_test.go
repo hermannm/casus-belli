@@ -173,16 +173,16 @@ func checkExpectedControl(board Board, expected expectedControl, t *testing.T) {
 	}
 }
 
-type mockMessageHandler struct{}
+type mockMessenger struct{}
 
-func (mockMessageHandler) SendBattleResults(battles []Battle) error {
+func (mockMessenger) SendBattleResults(battles []Battle) error {
 	return nil
 }
 
-func (mockMessageHandler) SendSupportRequest(to string, supportingArea string, battlers []string) error {
+func (mockMessenger) SendSupportRequest(to string, supportingArea string, battlers []string) error {
 	return nil
 }
 
-func (mockMessageHandler) ReceiveSupport(from string, fromArea string) (supportTo string, err error) {
+func (mockMessenger) ReceiveSupport(from string, fromArea string) (supportTo string, err error) {
 	return "", nil
 }

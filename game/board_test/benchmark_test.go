@@ -9,7 +9,7 @@ import (
 func BenchmarkBoardResolve(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		board, round := setup()
-		board.Resolve(round, mockMessageHandler{})
+		board.Resolve(round, mockMessenger{})
 	}
 }
 
