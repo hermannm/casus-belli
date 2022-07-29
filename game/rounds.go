@@ -3,7 +3,6 @@ package game
 import (
 	"fmt"
 	"log"
-	"sync"
 
 	"hermannm.dev/bfh-server/game/board"
 	"hermannm.dev/bfh-server/game/validation"
@@ -21,28 +20,27 @@ func (game *Game) Start() {
 		// Waits for submitted orders from each player, then adds them to the round.
 		players := game.messenger.ReceiverIDs()
 
-		var wg sync.WaitGroup
-		wg.Add(len(players))
-
-		received := make(chan receivedOrders, len(players))
-
+		orderChans := make(map[string]chan []board.Order)
 		for _, player := range players {
-			go game.receiveAndValidateOrders(player, season, received, &wg)
+			orderChan := make(chan []board.Order, 1)
+			orderChans[player] = orderChan
+			go game.receiveAndValidateOrders(player, season, orderChan)
 		}
-
-		wg.Wait()
 
 		playerOrders := make(map[string][]board.Order)
-		for orderSet := range received {
-			playerOrders[orderSet.player] = orderSet.orders
+		for player, orderChan := range orderChans {
+			orders := <-orderChan
+			playerOrders[player] = orders
 		}
+
+		err := game.messenger.SendOrdersReceived(playerOrders)
+		if err != nil {
+			log.Println(err)
+		}
+
 		firstOrders, secondOrders := sortOrders(playerOrders, game.board)
 
-		round := board.Round{
-			Season:       season,
-			FirstOrders:  firstOrders,
-			SecondOrders: secondOrders,
-		}
+		round := board.Round{Season: season, FirstOrders: firstOrders, SecondOrders: secondOrders}
 
 		game.rounds = append(game.rounds, round)
 
@@ -60,32 +58,22 @@ func (game *Game) Start() {
 	game.messenger.SendWinner(winner)
 }
 
-type receivedOrders struct {
-	orders []board.Order
-	player string
-}
-
 // Waits for the given player to submit orders, then validates them.
 // If valid, sends the order set to the given output channel.
 // If invalid, informs the client and waits for a new order set.
-func (game Game) receiveAndValidateOrders(
-	player string,
-	season board.Season,
-	output chan<- receivedOrders,
-	wg *sync.WaitGroup,
-) {
-	defer wg.Done()
-
+func (game Game) receiveAndValidateOrders(player string, season board.Season, orderChan chan<- []board.Order) {
 	for {
 		err := game.messenger.SendOrderRequest(player)
 		if err != nil {
 			log.Println(err)
+			orderChan <- []board.Order{}
 			return
 		}
 
 		orders, err := game.messenger.ReceiveOrders(player)
 		if err != nil {
 			log.Println(err)
+			orderChan <- []board.Order{}
 			return
 		}
 
@@ -106,7 +94,7 @@ func (game Game) receiveAndValidateOrders(
 			log.Println(err)
 		}
 
-		output <- receivedOrders{orders: orders, player: player}
+		orderChan <- orders
 	}
 }
 
