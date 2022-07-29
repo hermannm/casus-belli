@@ -81,7 +81,7 @@ func (board Board) resolveMoves(allowPlayerConflict bool, messenger Messenger) [
 	processed := make(map[string]struct{})
 	retreats := make(map[string]Order)
 
-outerLoop:
+OuterLoop:
 	for {
 		select {
 		case battle := <-battleReceiver:
@@ -97,14 +97,14 @@ outerLoop:
 				delete(processing, area)
 			}
 		default:
-		boardLoop:
+		BoardLoop:
 			for areaName, area := range board.Areas {
 				retreat, hasRetreat := retreats[areaName]
 				if _, skip := processed[areaName]; skip && !hasRetreat {
-					continue boardLoop
+					continue BoardLoop
 				}
 				if _, skip := processing[areaName]; skip {
-					continue boardLoop
+					continue BoardLoop
 				}
 
 				for _, move := range area.IncomingMoves {
@@ -112,7 +112,7 @@ outerLoop:
 
 					if transportAttacked {
 						if allowPlayerConflict {
-							continue boardLoop
+							continue BoardLoop
 						} else {
 							processed[areaName] = struct{}{}
 						}
@@ -138,7 +138,7 @@ outerLoop:
 					}
 
 					processed[area.Name] = struct{}{}
-					continue boardLoop
+					continue BoardLoop
 				}
 
 				board.resolveAreaMoves(
@@ -154,10 +154,10 @@ outerLoop:
 
 			if len(processing) == 0 {
 				if len(retreats) != 0 {
-					continue boardLoop
+					continue BoardLoop
 				}
 
-				break outerLoop
+				break OuterLoop
 			}
 		}
 	}

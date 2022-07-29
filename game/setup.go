@@ -65,7 +65,7 @@ func (game Game) AddPlayer(playerID string) (lobby.MessageReceiver, error) {
 func playerIDsFromBoard(brd board.Board) []string {
 	ids := make([]string, 0)
 
-outerLoop:
+OuterLoop:
 	for _, area := range brd.Areas {
 		potentialID := area.HomePlayer
 		if potentialID == "" {
@@ -74,7 +74,7 @@ outerLoop:
 
 		for _, id := range ids {
 			if potentialID == id {
-				continue outerLoop
+				continue OuterLoop
 			}
 		}
 
