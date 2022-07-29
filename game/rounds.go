@@ -27,7 +27,7 @@ func (game *Game) Start() {
 		for orderSet := range received {
 			allOrders = append(allOrders, orderSet...)
 		}
-		firstOrders, secondOrders := sortOrders(allOrders, game.Board)
+		firstOrders, secondOrders := sortOrders(allOrders, game.board)
 
 		round := board.Round{
 			Season:       season,
@@ -35,9 +35,9 @@ func (game *Game) Start() {
 			SecondOrders: secondOrders,
 		}
 
-		game.Rounds = append(game.Rounds, round)
+		game.rounds = append(game.rounds, round)
 
-		battles, newWinner := game.Board.Resolve(round, game.messenger)
+		battles, newWinner := game.board.Resolve(round, game.messenger)
 		winner = newWinner
 
 		for _, battle := range battles {
@@ -72,7 +72,7 @@ func (game Game) receiveAndValidateOrders(player string, season board.Season, ou
 
 		addOrderPlayer(orders, player)
 
-		err = validation.ValidateOrderSet(orders, game.Board, season)
+		err = validation.ValidateOrderSet(orders, game.board, season)
 		if err != nil {
 			log.Println(err)
 			game.messenger.SendError(player, fmt.Sprintf("Invalid order set: %s", err.Error()))

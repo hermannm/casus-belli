@@ -10,14 +10,14 @@ import (
 )
 
 type Game struct {
-	Board     board.Board
-	Rounds    []board.Round
-	Options   GameOptions
+	board     board.Board
+	rounds    []board.Round
+	options   GameOptions
 	messenger messages.Messenger
 }
 
 type GameOptions struct {
-	Thrones bool // Whether the game has the "Raven, Sword and Throne" expansion enabled.
+	ThroneExpansion bool // Whether the game has the "Raven, Sword and Throne" expansion enabled.
 }
 
 // Constructs a game instance. Initializes player slots for each area home tag on the given board.
@@ -28,30 +28,30 @@ func New(boardName string, options GameOptions, msgSender messages.Sender) (*Gam
 	}
 
 	return &Game{
-		Board:     brd,
-		Rounds:    make([]board.Round, 0),
-		Options:   options,
+		board:     brd,
+		rounds:    make([]board.Round, 0),
+		options:   options,
 		messenger: messages.NewMessenger(msgSender),
 	}, nil
 }
 
 func DefaultOptions() GameOptions {
 	return GameOptions{
-		Thrones: true,
+		ThroneExpansion: true,
 	}
 }
 
 // Dynamically finds the possible player IDs for the game
 // by going through the board and finding all the different Home values.
 func (game Game) PlayerIDs() []string {
-	return playerIDsFromBoard(game.Board)
+	return playerIDsFromBoard(game.board)
 }
 
 // Creates a new message receiver for the given player tag, and adds it to the game.
 // Returns error if tag is invalid or already taken.
 func (game Game) AddPlayer(playerID string) (lobby.MessageReceiver, error) {
 	areaNames := make([]string, 0)
-	for _, area := range game.Board.Areas {
+	for _, area := range game.board.Areas {
 		areaNames = append(areaNames, area.Name)
 	}
 

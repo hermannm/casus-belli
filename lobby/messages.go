@@ -6,36 +6,36 @@ import (
 
 // Lobby-specific messages from client to server.
 const (
-	MsgError     = "error"
-	MsgReady     = "ready"
-	MsgStartGame = "startGame"
+	msgError     = "error"
+	msgReady     = "ready"
+	msgStartGame = "startGame"
 )
 
 // Base for all messages.
-type Message struct {
+type message struct {
 	Type string `json:"type"`
 }
 
 // Message sent from server when an error occurs.
-type ErrorMessage struct {
-	Type  string `json:"type"` // MsgError
+type errorMsg struct {
+	Type  string `json:"type"` // msgError
 	Error string `json:"error"`
 }
 
 // Message sent from client to mark themselves as ready to start the game.
-type ReadyMessage struct {
-	Type  string `json:"type"` // MsgReady
+type readyMsg struct {
+	Type  string `json:"type"` // msgReady
 	Ready bool   `json:"ready"`
 }
 
 // Message sent from lobby host to start the game once all players are ready.
-type StartGameMessage struct {
-	Type string `json:"type"` // MsgStartGame
+type startGameMsg struct {
+	Type string `json:"type"` // msgStartGame
 }
 
 // Listens for messages from the player, and forwards them to the given receiver.
 // Listens continuously until the player turns inactive.
-func (player *Player) Listen(receiver MessageReceiver) {
+func (player *Player) listen(receiver MessageReceiver) {
 	for {
 		if !player.isActive() {
 			return
@@ -46,11 +46,11 @@ func (player *Player) Listen(receiver MessageReceiver) {
 			continue
 		}
 
-		var baseMsg Message
+		var baseMsg message
 
 		err = json.Unmarshal(msg, &baseMsg)
 		if err != nil || baseMsg.Type == "" {
-			player.send(ErrorMessage{Type: MsgError, Error: "error in deserializing message"})
+			player.send(errorMsg{Type: msgError, Error: "error in deserializing message"})
 			return
 		}
 
