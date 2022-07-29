@@ -55,10 +55,10 @@ func (messenger Messenger) SendSupportRequest(to string, supportingArea string, 
 	return nil
 }
 
-func (messenger Messenger) SendBattleResult(battle board.Battle) error {
-	err := messenger.sender.SendMessageToAll(battleResultMsg{Type: msgBattleResult, Battle: battle})
+func (messenger Messenger) SendBattleResults(battles []board.Battle) error {
+	err := messenger.sender.SendMessageToAll(battleResultsMsg{Type: msgBattleResults, Battles: battles})
 	if err != nil {
-		return fmt.Errorf("failed to send battle result message: %w", err)
+		return fmt.Errorf("failed to send battle results message: %w", err)
 	}
 	return nil
 }

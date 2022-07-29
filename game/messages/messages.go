@@ -11,7 +11,7 @@ const (
 	msgOrderRequest       = "orderRequest"
 	msgOrdersReceived     = "ordersReceived"
 	msgOrdersConfirmation = "ordersConfirmation"
-	msgBattleResult       = "battleResult"
+	msgBattleResults      = "battleResults"
 	msgWinner             = "winner"
 )
 
@@ -67,11 +67,11 @@ type ordersConfirmationMsg struct {
 }
 
 // Message sent from server to all clients when a battle result is calculated.
-type battleResultMsg struct {
-	Type string `json:"type"` // msgBattleResult
+type battleResultsMsg struct {
+	Type string `json:"type"` // msgBattleResults
 
 	// The relevant battle result.
-	Battle board.Battle `json:"battle"`
+	Battles []board.Battle `json:"battles"`
 }
 
 // Message sent from server to all clients when the game is won.

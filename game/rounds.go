@@ -47,11 +47,9 @@ func (game *Game) Start() {
 		battles, newWinner := game.board.Resolve(round, game.messenger)
 		winner = newWinner
 
-		for _, battle := range battles {
-			err := game.messenger.SendBattleResult(battle)
-			if err != nil {
-				log.Println(err)
-			}
+		err = game.messenger.SendBattleResults(battles)
+		if err != nil {
+			log.Println(err)
 		}
 	}
 
