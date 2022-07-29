@@ -31,9 +31,9 @@ func TestResolveConflictFreeMoveCycle(t *testing.T) {
 
 	// Expected: the units have switched places in a circle.
 	expected := expectedControl{
-		"Leil":   {control: "yellow", unit: units["Worp"]},
-		"Limbol": {control: "red", unit: units["Leil"]},
-		"Worp":   {control: "green", unit: units["Limbol"]},
+		"Leil":   {controllingPlayer: "yellow", unit: units["Worp"]},
+		"Limbol": {controllingPlayer: "red", unit: units["Leil"]},
+		"Worp":   {controllingPlayer: "green", unit: units["Limbol"]},
 	}
 
 	checkExpectedControl(board, expected, t)

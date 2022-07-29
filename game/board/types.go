@@ -5,9 +5,6 @@ type MessageHandler interface {
 	ReceiveSupport(from string, fromArea string) (supportTo string, err error)
 }
 
-// Unique tag for a player in the game.
-type Player string
-
 // A set of player-submitted orders for a round of the game.
 type Round struct {
 	// Affects the type of orders that can be played in the round.
@@ -54,13 +51,13 @@ type Area struct {
 	Nation string `json:"nation"`
 
 	// For land areas that are a starting area for a player.
-	Home Player `json:"home,omitempty"`
+	HomePlayer string `json:"homePlayer,omitempty"`
 
 	// The unit that currently occupies the area.
 	Unit Unit `json:"unit"`
 
 	// The player that currently controls the area.
-	Control Player `json:"control,omitempty"`
+	ControllingPlayer string `json:"controllingPlayer,omitempty"`
 
 	// For land areas with castles: the number of times an occupying unit has besieged the castle.
 	SiegeCount int `json:"siegeCount"`
@@ -96,7 +93,7 @@ type Unit struct {
 	Type UnitType `json:"unit"`
 
 	// The player owning the unit.
-	Player Player `json:"player"`
+	Player string `json:"player"`
 }
 
 // Type of player unit on the board (affects how it moves and its battle capabilities).
@@ -109,7 +106,7 @@ type Order struct {
 	Type OrderType `json:"type"`
 
 	// The player submitting the order.
-	Player Player `json:"player"`
+	Player string `json:"player"`
 
 	// The unit the order affects.
 	// Excluded from JSON messages, as clients can deduce this from the From field.
@@ -169,7 +166,7 @@ type Modifier struct {
 	Value int `json:"value"`
 
 	// If modifier was from a support: the supporting player.
-	SupportFrom Player `json:"supportFrom"`
+	SupportingPlayer string `json:"supportingPlayer"`
 }
 
 // The source of a modifier.
@@ -183,8 +180,6 @@ const (
 	// Number to beat when attempting to cross a danger zone.
 	RequirementDangerZone int = 3
 )
-
-const PlayerNone Player = ""
 
 // Rounds where only build and internal move orders are allowed.
 const SeasonWinter Season = "winter"

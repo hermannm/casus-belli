@@ -12,7 +12,7 @@ import (
 // Initializes a new round of the game.
 func (game *Game) Start() {
 	var season board.Season
-	var winner board.Player
+	var winner string
 
 	// Starts new rounds until there is a winner.
 	for winner == "" {
@@ -49,7 +49,7 @@ func (game *Game) Start() {
 		}
 	}
 
-	game.msgHandler.SendWinner(string(winner))
+	game.msgHandler.SendWinner(winner)
 }
 
 // Waits for the given player to submit orders, then validates them.
@@ -94,7 +94,7 @@ func (game Game) receiveAndValidateOrders(
 // to the Player field on every order.
 func addOrderPlayer(orders []board.Order, playerID string) {
 	for i, order := range orders {
-		order.Player = board.Player(playerID)
+		order.Player = playerID
 		orders[i] = order
 	}
 }

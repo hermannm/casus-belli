@@ -15,15 +15,15 @@
       { "name": "Leil" }
     ],
     "Wonde": [
-      { "name": "Worp", "forest": true, "home": "green" },
-      { "name": "Winde", "forest": true, "castle": true, "home": "green" }
+      { "name": "Worp", "forest": true, "homePlayer": "green" },
+      { "name": "Winde", "forest": true, "castle": true, "homePlayer": "green" }
     ],
     "Ovo": [
       { "name": "Ovo", "forest": true }
     ],
     "Monone": [
-      { "name": "Morone", "home": "red" },
-      { "name": "Monté", "castle": true, "home": "red" }
+      { "name": "Morone", "homePlayer": "red" },
+      { "name": "Monté", "castle": true, "homePlayer": "red" }
     ],
     "Brobomba": [
       { "name": "Brodo", "forest": true },
@@ -43,8 +43,8 @@
       { "name": "Cymere" }
     ],
     "Pusth": [
-      { "name": "Pesth", "home": "yellow" },
-      { "name": "Purth", "castle": true, "home": "yellow" }
+      { "name": "Pesth", "homePlayer": "yellow" },
+      { "name": "Purth", "castle": true, "homePlayer": "yellow" }
     ],
     "Rimimar": [
       { "name": "Rimine" },
@@ -59,8 +59,8 @@
       { "name": "Tusser" }
     ],
     "Dordal": [
-      { "name": "Dalom", "forest": true, "home": "white" },
-      { "name": "Dordel", "castle": true, "home": "white" }
+      { "name": "Dalom", "forest": true, "homePlayer": "white" },
+      { "name": "Dordel", "castle": true, "homePlayer": "white" }
     ],
     "Hyllerk": [
       { "name": "Herk", "forest": true },
@@ -80,8 +80,8 @@
       { "name": "Gnade" },
       { "name": "Gewel", "forest": true, "castle": true }],
     "Erreman": [
-      { "name": "Emman", "forest": true, "home": "black" },
-      { "name": "Erren", "castle": true, "home": "black" }
+      { "name": "Emman", "forest": true, "homePlayer": "black" },
+      { "name": "Erren", "castle": true, "homePlayer": "black" }
     ]
   },
   "seas": [

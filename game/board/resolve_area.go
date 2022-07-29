@@ -73,13 +73,13 @@ func (board Board) resolveAreaMoves(
 // Calculates battle between a single attacker and an unconquered area.
 // Sends the resulting battle to the given battleReceiver.
 func (area Area) calculateSingleplayerBattle(move Order, battleReceiver chan<- Battle, msgHandler MessageHandler) {
-	results := map[Player]Result{
+	playerResults := map[string]Result{
 		move.Player: {Parts: move.attackModifiers(area, false, false, true), Move: move},
 	}
 
-	appendSupportMods(results, area, false, msgHandler)
+	appendSupportMods(playerResults, area, false, msgHandler)
 
-	battleReceiver <- Battle{Results: calculateTotals(results)}
+	battleReceiver <- Battle{Results: calculateTotals(playerResults)}
 }
 
 // Calculates battle when attacked area is defended or has multiple attackers.
@@ -90,19 +90,19 @@ func (area Area) calculateMultiplayerBattle(
 	battleReceiver chan<- Battle,
 	msgHandler MessageHandler,
 ) {
-	results := make(map[Player]Result)
+	playerResults := make(map[string]Result)
 
 	for _, move := range area.IncomingMoves {
-		results[move.Player] = Result{Parts: move.attackModifiers(area, true, false, includeDefender), Move: move}
+		playerResults[move.Player] = Result{Parts: move.attackModifiers(area, true, false, includeDefender), Move: move}
 	}
 
 	if !area.IsEmpty() && includeDefender {
-		results[area.Unit.Player] = Result{Parts: area.defenseModifiers(), DefenderArea: area.Name}
+		playerResults[area.Unit.Player] = Result{Parts: area.defenseModifiers(), DefenderArea: area.Name}
 	}
 
-	appendSupportMods(results, area, includeDefender, msgHandler)
+	appendSupportMods(playerResults, area, includeDefender, msgHandler)
 
-	battleReceiver <- Battle{Results: calculateTotals(results)}
+	battleReceiver <- Battle{Results: calculateTotals(playerResults)}
 }
 
 // Calculates battle when units from two areas attack each other simultaneously.
@@ -110,13 +110,13 @@ func (area Area) calculateMultiplayerBattle(
 func calculateBorderBattle(area1 Area, area2 Area, battleReceiver chan<- Battle, msgHandler MessageHandler) {
 	move1 := area1.Order
 	move2 := area2.Order
-	results := map[Player]Result{
+	playerResults := map[string]Result{
 		move1.Player: {Parts: move1.attackModifiers(area2, true, true, false), Move: move1},
 		move2.Player: {Parts: move2.attackModifiers(area1, true, true, false), Move: move2},
 	}
 
-	appendSupportMods(results, area2, false, msgHandler)
-	appendSupportMods(results, area1, false, msgHandler)
+	appendSupportMods(playerResults, area2, false, msgHandler)
+	appendSupportMods(playerResults, area1, false, msgHandler)
 
-	battleReceiver <- Battle{Results: calculateTotals(results)}
+	battleReceiver <- Battle{Results: calculateTotals(playerResults)}
 }

@@ -2,7 +2,7 @@ package board
 
 // Adds the round's orders to the board, and resolves them.
 // Returns a list of any potential battles from the round.
-func (board Board) Resolve(round Round, msgHandler MessageHandler) (battles []Battle, winner Player) {
+func (board Board) Resolve(round Round, msgHandler MessageHandler) (battles []Battle, winner string) {
 	battles = make([]Battle, 0)
 
 	switch round.Season {
@@ -199,7 +199,7 @@ func (board Board) resolveSieges() {
 
 		area.SiegeCount++
 		if area.SiegeCount == 2 {
-			area.Control = area.Unit.Player
+			area.ControllingPlayer = area.Unit.Player
 			area.SiegeCount = 0
 		}
 
@@ -210,18 +210,18 @@ func (board Board) resolveSieges() {
 // Goes through the board to check if any player has met the board's winning castle count.
 // If there is a winner, and there is no tie, returns the tag of that player.
 // Otherwise, returns "".
-func (board Board) resolveWinner() Player {
-	castleCount := make(map[Player]int)
+func (board Board) resolveWinner() string {
+	castleCount := make(map[string]int)
 
 	for _, area := range board.Areas {
 		if area.Castle && area.IsControlled() {
-			castleCount[area.Control]++
+			castleCount[area.ControllingPlayer]++
 		}
 	}
 
 	tie := false
 	highestCount := 0
-	var highestCountPlayer Player
+	var highestCountPlayer string
 	for player, count := range castleCount {
 		if count > highestCount {
 			highestCount = count

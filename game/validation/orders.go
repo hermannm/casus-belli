@@ -21,7 +21,7 @@ func ValidateOrderSet(orders []board.Order, brd board.Board, season board.Season
 func validateOrder(order board.Order, brd board.Board, season board.Season) error {
 	from := brd.Areas[order.From]
 
-	if order.Player != from.Control {
+	if order.Player != from.ControllingPlayer {
 		return errors.New("must control area that is ordered")
 	}
 
@@ -171,7 +171,7 @@ func validateWinterMove(order board.Order, from board.Area, brd board.Board) err
 		return errors.New("invalid order destination")
 	}
 
-	if to.Control != order.Player {
+	if to.ControllingPlayer != order.Player {
 		return errors.New("must control destination area in winter move")
 	}
 

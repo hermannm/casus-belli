@@ -23,10 +23,10 @@ type jsonBoard struct {
 
 // Utility type for json unmarshaling.
 type landArea struct {
-	Name   string `json:"name"`
-	Forest bool   `json:"forest"`
-	Castle bool   `json:"castle"`
-	Home   string `json:"home"`
+	Name       string `json:"name"`
+	Forest     bool   `json:"forest"`
+	Castle     bool   `json:"castle"`
+	HomePlayer string `json:"homePlayer"`
 }
 
 // Utility type for json unmarshaling.
@@ -69,15 +69,15 @@ func ReadBoard(boardName string) (board.Board, error) {
 	for nation, areas := range jsonBrd.Nations {
 		for _, landArea := range areas {
 			area := board.Area{
-				Name:             landArea.Name,
-				Nation:           nation,
-				Control:          board.Player(landArea.Home),
-				Home:             board.Player(landArea.Home),
-				Forest:           landArea.Forest,
-				Castle:           landArea.Castle,
-				Neighbors:        make([]board.Neighbor, 0),
-				IncomingMoves:    make([]board.Order, 0),
-				IncomingSupports: make([]board.Order, 0),
+				Name:              landArea.Name,
+				Nation:            nation,
+				ControllingPlayer: landArea.HomePlayer,
+				HomePlayer:        landArea.HomePlayer,
+				Forest:            landArea.Forest,
+				Castle:            landArea.Castle,
+				Neighbors:         make([]board.Neighbor, 0),
+				IncomingMoves:     make([]board.Order, 0),
+				IncomingSupports:  make([]board.Order, 0),
 			}
 
 			brd.Areas[area.Name] = area

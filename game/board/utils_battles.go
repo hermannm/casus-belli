@@ -33,7 +33,7 @@ func (battle Battle) isBorderConflict() bool {
 //
 // In case of a battle between players, multiple winners are returned
 // in the case of a tie.
-func (battle Battle) parseResults() (winners []Player, losers []Player) {
+func (battle Battle) parseResults() (winners []string, losers []string) {
 	// Checks if the battle was against an unconquered area.
 	if len(battle.Results) == 1 {
 		result := battle.Results[0]
@@ -41,17 +41,17 @@ func (battle Battle) parseResults() (winners []Player, losers []Player) {
 		// Checks that order meets the requirement for crossing the danger zone.
 		if battle.DangerZone != "" {
 			if result.Total >= RequirementDangerZone {
-				return []Player{result.Move.Player}, make([]Player, 0)
+				return []string{result.Move.Player}, make([]string, 0)
 			} else {
-				return make([]Player, 0), []Player{result.Move.Player}
+				return make([]string, 0), []string{result.Move.Player}
 			}
 		}
 
 		// Checks that order meets the requirement for conquering the neutral area.
 		if result.Total >= RequirementConquer {
-			return []Player{result.Move.Player}, make([]Player, 0)
+			return []string{result.Move.Player}, make([]string, 0)
 		} else {
-			return make([]Player, 0), []Player{result.Move.Player}
+			return make([]string, 0), []string{result.Move.Player}
 		}
 	}
 
@@ -64,8 +64,8 @@ func (battle Battle) parseResults() (winners []Player, losers []Player) {
 	}
 
 	// Sorts combatants based on whether they exceeded the highest result.
-	winners = make([]Player, 0)
-	losers = make([]Player, 0)
+	winners = make([]string, 0)
+	losers = make([]string, 0)
 	for _, result := range battle.Results {
 		if result.Total >= highestResult {
 			winners = append(winners, result.Move.Player)
@@ -78,7 +78,7 @@ func (battle Battle) parseResults() (winners []Player, losers []Player) {
 }
 
 // Checks if the given player is contained in the given list of players.
-func containsPlayer(players []Player, player Player) bool {
+func containsPlayer(players []string, player string) bool {
 	for _, otherPlayer := range players {
 		if otherPlayer == player {
 			return true

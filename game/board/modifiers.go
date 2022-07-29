@@ -84,17 +84,16 @@ func rollDice() int {
 	return rand.Intn(6) + 1
 }
 
-// Message sent from callSupport to appendSupportMods.
 type supportDeclaration struct {
-	from Player // The player with the support order.
-	to   Player // The player that the support order wishes to support.
+	fromPlayer string
+	toPlayer   string
 }
 
 // Calls support from support orders to the given area.
 // Appends support modifiers to receiving players' results in the given map,
 // but only if the result is tied to a move order to the area.
 // Calls support to defender in the area if includeDefender is true.
-func appendSupportMods(results map[Player]Result, area Area, includeDefender bool, msgHandler MessageHandler) {
+func appendSupportMods(results map[string]Result, area Area, includeDefender bool, msgHandler MessageHandler) {
 	supports := area.IncomingSupports
 	supportCount := len(supports)
 	supportReceiver := make(chan supportDeclaration, supportCount)
@@ -122,13 +121,13 @@ func appendSupportMods(results map[Player]Result, area Area, includeDefender boo
 	close(supportReceiver)
 
 	for support := range supportReceiver {
-		if support.to == "" {
+		if support.toPlayer == "" {
 			continue
 		}
 
-		if result, isPlayer := results[support.to]; isPlayer {
-			result.Parts = append(result.Parts, Modifier{Type: ModifierSupport, Value: 1, SupportFrom: support.from})
-			results[support.to] = result
+		if result, isPlayer := results[support.toPlayer]; isPlayer {
+			result.Parts = append(result.Parts, Modifier{Type: ModifierSupport, Value: 1, SupportingPlayer: support.fromPlayer})
+			results[support.toPlayer] = result
 		}
 	}
 }
@@ -152,47 +151,47 @@ func callSupport(
 	defer wg.Done()
 
 	if includeDefender && !area.IsEmpty() && area.Unit.Player == support.Player {
-		supportReceiver <- supportDeclaration{from: support.Player, to: support.Player}
+		supportReceiver <- supportDeclaration{fromPlayer: support.Player, toPlayer: support.Player}
 		return
 	}
 
 	for _, move := range moves {
 		if support.Player == move.Player {
-			supportReceiver <- supportDeclaration{from: support.Player, to: support.Player}
+			supportReceiver <- supportDeclaration{fromPlayer: support.Player, toPlayer: support.Player}
 			return
 		}
 	}
 
 	battlers := make([]string, 0)
 	for _, move := range moves {
-		battlers = append(battlers, string(move.Player))
+		battlers = append(battlers, move.Player)
 	}
 	if includeDefender && !area.IsEmpty() {
-		battlers = append(battlers, string(area.Unit.Player))
+		battlers = append(battlers, area.Unit.Player)
 	}
 
-	err := msgHandler.SendSupportRequest(string(support.Player), area.Name, battlers)
+	err := msgHandler.SendSupportRequest(support.Player, area.Name, battlers)
 	if err != nil {
 		log.Println(fmt.Errorf("failed to send support request: %w", err))
-		supportReceiver <- supportDeclaration{from: support.Player, to: PlayerNone}
+		supportReceiver <- supportDeclaration{fromPlayer: support.Player, toPlayer: ""}
 		return
 	}
 
-	supported, err := msgHandler.ReceiveSupport(string(support.Player), area.Name)
+	supported, err := msgHandler.ReceiveSupport(support.Player, area.Name)
 	if err != nil {
 		log.Println(fmt.Errorf("failed to receive support declaration from player %s: %w", support.Player, err))
-		supportReceiver <- supportDeclaration{from: support.Player, to: PlayerNone}
+		supportReceiver <- supportDeclaration{fromPlayer: support.Player, toPlayer: ""}
 		return
 	}
 
-	supportReceiver <- supportDeclaration{from: support.Player, to: Player(supported)}
+	supportReceiver <- supportDeclaration{fromPlayer: support.Player, toPlayer: supported}
 }
 
-// Calculates totals for each of the given results, and returns them as a list.
-func calculateTotals(resultsMap map[Player]Result) []Result {
+// Calculates totals for the given map of player IDs to results, and returns them as a list.
+func calculateTotals(playerResults map[string]Result) []Result {
 	results := make([]Result, 0)
 
-	for _, result := range resultsMap {
+	for _, result := range playerResults {
 		total := 0
 		for _, mod := range result.Parts {
 			total += mod.Value

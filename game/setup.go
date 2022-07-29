@@ -67,7 +67,7 @@ func playerIDsFromBoard(brd board.Board) []string {
 
 outerLoop:
 	for _, area := range brd.Areas {
-		potentialID := string(area.Home)
+		potentialID := area.HomePlayer
 		if potentialID == "" {
 			continue
 		}

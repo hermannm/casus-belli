@@ -7,7 +7,7 @@ func (area Area) IsEmpty() bool {
 
 // Checks whether the area is controlled by a player.
 func (area Area) IsControlled() bool {
-	return area.Control != ""
+	return area.ControllingPlayer != ""
 }
 
 // Returns an area's neighbor of the given name, and whether it was found.
@@ -69,8 +69,8 @@ func (area Area) setUnit(unit Unit) Area {
 }
 
 // Returns a copy of the area, with control set to the given player.
-func (area Area) setControl(player Player) Area {
-	area.Control = player
+func (area Area) setControl(player string) Area {
+	area.ControllingPlayer = player
 	return area
 }
 

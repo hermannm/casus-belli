@@ -17,8 +17,8 @@ func mockBoard() Board {
 		{Name: "Lomone", Forest: true},
 		{Name: "Limbol", Forest: true},
 		{Name: "Leil"},
-		{Name: "Worp", Forest: true, Home: "green", Control: "green"},
-		{Name: "Winde", Forest: true, Castle: true, Home: "green", Control: "green"},
+		{Name: "Worp", Forest: true, HomePlayer: "green", ControllingPlayer: "green"},
+		{Name: "Winde", Forest: true, Castle: true, HomePlayer: "green", ControllingPlayer: "green"},
 		{Name: "Ovo", Forest: true},
 		{Name: "Mare Gond", Sea: true},
 		{Name: "Mare Elle", Sea: true},
@@ -34,8 +34,8 @@ func mockBoard() Board {
 		{Name: "Gnade"},
 		{Name: "Gewel", Forest: true, Castle: true},
 		{Name: "Mare Unna", Sea: true},
-		{Name: "Emman", Forest: true, Home: "black", Control: "black"},
-		{Name: "Erren", Castle: true, Home: "black", Control: "black"},
+		{Name: "Emman", Forest: true, HomePlayer: "black", ControllingPlayer: "black"},
+		{Name: "Erren", Castle: true, HomePlayer: "black", ControllingPlayer: "black"},
 		{Name: "Mare Bøso", Sea: true},
 	}
 
@@ -133,7 +133,7 @@ func placeUnits(board Board, units map[string]Unit) {
 	for areaName, unit := range units {
 		area := board.Areas[areaName]
 		area.Unit = unit
-		area.Control = unit.Player
+		area.ControllingPlayer = unit.Player
 		board.Areas[areaName] = area
 	}
 }
@@ -153,8 +153,8 @@ func attachUnits(orders []Order, units map[string]Unit) {
 
 // Utility type for setting up expected outcomes of a test of board resolving.
 type expectedControl map[string]struct {
-	control Player
-	unit    Unit
+	controllingPlayer string
+	unit              Unit
 }
 
 func checkExpectedControl(board Board, expected expectedControl, t *testing.T) {
@@ -164,8 +164,8 @@ func checkExpectedControl(board Board, expected expectedControl, t *testing.T) {
 			continue
 		}
 
-		if area.Control != expectation.control {
-			t.Errorf("unexpected control of %v, want %v, got %v", name, area.Control, expectation.control)
+		if area.ControllingPlayer != expectation.controllingPlayer {
+			t.Errorf("unexpected control of %v, want %v, got %v", name, area.ControllingPlayer, expectation.controllingPlayer)
 		}
 		if area.Unit != expectation.unit {
 			t.Errorf("unexpected unit in %v, want %v, got %v", name, area.Unit, expectation.unit)
