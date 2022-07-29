@@ -70,7 +70,10 @@ func (game Game) receiveAndValidateOrders(player string, season board.Season, ou
 			return
 		}
 
-		addOrderPlayer(orders, player)
+		for i, order := range orders {
+			order.Player = player
+			orders[i] = order
+		}
 
 		err = validation.ValidateOrderSet(orders, game.board, season)
 		if err != nil {
@@ -80,15 +83,6 @@ func (game Game) receiveAndValidateOrders(player string, season board.Season, ou
 		}
 
 		output <- orders
-	}
-}
-
-// Takes a set of orders, and mutates it by adding the given player ID
-// to the Player field on every order.
-func addOrderPlayer(orders []board.Order, playerID string) {
-	for i, order := range orders {
-		order.Player = playerID
-		orders[i] = order
 	}
 }
 
