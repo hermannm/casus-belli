@@ -8,15 +8,15 @@ package board
 // which send results to the given battleReceiver.
 //
 // Skips areas that have outgoing moves, unless they are part of a move cycle.
-// If playerConflictsAllowed is true, skips areas that require battle between players.
+// If allowPlayerConflict is true, skips areas that require battle between players.
 func (board Board) resolveAreaMoves(
 	area Area,
 	moveCount int,
-	playerConflictsAllowed bool,
+	allowPlayerConflict bool,
 	battleReceiver chan Battle,
 	processing map[string]struct{},
 	processed map[string]struct{},
-	msgHandler MessageHandler,
+	msg MessageHandler,
 ) {
 	// Finds out if the move is part of a two-way cycle (moves moving against each other), and resolves it.
 	twoWayCycle, area2, samePlayer := board.discoverTwoWayCycle(area)
@@ -31,7 +31,7 @@ func (board Board) resolveAreaMoves(
 			}
 		} else {
 			// If the moves are from different players, they battle in the middle.
-			go calculateBorderBattle(area, area2, battleReceiver, msgHandler)
+			go calculateBorderBattle(area, area2, battleReceiver, msg)
 			processing[area.Name], processing[area2.Name] = struct{}{}, struct{}{}
 			return
 		}
@@ -39,7 +39,7 @@ func (board Board) resolveAreaMoves(
 		// If there is a cycle longer than 2 moves, forwards the resolving to 'resolveCycle'.
 		cycle, _ := board.discoverCycle(area.Order, area.Name)
 		if cycle != nil {
-			board.resolveCycle(cycle, playerConflictsAllowed, battleReceiver, processing, processed, msgHandler)
+			board.resolveCycle(cycle, allowPlayerConflict, battleReceiver, processing, processed, msg)
 			return
 		}
 	}
@@ -54,7 +54,7 @@ func (board Board) resolveAreaMoves(
 			return
 		}
 
-		go area.calculateSingleplayerBattle(move, battleReceiver, msgHandler)
+		go area.calculateSingleplayerBattle(move, battleReceiver, msg)
 		processing[area.Name] = struct{}{}
 		return
 	}
@@ -66,7 +66,7 @@ func (board Board) resolveAreaMoves(
 	}
 
 	// If the function has not returned yet, then it must be a multiplayer battle.
-	go area.calculateMultiplayerBattle(!area.IsEmpty(), battleReceiver, msgHandler)
+	go area.calculateMultiplayerBattle(!area.IsEmpty(), battleReceiver, msg)
 	processing[area.Name] = struct{}{}
 }
 

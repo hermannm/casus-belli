@@ -9,16 +9,16 @@ type Handler struct {
 	receivers map[string]Receiver
 }
 
-func NewHandler(s Sender) Handler {
-	rs := make(map[string]Receiver)
+func NewHandler(sender Sender) Handler {
+	receivers := make(map[string]Receiver)
 	return Handler{
-		sender:    s,
-		receivers: rs,
+		sender:    sender,
+		receivers: receivers,
 	}
 }
 
-func (h Handler) AddReceiver(playerID string, areaNames []string) (Receiver, error) {
-	_, exists := h.receivers[playerID]
+func (handler Handler) AddReceiver(playerID string, areaNames []string) (Receiver, error) {
+	_, exists := handler.receivers[playerID]
 	if exists {
 		return Receiver{}, fmt.Errorf("message receiver for player id %s already exists", playerID)
 	}
@@ -28,7 +28,7 @@ func (h Handler) AddReceiver(playerID string, areaNames []string) (Receiver, err
 		supportChans[areaName] = make(chan giveSupportMsg)
 	}
 
-	r := Receiver{
+	receiver := Receiver{
 		Orders:     make(chan submitOrdersMsg),
 		Support:    supportChans,
 		WinterVote: make(chan winterVoteMsg),
@@ -36,17 +36,17 @@ func (h Handler) AddReceiver(playerID string, areaNames []string) (Receiver, err
 		Raven:      make(chan ravenMsg),
 	}
 
-	h.receivers[playerID] = r
-	return r, nil
+	handler.receivers[playerID] = receiver
+	return receiver, nil
 }
 
-func (h Handler) RemoveReceiver(playerID string) {
-	delete(h.receivers, playerID)
+func (handler Handler) RemoveReceiver(playerID string) {
+	delete(handler.receivers, playerID)
 }
 
-func (h Handler) ReceiverIDs() []string {
+func (handler Handler) ReceiverIDs() []string {
 	ids := make([]string, 0)
-	for id := range h.receivers {
+	for id := range handler.receivers {
 		ids = append(ids, id)
 	}
 	return ids

@@ -2,17 +2,17 @@ package board
 
 // Adds the round's orders to the board, and resolves them.
 // Returns a list of any potential battles from the round.
-func (board Board) Resolve(round Round, msgHandler MessageHandler) (battles []Battle, winner string) {
+func (board Board) Resolve(round Round, msg MessageHandler) (battles []Battle, winner string) {
 	battles = make([]Battle, 0)
 
 	switch round.Season {
 	case SeasonWinter:
 		board.resolveWinter(round.FirstOrders)
 	default:
-		firstBattles := board.resolveOrders(round.FirstOrders, msgHandler)
+		firstBattles := board.resolveOrders(round.FirstOrders, msg)
 		battles = append(battles, firstBattles...)
 
-		secondBattles := board.resolveOrders(round.SecondOrders, msgHandler)
+		secondBattles := board.resolveOrders(round.SecondOrders, msg)
 		battles = append(battles, secondBattles...)
 
 		board.resolveSieges()
@@ -26,7 +26,7 @@ func (board Board) Resolve(round Round, msgHandler MessageHandler) (battles []Ba
 }
 
 // Resolves results of the given orders on the board.
-func (board Board) resolveOrders(orders []Order, msgHandler MessageHandler) []Battle {
+func (board Board) resolveOrders(orders []Order, msg MessageHandler) []Battle {
 	battles := make([]Battle, 0)
 
 	board.populateAreaOrders(orders)
@@ -34,10 +34,10 @@ func (board Board) resolveOrders(orders []Order, msgHandler MessageHandler) []Ba
 	dangerZoneBattles := board.crossDangerZones()
 	battles = append(battles, dangerZoneBattles...)
 
-	singleplayerBattles := board.resolveMoves(false, msgHandler)
+	singleplayerBattles := board.resolveMoves(false, msg)
 	battles = append(battles, singleplayerBattles...)
 
-	remainingBattles := board.resolveMoves(true, msgHandler)
+	remainingBattles := board.resolveMoves(true, msg)
 	battles = append(battles, remainingBattles...)
 
 	return battles
@@ -66,8 +66,8 @@ func (board Board) populateAreaOrders(orders []Order) {
 }
 
 // Resolves moves on the board. Returns any resulting battles.
-// Only resolves battles between players if playerConflictsAllowed is true.
-func (board Board) resolveMoves(playerConflictsAllowed bool, msgHandler MessageHandler) []Battle {
+// Only resolves battles between players if allowPlayerConflict is true.
+func (board Board) resolveMoves(allowPlayerConflict bool, msg MessageHandler) []Battle {
 	battles := make([]Battle, 0)
 
 	battleReceiver := make(chan Battle)
@@ -108,7 +108,7 @@ outerLoop:
 					}
 
 					if transportAttacked {
-						if playerConflictsAllowed {
+						if allowPlayerConflict {
 							continue boardLoop
 						} else {
 							processed[areaName] = struct{}{}
@@ -128,15 +128,7 @@ outerLoop:
 					continue
 				}
 
-				board.resolveAreaMoves(
-					area,
-					moveCount,
-					playerConflictsAllowed,
-					battleReceiver,
-					processing,
-					processed,
-					msgHandler,
-				)
+				board.resolveAreaMoves(area, moveCount, allowPlayerConflict, battleReceiver, processing, processed, msg)
 			}
 
 			if len(processing) == 0 {

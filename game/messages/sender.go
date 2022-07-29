@@ -12,23 +12,23 @@ type Sender interface {
 	SendMessageToAll(msg any) error
 }
 
-func (h Handler) SendError(to string, errMsg string) {
-	err := h.sender.SendMessage(to, errorMsg{Type: msgError, Error: errMsg})
+func (handler Handler) SendError(to string, errMsg string) {
+	err := handler.sender.SendMessage(to, errorMsg{Type: msgError, Error: errMsg})
 	if err != nil {
 		log.Println(fmt.Errorf("failed to send error message to player %s: %w", to, err))
 	}
 }
 
-func (h Handler) SendOrderRequest(to string) error {
-	err := h.sender.SendMessage(to, orderRequestMsg{Type: msgOrderRequest})
+func (handler Handler) SendOrderRequest(to string) error {
+	err := handler.sender.SendMessage(to, orderRequestMsg{Type: msgOrderRequest})
 	if err != nil {
 		return fmt.Errorf("failed to send order request message to player %s: %w", to, err)
 	}
 	return nil
 }
 
-func (h Handler) SendSupportRequest(to string, supportingArea string, battlers []string) error {
-	err := h.sender.SendMessage(to, supportRequestMsg{
+func (handler Handler) SendSupportRequest(to string, supportingArea string, battlers []string) error {
+	err := handler.sender.SendMessage(to, supportRequestMsg{
 		Type:           msgSupportRequest,
 		SupportingArea: supportingArea,
 		Battlers:       battlers,
@@ -39,16 +39,16 @@ func (h Handler) SendSupportRequest(to string, supportingArea string, battlers [
 	return nil
 }
 
-func (h Handler) SendBattleResult(battle board.Battle) error {
-	err := h.sender.SendMessageToAll(battleResultMsg{Type: msgBattleResult, Battle: battle})
+func (handler Handler) SendBattleResult(battle board.Battle) error {
+	err := handler.sender.SendMessageToAll(battleResultMsg{Type: msgBattleResult, Battle: battle})
 	if err != nil {
 		return fmt.Errorf("failed to send battle result message: %w", err)
 	}
 	return nil
 }
 
-func (h Handler) SendWinner(winner string) error {
-	err := h.sender.SendMessageToAll(winnerMsg{Type: msgWinner, Winner: winner})
+func (handler Handler) SendWinner(winner string) error {
+	err := handler.sender.SendMessageToAll(winnerMsg{Type: msgWinner, Winner: winner})
 	if err != nil {
 		return fmt.Errorf("failed to send winner message: %w", err)
 	}

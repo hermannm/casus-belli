@@ -20,7 +20,7 @@ type Receiver struct {
 
 // Takes a partly deserialized base message, checks it type, and further deserializes the given raw
 // message to pass it to the appropriate channel on the receiver.
-func (r Receiver) ReceiveMessage(msgType string, rawMsg []byte) {
+func (receiver Receiver) ReceiveMessage(msgType string, rawMsg []byte) {
 	var err error // Error declared here in order to handle it after the switch.
 
 	switch msgType {
@@ -28,14 +28,14 @@ func (r Receiver) ReceiveMessage(msgType string, rawMsg []byte) {
 		var msg submitOrdersMsg
 		err = json.Unmarshal(rawMsg, &msg)
 		if err == nil {
-			r.Orders <- msg
+			receiver.Orders <- msg
 			return
 		}
 	case msgGiveSupport:
 		var msg giveSupportMsg
 		err = json.Unmarshal(rawMsg, &msg)
 		if err == nil {
-			supportChan, ok := r.Support[msg.From]
+			supportChan, ok := receiver.Support[msg.From]
 			if ok {
 				supportChan <- msg
 			} else {
@@ -46,21 +46,21 @@ func (r Receiver) ReceiveMessage(msgType string, rawMsg []byte) {
 		var msg winterVoteMsg
 		err = json.Unmarshal(rawMsg, &msg)
 		if err == nil {
-			r.WinterVote <- msg
+			receiver.WinterVote <- msg
 			return
 		}
 	case msgSword:
 		var msg swordMsg
 		err = json.Unmarshal(rawMsg, &msg)
 		if err == nil {
-			r.Sword <- msg
+			receiver.Sword <- msg
 			return
 		}
 	case msgRaven:
 		var msg ravenMsg
 		err = json.Unmarshal(rawMsg, &msg)
 		if err == nil {
-			r.Raven <- msg
+			receiver.Raven <- msg
 			return
 		}
 	}
@@ -70,8 +70,8 @@ func (r Receiver) ReceiveMessage(msgType string, rawMsg []byte) {
 	}
 }
 
-func (h Handler) ReceiveOrders(from string) ([]board.Order, error) {
-	receiver, ok := h.receivers[from]
+func (handler Handler) ReceiveOrders(from string) ([]board.Order, error) {
+	receiver, ok := handler.receivers[from]
 	if !ok {
 		return nil, fmt.Errorf("failed to get order message from player %s: receiver not found", from)
 	}
@@ -80,8 +80,8 @@ func (h Handler) ReceiveOrders(from string) ([]board.Order, error) {
 	return orders.Orders, nil
 }
 
-func (h Handler) ReceiveSupport(from string, supportingArea string) (supportTo string, err error) {
-	receiver, ok := h.receivers[from]
+func (handler Handler) ReceiveSupport(from string, supportingArea string) (supportTo string, err error) {
+	receiver, ok := handler.receivers[from]
 	if !ok {
 		return "", fmt.Errorf("failed to get support message from player %s: receiver not found", from)
 	}

@@ -10,7 +10,7 @@ package board
 // which send results to the given battleReceiver.
 func (board Board) resolveCycle(
 	cycle []Order,
-	playerConflictsAllowed bool,
+	allowPlayerConflict bool,
 	battleReceiver chan<- Battle,
 	processing map[string]struct{},
 	processed map[string]struct{},
@@ -37,7 +37,7 @@ func (board Board) resolveCycle(
 		if len(area.IncomingMoves) == 1 {
 			go area.calculateSingleplayerBattle(area.IncomingMoves[0], battleReceiver, msgHandler)
 			processing[area.Name] = struct{}{}
-		} else if playerConflictsAllowed {
+		} else if allowPlayerConflict {
 			go area.calculateMultiplayerBattle(false, battleReceiver, msgHandler)
 			processing[area.Name] = struct{}{}
 		} else {
