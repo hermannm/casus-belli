@@ -3,6 +3,7 @@ package game
 import (
 	"fmt"
 	"log"
+	"sync"
 
 	"hermannm.dev/bfh-server/game/board"
 	"hermannm.dev/bfh-server/game/validation"
@@ -19,15 +20,23 @@ func (game *Game) Start() {
 
 		// Waits for submitted orders from each player, then adds them to the round.
 		players := game.messenger.ReceiverIDs()
-		received := make(chan []board.Order, len(players))
+
+		var wg sync.WaitGroup
+		wg.Add(len(players))
+
+		received := make(chan receivedOrders, len(players))
+
 		for _, player := range players {
-			go game.receiveAndValidateOrders(player, season, received)
+			go game.receiveAndValidateOrders(player, season, received, &wg)
 		}
-		allOrders := make([]board.Order, 0)
+
+		wg.Wait()
+
+		playerOrders := make(map[string][]board.Order)
 		for orderSet := range received {
-			allOrders = append(allOrders, orderSet...)
+			playerOrders[orderSet.player] = orderSet.orders
 		}
-		firstOrders, secondOrders := sortOrders(allOrders, game.board)
+		firstOrders, secondOrders := sortOrders(playerOrders, game.board)
 
 		round := board.Round{
 			Season:       season,
@@ -51,22 +60,32 @@ func (game *Game) Start() {
 	game.messenger.SendWinner(winner)
 }
 
+type receivedOrders struct {
+	orders []board.Order
+	player string
+}
+
 // Waits for the given player to submit orders, then validates them.
 // If valid, sends the order set to the given output channel.
 // If invalid, informs the client and waits for a new order set.
-func (game Game) receiveAndValidateOrders(player string, season board.Season, output chan<- []board.Order) {
+func (game Game) receiveAndValidateOrders(
+	player string,
+	season board.Season,
+	output chan<- receivedOrders,
+	wg *sync.WaitGroup,
+) {
+	defer wg.Done()
+
 	for {
 		err := game.messenger.SendOrderRequest(player)
 		if err != nil {
 			log.Println(err)
-			output <- make([]board.Order, 0)
 			return
 		}
 
 		orders, err := game.messenger.ReceiveOrders(player)
 		if err != nil {
 			log.Println(err)
-			output <- make([]board.Order, 0)
 			return
 		}
 
@@ -82,27 +101,36 @@ func (game Game) receiveAndValidateOrders(player string, season board.Season, ou
 			continue
 		}
 
-		output <- orders
+		err = game.messenger.SendOrdersConfirmation(player)
+		if err != nil {
+			log.Println(err)
+		}
+
+		output <- receivedOrders{orders: orders, player: player}
 	}
 }
 
 // Takes a set of orders, and sorts them into two sets based on their sequence in the round.
 // Also takes the board for deciding the sequence.
-func sortOrders(allOrders []board.Order, brd board.Board) (firstOrders []board.Order, secondOrders []board.Order) {
+func sortOrders(playerOrders map[string][]board.Order, brd board.Board) (
+	firstOrders []board.Order,
+	secondOrders []board.Order,
+) {
 	firstOrders = make([]board.Order, 0)
 	secondOrders = make([]board.Order, 0)
 
-	for _, order := range allOrders {
-		fromArea := brd.Areas[order.From]
+	for _, orders := range playerOrders {
+		for _, order := range orders {
+			fromArea := brd.Areas[order.From]
 
-		// If order origin has no unit, or unit of different color,
-		// then order is a second horse move and should be processed after all others.
-		if fromArea.IsEmpty() || fromArea.Unit.Player != order.Player {
-			secondOrders = append(secondOrders, order)
-			continue
+			// If order origin has no unit, or unit of different color,
+			// then order is a second horse move and should be processed after all others.
+			if fromArea.IsEmpty() || fromArea.Unit.Player != order.Player {
+				secondOrders = append(secondOrders, order)
+			} else {
+				firstOrders = append(firstOrders, order)
+			}
 		}
-
-		firstOrders = append(firstOrders, order)
 	}
 
 	return firstOrders, secondOrders
