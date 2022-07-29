@@ -1,5 +1,7 @@
 package board
 
+import "log"
+
 // Adds the round's orders to the board, and resolves them.
 // Returns a list of any potential battles from the round.
 func (board Board) Resolve(round Round, messenger Messenger) (battles []Battle, winner string) {
@@ -33,6 +35,10 @@ func (board Board) resolveOrders(orders []Order, messenger Messenger) []Battle {
 
 	dangerZoneBattles := board.crossDangerZones()
 	battles = append(battles, dangerZoneBattles...)
+	err := messenger.SendBattleResults(dangerZoneBattles)
+	if err != nil {
+		log.Println(err)
+	}
 
 	singleplayerBattles := board.resolveMoves(false, messenger)
 	battles = append(battles, singleplayerBattles...)
@@ -80,6 +86,7 @@ outerLoop:
 		select {
 		case battle := <-battleReceiver:
 			battles = append(battles, battle)
+			messenger.SendBattleResults([]Battle{battle})
 
 			newRetreats := board.resolveBattle(battle)
 			for _, retreat := range newRetreats {
@@ -94,18 +101,14 @@ outerLoop:
 			for areaName, area := range board.Areas {
 				retreat, hasRetreat := retreats[areaName]
 				if _, skip := processed[areaName]; skip && !hasRetreat {
-					continue
+					continue boardLoop
 				}
 				if _, skip := processing[areaName]; skip {
-					continue
+					continue boardLoop
 				}
 
 				for _, move := range area.IncomingMoves {
-					transportAttacked, dangerZoneCrossings := board.resolveTransports(move, area)
-
-					if dangerZoneCrossings != nil {
-						battles = append(battles, dangerZoneCrossings...)
-					}
+					transportAttacked, dangerZones := board.resolveTransports(move, area)
 
 					if transportAttacked {
 						if allowPlayerConflict {
@@ -113,27 +116,45 @@ outerLoop:
 						} else {
 							processed[areaName] = struct{}{}
 						}
+					} else if len(dangerZones) > 0 {
+						survived, dangerZoneCrossings := move.crossDangerZones(dangerZones)
+						if !survived {
+							board.removeMove(move)
+						}
+
+						battles = append(battles, dangerZoneCrossings...)
+						err := messenger.SendBattleResults(dangerZoneCrossings)
+						if err != nil {
+							log.Println(err)
+						}
 					}
 				}
 
 				moveCount := len(area.IncomingMoves)
 				if moveCount == 0 {
-					processed[area.Name] = struct{}{}
-
 					if hasRetreat && area.IsEmpty() {
 						board.Areas[areaName] = area.setUnit(retreat.Unit)
 						delete(retreats, areaName)
 					}
 
-					continue
+					processed[area.Name] = struct{}{}
+					continue boardLoop
 				}
 
-				board.resolveAreaMoves(area, moveCount, allowPlayerConflict, battleReceiver, processing, processed, messenger)
+				board.resolveAreaMoves(
+					area,
+					moveCount,
+					allowPlayerConflict,
+					battleReceiver,
+					processing,
+					processed,
+					messenger,
+				)
 			}
 
 			if len(processing) == 0 {
 				if len(retreats) != 0 {
-					continue
+					continue boardLoop
 				}
 
 				break outerLoop

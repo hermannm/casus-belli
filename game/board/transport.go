@@ -3,10 +3,7 @@ package board
 // Resolves transport of the given move to the given destination if it requires transport.
 // If transported, returns whether the transport path is attacked,
 // and a list of danger zones that the order must cross to transport, if any.
-func (board Board) resolveTransports(move Order, destination Area) (
-	transportAttacked bool,
-	dangerZoneCrossings []Battle,
-) {
+func (board Board) resolveTransports(move Order, destination Area) (transportAttacked bool, dangerZones []string) {
 	adjacent := destination.HasNeighbor(move.From)
 	if adjacent {
 		return false, nil
@@ -17,36 +14,14 @@ func (board Board) resolveTransports(move Order, destination Area) (
 		return false, nil
 	}
 
-	transportable, transportAttacked, dangerZones := from.transportable(
-		move.To,
-		board,
-		make(map[string]struct{}),
-	)
+	transportable, transportAttacked, dangerZones := from.transportable(move.To, board, make(map[string]struct{}))
 
 	if !transportable {
 		board.removeMove(move)
 		return false, nil
 	}
 
-	// If transport is attacked, delays the resolving of danger zone crossings.
-	if transportAttacked {
-		return transportAttacked, nil
-	}
-
-	survivedAll := true
-	for _, dangerZone := range dangerZones {
-		survived, battle := move.crossDangerZone(dangerZone)
-		dangerZoneCrossings = append(dangerZoneCrossings, battle)
-		if !survived {
-			survivedAll = false
-		}
-	}
-	if !survivedAll {
-		board.removeMove(move)
-		return false, dangerZoneCrossings
-	}
-
-	return transportAttacked, dangerZoneCrossings
+	return transportAttacked, dangerZones
 }
 
 // Stores status of a path of transport orders to destination.

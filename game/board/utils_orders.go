@@ -51,6 +51,21 @@ func (order Order) crossDangerZone(dangerZone string) (survived bool, result Bat
 	return diceMod.Value > 2, battle
 }
 
+func (order Order) crossDangerZones(dangerZones []string) (survivedAll bool, results []Battle) {
+	survivedAll = true
+	results = make([]Battle, 0)
+
+	for _, dangerZone := range dangerZones {
+		survived, result := order.crossDangerZone(dangerZone)
+		results = append(results, result)
+		if !survived {
+			survivedAll = false
+		}
+	}
+
+	return survivedAll, results
+}
+
 func (board Board) addOrder(order Order) {
 	board.Areas[order.From] = board.Areas[order.From].setOrder(order)
 
