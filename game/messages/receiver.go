@@ -18,8 +18,8 @@ type Receiver struct {
 	Raven      chan ravenMsg
 }
 
-// Takes a partly deserialized base message, checks it type, and further deserializes the given raw
-// message to pass it to the appropriate channel on the receiver.
+// Takes a message type and an unserialized JSON message.
+// Unmarshals the message according to its type, and send it to the appropraite receiver channel.
 func (receiver Receiver) ReceiveMessage(msgType string, rawMsg []byte) {
 	var err error // Error declared here in order to handle it after the switch.
 
