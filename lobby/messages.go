@@ -2,6 +2,10 @@ package lobby
 
 import (
 	"encoding/json"
+	"fmt"
+	"log"
+
+	"github.com/gorilla/websocket"
 )
 
 // Lobby-specific messages from client to server.
@@ -35,14 +39,15 @@ type startGameMsg struct {
 
 // Listens for messages from the player, and forwards them to the given receiver.
 // Listens continuously until the player turns inactive.
-func (player *Player) listen(receiver MessageReceiver) {
+func (player Player) listen(receiver MessageReceiver) {
 	for {
-		if !player.isActive() {
-			return
-		}
-
 		_, msg, err := player.socket.ReadMessage()
 		if err != nil {
+			if err, ok := err.(*websocket.CloseError); ok {
+				log.Println(fmt.Errorf("socket for player %s closed: %w", player.id, err))
+				return
+			}
+			log.Println(fmt.Errorf("error in socket connection for player %s: %w", player.id, err))
 			continue
 		}
 

@@ -2,6 +2,7 @@ package lobby
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"net/url"
@@ -19,14 +20,14 @@ func RegisterEndpoints(mux *http.ServeMux) {
 
 	// Endpoint for clients to join a given lobby.
 	// Takes query parameters "lobby" (name of the lobby) and "player" (the player ID that the client wants to claim).
-	mux.HandleFunc("/join", addPlayer)
+	mux.HandleFunc("/join", joinLobby)
 
 	// Endpoint for clients to view info about a single lobby.
 	// Takes query parameter "lobby" (name of the lobby).
-	mux.HandleFunc("/info", getLobby)
+	mux.HandleFunc("/info", lobbyInfo)
 
 	// Endpoint for clients to view info about all lobbies on the server.
-	mux.HandleFunc("/all", getLobbies)
+	mux.HandleFunc("/all", lobbyList)
 }
 
 // Registers handler for public lobby creation endpoint on the given ServeMux.
@@ -66,20 +67,20 @@ func checkParams(req *http.Request, keys ...string) (params url.Values, ok bool)
 }
 
 // Utility type for responding to requests for lobby info.
-type lobbyInfo struct {
+type lobbyInfoResponse struct {
 	ID                 string          `json:"id"`
 	AvailablePlayerIDs map[string]bool `json:"availablePlayerIDs"`
 }
 
 // Handler for returning information about a given lobby.
-func getLobby(res http.ResponseWriter, req *http.Request) {
+func lobbyInfo(res http.ResponseWriter, req *http.Request) {
 	lobby, err := findLobby(req)
 	if err != nil {
 		http.Error(res, "could not fetch lobby", http.StatusNotFound)
 		return
 	}
 
-	info, err := json.Marshal(lobbyInfo{
+	info, err := json.Marshal(lobbyInfoResponse{
 		ID:                 lobby.id,
 		AvailablePlayerIDs: lobby.availablePlayerIDs(),
 	})
@@ -92,11 +93,11 @@ func getLobby(res http.ResponseWriter, req *http.Request) {
 }
 
 // Handler for returning information about all available lobbies.
-func getLobbies(res http.ResponseWriter, req *http.Request) {
-	lobbyInfoList := make([]lobbyInfo, 0, len(lobbies))
+func lobbyList(res http.ResponseWriter, req *http.Request) {
+	lobbyInfoList := make([]lobbyInfoResponse, 0, len(lobbies))
 
 	for _, lobby := range lobbies {
-		lobbyInfoList = append(lobbyInfoList, lobbyInfo{
+		lobbyInfoList = append(lobbyInfoList, lobbyInfoResponse{
 			ID:                 lobby.id,
 			AvailablePlayerIDs: lobby.availablePlayerIDs(),
 		})
@@ -112,7 +113,7 @@ func getLobbies(res http.ResponseWriter, req *http.Request) {
 }
 
 // Handler for adding a player to a lobby.
-func addPlayer(res http.ResponseWriter, req *http.Request) {
+func joinLobby(res http.ResponseWriter, req *http.Request) {
 	lobby, err := findLobby(req)
 	if err != nil {
 		http.Error(res, "could not find lobby", http.StatusNotFound)
@@ -121,20 +122,6 @@ func addPlayer(res http.ResponseWriter, req *http.Request) {
 	params, ok := checkParams(req, "player")
 	if !ok {
 		http.Error(res, "must select player ID", http.StatusBadRequest)
-		return
-	}
-
-	playerID := params.Get("player")
-	lobby.lock.Lock()
-	player, ok := lobby.players[playerID]
-	if !ok {
-		http.Error(res, "invalid player ID", http.StatusBadRequest)
-		lobby.lock.Unlock()
-		return
-	}
-	if player.isActive() {
-		http.Error(res, "player ID already taken", http.StatusConflict)
-		lobby.lock.Unlock()
 		return
 	}
 
@@ -147,33 +134,17 @@ func addPlayer(res http.ResponseWriter, req *http.Request) {
 
 	socket, err := upgrader.Upgrade(res, req, nil)
 	if err != nil {
-		log.Println(err)
+		log.Println(fmt.Errorf("failed to establish socket connection: %w", err))
 		http.Error(res, "unable to establish socket connection", http.StatusInternalServerError)
-		lobby.lock.Unlock()
 		return
 	}
 
-	receiver, err := lobby.game.AddPlayer(playerID)
-	if err != nil {
-		log.Println(err)
-		http.Error(res, "unable to join game", http.StatusConflict)
-		lobby.lock.Unlock()
+	player := Player{id: params.Get("player"), socket: socket, lock: new(sync.RWMutex)}
+	if err := lobby.addPlayer(player); err != nil {
+		log.Println(fmt.Errorf("failed to add player: %w", err))
+		player.send(errorMsg{Type: msgError, Error: "failed to join game"})
 		return
 	}
-
-	player = &Player{
-		id:     playerID,
-		socket: socket,
-		active: true,
-		lock:   new(sync.RWMutex),
-	}
-	lobby.players[playerID] = player
-	go player.listen(receiver)
-
-	res.Write([]byte("joined lobby"))
-
-	lobby.lock.Unlock()
-	lobby.wg.Done()
 }
 
 type lobbyCreationHandler struct {
