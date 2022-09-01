@@ -33,7 +33,7 @@ type startGameMsg struct{}
 
 // Listens for messages from the player, and forwards them to the given receiver.
 // Listens continuously until the player turns inactive.
-func (player Player) listen(receiver MessageReceiver) {
+func (player Player) listen(receiver GameMessageReceiver) {
 	for {
 		_, receivedMsg, err := player.socket.ReadMessage()
 		if err != nil {
@@ -65,13 +65,12 @@ func (player Player) listen(receiver MessageReceiver) {
 		}
 
 		switch msgID {
-		case errorMsgID:
-			continue // TODO
 		case readyMsgID:
 			continue
 		case startGameMsgID:
 			continue
 		default:
+			// If msg ID is not a lobby message ID, the message is forwarded to the game message receiver.
 			go receiver.ReceiveMessage(msgID, rawMsg)
 		}
 	}

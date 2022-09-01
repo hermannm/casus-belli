@@ -38,7 +38,7 @@ type Player struct {
 type Game interface {
 	// Takes a player identifier string (unique to this game instance, format depends on the game),
 	// and returns a receiver to handle messages from the player, or an error if adding the player failed.
-	AddPlayer(playerID string) (MessageReceiver, error)
+	AddPlayer(playerID string) (GameMessageReceiver, error)
 
 	// Returns the range of possible player IDs for this game.
 	PlayerIDs() []string
@@ -47,7 +47,8 @@ type Game interface {
 	Start()
 }
 
-type MessageReceiver interface {
+// Receives game-specific messages for a player.
+type GameMessageReceiver interface {
 	ReceiveMessage(msgType string, msg json.RawMessage)
 }
 

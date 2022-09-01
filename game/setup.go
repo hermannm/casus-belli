@@ -49,7 +49,7 @@ func (game Game) PlayerIDs() []string {
 
 // Creates a new message receiver for the given player tag, and adds it to the game.
 // Returns error if tag is invalid or already taken.
-func (game Game) AddPlayer(playerID string) (lobby.MessageReceiver, error) {
+func (game Game) AddPlayer(playerID string) (lobby.GameMessageReceiver, error) {
 	areaNames := make([]string, 0)
 	for _, area := range game.board.Areas {
 		areaNames = append(areaNames, area.Name)
