@@ -1,6 +1,7 @@
 package lobby
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -47,7 +48,7 @@ type Game interface {
 }
 
 type MessageReceiver interface {
-	ReceiveMessage(msgType string, msg []byte)
+	ReceiveMessage(msgType string, msg json.RawMessage)
 }
 
 // Signature for functions that construct a game instance.
@@ -93,7 +94,7 @@ func (lobby Lobby) activePlayers() []string {
 
 // Marshals the given message to JSON and sends it to all connected players.
 // Returns an error if it failed to marshal or send to at least one of the players.
-func (lobby Lobby) SendMessageToAll(msg any) error {
+func (lobby Lobby) SendMessageToAll(msg map[string]any) error {
 	lobby.lock.RLock()
 	defer lobby.lock.RUnlock()
 
@@ -105,7 +106,7 @@ func (lobby Lobby) SendMessageToAll(msg any) error {
 	return err
 }
 
-func (lobby Lobby) SendMessage(to string, msg any) error {
+func (lobby Lobby) SendMessage(to string, msg map[string]any) error {
 	player, ok := lobby.getPlayer(to)
 	if !ok {
 		return fmt.Errorf("failed to send message to player with id %s: player not found", to)

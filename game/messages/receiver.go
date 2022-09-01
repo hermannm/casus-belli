@@ -18,23 +18,21 @@ type Receiver struct {
 	Raven      chan ravenMsg
 }
 
-// Takes a message type and an unserialized JSON message.
+// Takes a message ID and an unserialized JSON message.
 // Unmarshals the message according to its type, and send it to the appropraite receiver channel.
-func (receiver Receiver) ReceiveMessage(msgType string, rawMsg []byte) {
+func (receiver Receiver) ReceiveMessage(msgID string, rawMsg json.RawMessage) {
 	var err error // Error declared here in order to handle it after the switch.
 
-	switch msgType {
-	case msgSubmitOrders:
+	switch msgID {
+	case submitOrdersMsgID:
 		var msg submitOrdersMsg
-		err = json.Unmarshal(rawMsg, &msg)
-		if err == nil {
+		if err = json.Unmarshal(rawMsg, &msg); err == nil {
 			receiver.Orders <- msg
 			return
 		}
-	case msgGiveSupport:
+	case giveSupportMsgID:
 		var msg giveSupportMsg
-		err = json.Unmarshal(rawMsg, &msg)
-		if err == nil {
+		if err = json.Unmarshal(rawMsg, &msg); err == nil {
 			supportChan, ok := receiver.Support[msg.From]
 			if ok {
 				supportChan <- msg
@@ -42,31 +40,28 @@ func (receiver Receiver) ReceiveMessage(msgType string, rawMsg []byte) {
 				err = fmt.Errorf("support receiver uninitialized for area %s", msg.From)
 			}
 		}
-	case msgWinterVote:
+	case winterVoteMsgID:
 		var msg winterVoteMsg
-		err = json.Unmarshal(rawMsg, &msg)
-		if err == nil {
+		if err = json.Unmarshal(rawMsg, &msg); err == nil {
 			receiver.WinterVote <- msg
 			return
 		}
-	case msgSword:
+	case swordMsgID:
 		var msg swordMsg
-		err = json.Unmarshal(rawMsg, &msg)
-		if err == nil {
+		if err = json.Unmarshal(rawMsg, &msg); err == nil {
 			receiver.Sword <- msg
 			return
 		}
-	case msgRaven:
+	case ravenMsgID:
 		var msg ravenMsg
-		err = json.Unmarshal(rawMsg, &msg)
-		if err == nil {
+		if err = json.Unmarshal(rawMsg, &msg); err == nil {
 			receiver.Raven <- msg
 			return
 		}
 	}
 
 	if err != nil {
-		log.Println(fmt.Errorf("failed to parse message of type %s: %w", msgType, err))
+		log.Println(fmt.Errorf("failed to parse message of type %s: %w", msgID, err))
 	}
 }
 

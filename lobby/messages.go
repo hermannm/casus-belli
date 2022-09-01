@@ -2,46 +2,40 @@ package lobby
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 
 	"github.com/gorilla/websocket"
 )
 
-// Lobby-specific messages from client to server.
-const (
-	msgError     = "error"
-	msgReady     = "ready"
-	msgStartGame = "startGame"
-)
-
 // Base for all messages.
-type message struct {
-	Type string `json:"type"`
-}
+type message map[string]any
+
+const errorMsgID = "error"
 
 // Message sent from server when an error occurs.
 type errorMsg struct {
-	Type  string `json:"type"` // msgError
 	Error string `json:"error"`
 }
 
+const readyMsgID = "ready"
+
 // Message sent from client to mark themselves as ready to start the game.
 type readyMsg struct {
-	Type  string `json:"type"` // msgReady
-	Ready bool   `json:"ready"`
+	Ready bool `json:"ready"`
 }
 
+const startGameMsgID = "startGame"
+
 // Message sent from lobby host to start the game once all players are ready.
-type startGameMsg struct {
-	Type string `json:"type"` // msgStartGame
-}
+type startGameMsg struct{}
 
 // Listens for messages from the player, and forwards them to the given receiver.
 // Listens continuously until the player turns inactive.
 func (player Player) listen(receiver MessageReceiver) {
 	for {
-		_, msg, err := player.socket.ReadMessage()
+		_, receivedMsg, err := player.socket.ReadMessage()
 		if err != nil {
 			if err, ok := err.(*websocket.CloseError); ok {
 				log.Println(fmt.Errorf("socket for player %s closed: %w", player.id, err))
@@ -51,14 +45,38 @@ func (player Player) listen(receiver MessageReceiver) {
 			continue
 		}
 
-		var baseMsg message
-
-		err = json.Unmarshal(msg, &baseMsg)
-		if err != nil || baseMsg.Type == "" {
-			player.send(errorMsg{Type: msgError, Error: "error in deserializing message"})
-			return
+		var msgWithID map[string]json.RawMessage
+		if err := json.Unmarshal(receivedMsg, &msgWithID); err != nil {
+			log.Println(fmt.Errorf("failed to parse message: %w", err))
+			player.sendErr("failed to parse message")
+			continue
+		}
+		if len(msgWithID) != 1 {
+			err := errors.New("invalid message format")
+			log.Println(err)
+			player.sendErr(err.Error())
+			continue
 		}
 
-		go receiver.ReceiveMessage(baseMsg.Type, msg)
+		var msgID string
+		var rawMsg json.RawMessage
+		for msgID, rawMsg = range msgWithID {
+			break
+		}
+
+		switch msgID {
+		case errorMsgID:
+			continue // TODO
+		case readyMsgID:
+			continue
+		case startGameMsgID:
+			continue
+		default:
+			go receiver.ReceiveMessage(msgID, rawMsg)
+		}
 	}
+}
+
+func (player Player) sendErr(errMsg string) {
+	player.send(message{errorMsgID: errorMsg{Error: errMsg}})
 }

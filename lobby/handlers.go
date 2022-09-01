@@ -142,7 +142,7 @@ func joinLobby(res http.ResponseWriter, req *http.Request) {
 	player := Player{id: params.Get("player"), socket: socket, lock: new(sync.RWMutex)}
 	if err := lobby.addPlayer(player); err != nil {
 		log.Println(fmt.Errorf("failed to add player: %w", err))
-		player.send(errorMsg{Type: msgError, Error: "failed to join game"})
+		player.sendErr("failed to join game")
 		return
 	}
 }
