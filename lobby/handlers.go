@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"sync"
 
 	"github.com/gorilla/websocket"
 )
@@ -19,15 +18,10 @@ func RegisterEndpoints(mux *http.ServeMux) {
 	}
 
 	// Endpoint for clients to join a given lobby.
-	// Takes query parameters "lobby" (name of the lobby) and "player" (the player ID that the client wants to claim).
 	mux.HandleFunc("/join", joinLobby)
 
-	// Endpoint for clients to view info about a single lobby.
-	// Takes query parameter "lobby" (name of the lobby).
-	mux.HandleFunc("/info", lobbyInfo)
-
 	// Endpoint for clients to view info about all lobbies on the server.
-	mux.HandleFunc("/all", lobbyList)
+	mux.HandleFunc("/lobbies", lobbyList)
 }
 
 // Registers handler for public lobby creation endpoint on the given ServeMux.
@@ -40,8 +34,7 @@ func RegisterLobbyCreationEndpoints(mux *http.ServeMux, games map[string]GameCon
 	}
 
 	// Endpoint for clients to create their own lobbies if the server is set to enable that.
-	// Takes query parameters "id" (unique name of the lobby) and "playerIDs".
-	mux.Handle("/new", lobbyCreationHandler{games: games})
+	mux.Handle("/create", createLobbyHandler{games: games})
 
 	gameTitles := make([]string, len(games))
 	for key := range games {
@@ -52,76 +45,35 @@ func RegisterLobbyCreationEndpoints(mux *http.ServeMux, games map[string]GameCon
 	mux.Handle("/games", gameListHandler{gameTitles: gameTitles})
 }
 
-// Checks the given request for the existence of the provided parameter keys.
-// If all exist, returns the parameters, otherwise returns ok = false.
-func checkParams(req *http.Request, keys ...string) (params url.Values, ok bool) {
-	params = req.URL.Query()
-
-	for _, key := range keys {
-		if !params.Has(key) {
-			return nil, false
-		}
-	}
-
-	return params, true
-}
-
-// Utility type for responding to requests for lobby info.
-type lobbyInfoResponse struct {
-	ID                 string          `json:"id"`
-	AvailablePlayerIDs map[string]bool `json:"availablePlayerIDs"`
-}
-
-// Handler for returning information about a given lobby.
-func lobbyInfo(res http.ResponseWriter, req *http.Request) {
-	lobby, err := findLobby(req)
-	if err != nil {
-		http.Error(res, "could not fetch lobby", http.StatusNotFound)
-		return
-	}
-
-	info, err := json.Marshal(lobbyInfoResponse{
-		ID:                 lobby.id,
-		AvailablePlayerIDs: lobby.availablePlayerIDs(),
-	})
-	if err != nil {
-		http.Error(res, "could not serialize lobby", http.StatusInternalServerError)
-		return
-	}
-
-	res.Write(info)
-}
-
 // Handler for returning information about all available lobbies.
 func lobbyList(res http.ResponseWriter, req *http.Request) {
-	lobbyInfoList := make([]lobbyInfoResponse, 0, len(lobbies))
+	lobbyList := lobbyRegistry.lobbyInfo()
 
-	for _, lobby := range lobbies {
-		lobbyInfoList = append(lobbyInfoList, lobbyInfoResponse{
-			ID:                 lobby.id,
-			AvailablePlayerIDs: lobby.availablePlayerIDs(),
-		})
-	}
-
-	info, err := json.Marshal(lobbyInfoList)
+	lobbyListJSON, err := json.Marshal(lobbyList)
 	if err != nil {
 		http.Error(res, "error in reading lobby fetching lobby list", http.StatusInternalServerError)
 		return
 	}
 
-	res.Write(info)
+	res.Write(lobbyListJSON)
 }
 
-// Handler for adding a player to a lobby.
+// Handler for a player to join a lobby.
+// Expects query parameters "lobbyName" and "username" (name the user wants to join with).
 func joinLobby(res http.ResponseWriter, req *http.Request) {
-	lobby, err := findLobby(req)
-	if err != nil {
-		http.Error(res, "could not find lobby", http.StatusNotFound)
+	const lobbyParam = "lobbyName"
+	const usernameParam = "username"
+
+	params, ok := checkParams(req, lobbyParam, usernameParam)
+	if !ok {
+		http.Error(res, "lobby name and username are required to join lobby", http.StatusBadRequest)
+		return
 	}
 
-	params, ok := checkParams(req, "player")
+	lobbyName := params.Get(lobbyParam)
+	lobby, ok := lobbyRegistry.getLobby(lobbyName)
 	if !ok {
-		http.Error(res, "must select player ID", http.StatusBadRequest)
+		http.Error(res, fmt.Sprintf("no lobby found with name \"%s\"", lobbyName), http.StatusNotFound)
 		return
 	}
 
@@ -139,33 +91,41 @@ func joinLobby(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	player := Player{id: params.Get("player"), socket: socket, lock: new(sync.RWMutex)}
-	if err := lobby.addPlayer(player); err != nil {
+	username := params.Get(usernameParam)
+
+	player, err := lobby.addPlayer(username, socket)
+	if err != nil {
 		log.Println(fmt.Errorf("failed to add player: %w", err))
 		player.sendErr("failed to join game")
 		return
 	}
+
+	player.sendLobbyJoinedMsg(lobby)
 }
 
-type lobbyCreationHandler struct {
+// Handler for creating lobbies (for servers with public lobby creation).
+// Expects query parameters "lobbyName" and "gameName".
+type createLobbyHandler struct {
 	games map[string]GameConstructor
 }
 
-// Returns a handler for creating lobbies (for servers with public lobby creation).
-func (handler lobbyCreationHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
-	params, ok := checkParams(req, "id", "game")
+func (handler createLobbyHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
+	const lobbyNameParam = "lobbyName"
+	const gameNameParam = "gameName"
+
+	params, ok := checkParams(req, lobbyNameParam, gameNameParam)
 	if !ok {
 		http.Error(res, "insufficient query parameters", http.StatusBadRequest)
 		return
 	}
 
-	id, err := url.QueryUnescape(params.Get("id"))
+	lobbyName, err := url.QueryUnescape(params.Get(lobbyNameParam))
 	if err != nil {
 		http.Error(res, "invalid lobby ID provided", http.StatusBadRequest)
 		return
 	}
 
-	gameTitle, err := url.QueryUnescape(params.Get("game"))
+	gameTitle, err := url.QueryUnescape(params.Get(gameNameParam))
 	if err != nil {
 		http.Error(res, "invalid game title provided", http.StatusBadRequest)
 	}
@@ -176,7 +136,7 @@ func (handler lobbyCreationHandler) ServeHTTP(res http.ResponseWriter, req *http
 		return
 	}
 
-	_, err = New(id, gameConstructor)
+	_, err = New(lobbyName, gameConstructor)
 	if err != nil {
 		http.Error(res, "error creating lobby", http.StatusInternalServerError)
 		return
@@ -185,11 +145,11 @@ func (handler lobbyCreationHandler) ServeHTTP(res http.ResponseWriter, req *http
 	res.Write([]byte("lobby created"))
 }
 
+// Handler for showing the list of games supported by the server.
 type gameListHandler struct {
 	gameTitles []string
 }
 
-// Returns a handler for showing the list of games supported by the server.
 func (handler gameListHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	jsonResponse, err := json.Marshal(handler.gameTitles)
 	if err != nil {

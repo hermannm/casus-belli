@@ -1,81 +1,49 @@
 package lobby
 
-import (
-	"encoding/json"
-	"errors"
-	"fmt"
-	"log"
-
-	"github.com/gorilla/websocket"
-)
-
-// Base for all messages.
+// Messages map a single key, the message ID, to an object determined by the message ID.
 type message map[string]any
 
-const errorMsgID = "error"
+// IDs for lobby-specific messages.
+const (
+	errorMsgID        = "error"
+	readyStatusMsgID  = "readyStatus"
+	lobbyJoinedMsgID  = "lobbyJoined"
+	selectGameIDMsgID = "selectGameId"
+	readyMsgID        = "ready"
+	startGameMsgID    = "startGame"
+)
 
 // Message sent from server when an error occurs.
 type errorMsg struct {
 	Error string `json:"error"`
 }
 
-const readyMsgID = "ready"
+// Message sent from server to all clients when a player marks themselves as ready.
+type readyStatusMsg struct {
+	Player string `json:"player"`
+	Ready  bool   `json:"ready"`
+}
 
-// Message sent from client to mark themselves as ready to start the game.
+type lobbyPlayerStatus struct {
+	Username string  `json:"username"`
+	GameID   *string `json:"gameID"`
+	Ready    bool    `json:"ready"`
+}
+
+// Message sent to a player when they join a lobby, to inform them about other players.
+type lobbyJoinedMsg struct {
+	PlayerStatuses []lobbyPlayerStatus `json:"playerStatuses"`
+}
+
+// Message sent from client when they want to select a game ID.
+type selectGameIDMsg struct {
+	GameID string `json:"gameID"`
+}
+
+// Message sent from client to mark themselves as ready to start the game (requires game ID being selected).
 type readyMsg struct {
 	Ready bool `json:"ready"`
 }
 
-const startGameMsgID = "startGame"
-
-// Message sent from lobby host to start the game once all players are ready.
+// Message sent from a player when the lobby wants to start the game (requires that all players are ready).
 type startGameMsg struct{}
-
-// Listens for messages from the player, and forwards them to the given receiver.
-// Listens continuously until the player turns inactive.
-func (player Player) listen(receiver GameMessageReceiver) {
-	for {
-		_, receivedMsg, err := player.socket.ReadMessage()
-		if err != nil {
-			if err, ok := err.(*websocket.CloseError); ok {
-				log.Println(fmt.Errorf("socket for player %s closed: %w", player.id, err))
-				return
-			}
-			log.Println(fmt.Errorf("error in socket connection for player %s: %w", player.id, err))
-			continue
-		}
-
-		var msgWithID map[string]json.RawMessage
-		if err := json.Unmarshal(receivedMsg, &msgWithID); err != nil {
-			log.Println(fmt.Errorf("failed to parse message: %w", err))
-			player.sendErr("failed to parse message")
-			continue
-		}
-		if len(msgWithID) != 1 {
-			err := errors.New("invalid message format")
-			log.Println(err)
-			player.sendErr(err.Error())
-			continue
-		}
-
-		var msgID string
-		var rawMsg json.RawMessage
-		for msgID, rawMsg = range msgWithID {
-			break
-		}
-
-		switch msgID {
-		case readyMsgID:
-			continue
-		case startGameMsgID:
-			continue
-		default:
-			// If msg ID is not a lobby message ID, the message is forwarded to the game message receiver.
-			go receiver.ReceiveMessage(msgID, rawMsg)
-		}
-	}
-}
-
-func (player Player) sendErr(errMsg string) {
-	player.send(message{errorMsgID: errorMsg{Error: errMsg}})
-}
