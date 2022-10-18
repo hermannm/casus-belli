@@ -10,11 +10,13 @@ import (
 )
 
 // boards embeds the json files of boards from this folder.
+//
 //go:embed bfh_5players.json
 var boards embed.FS
 
 // Utility type for json unmarshaling.
 type jsonBoard struct {
+	Name               string                `json:"name"`
 	WinningCastleCount int                   `json:"winningCastleCount"`
 	Nations            map[string][]landArea `json:"nations"`
 	Seas               []seaArea             `json:"seas"`
@@ -43,9 +45,9 @@ type neighbor struct {
 	DangerZone string `json:"dangerZone"`
 }
 
-// Reads and constructs the board matching the given map name and number of players.
-func ReadBoard(boardName string) (board.Board, error) {
-	content, err := boards.ReadFile(fmt.Sprintf("%s.json", boardName))
+// Reads and constructs the board matching the given ID.
+func ReadBoard(boardID string) (board.Board, error) {
+	content, err := boards.ReadFile(fmt.Sprintf("%s.json", boardID))
 	if err != nil {
 		return board.Board{}, err
 	}
@@ -63,6 +65,7 @@ func ReadBoard(boardName string) (board.Board, error) {
 
 	brd := board.Board{
 		Areas:              make(map[string]board.Area),
+		Name:               jsonBrd.Name,
 		WinningCastleCount: jsonBrd.WinningCastleCount,
 	}
 

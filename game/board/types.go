@@ -27,6 +27,9 @@ type Board struct {
 	// Areas on the board that player units can move to.
 	Areas map[string]Area `json:"area"`
 
+	// Name of this type of board.
+	Name string
+
 	// The number of castles to capture to win a game round on this board.
 	WinningCastleCount int `json:"winningCastleCount"`
 }

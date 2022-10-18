@@ -10,6 +10,7 @@ import (
 )
 
 type Game struct {
+	name      string
 	board     board.Board
 	rounds    []board.Round
 	options   GameOptions
@@ -45,6 +46,11 @@ func DefaultOptions() GameOptions {
 // by going through the board and finding all the different Home values.
 func (game Game) PlayerIDs() []string {
 	return playerIDsFromBoard(game.board)
+}
+
+// Returns the name of the board played in this game.
+func (game Game) Name() string {
+	return game.board.Name
 }
 
 // Creates a new message receiver for the given player tag, and adds it to the game.
