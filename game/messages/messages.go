@@ -4,16 +4,29 @@ import (
 	"hermannm.dev/bfh-server/game/board"
 )
 
+// Messages map a single key, the message ID, to an object determined by the message ID.
 type message map[string]any
 
-const errorMsgID = "error"
+// IDs for game-specific messages.
+const (
+	errorMsgID              = "error"
+	supportRequestMsgID     = "supportRequest"
+	orderRequestMsgID       = "orderRequest"
+	ordersReceivedMsgID     = "ordersReceived"
+	ordersConfirmationMsgID = "ordersConfirmation"
+	battleResultsMsgID      = "battleResults"
+	winnerMsgID             = "winner"
+	submitOrdersMsgID       = "submitOrders"
+	giveSupportMsgID        = "giveSupport"
+	winterVoteMsgID         = "winterVote"
+	swordMsgID              = "sword"
+	ravenMsgID              = "raven"
+)
 
 // Message sent from server when an error occurs.
 type errorMsg struct {
 	Error string `json:"error"`
 }
-
-const supportRequestMsgID = "supportRequest"
 
 // Message sent from server when asking a supporting player who to support in an embattled area.
 type supportRequestMsg struct {
@@ -24,19 +37,13 @@ type supportRequestMsg struct {
 	Battlers []string `json:"battlers"`
 }
 
-const orderRequestMsgID = "orderRequest"
-
 type orderRequestMsg struct{}
-
-const ordersReceivedMsgID = "ordersReceived"
 
 // Message sent from server to all clients when valid orders are received from all players.
 type ordersReceivedMsg struct {
 	// Maps a player's ID to their submitted orders.
 	Orders map[string][]board.Order `json:"orders"`
 }
-
-const ordersConfirmationMsgID = "ordersConfirmation"
 
 // Message sent from server to all clients when valid orders are received from a player.
 // Used to show who the server is waiting for.
@@ -45,15 +52,11 @@ type ordersConfirmationMsg struct {
 	Player string `json:"player"`
 }
 
-const battleResultsMsgID = "battleResults"
-
 // Message sent from server to all clients when a battle result is calculated.
 type battleResultsMsg struct {
 	// The relevant battle result.
 	Battles []board.Battle `json:"battles"`
 }
-
-const winnerMsgID = "winner"
 
 // Message sent from server to all clients when the game is won.
 type winnerMsg struct {
@@ -61,15 +64,11 @@ type winnerMsg struct {
 	Winner string `json:"winner"`
 }
 
-const submitOrdersMsgID = "submitOrders"
-
 // Message sent from client when submitting orders.
 type submitOrdersMsg struct {
 	// List of submitted orders.
 	Orders []board.Order `json:"orders"`
 }
-
-const giveSupportMsgID = "giveSupport"
 
 // Message sent from client when declaring who to support with their support order.
 // Forwarded by server to all clients to show who were given support.
@@ -81,16 +80,12 @@ type giveSupportMsg struct {
 	Player string `json:"player"`
 }
 
-const winterVoteMsgID = "winterVote"
-
 // Message passed from the client during winter council voting.
 // Used for the throne expansion.
 type winterVoteMsg struct {
 	// ID of the player that the submitting player votes for.
 	Player string `json:"player"`
 }
-
-const swordMsgID = "sword"
 
 // Message passed from the client with the swordMsg to declare where they want to use it.
 // Used for the throne expansion.
@@ -101,8 +96,6 @@ type swordMsg struct {
 	// Index of the battle in which to use the sword, in case of several battles in the area.
 	BattleIndex int `json:"battleIndex"`
 }
-
-const ravenMsgID = "raven"
 
 // Message passed from the client with the ravenMsg when they want to spy on another player's orders.
 // Used for the throne expansion.
