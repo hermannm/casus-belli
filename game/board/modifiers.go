@@ -113,7 +113,7 @@ func appendSupportMods(results map[string]Result, area Area, includeDefender boo
 
 	// Starts a goroutine to call support for each support order to the area.
 	for _, support := range supports {
-		go callSupport(support, area, moves, includeDefender, supportReceiver, wg, messenger)
+		go callSupport(support, area, moves, includeDefender, supportReceiver, &wg, messenger)
 	}
 
 	// Waits until all support calls are done, then closes the channel to range over it.
@@ -145,7 +145,7 @@ func callSupport(
 	moves []Order,
 	includeDefender bool,
 	supportReceiver chan<- supportDeclaration,
-	wg sync.WaitGroup,
+	wg *sync.WaitGroup,
 	messenger Messenger,
 ) {
 	defer wg.Done()
