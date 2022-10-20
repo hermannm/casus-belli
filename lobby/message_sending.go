@@ -11,7 +11,7 @@ func (player *Player) sendErr(errMsg string) {
 
 // Gives an overview of other players to a player who has just joined a lobby.
 func (player *Player) sendLobbyJoinedMsg(lobby *Lobby) error {
-	statuses := make([]lobbyPlayerStatus, 0)
+	statuses := make([]playerStatusMsg, 0)
 
 	lobby.lock.RLock()
 	defer lobby.lock.RUnlock()
@@ -24,7 +24,7 @@ func (player *Player) sendLobbyJoinedMsg(lobby *Lobby) error {
 			gameID = &player.gameID
 		}
 
-		statuses = append(statuses, lobbyPlayerStatus{Username: player.username, GameID: gameID, Ready: player.ready})
+		statuses = append(statuses, playerStatusMsg{Username: player.username, GameID: gameID, Ready: player.ready})
 
 		player.lock.RUnlock()
 	}
@@ -33,5 +33,27 @@ func (player *Player) sendLobbyJoinedMsg(lobby *Lobby) error {
 	if err != nil {
 		return fmt.Errorf("failed to send lobby joined message to player %s: %w", player.String(), err)
 	}
+	return nil
+}
+
+func (lobby *Lobby) sendPlayerStatusMsg(player *Player) error {
+	player.lock.RLock()
+
+	statusMsg := playerStatusMsg{
+		Username: player.username,
+		GameID:   nil,
+		Ready:    player.ready,
+	}
+	if player.gameID != "" {
+		gameID := player.gameID
+		statusMsg.GameID = &gameID
+	}
+
+	player.lock.RUnlock()
+
+	if err := lobby.SendMessageToAll(message{playerStatusMsgID: statusMsg}); err != nil {
+		return fmt.Errorf("failed to send player status message: %w", err)
+	}
+
 	return nil
 }

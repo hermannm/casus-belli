@@ -1,6 +1,7 @@
 package lobby
 
 import (
+	"errors"
 	"fmt"
 	"sync"
 
@@ -78,5 +79,18 @@ func (player *Player) selectGameID(gameID string, lobby *Lobby) error {
 	defer player.lock.Unlock()
 
 	player.gameID = gameID
+	return nil
+}
+
+// Acquires the player's lock and sets their ready field.
+func (player *Player) setReady(ready bool) error {
+	player.lock.Lock()
+	defer player.lock.Unlock()
+
+	if ready && player.gameID == "" {
+		return errors.New("must select game ID before setting ready status")
+	}
+
+	player.ready = ready
 	return nil
 }

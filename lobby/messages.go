@@ -6,7 +6,7 @@ type message map[string]any
 // IDs for lobby-specific messages.
 const (
 	errorMsgID        = "error"
-	readyStatusMsgID  = "readyStatus"
+	playerStatusMsgID = "playerStatus"
 	lobbyJoinedMsgID  = "lobbyJoined"
 	selectGameIDMsgID = "selectGameId"
 	readyMsgID        = "ready"
@@ -18,13 +18,8 @@ type errorMsg struct {
 	Error string `json:"error"`
 }
 
-// Message sent from server to all clients when a player marks themselves as ready.
-type readyStatusMsg struct {
-	Player string `json:"player"`
-	Ready  bool   `json:"ready"`
-}
-
-type lobbyPlayerStatus struct {
+// Message sent from server to all clients when a player's status changes.
+type playerStatusMsg struct {
 	Username string  `json:"username"`
 	GameID   *string `json:"gameID"`
 	Ready    bool    `json:"ready"`
@@ -32,7 +27,7 @@ type lobbyPlayerStatus struct {
 
 // Message sent to a player when they join a lobby, to inform them about other players.
 type lobbyJoinedMsg struct {
-	PlayerStatuses []lobbyPlayerStatus `json:"playerStatuses"`
+	PlayerStatuses []playerStatusMsg `json:"playerStatuses"`
 }
 
 // Message sent from client when they want to select a game ID.

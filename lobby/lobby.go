@@ -2,6 +2,7 @@ package lobby
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"sync"
@@ -168,6 +169,39 @@ func (lobby *Lobby) close() error {
 	}
 
 	lobbyRegistry.removeLobby(lobby.name)
+
+	return nil
+}
+
+// Starts the lobby's game. Errors if not all game IDs are selected, or if not all players are ready yet.
+func (lobby *Lobby) startGame() error {
+	lobby.lock.RLock()
+	defer lobby.lock.RUnlock()
+
+	claimedGameIDs := 0
+	readyPlayers := 0
+	for _, player := range lobby.players {
+		player.lock.RLock()
+
+		if player.gameID != "" {
+			claimedGameIDs++
+		}
+
+		if player.ready {
+			readyPlayers++
+		}
+
+		player.lock.RUnlock()
+	}
+
+	if claimedGameIDs < len(lobby.game.PlayerIDs()) {
+		return errors.New("all game IDs must be claimed before starting the game")
+	}
+	if readyPlayers < len(lobby.players) {
+		return errors.New("all players must mark themselves as ready before starting the game")
+	}
+
+	lobby.game.Start()
 
 	return nil
 }

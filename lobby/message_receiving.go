@@ -67,22 +67,48 @@ func (player *Player) receiveMessage(lobby *Lobby) (socketClosed bool, err error
 	return false, nil
 }
 
-// Receives a lobby-specific message, and handles it appropriately.
+// Receives a lobby-specific message, and handles it according to its ID.
 func (player *Player) receiveLobbyMessage(
 	lobby *Lobby, msgID string, rawMsg json.RawMessage,
 ) (isLobbyMsg bool, err error) {
-	isLobbyMsg = true
-
-	// TODO: Handle all lobby messages
 	switch msgID {
 	case selectGameIDMsgID:
 		var msg selectGameIDMsg
-		if err = json.Unmarshal(rawMsg, &msg); err == nil {
-			err = player.selectGameID(msg.GameID, lobby)
+		if err := json.Unmarshal(rawMsg, &msg); err != nil {
+			return true, fmt.Errorf("failed to unmarshal %s message: %w", msgID, err)
 		}
-	default:
-		isLobbyMsg = false
-	}
 
-	return isLobbyMsg, err
+		if err := player.selectGameID(msg.GameID, lobby); err != nil {
+			return true, fmt.Errorf("failed to select game ID: %w", err)
+		}
+
+		if err := lobby.sendPlayerStatusMsg(player); err != nil {
+			return true, fmt.Errorf("failed to update other players about game ID selection: %w", err)
+		}
+
+		return true, nil
+	case readyMsgID:
+		var msg readyMsg
+		if err := json.Unmarshal(rawMsg, &msg); err != nil {
+			return true, fmt.Errorf("failed to unmarshal %s message: %w", msgID, err)
+		}
+
+		if err := player.setReady(msg.Ready); err != nil {
+			return true, fmt.Errorf("failed to set ready status: %w", err)
+		}
+
+		if err := lobby.sendPlayerStatusMsg(player); err != nil {
+			return true, fmt.Errorf("failed to update other players about ready status: %w", err)
+		}
+
+		return true, nil
+	case startGameMsgID:
+		if err := lobby.startGame(); err != nil {
+			return true, fmt.Errorf("failed to start game: %w", err)
+		}
+
+		return true, nil
+	default:
+		return false, nil
+	}
 }
