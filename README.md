@@ -14,6 +14,7 @@ _The Battle for Hermannia_ is a board game created as a gift by the father of [h
   - Package `main` under `local` sets up a game server with a single, server-created lobby.
   - Package `main` under `public` sets up a game server where anyone can create their own lobbies through an open endpoint.
 - Package `server` at the project root contains the common setup code for the server's executables, such as the configured games.
+- Package `main` under `magefiles` contains build scripts using [Mage](https://magefile.org/)
 
 ## Credits
 
