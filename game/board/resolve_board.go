@@ -152,11 +152,7 @@ OuterLoop:
 				)
 			}
 
-			if len(processing) == 0 {
-				if len(retreats) != 0 {
-					continue BoardLoop
-				}
-
+			if len(processing) == 0 && len(retreats) == 0 {
 				break OuterLoop
 			}
 		}
