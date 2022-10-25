@@ -4,8 +4,7 @@ package board
 // If transported, returns whether the transport path is attacked,
 // and a list of danger zones that the order must cross to transport, if any.
 func (board Board) resolveTransports(move Order, destination Area) (transportAttacked bool, dangerZones []string) {
-	adjacent := destination.HasNeighbor(move.From)
-	if adjacent {
+	if destination.HasNeighbor(move.From) {
 		return false, nil
 	}
 
@@ -89,7 +88,8 @@ func (area Area) canTransportTo(destination string, board Board, exclude map[str
 		// If both this neighbor and potential subpaths can transport, finds the best one.
 		// This is for the niche edge case of there being a danger zone between this
 		// transport and the destination, in which case a longer subpath may be better.
-		if bestPath, canTransport := bestTransportPath(subPaths); canTransport {
+		bestPath, canTransport := bestTransportPath(subPaths)
+		if canTransport {
 			paths = append(paths, bestPath)
 		}
 	}

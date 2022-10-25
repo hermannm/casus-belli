@@ -79,13 +79,15 @@ func (game Game) receiveAndValidateOrders(player string, season board.Season, or
 			orders[i] = order
 		}
 
-		if err := validation.ValidateOrders(orders, game.board, season); err != nil {
+		err = validation.ValidateOrders(orders, game.board, season)
+		if err != nil {
 			log.Println(err)
 			game.messenger.SendError(player, err.Error())
 			continue
 		}
 
-		if err := game.messenger.SendOrdersConfirmation(player); err != nil {
+		err = game.messenger.SendOrdersConfirmation(player)
+		if err != nil {
 			log.Println(err)
 		}
 

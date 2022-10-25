@@ -19,20 +19,21 @@ type Receiver struct {
 }
 
 // Takes a message ID and an unserialized JSON message.
-// Unmarshals the message according to its type, and send it to the appropraite receiver channel.
+// Unmarshals the message according to its type, and sends it to the appropraite receiver channel.
 func (receiver Receiver) ReceiveMessage(msgID string, rawMsg json.RawMessage) {
 	var err error // Error declared here in order to handle it after the switch.
 
 	switch msgID {
 	case submitOrdersMsgID:
 		var msg submitOrdersMsg
-		if err = json.Unmarshal(rawMsg, &msg); err == nil {
+		err = json.Unmarshal(rawMsg, &msg)
+		if err == nil {
 			receiver.Orders <- msg
-			return
 		}
 	case giveSupportMsgID:
 		var msg giveSupportMsg
-		if err = json.Unmarshal(rawMsg, &msg); err == nil {
+		err = json.Unmarshal(rawMsg, &msg)
+		if err == nil {
 			supportChan, ok := receiver.Support[msg.From]
 			if ok {
 				supportChan <- msg
@@ -42,21 +43,21 @@ func (receiver Receiver) ReceiveMessage(msgID string, rawMsg json.RawMessage) {
 		}
 	case winterVoteMsgID:
 		var msg winterVoteMsg
-		if err = json.Unmarshal(rawMsg, &msg); err == nil {
+		err = json.Unmarshal(rawMsg, &msg)
+		if err == nil {
 			receiver.WinterVote <- msg
-			return
 		}
 	case swordMsgID:
 		var msg swordMsg
-		if err = json.Unmarshal(rawMsg, &msg); err == nil {
+		err = json.Unmarshal(rawMsg, &msg)
+		if err == nil {
 			receiver.Sword <- msg
-			return
 		}
 	case ravenMsgID:
 		var msg ravenMsg
-		if err = json.Unmarshal(rawMsg, &msg); err == nil {
+		err = json.Unmarshal(rawMsg, &msg)
+		if err == nil {
 			receiver.Raven <- msg
-			return
 		}
 	}
 

@@ -58,7 +58,8 @@ func New(name string, gameConstructor GameConstructor) (*Lobby, error) {
 	}
 	lobby.game = game
 
-	if err := lobbyRegistry.registerLobby(lobby); err != nil {
+	err = lobbyRegistry.registerLobby(lobby)
+	if err != nil {
 		return nil, fmt.Errorf("failed to register lobby: %w", err)
 	}
 
@@ -160,7 +161,8 @@ func (lobby *Lobby) close() error {
 	for _, player := range lobby.players {
 		player.lock.Lock()
 
-		if err := player.socket.Close(); err != nil {
+		err := player.socket.Close()
+		if err != nil {
 			player.lock.Unlock()
 			log.Println(fmt.Errorf("failed to close socket connection to player %s: %w", player.String(), err))
 		}

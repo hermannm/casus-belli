@@ -37,7 +37,8 @@ func CrossCompile() error {
 
 				fmt.Printf("%s %s\n", color.Blue.String("[Building]"), binName)
 
-				if err := sh.RunWithV(env, "go", "build", "-o", outputLocation, inputLocation); err != nil {
+				err := sh.RunWithV(env, "go", "build", "-o", outputLocation, inputLocation)
+				if err != nil {
 					return fmt.Errorf("cross-compilation failed: %w", err)
 				}
 			}

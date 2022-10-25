@@ -51,7 +51,8 @@ func (lobby *Lobby) sendPlayerStatusMsg(player *Player) error {
 
 	player.lock.RUnlock()
 
-	if err := lobby.SendMessageToAll(message{playerStatusMsgID: statusMsg}); err != nil {
+	err := lobby.SendMessageToAll(message{playerStatusMsgID: statusMsg})
+	if err != nil {
 		return fmt.Errorf("failed to send player status message: %w", err)
 	}
 

@@ -52,24 +52,24 @@ func ReadBoard(boardID string) (board.Board, error) {
 		return board.Board{}, err
 	}
 
-	var jsonBrd jsonBoard
+	var jsonBoard jsonBoard
 
-	err = json.Unmarshal(content, &jsonBrd)
+	err = json.Unmarshal(content, &jsonBoard)
 	if err != nil {
 		return board.Board{}, err
 	}
 
-	if jsonBrd.WinningCastleCount <= 0 {
+	if jsonBoard.WinningCastleCount <= 0 {
 		return board.Board{}, errors.New("invalid winningCastleCount in board config")
 	}
 
 	brd := board.Board{
 		Areas:              make(map[string]board.Area),
-		Name:               jsonBrd.Name,
-		WinningCastleCount: jsonBrd.WinningCastleCount,
+		Name:               jsonBoard.Name,
+		WinningCastleCount: jsonBoard.WinningCastleCount,
 	}
 
-	for nation, areas := range jsonBrd.Nations {
+	for nation, areas := range jsonBoard.Nations {
 		for _, landArea := range areas {
 			area := board.Area{
 				Name:              landArea.Name,
@@ -87,7 +87,7 @@ func ReadBoard(boardID string) (board.Board, error) {
 		}
 	}
 
-	for _, sea := range jsonBrd.Seas {
+	for _, sea := range jsonBoard.Seas {
 		area := board.Area{
 			Name:             sea.Name,
 			Neighbors:        make([]board.Neighbor, 0),
@@ -98,7 +98,7 @@ func ReadBoard(boardID string) (board.Board, error) {
 		brd.Areas[area.Name] = area
 	}
 
-	for _, neighbor := range jsonBrd.Neighbors {
+	for _, neighbor := range jsonBoard.Neighbors {
 		area1, ok1 := brd.Areas[neighbor.Area1]
 		area2, ok2 := brd.Areas[neighbor.Area2]
 

@@ -125,7 +125,8 @@ func appendSupportMods(results map[string]Result, area Area, includeDefender boo
 			continue
 		}
 
-		if result, isPlayer := results[support.toPlayer]; isPlayer {
+		result, isPlayer := results[support.toPlayer]
+		if isPlayer {
 			result.Parts = append(result.Parts, Modifier{Type: ModifierSupport, Value: 1, SupportingPlayer: support.fromPlayer})
 			results[support.toPlayer] = result
 		}

@@ -38,7 +38,8 @@ func (player *Player) String() string {
 func (player *Player) send(msg any) error {
 	player.lock.Lock()
 
-	if err := player.socket.WriteJSON(msg); err != nil {
+	err := player.socket.WriteJSON(msg)
+	if err != nil {
 		player.lock.Unlock()
 		return fmt.Errorf("failed to send message to player %s: %w", player.String(), err)
 	}

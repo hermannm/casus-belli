@@ -34,14 +34,17 @@ func (player *Player) receiveMessage(lobby *Lobby) (socketClosed bool, err error
 
 	_, receivedMsg, err := player.socket.ReadMessage()
 	if err != nil {
-		if err, ok := err.(*websocket.CloseError); ok {
+		switch err := err.(type) {
+		case *websocket.CloseError:
 			return true, fmt.Errorf("socket closed: %w", err)
+		default:
+			return false, fmt.Errorf("socket connection error: %w", err)
 		}
-		return false, fmt.Errorf("socket connection error: %w", err)
 	}
 
 	var msgWithID map[string]json.RawMessage
-	if err := json.Unmarshal(receivedMsg, &msgWithID); err != nil {
+	err = json.Unmarshal(receivedMsg, &msgWithID)
+	if err != nil {
 		return false, fmt.Errorf("failed to parse message: %w", err)
 	}
 	if len(msgWithID) != 1 {
@@ -74,36 +77,43 @@ func (player *Player) receiveLobbyMessage(
 	switch msgID {
 	case selectGameIDMsgID:
 		var msg selectGameIDMsg
-		if err := json.Unmarshal(rawMsg, &msg); err != nil {
+		err := json.Unmarshal(rawMsg, &msg)
+		if err != nil {
 			return true, fmt.Errorf("failed to unmarshal %s message: %w", msgID, err)
 		}
 
-		if err := player.selectGameID(msg.GameID, lobby); err != nil {
+		err = player.selectGameID(msg.GameID, lobby)
+		if err != nil {
 			return true, fmt.Errorf("failed to select game ID: %w", err)
 		}
 
-		if err := lobby.sendPlayerStatusMsg(player); err != nil {
+		err = lobby.sendPlayerStatusMsg(player)
+		if err != nil {
 			return true, fmt.Errorf("failed to update other players about game ID selection: %w", err)
 		}
 
 		return true, nil
 	case readyMsgID:
 		var msg readyMsg
-		if err := json.Unmarshal(rawMsg, &msg); err != nil {
+		err := json.Unmarshal(rawMsg, &msg)
+		if err != nil {
 			return true, fmt.Errorf("failed to unmarshal %s message: %w", msgID, err)
 		}
 
-		if err := player.setReady(msg.Ready); err != nil {
+		err = player.setReady(msg.Ready)
+		if err != nil {
 			return true, fmt.Errorf("failed to set ready status: %w", err)
 		}
 
-		if err := lobby.sendPlayerStatusMsg(player); err != nil {
+		err = lobby.sendPlayerStatusMsg(player)
+		if err != nil {
 			return true, fmt.Errorf("failed to update other players about ready status: %w", err)
 		}
 
 		return true, nil
 	case startGameMsgID:
-		if err := lobby.startGame(); err != nil {
+		err := lobby.startGame()
+		if err != nil {
 			return true, fmt.Errorf("failed to start game: %w", err)
 		}
 

@@ -11,12 +11,14 @@ import (
 // Assumes that all orders are from the same player.
 func ValidateOrders(orders []board.Order, brd board.Board, season board.Season) error {
 	for _, order := range orders {
-		if err := validateOrder(order, brd, season); err != nil {
+		err := validateOrder(order, brd, season)
+		if err != nil {
 			return fmt.Errorf("invalid order in area %s: %w", order.From, err)
 		}
 	}
 
-	if err := validateOrderSet(orders, brd); err != nil {
+	err := validateOrderSet(orders, brd)
+	if err != nil {
 		return fmt.Errorf("invalid order set: %w", err)
 	}
 
@@ -89,7 +91,8 @@ func validateMoveOrSupport(order board.Order, from board.Area, brd board.Board) 
 
 func validateMove(order board.Order, from board.Area, to board.Area, brd board.Board) error {
 	if !from.HasNeighbor(order.To) {
-		if canTransport, _, _ := from.CanTransportTo(order.To, brd); !canTransport {
+		canTransport, _, _ := from.CanTransportTo(order.To, brd)
+		if !canTransport {
 			return errors.New("move is not adjacent to destination, and cannot be transported")
 		}
 	}
@@ -222,11 +225,13 @@ func validateBuild(order board.Order, from board.Area, brd board.Board) error {
 }
 
 func validateOrderSet(orders []board.Order, brd board.Board) error {
-	if err := validateUniqueMoveDestinations(orders, brd); err != nil {
+	err := validateUniqueMoveDestinations(orders, brd)
+	if err != nil {
 		return err
 	}
 
-	if err := validateOneOrderPerArea(orders, brd); err != nil {
+	err = validateOneOrderPerArea(orders, brd)
+	if err != nil {
 		return err
 	}
 
@@ -238,7 +243,8 @@ func validateUniqueMoveDestinations(orders []board.Order, brd board.Board) error
 
 	for _, order := range orders {
 		if order.Type == board.OrderMove {
-			if _, notUnique := moveDestinations[order.To]; notUnique {
+			_, notUnique := moveDestinations[order.To]
+			if notUnique {
 				return fmt.Errorf("orders include two moves to area %s", order.To)
 			}
 
@@ -253,7 +259,8 @@ func validateOneOrderPerArea(orders []board.Order, brd board.Board) error {
 	orderedAreas := make(map[string]struct{})
 
 	for _, order := range orders {
-		if _, alreadyOrdered := orderedAreas[order.From]; alreadyOrdered {
+		_, alreadyOrdered := orderedAreas[order.From]
+		if alreadyOrdered {
 			return fmt.Errorf("unit in area %s is ordered twice", order.From)
 		}
 

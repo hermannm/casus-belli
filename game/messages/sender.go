@@ -13,58 +13,76 @@ type Sender interface {
 }
 
 func (messenger Messenger) SendError(to string, errMsg string) {
-	err := messenger.sender.SendMessage(to, message{errorMsgID: errorMsg{Error: errMsg}})
+	msg := message{errorMsgID: errorMsg{Error: errMsg}}
+
+	err := messenger.sender.SendMessage(to, msg)
 	if err != nil {
 		log.Println(fmt.Errorf("failed to send error message to player %s: %w", to, err))
 	}
 }
 
 func (messenger Messenger) SendOrderRequest(to string) error {
-	err := messenger.sender.SendMessage(to, message{orderRequestMsgID: orderRequestMsg{}})
+	msg := message{orderRequestMsgID: orderRequestMsg{}}
+
+	err := messenger.sender.SendMessage(to, msg)
 	if err != nil {
 		return fmt.Errorf("failed to send order request message to player %s: %w", to, err)
 	}
+
 	return nil
 }
 
 func (messenger Messenger) SendOrdersReceived(playerOrders map[string][]board.Order) error {
-	err := messenger.sender.SendMessageToAll(message{ordersReceivedMsgID: ordersReceivedMsg{Orders: playerOrders}})
+	msg := message{ordersReceivedMsgID: ordersReceivedMsg{Orders: playerOrders}}
+
+	err := messenger.sender.SendMessageToAll(msg)
 	if err != nil {
 		return fmt.Errorf("failed to send orders received message: %w", err)
 	}
+
 	return nil
 }
 
 func (messenger Messenger) SendOrdersConfirmation(player string) error {
-	err := messenger.sender.SendMessageToAll(message{ordersConfirmationMsgID: ordersConfirmationMsg{Player: player}})
+	msg := message{ordersConfirmationMsgID: ordersConfirmationMsg{Player: player}}
+
+	err := messenger.sender.SendMessageToAll(msg)
 	if err != nil {
 		return fmt.Errorf("failed to send orders confirmation message: %w", err)
 	}
+
 	return nil
 }
 
 func (messenger Messenger) SendSupportRequest(to string, supportingArea string, battlers []string) error {
-	err := messenger.sender.SendMessage(to, message{
-		supportRequestMsgID: supportRequestMsg{SupportingArea: supportingArea, Battlers: battlers},
-	})
+	msg := message{supportRequestMsgID: supportRequestMsg{SupportingArea: supportingArea, Battlers: battlers}}
+
+	err := messenger.sender.SendMessage(to, msg)
 	if err != nil {
 		return fmt.Errorf("failed to send support request message to player %s: %w", to, err)
 	}
+
 	return nil
 }
 
 func (messenger Messenger) SendBattleResults(battles []board.Battle) error {
-	err := messenger.sender.SendMessageToAll(message{battleResultsMsgID: battleResultsMsg{Battles: battles}})
+	msg := message{battleResultsMsgID: battleResultsMsg{Battles: battles}}
+
+	err := messenger.sender.SendMessageToAll(msg)
 	if err != nil {
 		return fmt.Errorf("failed to send battle results message: %w", err)
 	}
+
 	return nil
 }
 
 func (messenger Messenger) SendWinner(winner string) error {
-	err := messenger.sender.SendMessageToAll(message{winnerMsgID: winnerMsg{Winner: winner}})
+	msg := message{winnerMsgID: winnerMsg{Winner: winner}}
+
+	err := messenger.sender.SendMessageToAll(msg)
 	if err != nil {
 		return fmt.Errorf("failed to send winner message: %w", err)
 	}
+
 	return nil
 }

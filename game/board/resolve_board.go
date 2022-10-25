@@ -100,10 +100,14 @@ OuterLoop:
 		BoardLoop:
 			for areaName, area := range board.Areas {
 				retreat, hasRetreat := retreats[areaName]
-				if _, skip := processed[areaName]; skip && !hasRetreat {
+
+				_, isProcessed := processed[areaName]
+				if isProcessed && !hasRetreat {
 					continue BoardLoop
 				}
-				if _, skip := processing[areaName]; skip {
+
+				_, isProcessing := processing[areaName]
+				if isProcessing {
 					continue BoardLoop
 				}
 
