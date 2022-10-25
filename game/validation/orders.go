@@ -16,32 +16,8 @@ func ValidateOrders(orders []board.Order, brd board.Board, season board.Season) 
 		}
 	}
 
-	if err := validateOrderSet(orders, brd, season); err != nil {
+	if err := validateOrderSet(orders, brd); err != nil {
 		return fmt.Errorf("invalid order set: %w", err)
-	}
-
-	return nil
-}
-
-func validateOrderSet(orders []board.Order, brd board.Board, season board.Season) error {
-	if err := validateUniqueMoveDestinations(orders, brd, season); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func validateUniqueMoveDestinations(orders []board.Order, brd board.Board, season board.Season) error {
-	moveDestinations := make(map[string]struct{})
-
-	for _, order := range orders {
-		if order.Type == board.OrderMove {
-			if _, notUnique := moveDestinations[order.To]; notUnique {
-				return fmt.Errorf("orders include two moves to area %s", order.To)
-			}
-
-			moveDestinations[order.To] = struct{}{}
-		}
 	}
 
 	return nil
@@ -240,6 +216,48 @@ func validateBuild(order board.Order, from board.Area, brd board.Board) error {
 	case board.UnitCatapult:
 	default:
 		return errors.New("invalid unit type")
+	}
+
+	return nil
+}
+
+func validateOrderSet(orders []board.Order, brd board.Board) error {
+	if err := validateUniqueMoveDestinations(orders, brd); err != nil {
+		return err
+	}
+
+	if err := validateOneOrderPerArea(orders, brd); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func validateUniqueMoveDestinations(orders []board.Order, brd board.Board) error {
+	moveDestinations := make(map[string]struct{})
+
+	for _, order := range orders {
+		if order.Type == board.OrderMove {
+			if _, notUnique := moveDestinations[order.To]; notUnique {
+				return fmt.Errorf("orders include two moves to area %s", order.To)
+			}
+
+			moveDestinations[order.To] = struct{}{}
+		}
+	}
+
+	return nil
+}
+
+func validateOneOrderPerArea(orders []board.Order, brd board.Board) error {
+	orderedAreas := make(map[string]struct{})
+
+	for _, order := range orders {
+		if _, alreadyOrdered := orderedAreas[order.From]; alreadyOrdered {
+			return fmt.Errorf("unit in area %s is ordered twice", order.From)
+		}
+
+		orderedAreas[order.From] = struct{}{}
 	}
 
 	return nil
