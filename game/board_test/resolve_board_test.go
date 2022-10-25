@@ -3,38 +3,37 @@ package board_test
 import (
 	"testing"
 
-	. "hermannm.dev/bfh-server/game/board"
+	"hermannm.dev/bfh-server/game/board"
+	"hermannm.dev/bfh-server/game/testutils"
 )
 
 // Tests whether units correctly move in circle without outside interference.
 func TestResolveConflictFreeMoveCycle(t *testing.T) {
-	units := map[string]Unit{
-		"Leil":   {Type: UnitFootman, Player: "red"},
-		"Limbol": {Type: UnitFootman, Player: "green"},
-		"Worp":   {Type: UnitFootman, Player: "yellow"},
+	units := map[string]board.Unit{
+		"Leil":   {Type: board.UnitFootman, Player: "red"},
+		"Limbol": {Type: board.UnitFootman, Player: "green"},
+		"Worp":   {Type: board.UnitFootman, Player: "yellow"},
 	}
 
-	orders := []Order{
-		{Type: OrderMove, From: "Leil", To: "Limbol"},
-		{Type: OrderMove, From: "Limbol", To: "Worp"},
-		{Type: OrderMove, From: "Worp", To: "Leil"},
+	orders := []board.Order{
+		{Type: board.OrderMove, From: "Leil", To: "Limbol"},
+		{Type: board.OrderMove, From: "Limbol", To: "Worp"},
+		{Type: board.OrderMove, From: "Worp", To: "Leil"},
 	}
 
-	board := mockBoard()
-	placeUnits(board, units)
+	brd := testutils.NewMockBoard()
+	testutils.PlaceUnits(units, brd)
+	testutils.PlaceOrders(orders, brd)
 
-	attachUnits(orders, units)
-	round := Round{FirstOrders: orders}
+	round := board.Round{FirstOrders: orders}
 
 	// Runs the resolve function, mutating the board.
-	board.Resolve(round, mockMessenger{})
+	brd.Resolve(round, testutils.MockMessenger{})
 
 	// Expected: the units have switched places in a circle.
-	expected := expectedControl{
-		"Leil":   {controllingPlayer: "yellow", unit: units["Worp"]},
-		"Limbol": {controllingPlayer: "red", unit: units["Leil"]},
-		"Worp":   {controllingPlayer: "green", unit: units["Limbol"]},
-	}
-
-	checkExpectedControl(board, expected, t)
+	testutils.ExpectedControl{
+		"Leil":   {ControllingPlayer: "yellow", Unit: units["Worp"]},
+		"Limbol": {ControllingPlayer: "red", Unit: units["Leil"]},
+		"Worp":   {ControllingPlayer: "green", Unit: units["Limbol"]},
+	}.Check(brd, t)
 }

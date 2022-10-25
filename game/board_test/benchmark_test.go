@@ -3,88 +3,89 @@ package board_test
 import (
 	"testing"
 
-	. "hermannm.dev/bfh-server/game/board"
+	"hermannm.dev/bfh-server/game/board"
+	"hermannm.dev/bfh-server/game/testutils"
 )
 
 func BenchmarkBoardResolve(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		board, round := setup()
-		board.Resolve(round, mockMessenger{})
+		board.Resolve(round, testutils.MockMessenger{})
 	}
 }
 
-func setup() (Board, Round) {
-	units := map[string]Unit{
-		"Emman": {Type: UnitFootman, Player: "white"},
+func setup() (board.Board, board.Round) {
+	units := map[string]board.Unit{
+		"Emman": {Type: board.UnitFootman, Player: "white"},
 
-		"Lomone": {Type: UnitFootman, Player: "green"},
-		"Lusía":  {Type: UnitFootman, Player: "red"},
+		"Lomone": {Type: board.UnitFootman, Player: "green"},
+		"Lusía":  {Type: board.UnitFootman, Player: "red"},
 
-		"Gron":  {Type: UnitFootman, Player: "white"},
-		"Gnade": {Type: UnitFootman, Player: "black"},
+		"Gron":  {Type: board.UnitFootman, Player: "white"},
+		"Gnade": {Type: board.UnitFootman, Player: "black"},
 
-		"Firril": {Type: UnitFootman, Player: "black"},
+		"Firril": {Type: board.UnitFootman, Player: "black"},
 
-		"Ovo":       {Type: UnitFootman, Player: "green"},
-		"Mare Elle": {Type: UnitShip, Player: "green"},
+		"Ovo":       {Type: board.UnitFootman, Player: "green"},
+		"Mare Elle": {Type: board.UnitShip, Player: "green"},
 
-		"Winde":      {Type: UnitFootman, Player: "green"},
-		"Mare Gond":  {Type: UnitShip, Player: "green"},
-		"Mare Ovond": {Type: UnitShip, Player: "green"},
-		"Mare Unna":  {Type: UnitShip, Player: "black"},
+		"Winde":      {Type: board.UnitFootman, Player: "green"},
+		"Mare Gond":  {Type: board.UnitShip, Player: "green"},
+		"Mare Ovond": {Type: board.UnitShip, Player: "green"},
+		"Mare Unna":  {Type: board.UnitShip, Player: "black"},
 
-		"Tusser": {Type: UnitFootman, Player: "white"},
-		"Tige":   {Type: UnitFootman, Player: "black"},
+		"Tusser": {Type: board.UnitFootman, Player: "white"},
+		"Tige":   {Type: board.UnitFootman, Player: "black"},
 
-		"Tond": {Type: UnitFootman, Player: "green"},
+		"Tond": {Type: board.UnitFootman, Player: "green"},
 
-		"Leil":   {Type: UnitFootman, Player: "red"},
-		"Limbol": {Type: UnitFootman, Player: "green"},
-		"Worp":   {Type: UnitFootman, Player: "yellow"},
+		"Leil":   {Type: board.UnitFootman, Player: "red"},
+		"Limbol": {Type: board.UnitFootman, Player: "green"},
+		"Worp":   {Type: board.UnitFootman, Player: "yellow"},
 	}
 
-	orders := []Order{
+	orders := []board.Order{
 		// Auto-success
-		{Type: OrderMove, From: "Emman", To: "Erren"},
+		{Type: board.OrderMove, From: "Emman", To: "Erren"},
 
 		// PvP battle with defender
-		{Type: OrderMove, From: "Lomone", To: "Lusía"},
+		{Type: board.OrderMove, From: "Lomone", To: "Lusía"},
 
 		// PvP battle, no defender
-		{Type: OrderMove, From: "Gron", To: "Gewel"},
-		{Type: OrderMove, From: "Gnade", To: "Gewel"},
+		{Type: board.OrderMove, From: "Gron", To: "Gewel"},
+		{Type: board.OrderMove, From: "Gnade", To: "Gewel"},
 
 		// PvE battle
-		{Type: OrderMove, From: "Firril", To: "Furie"},
+		{Type: board.OrderMove, From: "Firril", To: "Furie"},
 
 		// PvE battle, transport not attacked
-		{Type: OrderMove, From: "Ovo", To: "Zona"},
-		{Type: OrderTransport, From: "Mare Elle"},
+		{Type: board.OrderMove, From: "Ovo", To: "Zona"},
+		{Type: board.OrderTransport, From: "Mare Elle"},
 
 		// PvE battle, transport attacked
-		{Type: OrderMove, From: "Winde", To: "Fond"},
-		{Type: OrderTransport, From: "Mare Gond"},
-		{Type: OrderTransport, From: "Mare Ovond"},
-		{Type: OrderMove, From: "Mare Unna", To: "Mare Ovond"},
+		{Type: board.OrderMove, From: "Winde", To: "Fond"},
+		{Type: board.OrderTransport, From: "Mare Gond"},
+		{Type: board.OrderTransport, From: "Mare Ovond"},
+		{Type: board.OrderMove, From: "Mare Unna", To: "Mare Ovond"},
 
 		// Border battle
-		{Type: OrderMove, From: "Tusser", To: "Tige"},
-		{Type: OrderMove, From: "Tige", To: "Tusser"},
+		{Type: board.OrderMove, From: "Tusser", To: "Tige"},
+		{Type: board.OrderMove, From: "Tige", To: "Tusser"},
 
 		// Danger zone, dependent move
-		{Type: OrderMove, From: "Tond", To: "Tige"},
+		{Type: board.OrderMove, From: "Tond", To: "Tige"},
 
 		// Move cycle
-		{Type: OrderMove, From: "Leil", To: "Limbol"},
-		{Type: OrderMove, From: "Limbol", To: "Worp"},
-		{Type: OrderMove, From: "Worp", To: "Leil"},
+		{Type: board.OrderMove, From: "Leil", To: "Limbol"},
+		{Type: board.OrderMove, From: "Limbol", To: "Worp"},
+		{Type: board.OrderMove, From: "Worp", To: "Leil"},
 	}
 
-	board := mockBoard()
-	placeUnits(board, units)
+	brd := testutils.NewMockBoard()
+	testutils.PlaceUnits(units, brd)
+	testutils.PlaceOrders(orders, brd)
 
-	attachUnits(orders, units)
-	round := Round{FirstOrders: orders}
+	round := board.Round{FirstOrders: orders}
 
-	return board, round
+	return brd, round
 }

@@ -1,18 +1,20 @@
-package board_test
+package testutils
 
 import (
 	"testing"
 
-	. "hermannm.dev/bfh-server/game/board"
+	"hermannm.dev/bfh-server/game/board"
 )
 
 // Returns an empty, limited example board for testing.
-func mockBoard() Board {
-	board := Board{
+func NewMockBoard() board.Board {
+	brd := board.Board{
+		Areas:              make(map[string]board.Area),
+		Name:               "Mock board",
 		WinningCastleCount: 5,
 	}
 
-	areas := []Area{
+	areas := []board.Area{
 		{Name: "Lusía", Castle: true},
 		{Name: "Lomone", Forest: true},
 		{Name: "Limbol", Forest: true},
@@ -97,39 +99,39 @@ func mockBoard() Board {
 	}
 
 	for _, area := range areas {
-		area.Neighbors = make([]Neighbor, 0)
-		area.IncomingMoves = make([]Order, 0)
-		area.IncomingSupports = make([]Order, 0)
-		board.Areas[area.Name] = area
+		area.Neighbors = make([]board.Neighbor, 0)
+		area.IncomingMoves = make([]board.Order, 0)
+		area.IncomingSupports = make([]board.Order, 0)
+		brd.Areas[area.Name] = area
 	}
 
 	for _, neighbor := range neighbors {
-		area1 := board.Areas[neighbor.a1]
-		area2 := board.Areas[neighbor.a2]
+		area1 := brd.Areas[neighbor.a1]
+		area2 := brd.Areas[neighbor.a2]
 
-		area1.Neighbors = append(area1.Neighbors, Neighbor{
+		area1.Neighbors = append(area1.Neighbors, board.Neighbor{
 			Name:        neighbor.a2,
 			AcrossWater: neighbor.river || (area1.Sea && !area2.Sea),
 			Cliffs:      neighbor.cliffs,
 			DangerZone:  neighbor.dangerZone,
 		})
-		board.Areas[neighbor.a1] = area1
+		brd.Areas[neighbor.a1] = area1
 
-		area2.Neighbors = append(area2.Neighbors, Neighbor{
+		area2.Neighbors = append(area2.Neighbors, board.Neighbor{
 			Name:        neighbor.a1,
 			AcrossWater: neighbor.river || (area2.Sea && !area1.Sea),
 			Cliffs:      neighbor.cliffs,
 			DangerZone:  neighbor.dangerZone,
 		})
-		board.Areas[neighbor.a2] = area2
+		brd.Areas[neighbor.a2] = area2
 	}
 
-	return board
+	return brd
 }
 
-// Utility function for placing units on a map.
+// Utility function for placing units on the given board.
 // Takes a map of area names to units to be placed there.
-func placeUnits(board Board, units map[string]Unit) {
+func PlaceUnits(units map[string]board.Unit, board board.Board) {
 	for areaName, unit := range units {
 		area := board.Areas[areaName]
 		area.Unit = unit
@@ -138,51 +140,39 @@ func placeUnits(board Board, units map[string]Unit) {
 	}
 }
 
-func attachUnits(orders []Order, units map[string]Unit) {
+// Attaches units from the board to the given set of orders.
+// Also sets the player field on each order to the player of the ordered unit.
+func PlaceOrders(orders []board.Order, brd board.Board) {
 	for i, order := range orders {
-		unit, ok := units[order.From]
+		area, ok := brd.Areas[order.From]
 		if !ok {
 			continue
 		}
 
-		order.Unit = unit
-		order.Player = unit.Player
+		order.Unit = area.Unit
+		order.Player = area.Unit.Player
 		orders[i] = order
 	}
 }
 
 // Utility type for setting up expected outcomes of a test of board resolving.
-type expectedControl map[string]struct {
-	controllingPlayer string
-	unit              Unit
+type ExpectedControl map[string]struct {
+	ControllingPlayer string
+	Unit              board.Unit
 }
 
-func checkExpectedControl(board Board, expected expectedControl, t *testing.T) {
-	for name, area := range board.Areas {
+func (expected ExpectedControl) Check(brd board.Board, t *testing.T) {
+	for name, area := range brd.Areas {
 		expectation, ok := expected[name]
 		if !ok {
 			continue
 		}
 
-		if area.ControllingPlayer != expectation.controllingPlayer {
-			t.Errorf("unexpected control of %v, want %v, got %v", name, area.ControllingPlayer, expectation.controllingPlayer)
+		if area.ControllingPlayer != expectation.ControllingPlayer {
+			t.Errorf("unexpected control of %v, want %v, got %v", name, area.ControllingPlayer, expectation.ControllingPlayer)
 		}
-		if area.Unit != expectation.unit {
-			t.Errorf("unexpected unit in %v, want %v, got %v", name, area.Unit, expectation.unit)
+		if area.Unit != expectation.Unit {
+			t.Errorf("unexpected unit in %v, want %v, got %v", name, area.Unit, expectation.Unit)
 		}
 	}
-}
-
-type mockMessenger struct{}
-
-func (mockMessenger) SendBattleResults(battles []Battle) error {
-	return nil
-}
-
-func (mockMessenger) SendSupportRequest(to string, supportingArea string, battlers []string) error {
-	return nil
-}
-
-func (mockMessenger) ReceiveSupport(from string, fromArea string) (supportTo string, err error) {
-	return "", nil
 }
