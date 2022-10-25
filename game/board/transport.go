@@ -14,14 +14,29 @@ func (board Board) resolveTransports(move Order, destination Area) (transportAtt
 		return false, nil
 	}
 
-	transportable, transportAttacked, dangerZones := from.transportable(move.To, board, make(map[string]struct{}))
+	canTransport, transportAttacked, dangerZones := from.canTransportTo(move.To, board, make(map[string]struct{}))
 
-	if !transportable {
+	if !canTransport {
 		board.removeMove(move)
 		return false, nil
 	}
 
 	return transportAttacked, dangerZones
+}
+
+// Checks if a unit from the area can be transported to an area with the same name as the given destination.
+// Returns whether the unit can be transported, and if so, whether the transports are attacked,
+// as well as any potential danger zones the transported unit must cross.
+func (area Area) CanTransportTo(destination string, board Board) (
+	canTransport bool,
+	transportAttacked bool,
+	dangerZones []string,
+) {
+	if area.IsEmpty() || area.Unit.Type == UnitShip {
+		return false, false, nil
+	}
+
+	return area.canTransportTo(destination, board, make(map[string]struct{}))
 }
 
 // Stores status of a path of transport orders to destination.
@@ -30,12 +45,10 @@ type transportPath struct {
 	dangerZones []string
 }
 
-// Checks if a unit from the area can be transported to an area with the same name as the given destination.
-// Takes a map of area names to exclude, to enable recursion.
-// Returns whether the unit can be transported, and if so, whether the transports are attacked,
-// as well as any potential danger zones the transported unit must cross.
-func (area Area) transportable(destination string, board Board, exclude map[string]struct{}) (
-	transportable bool,
+// Recursively checks neighbors of the area for available transports to the destination.
+// Takes a map of area names to exclude.
+func (area Area) canTransportTo(destination string, board Board, exclude map[string]struct{}) (
+	canTransport bool,
 	transportAttacked bool,
 	dangerZones []string,
 ) {
@@ -53,7 +66,7 @@ func (area Area) transportable(destination string, board Board, exclude map[stri
 
 		// Recursively calls this function on the transporting neighbor,
 		// in order to find potential transport chains.
-		nextTransportable, nextTransportAttacked, nextDangerZones := transportArea.transportable(
+		nextCanTransport, nextTransportAttacked, nextDangerZones := transportArea.canTransportTo(
 			destination,
 			board,
 			newExclude,
@@ -66,7 +79,7 @@ func (area Area) transportable(destination string, board Board, exclude map[stri
 				dangerZones: []string{destDangerZone},
 			})
 		}
-		if nextTransportable {
+		if nextCanTransport {
 			subPaths = append(subPaths, transportPath{
 				attacked:    attacked || nextTransportAttacked,
 				dangerZones: nextDangerZones,
@@ -76,14 +89,13 @@ func (area Area) transportable(destination string, board Board, exclude map[stri
 		// If both this neighbor and potential subpaths can transport, finds the best one.
 		// This is for the niche edge case of there being a danger zone between this
 		// transport and the destination, in which case a longer subpath may be better.
-		bestPath, ok := bestTransportPath(subPaths)
-		if ok {
+		if bestPath, canTransport := bestTransportPath(subPaths); canTransport {
 			paths = append(paths, bestPath)
 		}
 	}
 
-	bestPath, transportable := bestTransportPath(paths)
-	return transportable, bestPath.attacked, bestPath.dangerZones
+	bestPath, canTransport := bestTransportPath(paths)
+	return canTransport, bestPath.attacked, bestPath.dangerZones
 }
 
 // Finds the given area's friendly neighbors that offer transports.
@@ -146,8 +158,8 @@ func (area Area) findDestination(destination string) (adjacent bool, dangerZone 
 // From the given paths, returns the best path.
 // Prioritizes paths that are not attacked first, then paths that have to cross the fewest danger zones.
 //
-// If the given path list contains no paths, returns transportable = false.
-func bestTransportPath(paths []transportPath) (bestPath transportPath, transportable bool) {
+// If the given path list contains no paths, returns canTransport = false.
+func bestTransportPath(paths []transportPath) (bestPath transportPath, canTransport bool) {
 	if len(paths) == 0 {
 		return transportPath{}, false
 	}
