@@ -1,7 +1,6 @@
 package game
 
 import (
-	"fmt"
 	"log"
 
 	"hermannm.dev/bfh-server/game/board"
@@ -80,15 +79,13 @@ func (game Game) receiveAndValidateOrders(player string, season board.Season, or
 			orders[i] = order
 		}
 
-		err = validation.ValidateOrderSet(orders, game.board, season)
-		if err != nil {
+		if err := validation.ValidateOrders(orders, game.board, season); err != nil {
 			log.Println(err)
-			game.messenger.SendError(player, fmt.Sprintf("Invalid order set: %s", err.Error()))
+			game.messenger.SendError(player, err.Error())
 			continue
 		}
 
-		err = game.messenger.SendOrdersConfirmation(player)
-		if err != nil {
+		if err := game.messenger.SendOrdersConfirmation(player); err != nil {
 			log.Println(err)
 		}
 

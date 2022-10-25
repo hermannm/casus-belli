@@ -2,27 +2,56 @@ package validation
 
 import (
 	"errors"
+	"fmt"
 
 	"hermannm.dev/bfh-server/game/board"
 )
 
-func ValidateOrderSet(orders []board.Order, brd board.Board, season board.Season) error {
+// Checks if the given set of orders are valid for the state of the board in the given season.
+// Assumes that all orders are from the same player.
+func ValidateOrders(orders []board.Order, brd board.Board, season board.Season) error {
 	for _, order := range orders {
-		err := validateOrder(order, brd, season)
-		if err != nil {
-			return err
+		if err := validateOrder(order, brd, season); err != nil {
+			return fmt.Errorf("invalid order in area %s: %w", order.From, err)
+		}
+	}
+
+	if err := validateOrderSet(orders, brd, season); err != nil {
+		return fmt.Errorf("invalid order set: %w", err)
+	}
+
+	return nil
+}
+
+func validateOrderSet(orders []board.Order, brd board.Board, season board.Season) error {
+	if err := validateUniqueMoveDestinations(orders, brd, season); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func validateUniqueMoveDestinations(orders []board.Order, brd board.Board, season board.Season) error {
+	moveDestinations := make(map[string]struct{})
+
+	for _, order := range orders {
+		if order.Type == board.OrderMove {
+			if _, notUnique := moveDestinations[order.To]; notUnique {
+				return fmt.Errorf("orders include two moves to area %s", order.To)
+			}
+
+			moveDestinations[order.To] = struct{}{}
 		}
 	}
 
 	return nil
 }
 
-// Takes a game order, and returns an error if it is invalid.
 func validateOrder(order board.Order, brd board.Board, season board.Season) error {
 	from := brd.Areas[order.From]
 
-	if order.Player != from.ControllingPlayer {
-		return errors.New("must control area that is ordered")
+	if order.Player != from.Unit.Player {
+		return errors.New("must have unit in ordered area")
 	}
 
 	switch season {
@@ -35,7 +64,7 @@ func validateOrder(order board.Order, brd board.Board, season board.Season) erro
 
 func validateNonWinterOrder(order board.Order, from board.Area, brd board.Board) error {
 	if order.Build != "" {
-		return errors.New("units can only be built in winter")
+		return errors.New("build orders can only be placed in winter")
 	}
 
 	switch order.Type {
@@ -54,16 +83,12 @@ func validateNonWinterOrder(order board.Order, from board.Area, brd board.Board)
 
 func validateMoveOrSupport(order board.Order, from board.Area, brd board.Board) error {
 	if order.To == "" {
-		return errors.New("mvoes and supports must have destination")
+		return errors.New("moves and supports must have destination")
 	}
 
 	to, ok := brd.Areas[order.To]
 	if !ok {
-		return errors.New("invalid order destination")
-	}
-
-	if !from.HasNeighbor(order.To) {
-		return errors.New("destination not adjacent to origin")
+		return fmt.Errorf("destination area with name %s not found", order.To)
 	}
 
 	if from.Unit.Type == board.UnitShip {
@@ -78,7 +103,7 @@ func validateMoveOrSupport(order board.Order, from board.Area, brd board.Board) 
 
 	switch order.Type {
 	case board.OrderMove:
-		return validateMove(order, from, to)
+		return validateMove(order, from, to, brd)
 	case board.OrderSupport:
 		return validateSupport(order, from, to)
 	}
@@ -86,7 +111,13 @@ func validateMoveOrSupport(order board.Order, from board.Area, brd board.Board) 
 	return errors.New("invalid order type")
 }
 
-func validateMove(order board.Order, from board.Area, to board.Area) error {
+func validateMove(order board.Order, from board.Area, to board.Area, brd board.Board) error {
+	if !from.HasNeighbor(order.To) {
+		if canTransport, _, _ := from.CanTransportTo(order.To, brd); !canTransport {
+			return errors.New("move is not adjacent to destination, and cannot be transported")
+		}
+	}
+
 	if from.IsEmpty() || from.Unit.Player != order.Player {
 		secondHorseMove := false
 
@@ -108,6 +139,10 @@ func validateMove(order board.Order, from board.Area, to board.Area) error {
 }
 
 func validateSupport(order board.Order, from board.Area, to board.Area) error {
+	if !from.HasNeighbor(order.To) {
+		return errors.New("support order must be adjacent to destination")
+	}
+
 	return nil
 }
 
@@ -147,6 +182,10 @@ func validateTransport(order board.Order, from board.Area) error {
 		return errors.New("only ships can transport")
 	}
 
+	if !from.Sea {
+		return errors.New("transport orders can only be placed at sea")
+	}
+
 	return nil
 }
 
@@ -168,7 +207,7 @@ func validateWinterMove(order board.Order, from board.Area, brd board.Board) err
 
 	to, ok := brd.Areas[order.To]
 	if !ok {
-		return errors.New("invalid order destination")
+		return fmt.Errorf("destination area with name %s not found", order.To)
 	}
 
 	if to.ControllingPlayer != order.Player {
@@ -197,11 +236,8 @@ func validateBuild(order board.Order, from board.Area, brd board.Board) error {
 			return errors.New("ships can only be built on coast")
 		}
 	case board.UnitFootman:
-		break
 	case board.UnitHorse:
-		break
 	case board.UnitCatapult:
-		break
 	default:
 		return errors.New("invalid unit type")
 	}
