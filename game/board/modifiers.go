@@ -138,8 +138,6 @@ func appendSupportMods(results map[string]Result, area Area, includeDefender boo
 //
 // If the support order's player matches a player in the battle, support is automatically given to themselves.
 // If support is not given to any player in the battle, the to field on the declaration is "".
-//
-// TODO: Implement asking player who to support if they are not involved themselves.
 func callSupport(
 	support Order,
 	area Area,

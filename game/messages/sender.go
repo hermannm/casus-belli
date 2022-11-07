@@ -33,7 +33,7 @@ func (messenger Messenger) SendOrderRequest(to string) error {
 }
 
 func (messenger Messenger) SendOrdersReceived(playerOrders map[string][]board.Order) error {
-	msg := message{ordersReceivedMsgID: ordersReceivedMsg{Orders: playerOrders}}
+	msg := message{ordersReceivedMsgID: ordersReceivedMsg{PlayerOrders: playerOrders}}
 
 	err := messenger.sender.SendMessageToAll(msg)
 	if err != nil {
@@ -54,8 +54,10 @@ func (messenger Messenger) SendOrdersConfirmation(player string) error {
 	return nil
 }
 
-func (messenger Messenger) SendSupportRequest(to string, supportingArea string, battlers []string) error {
-	msg := message{supportRequestMsgID: supportRequestMsg{SupportingArea: supportingArea, Battlers: battlers}}
+func (messenger Messenger) SendSupportRequest(to string, supportingArea string, supportablePlayers []string) error {
+	msg := message{
+		supportRequestMsgID: supportRequestMsg{SupportingArea: supportingArea, SupportablePlayers: supportablePlayers},
+	}
 
 	err := messenger.sender.SendMessage(to, msg)
 	if err != nil {

@@ -34,15 +34,16 @@ type supportRequestMsg struct {
 	SupportingArea string `json:"supportingArea"`
 
 	// List of possible players to support in the battle.
-	Battlers []string `json:"battlers"`
+	SupportablePlayers []string `json:"supportablePlayers"`
 }
 
+// Message sent from server to client to signal that client should submit orders.
 type orderRequestMsg struct{}
 
 // Message sent from server to all clients when valid orders are received from all players.
 type ordersReceivedMsg struct {
 	// Maps a player's ID to their submitted orders.
-	Orders map[string][]board.Order `json:"orders"`
+	PlayerOrders map[string][]board.Order `json:"playerOrders"`
 }
 
 // Message sent from server to all clients when valid orders are received from a player.
@@ -73,11 +74,12 @@ type submitOrdersMsg struct {
 // Message sent from client when declaring who to support with their support order.
 // Forwarded by server to all clients to show who were given support.
 type giveSupportMsg struct {
-	// Name of the area in which the support order is placed.
-	From string `json:"from"`
+	// Name of the area where the supporting player has their support order.
+	SupportingArea string `json:"supportingArea"`
 
 	// ID of the player in the destination area to support.
-	Player string `json:"player"`
+	// Nil if none were supported.
+	SupportedPlayer *string `json:"supportedPlayer"`
 }
 
 // Message passed from the client during winter council voting.

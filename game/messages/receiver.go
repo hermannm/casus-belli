@@ -34,11 +34,11 @@ func (receiver Receiver) ReceiveMessage(msgID string, rawMsg json.RawMessage) {
 		var msg giveSupportMsg
 		err = json.Unmarshal(rawMsg, &msg)
 		if err == nil {
-			supportChan, ok := receiver.Support[msg.From]
+			supportChan, ok := receiver.Support[msg.SupportingArea]
 			if ok {
 				supportChan <- msg
 			} else {
-				err = fmt.Errorf("support receiver uninitialized for area %s", msg.From)
+				err = fmt.Errorf("support receiver uninitialized for area %s", msg.SupportingArea)
 			}
 		}
 	case winterVoteMsgID:
@@ -92,5 +92,10 @@ func (messenger Messenger) ReceiveSupport(from string, supportingArea string) (s
 	}
 
 	support := <-supportChan
-	return support.Player, nil
+
+	if support.SupportedPlayer != nil {
+		return *support.SupportedPlayer, nil
+	} else {
+		return "", nil
+	}
 }
