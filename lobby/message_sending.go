@@ -29,7 +29,9 @@ func (player *Player) sendLobbyJoinedMsg(lobby *Lobby) error {
 		player.lock.RUnlock()
 	}
 
-	err := player.send(message{lobbyJoinedMsgID: lobbyJoinedMsg{PlayerStatuses: statuses}})
+	gameIDs := lobby.game.PlayerIDs()
+
+	err := player.send(message{lobbyJoinedMsgID: lobbyJoinedMsg{GameIDs: gameIDs, PlayerStatuses: statuses}})
 	if err != nil {
 		return fmt.Errorf("failed to send lobby joined message to player %s: %w", player.String(), err)
 	}
