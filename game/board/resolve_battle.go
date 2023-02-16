@@ -16,7 +16,7 @@ func (board Board) resolveBattle(battle Battle) (retreats []Order) {
 }
 
 // Resolves effects on the board from the given border battle.
-// Assumes that the battle consists of exactly 2 results, for each of the areas in the battle,
+// Assumes that the battle consists of exactly 2 results, for each of the regions in the battle,
 // that each result is tied to a move order, and that the battle had at least one winner.
 // Returns any retreating move orders that could not be resolved.
 func (board Board) resolveBorderBattle(battle Battle) (retreats []Order) {
@@ -43,8 +43,8 @@ func (board Board) resolveBorderBattle(battle Battle) (retreats []Order) {
 
 	for _, move := range []Order{move1, move2} {
 		if move.Player == winner {
-			// If destination area is uncontrolled, the player must win a singleplayer battle there before taking control.
-			if board.Areas[move.To].IsControlled() {
+			// If destination region is uncontrolled, the player must win a singleplayer battle there before taking control.
+			if board.Regions[move.To].IsControlled() {
 				board.succeedMove(move)
 			}
 		} else {
@@ -56,7 +56,7 @@ func (board Board) resolveBorderBattle(battle Battle) (retreats []Order) {
 	return nil
 }
 
-// Resolves effects on the board from the given singleplayer battle (player vs. neutral area).
+// Resolves effects on the board from the given singleplayer battle (player vs. neutral region).
 // Assumes that the battle has a single result, with a move order tied to it.
 // Returns the move order in a list if it fails retreat, or nil otherwise.
 func (board Board) resolveSingleplayerBattle(battle Battle) (retreats []Order) {
@@ -85,10 +85,10 @@ func (board Board) resolveMultiplayerBattle(battle Battle) (retreats []Order) {
 	tie := len(winners) != 1
 
 	for _, result := range battle.Results {
-		// If the result has a DefenderArea, it is the result of the area's defender.
+		// If the result has a DefenderRegion, it is the result of the region's defender.
 		// If the defender won, nothing changes for them.
 		// If an attacker won, changes to the defender will be handled by calling succeedMove.
-		if result.DefenderArea != "" {
+		if result.DefenderRegion != "" {
 			continue
 		}
 
@@ -109,7 +109,7 @@ func (board Board) resolveMultiplayerBattle(battle Battle) (retreats []Order) {
 			continue
 		}
 
-		if board.Areas[move.To].IsControlled() {
+		if board.Regions[move.To].IsControlled() {
 			board.succeedMove(move)
 		}
 	}

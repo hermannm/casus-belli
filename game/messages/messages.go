@@ -28,10 +28,10 @@ type errorMsg struct {
 	Error string `json:"error"`
 }
 
-// Message sent from server when asking a supporting player who to support in an embattled area.
+// Message sent from server when asking a supporting player who to support in an embattled region.
 type supportRequestMsg struct {
-	// The area from which support is asked, where the asked player should have a support order.
-	SupportingArea string `json:"supportingArea"`
+	// The region from which support is asked, where the asked player should have a support order.
+	SupportingRegion string `json:"supportingRegion"`
 
 	// List of possible players to support in the battle.
 	SupportablePlayers []string `json:"supportablePlayers"`
@@ -74,10 +74,10 @@ type submitOrdersMsg struct {
 // Message sent from client when declaring who to support with their support order.
 // Forwarded by server to all clients to show who were given support.
 type giveSupportMsg struct {
-	// Name of the area where the supporting player has their support order.
-	SupportingArea string `json:"supportingArea"`
+	// Name of the region where the supporting player has their support order.
+	SupportingRegion string `json:"supportingRegion"`
 
-	// ID of the player in the destination area to support.
+	// ID of the player in the destination region to support.
 	// Nil if none were supported.
 	SupportedPlayer *string `json:"supportedPlayer"`
 }
@@ -92,10 +92,10 @@ type winterVoteMsg struct {
 // Message passed from the client with the swordMsg to declare where they want to use it.
 // Used for the throne expansion.
 type swordMsg struct {
-	// Name of the area in which the player wants to use the sword in battle.
-	Area string `json:"area"`
+	// Name of the region in which the player wants to use the sword in battle.
+	Region string `json:"region"`
 
-	// Index of the battle in which to use the sword, in case of several battles in the area.
+	// Index of the battle in which to use the sword, in case of several battles in the region.
 	BattleIndex int `json:"battleIndex"`
 }
 

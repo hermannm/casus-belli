@@ -31,7 +31,7 @@ func (board Board) Resolve(round Round, messenger Messenger) (battles []Battle, 
 func (board Board) resolveOrders(orders []Order, messenger Messenger) []Battle {
 	battles := make([]Battle, 0)
 
-	board.populateAreaOrders(orders)
+	board.populateRegionOrders(orders)
 
 	dangerZoneBattles := board.crossDangerZones()
 	battles = append(battles, dangerZoneBattles...)
@@ -49,9 +49,9 @@ func (board Board) resolveOrders(orders []Order, messenger Messenger) []Battle {
 	return battles
 }
 
-// Takes a list of orders, and populates the appropriate areas on the board with those orders.
+// Takes a list of orders, and populates the appropriate regions on the board with those orders.
 // Does not add support orders that have moves against them, as that cancels them.
-func (board Board) populateAreaOrders(orders []Order) {
+func (board Board) populateRegionOrders(orders []Order) {
 	// First adds all orders except supports, so that supports can check IncomingMoves.
 	for _, order := range orders {
 		if order.Type == OrderSupport {
@@ -61,9 +61,9 @@ func (board Board) populateAreaOrders(orders []Order) {
 		board.addOrder(order)
 	}
 
-	// Then adds all supports, except in those areas that are attacked.
+	// Then adds all supports, except in those regions that are attacked.
 	for _, order := range orders {
-		if order.Type != OrderSupport || len(board.Areas[order.From].IncomingMoves) > 0 {
+		if order.Type != OrderSupport || len(board.Regions[order.From].IncomingMoves) > 0 {
 			continue
 		}
 
@@ -93,32 +93,32 @@ OuterLoop:
 				retreats[retreat.From] = retreat
 			}
 
-			for _, area := range battle.areaNames() {
-				delete(processing, area)
+			for _, region := range battle.regionNames() {
+				delete(processing, region)
 			}
 		default:
 		BoardLoop:
-			for areaName, area := range board.Areas {
-				retreat, hasRetreat := retreats[areaName]
+			for regionName, region := range board.Regions {
+				retreat, hasRetreat := retreats[regionName]
 
-				_, isProcessed := processed[areaName]
+				_, isProcessed := processed[regionName]
 				if isProcessed && !hasRetreat {
 					continue BoardLoop
 				}
 
-				_, isProcessing := processing[areaName]
+				_, isProcessing := processing[regionName]
 				if isProcessing {
 					continue BoardLoop
 				}
 
-				for _, move := range area.IncomingMoves {
-					transportAttacked, dangerZones := board.resolveTransports(move, area)
+				for _, move := range region.IncomingMoves {
+					transportAttacked, dangerZones := board.resolveTransports(move, region)
 
 					if transportAttacked {
 						if allowPlayerConflict {
 							continue BoardLoop
 						} else {
-							processed[areaName] = struct{}{}
+							processed[regionName] = struct{}{}
 						}
 					} else if len(dangerZones) > 0 {
 						survived, dangerZoneCrossings := move.crossDangerZones(dangerZones)
@@ -134,19 +134,19 @@ OuterLoop:
 					}
 				}
 
-				moveCount := len(area.IncomingMoves)
+				moveCount := len(region.IncomingMoves)
 				if moveCount == 0 {
-					if hasRetreat && area.IsEmpty() {
-						board.Areas[areaName] = area.setUnit(retreat.Unit)
-						delete(retreats, areaName)
+					if hasRetreat && region.IsEmpty() {
+						board.Regions[regionName] = region.setUnit(retreat.Unit)
+						delete(retreats, regionName)
 					}
 
-					processed[area.Name] = struct{}{}
+					processed[region.Name] = struct{}{}
 					continue BoardLoop
 				}
 
-				board.resolveAreaMoves(
-					area,
+				board.resolveRegionMoves(
+					region,
 					moveCount,
 					allowPlayerConflict,
 					battleReceiver,
@@ -171,15 +171,15 @@ OuterLoop:
 func (board Board) crossDangerZones() []Battle {
 	battles := make([]Battle, 0)
 
-	for areaName, area := range board.Areas {
-		order := area.Order
+	for regionName, region := range board.Regions {
+		order := region.Order
 
 		if order.Type != OrderMove && order.Type != OrderSupport {
 			continue
 		}
 
 		// Checks if the order tries to cross a danger zone.
-		destination, adjacent := area.GetNeighbor(order.To, order.Via)
+		destination, adjacent := region.GetNeighbor(order.To, order.Via)
 		if !adjacent || destination.DangerZone == "" {
 			continue
 		}
@@ -192,7 +192,7 @@ func (board Board) crossDangerZones() []Battle {
 		// If support fails crossing, only the order fails.
 		if !survived {
 			if order.Type == OrderMove {
-				board.Areas[areaName] = area.setUnit(Unit{})
+				board.Regions[regionName] = region.setUnit(Unit{})
 				board.removeMove(order)
 			} else {
 				board.removeSupport(order)
@@ -203,20 +203,20 @@ func (board Board) crossDangerZones() []Battle {
 	return battles
 }
 
-// Goes through areas with siege orders, and updates the area following the siege.
+// Goes through regions with siege orders, and updates the region following the siege.
 func (board Board) resolveSieges() {
-	for areaName, area := range board.Areas {
-		if area.Order.IsNone() || area.Order.Type != OrderBesiege {
+	for regionName, region := range board.Regions {
+		if region.Order.IsNone() || region.Order.Type != OrderBesiege {
 			continue
 		}
 
-		area.SiegeCount++
-		if area.SiegeCount == 2 {
-			area.ControllingPlayer = area.Unit.Player
-			area.SiegeCount = 0
+		region.SiegeCount++
+		if region.SiegeCount == 2 {
+			region.ControllingPlayer = region.Unit.Player
+			region.SiegeCount = 0
 		}
 
-		board.Areas[areaName] = area
+		board.Regions[regionName] = region
 	}
 }
 
@@ -226,9 +226,9 @@ func (board Board) resolveSieges() {
 func (board Board) resolveWinner() string {
 	castleCount := make(map[string]int)
 
-	for _, area := range board.Areas {
-		if area.Castle && area.IsControlled() {
-			castleCount[area.ControllingPlayer]++
+	for _, region := range board.Regions {
+		if region.Castle && region.IsControlled() {
+			castleCount[region.ControllingPlayer]++
 		}
 	}
 
@@ -257,37 +257,37 @@ func (board Board) resolveWinter(orders []Order) {
 	for _, order := range orders {
 		switch order.Type {
 		case OrderBuild:
-			from := board.Areas[order.From]
+			from := board.Regions[order.From]
 			from.Unit = Unit{
 				Player: order.Player,
 				Type:   order.Build,
 			}
-			board.Areas[order.From] = from
+			board.Regions[order.From] = from
 		case OrderMove:
-			from := board.Areas[order.From]
-			to := board.Areas[order.To]
+			from := board.Regions[order.From]
+			to := board.Regions[order.To]
 
 			to.Unit = from.Unit
 			from.Unit = Unit{}
 
-			board.Areas[order.From] = from
-			board.Areas[order.To] = to
+			board.Regions[order.From] = from
+			board.Regions[order.To] = to
 		}
 	}
 }
 
 // Cleans up remaining order references on the board after the round.
 func (board Board) cleanup() {
-	for areaName, area := range board.Areas {
-		area.Order = Order{}
+	for regionName, region := range board.Regions {
+		region.Order = Order{}
 
-		if len(area.IncomingMoves) > 0 {
-			area.IncomingMoves = make([]Order, 0)
+		if len(region.IncomingMoves) > 0 {
+			region.IncomingMoves = make([]Order, 0)
 		}
-		if len(area.IncomingSupports) > 0 {
-			area.IncomingSupports = make([]Order, 0)
+		if len(region.IncomingSupports) > 0 {
+			region.IncomingSupports = make([]Order, 0)
 		}
 
-		board.Areas[areaName] = area
+		board.Regions[regionName] = region
 	}
 }

@@ -17,15 +17,15 @@ func NewMessenger(sender Sender) Messenger {
 	}
 }
 
-func (messenger Messenger) AddReceiver(playerID string, areaNames []string) (Receiver, error) {
+func (messenger Messenger) AddReceiver(playerID string, regionNames []string) (Receiver, error) {
 	_, exists := messenger.receivers[playerID]
 	if exists {
 		return Receiver{}, fmt.Errorf("message receiver for player id %s already exists", playerID)
 	}
 
 	supportChans := make(map[string]chan giveSupportMsg)
-	for _, areaName := range areaNames {
-		supportChans[areaName] = make(chan giveSupportMsg)
+	for _, regionName := range regionNames {
+		supportChans[regionName] = make(chan giveSupportMsg)
 	}
 
 	receiver := Receiver{

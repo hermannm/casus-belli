@@ -16,15 +16,15 @@ var boards embed.FS
 
 // Utility type for json unmarshaling.
 type jsonBoard struct {
-	Name               string                `json:"name"`
-	WinningCastleCount int                   `json:"winningCastleCount"`
-	Nations            map[string][]landArea `json:"nations"`
-	Seas               []seaArea             `json:"seas"`
-	Neighbors          []neighbor            `json:"neighbors"`
+	Name               string                  `json:"name"`
+	WinningCastleCount int                     `json:"winningCastleCount"`
+	Nations            map[string][]landRegion `json:"nations"`
+	Seas               []seaRegion             `json:"seas"`
+	Neighbors          []neighbor              `json:"neighbors"`
 }
 
 // Utility type for json unmarshaling.
-type landArea struct {
+type landRegion struct {
 	Name       string `json:"name"`
 	Forest     bool   `json:"forest"`
 	Castle     bool   `json:"castle"`
@@ -32,14 +32,14 @@ type landArea struct {
 }
 
 // Utility type for json unmarshaling.
-type seaArea struct {
+type seaRegion struct {
 	Name string `json:"name"`
 }
 
 // Utility type for json unmarshaling.
 type neighbor struct {
-	Area1      string `json:"area1"`
-	Area2      string `json:"area2"`
+	Region1    string `json:"region1"`
+	Region2    string `json:"region2"`
 	River      bool   `json:"river"`
 	Cliffs     bool   `json:"cliffs"`
 	DangerZone string `json:"dangerZone"`
@@ -64,62 +64,62 @@ func ReadBoard(boardID string) (board.Board, error) {
 	}
 
 	brd := board.Board{
-		Areas:              make(map[string]board.Area),
+		Regions:            make(map[string]board.Region),
 		Name:               jsonBoard.Name,
 		WinningCastleCount: jsonBoard.WinningCastleCount,
 	}
 
-	for nation, areas := range jsonBoard.Nations {
-		for _, landArea := range areas {
-			area := board.Area{
-				Name:              landArea.Name,
+	for nation, regions := range jsonBoard.Nations {
+		for _, landRegion := range regions {
+			region := board.Region{
+				Name:              landRegion.Name,
 				Nation:            nation,
-				ControllingPlayer: landArea.HomePlayer,
-				HomePlayer:        landArea.HomePlayer,
-				Forest:            landArea.Forest,
-				Castle:            landArea.Castle,
+				ControllingPlayer: landRegion.HomePlayer,
+				HomePlayer:        landRegion.HomePlayer,
+				Forest:            landRegion.Forest,
+				Castle:            landRegion.Castle,
 				Neighbors:         make([]board.Neighbor, 0),
 				IncomingMoves:     make([]board.Order, 0),
 				IncomingSupports:  make([]board.Order, 0),
 			}
 
-			brd.Areas[area.Name] = area
+			brd.Regions[region.Name] = region
 		}
 	}
 
 	for _, sea := range jsonBoard.Seas {
-		area := board.Area{
+		region := board.Region{
 			Name:             sea.Name,
 			Neighbors:        make([]board.Neighbor, 0),
 			IncomingMoves:    make([]board.Order, 0),
 			IncomingSupports: make([]board.Order, 0),
 		}
 
-		brd.Areas[area.Name] = area
+		brd.Regions[region.Name] = region
 	}
 
 	for _, neighbor := range jsonBoard.Neighbors {
-		area1, ok1 := brd.Areas[neighbor.Area1]
-		area2, ok2 := brd.Areas[neighbor.Area2]
+		region1, ok1 := brd.Regions[neighbor.Region1]
+		region2, ok2 := brd.Regions[neighbor.Region2]
 
 		if !ok1 || !ok2 {
 			return board.Board{}, fmt.Errorf(
 				"error in board config: neighbor relation %s <-> %s",
-				neighbor.Area1,
-				neighbor.Area2,
+				neighbor.Region1,
+				neighbor.Region2,
 			)
 		}
 
-		area1.Neighbors = append(area1.Neighbors, board.Neighbor{
-			Name:        area2.Name,
-			AcrossWater: neighbor.River || (area1.Sea && !area2.Sea),
+		region1.Neighbors = append(region1.Neighbors, board.Neighbor{
+			Name:        region2.Name,
+			AcrossWater: neighbor.River || (region1.Sea && !region2.Sea),
 			Cliffs:      neighbor.Cliffs,
 			DangerZone:  neighbor.DangerZone,
 		})
 
-		area2.Neighbors = append(area2.Neighbors, board.Neighbor{
-			Name:        area1.Name,
-			AcrossWater: neighbor.River || (area2.Sea && !area1.Sea),
+		region2.Neighbors = append(region2.Neighbors, board.Neighbor{
+			Name:        region1.Name,
+			AcrossWater: neighbor.River || (region2.Sea && !region1.Sea),
 			Cliffs:      neighbor.Cliffs,
 			DangerZone:  neighbor.DangerZone,
 		})

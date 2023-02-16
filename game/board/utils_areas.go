@@ -1,23 +1,23 @@
 package board
 
-// Checks whether the area contains a unit.
-func (area Area) IsEmpty() bool {
-	return area.Unit.Type == ""
+// Checks whether the region contains a unit.
+func (region Region) IsEmpty() bool {
+	return region.Unit.Type == ""
 }
 
-// Checks whether the area is controlled by a player.
-func (area Area) IsControlled() bool {
-	return area.ControllingPlayer != ""
+// Checks whether the region is controlled by a player.
+func (region Region) IsControlled() bool {
+	return region.ControllingPlayer != ""
 }
 
-// Returns an area's neighbor of the given name, and whether it was found.
-// If the area has several neighbor relations to the area, returns the one matching the provided 'via' string
+// Returns an region's neighbor of the given name, and whether it was found.
+// If the region has several neighbor relations to the region, returns the one matching the provided 'via' string
 // (currently the name of the neighbor relation's danger zone).
-func (area Area) GetNeighbor(neighborName string, via string) (Neighbor, bool) {
+func (region Region) GetNeighbor(neighborName string, via string) (Neighbor, bool) {
 	neighbor := Neighbor{}
 	hasNeighbor := false
 
-	for _, otherNeighbor := range area.Neighbors {
+	for _, otherNeighbor := range region.Neighbors {
 		if neighborName != otherNeighbor.Name {
 			continue
 		}
@@ -33,9 +33,9 @@ func (area Area) GetNeighbor(neighborName string, via string) (Neighbor, bool) {
 	return neighbor, hasNeighbor
 }
 
-// Returns whether the area is adjacent to an area of the given name.
-func (area Area) HasNeighbor(neighborName string) bool {
-	for _, neighbor := range area.Neighbors {
+// Returns whether the region is adjacent to an region of the given name.
+func (region Region) HasNeighbor(neighborName string) bool {
+	for _, neighbor := range region.Neighbors {
 		if neighbor.Name == neighborName {
 			return true
 		}
@@ -44,17 +44,17 @@ func (area Area) HasNeighbor(neighborName string) bool {
 	return false
 }
 
-// Returns whether the area is a land area that borders the sea.
-// Takes the board in order to go through the area's neighbor areas.
-func (area Area) IsCoast(board Board) bool {
-	if area.Sea {
+// Returns whether the region is a land region that borders the sea.
+// Takes the board in order to go through the region's neighbor regions.
+func (region Region) IsCoast(board Board) bool {
+	if region.Sea {
 		return false
 	}
 
-	for _, neighbor := range area.Neighbors {
-		neighborArea := board.Areas[neighbor.Name]
+	for _, neighbor := range region.Neighbors {
+		neighborRegion := board.Regions[neighbor.Name]
 
-		if neighborArea.Sea {
+		if neighborRegion.Sea {
 			return true
 		}
 	}
@@ -62,20 +62,20 @@ func (area Area) IsCoast(board Board) bool {
 	return false
 }
 
-// Returns a copy of the area, with its unit set to the given unit.
-func (area Area) setUnit(unit Unit) Area {
-	area.Unit = unit
-	return area
+// Returns a copy of the region, with its unit set to the given unit.
+func (region Region) setUnit(unit Unit) Region {
+	region.Unit = unit
+	return region
 }
 
-// Returns a copy of the area, with control set to the given player.
-func (area Area) setControl(player string) Area {
-	area.ControllingPlayer = player
-	return area
+// Returns a copy of the region, with control set to the given player.
+func (region Region) setControl(player string) Region {
+	region.ControllingPlayer = player
+	return region
 }
 
-// Returns a copy of the area, with its order field set to the given order.
-func (area Area) setOrder(order Order) Area {
-	area.Order = order
-	return area
+// Returns a copy of the region, with its order field set to the given order.
+func (region Region) setOrder(order Order) Region {
+	region.Order = order
+	return region
 }

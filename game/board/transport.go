@@ -3,12 +3,12 @@ package board
 // Resolves transport of the given move to the given destination if it requires transport.
 // If transported, returns whether the transport path is attacked,
 // and a list of danger zones that the order must cross to transport, if any.
-func (board Board) resolveTransports(move Order, destination Area) (transportAttacked bool, dangerZones []string) {
+func (board Board) resolveTransports(move Order, destination Region) (transportAttacked bool, dangerZones []string) {
 	if destination.HasNeighbor(move.From) {
 		return false, nil
 	}
 
-	from := board.Areas[move.From]
+	from := board.Regions[move.From]
 	if from.Sea {
 		return false, nil
 	}
@@ -23,19 +23,19 @@ func (board Board) resolveTransports(move Order, destination Area) (transportAtt
 	return transportAttacked, dangerZones
 }
 
-// Checks if a unit from the area can be transported to an area with the same name as the given destination.
+// Checks if a unit from the region can be transported to an region with the same name as the given destination.
 // Returns whether the unit can be transported, and if so, whether the transports are attacked,
 // as well as any potential danger zones the transported unit must cross.
-func (area Area) CanTransportTo(destination string, board Board) (
+func (region Region) CanTransportTo(destination string, board Board) (
 	canTransport bool,
 	transportAttacked bool,
 	dangerZones []string,
 ) {
-	if area.IsEmpty() || area.Unit.Type == UnitShip {
+	if region.IsEmpty() || region.Unit.Type == UnitShip {
 		return false, false, nil
 	}
 
-	return area.canTransportTo(destination, board, make(map[string]struct{}))
+	return region.canTransportTo(destination, board, make(map[string]struct{}))
 }
 
 // Stores status of a path of transport orders to destination.
@@ -44,28 +44,28 @@ type transportPath struct {
 	dangerZones []string
 }
 
-// Recursively checks neighbors of the area for available transports to the destination.
-// Takes a map of area names to exclude.
-func (area Area) canTransportTo(destination string, board Board, exclude map[string]struct{}) (
+// Recursively checks neighbors of the region for available transports to the destination.
+// Takes a map of region names to exclude.
+func (region Region) canTransportTo(destination string, board Board, exclude map[string]struct{}) (
 	canTransport bool,
 	transportAttacked bool,
 	dangerZones []string,
 ) {
-	transportingNeighbors, newExclude := area.transportingNeighbors(board, exclude)
+	transportingNeighbors, newExclude := region.transportingNeighbors(board, exclude)
 
 	// Declares a list of potential transport paths to destination, in order to compare them.
 	var paths []transportPath
 
-	// Goes through the area's transporting neighbors to find potential transport paths through them.
+	// Goes through the region's transporting neighbors to find potential transport paths through them.
 	for _, transportNeighbor := range transportingNeighbors {
-		transportArea := board.Areas[transportNeighbor.Name]
+		transportRegion := board.Regions[transportNeighbor.Name]
 
-		attacked := len(transportArea.IncomingMoves) > 0
-		destAdjacent, destDangerZone := area.findDestination(destination)
+		attacked := len(transportRegion.IncomingMoves) > 0
+		destAdjacent, destDangerZone := region.findDestination(destination)
 
 		// Recursively calls this function on the transporting neighbor,
 		// in order to find potential transport chains.
-		nextCanTransport, nextTransportAttacked, nextDangerZones := transportArea.canTransportTo(
+		nextCanTransport, nextTransportAttacked, nextDangerZones := transportRegion.canTransportTo(
 			destination,
 			board,
 			newExclude,
@@ -98,10 +98,10 @@ func (area Area) canTransportTo(destination string, board Board, exclude map[str
 	return canTransport, bestPath.attacked, bestPath.dangerZones
 }
 
-// Finds the given area's friendly neighbors that offer transports.
-// Takes a map of area names to exclude,
+// Finds the given region's friendly neighbors that offer transports.
+// Takes a map of region names to exclude,
 // and returns a copy of it with the transporting neighbors added.
-func (area Area) transportingNeighbors(board Board, exclude map[string]struct{}) (
+func (region Region) transportingNeighbors(board Board, exclude map[string]struct{}) (
 	transports []Neighbor,
 	newExclude map[string]struct{},
 ) {
@@ -112,17 +112,17 @@ func (area Area) transportingNeighbors(board Board, exclude map[string]struct{})
 		newExclude[excluded] = struct{}{}
 	}
 
-	if area.IsEmpty() {
+	if region.IsEmpty() {
 		return transports, newExclude
 	}
 
-	for _, neighbor := range area.Neighbors {
-		neighborArea := board.Areas[neighbor.Name]
+	for _, neighbor := range region.Neighbors {
+		neighborRegion := board.Regions[neighbor.Name]
 		_, excluded := exclude[neighbor.Name]
 
 		if excluded ||
-			neighborArea.Order.Type != OrderTransport ||
-			neighborArea.Unit.Player != area.Unit.Player {
+			neighborRegion.Order.Type != OrderTransport ||
+			neighborRegion.Unit.Player != region.Unit.Player {
 			continue
 		}
 
@@ -133,10 +133,10 @@ func (area Area) transportingNeighbors(board Board, exclude map[string]struct{})
 	return transports, newExclude
 }
 
-// Returns whether the area is adjacent to the given destination,
+// Returns whether the region is adjacent to the given destination,
 // and whether a move to it must pass through a danger zone.
-func (area Area) findDestination(destination string) (adjacent bool, dangerZone string) {
-	for _, neighbor := range area.Neighbors {
+func (region Region) findDestination(destination string) (adjacent bool, dangerZone string) {
+	for _, neighbor := range region.Neighbors {
 		if neighbor.Name == destination {
 			// If destination is already found to be adjacent but only through a danger zone,
 			// checks if there is a different path to it without a danger zone.

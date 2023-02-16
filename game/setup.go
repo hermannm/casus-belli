@@ -21,7 +21,7 @@ type GameOptions struct {
 	ThroneExpansion bool // Whether the game has the "Raven, Sword and Throne" expansion enabled.
 }
 
-// Constructs a game instance. Initializes player slots for each area home tag on the given board.
+// Constructs a game instance. Initializes player slots for each region home tag on the given board.
 func New(boardName string, options GameOptions, msgSender messages.Sender) (*Game, error) {
 	brd, err := boardsetup.ReadBoard(boardName)
 	if err != nil {
@@ -56,12 +56,12 @@ func (game Game) Name() string {
 // Creates a new message receiver for the given player tag, and adds it to the game.
 // Returns error if tag is invalid or already taken.
 func (game Game) AddPlayer(playerID string) (lobby.GameMessageReceiver, error) {
-	areaNames := make([]string, 0)
-	for _, area := range game.board.Areas {
-		areaNames = append(areaNames, area.Name)
+	regionNames := make([]string, 0)
+	for _, region := range game.board.Regions {
+		regionNames = append(regionNames, region.Name)
 	}
 
-	receiver, err := game.messenger.AddReceiver(playerID, areaNames)
+	receiver, err := game.messenger.AddReceiver(playerID, regionNames)
 	if err != nil {
 		return nil, fmt.Errorf("failed to add player: %w", err)
 	}
@@ -72,8 +72,8 @@ func playerIDsFromBoard(brd board.Board) []string {
 	ids := make([]string, 0)
 
 OuterLoop:
-	for _, area := range brd.Areas {
-		potentialID := area.HomePlayer
+	for _, region := range brd.Regions {
+		potentialID := region.HomePlayer
 		if potentialID == "" {
 			continue
 		}

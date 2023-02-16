@@ -8,24 +8,24 @@ import (
 	"time"
 )
 
-// Returns modifiers (including dice roll) of defending unit in the area.
-// Assumes that the area is not empty.
-func (area Area) defenseModifiers() []Modifier {
+// Returns modifiers (including dice roll) of defending unit in the region.
+// Assumes that the region is not empty.
+func (region Region) defenseModifiers() []Modifier {
 	mods := []Modifier{}
-	mods = appendUnitMod(mods, area.Unit.Type)
+	mods = appendUnitMod(mods, region.Unit.Type)
 	mods = append(mods, Modifier{Type: ModifierDice, Value: rollDice()})
 	return mods
 }
 
-// Returns modifiers (including dice roll) of move order attacking an area.
+// Returns modifiers (including dice roll) of move order attacking an region.
 // Other parameters affect which modifiers are added:
 // otherAttackers for whether there are other moves involved in this battle,
 // borderBattle for whether this is a battle between two moves moving against each other,
-// includeDefender for whether a potential defending unit in the area should be included.
-func (move Order) attackModifiers(area Area, otherAttackers bool, borderBattle bool, includeDefender bool) []Modifier {
+// includeDefender for whether a potential defending unit in the region should be included.
+func (move Order) attackModifiers(region Region, otherAttackers bool, borderBattle bool, includeDefender bool) []Modifier {
 	mods := []Modifier{}
 
-	neighbor, adjacent := area.GetNeighbor(move.From, move.Via)
+	neighbor, adjacent := region.GetNeighbor(move.From, move.Via)
 
 	// Assumes danger zone checks have been made before battle,
 	// and thus adds surprise modifier to attacker coming across such zones.
@@ -34,28 +34,28 @@ func (move Order) attackModifiers(area Area, otherAttackers bool, borderBattle b
 	}
 
 	// Terrain modifiers should be added if:
-	// - Area is uncontrolled, and this unit is the only attacker.
+	// - Region is uncontrolled, and this unit is the only attacker.
 	// - Destination is controlled and defended, and this is not a border conflict.
-	if (!area.IsControlled() && !otherAttackers) ||
-		(area.IsControlled() && !area.IsEmpty() && includeDefender && !borderBattle) {
+	if (!region.IsControlled() && !otherAttackers) ||
+		(region.IsControlled() && !region.IsEmpty() && includeDefender && !borderBattle) {
 
-		if area.Forest {
+		if region.Forest {
 			mods = append(mods, Modifier{Type: ModifierForest, Value: -1})
 		}
 
-		if area.Castle {
+		if region.Castle {
 			mods = append(mods, Modifier{Type: ModifierCastle, Value: -1})
 		}
 
-		// If origin area is not adjacent to destination, the move is transported and takes water penalty.
+		// If origin region is not adjacent to destination, the move is transported and takes water penalty.
 		// Moves across rivers or from sea to land also take this penalty.
 		if !adjacent || neighbor.AcrossWater {
 			mods = append(mods, Modifier{Type: ModifierWater, Value: -1})
 		}
 	}
 
-	// Catapults get a bonus only in attacks on castle areas.
-	if move.Unit.Type == UnitCatapult && area.Castle {
+	// Catapults get a bonus only in attacks on castle regions.
+	if move.Unit.Type == UnitCatapult && region.Castle {
 		mods = append(mods, Modifier{Type: ModifierUnit, Value: +1})
 	} else {
 		mods = appendUnitMod(mods, move.Unit.Type)
@@ -89,31 +89,31 @@ type supportDeclaration struct {
 	toPlayer   string
 }
 
-// Calls support from support orders to the given area.
+// Calls support from support orders to the given region.
 // Appends support modifiers to receiving players' results in the given map,
-// but only if the result is tied to a move order to the area.
-// Calls support to defender in the area if includeDefender is true.
-func appendSupportMods(results map[string]Result, area Area, includeDefender bool, messenger Messenger) {
-	supports := area.IncomingSupports
+// but only if the result is tied to a move order to the region.
+// Calls support to defender in the region if includeDefender is true.
+func appendSupportMods(results map[string]Result, region Region, includeDefender bool, messenger Messenger) {
+	supports := region.IncomingSupports
 	supportCount := len(supports)
 	supportReceiver := make(chan supportDeclaration, supportCount)
 	var wg sync.WaitGroup
 	wg.Add(supportCount)
 
-	// Finds the moves going to this area.
+	// Finds the moves going to this region.
 	moves := []Order{}
 	for _, result := range results {
-		if result.DefenderArea != "" {
+		if result.DefenderRegion != "" {
 			continue
 		}
-		if result.Move.To == area.Name {
+		if result.Move.To == region.Name {
 			moves = append(moves, result.Move)
 		}
 	}
 
-	// Starts a goroutine to call support for each support order to the area.
+	// Starts a goroutine to call support for each support order to the region.
 	for _, support := range supports {
-		go callSupport(support, area, moves, includeDefender, supportReceiver, &wg, messenger)
+		go callSupport(support, region, moves, includeDefender, supportReceiver, &wg, messenger)
 	}
 
 	// Waits until all support calls are done, then closes the channel to range over it.
@@ -140,7 +140,7 @@ func appendSupportMods(results map[string]Result, area Area, includeDefender boo
 // If support is not given to any player in the battle, the to field on the declaration is "".
 func callSupport(
 	support Order,
-	area Area,
+	region Region,
 	moves []Order,
 	includeDefender bool,
 	supportReceiver chan<- supportDeclaration,
@@ -149,7 +149,7 @@ func callSupport(
 ) {
 	defer wg.Done()
 
-	if includeDefender && !area.IsEmpty() && area.Unit.Player == support.Player {
+	if includeDefender && !region.IsEmpty() && region.Unit.Player == support.Player {
 		supportReceiver <- supportDeclaration{fromPlayer: support.Player, toPlayer: support.Player}
 		return
 	}
@@ -165,18 +165,18 @@ func callSupport(
 	for _, move := range moves {
 		battlers = append(battlers, move.Player)
 	}
-	if includeDefender && !area.IsEmpty() {
-		battlers = append(battlers, area.Unit.Player)
+	if includeDefender && !region.IsEmpty() {
+		battlers = append(battlers, region.Unit.Player)
 	}
 
-	err := messenger.SendSupportRequest(support.Player, area.Name, battlers)
+	err := messenger.SendSupportRequest(support.Player, region.Name, battlers)
 	if err != nil {
 		log.Println(fmt.Errorf("failed to send support request: %w", err))
 		supportReceiver <- supportDeclaration{fromPlayer: support.Player, toPlayer: ""}
 		return
 	}
 
-	supported, err := messenger.ReceiveSupport(support.Player, area.Name)
+	supported, err := messenger.ReceiveSupport(support.Player, region.Name)
 	if err != nil {
 		log.Println(fmt.Errorf("failed to receive support declaration from player %s: %w", support.Player, err))
 		supportReceiver <- supportDeclaration{fromPlayer: support.Player, toPlayer: ""}

@@ -9,12 +9,12 @@ import (
 // Returns an empty, limited example board for testing.
 func NewMockBoard() board.Board {
 	brd := board.Board{
-		Areas:              make(map[string]board.Area),
+		Regions:            make(map[string]board.Region),
 		Name:               "Mock board",
 		WinningCastleCount: 5,
 	}
 
-	areas := []board.Area{
+	regions := []board.Region{
 		{Name: "Lusía", Castle: true},
 		{Name: "Lomone", Forest: true},
 		{Name: "Limbol", Forest: true},
@@ -98,45 +98,45 @@ func NewMockBoard() board.Board {
 		{a1: "Mare Unna", a2: "Mare Bøso"},
 	}
 
-	for _, area := range areas {
-		area.Neighbors = make([]board.Neighbor, 0)
-		area.IncomingMoves = make([]board.Order, 0)
-		area.IncomingSupports = make([]board.Order, 0)
-		brd.Areas[area.Name] = area
+	for _, region := range regions {
+		region.Neighbors = make([]board.Neighbor, 0)
+		region.IncomingMoves = make([]board.Order, 0)
+		region.IncomingSupports = make([]board.Order, 0)
+		brd.Regions[region.Name] = region
 	}
 
 	for _, neighbor := range neighbors {
-		area1 := brd.Areas[neighbor.a1]
-		area2 := brd.Areas[neighbor.a2]
+		region1 := brd.Regions[neighbor.a1]
+		region2 := brd.Regions[neighbor.a2]
 
-		area1.Neighbors = append(area1.Neighbors, board.Neighbor{
+		region1.Neighbors = append(region1.Neighbors, board.Neighbor{
 			Name:        neighbor.a2,
-			AcrossWater: neighbor.river || (area1.Sea && !area2.Sea),
+			AcrossWater: neighbor.river || (region1.Sea && !region2.Sea),
 			Cliffs:      neighbor.cliffs,
 			DangerZone:  neighbor.dangerZone,
 		})
-		brd.Areas[neighbor.a1] = area1
+		brd.Regions[neighbor.a1] = region1
 
-		area2.Neighbors = append(area2.Neighbors, board.Neighbor{
+		region2.Neighbors = append(region2.Neighbors, board.Neighbor{
 			Name:        neighbor.a1,
-			AcrossWater: neighbor.river || (area2.Sea && !area1.Sea),
+			AcrossWater: neighbor.river || (region2.Sea && !region1.Sea),
 			Cliffs:      neighbor.cliffs,
 			DangerZone:  neighbor.dangerZone,
 		})
-		brd.Areas[neighbor.a2] = area2
+		brd.Regions[neighbor.a2] = region2
 	}
 
 	return brd
 }
 
 // Utility function for placing units on the given board.
-// Takes a map of area names to units to be placed there.
+// Takes a map of region names to units to be placed there.
 func PlaceUnits(units map[string]board.Unit, board board.Board) {
-	for areaName, unit := range units {
-		area := board.Areas[areaName]
-		area.Unit = unit
-		area.ControllingPlayer = unit.Player
-		board.Areas[areaName] = area
+	for regionName, unit := range units {
+		region := board.Regions[regionName]
+		region.Unit = unit
+		region.ControllingPlayer = unit.Player
+		board.Regions[regionName] = region
 	}
 }
 
@@ -144,13 +144,13 @@ func PlaceUnits(units map[string]board.Unit, board board.Board) {
 // Also sets the player field on each order to the player of the ordered unit.
 func PlaceOrders(orders []board.Order, brd board.Board) {
 	for i, order := range orders {
-		area, ok := brd.Areas[order.From]
+		region, ok := brd.Regions[order.From]
 		if !ok {
 			continue
 		}
 
-		order.Unit = area.Unit
-		order.Player = area.Unit.Player
+		order.Unit = region.Unit
+		order.Player = region.Unit.Player
 		orders[i] = order
 	}
 }
@@ -162,17 +162,17 @@ type ExpectedControl map[string]struct {
 }
 
 func (expected ExpectedControl) Check(brd board.Board, t *testing.T) {
-	for name, area := range brd.Areas {
+	for name, region := range brd.Regions {
 		expectation, ok := expected[name]
 		if !ok {
 			continue
 		}
 
-		if area.ControllingPlayer != expectation.ControllingPlayer {
-			t.Errorf("unexpected control of %v, want %v, got %v", name, area.ControllingPlayer, expectation.ControllingPlayer)
+		if region.ControllingPlayer != expectation.ControllingPlayer {
+			t.Errorf("unexpected control of %v, want %v, got %v", name, region.ControllingPlayer, expectation.ControllingPlayer)
 		}
-		if area.Unit != expectation.Unit {
-			t.Errorf("unexpected unit in %v, want %v, got %v", name, area.Unit, expectation.Unit)
+		if region.Unit != expectation.Unit {
+			t.Errorf("unexpected unit in %v, want %v, got %v", name, region.Unit, expectation.Unit)
 		}
 	}
 }

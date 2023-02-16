@@ -2,8 +2,8 @@ package board
 
 type Messenger interface {
 	SendBattleResults(battles []Battle) error
-	SendSupportRequest(to string, supportingArea string, battlers []string) error
-	ReceiveSupport(from string, fromArea string) (supportTo string, err error)
+	SendSupportRequest(to string, supportingRegion string, battlers []string) error
+	ReceiveSupport(from string, fromRegion string) (supportTo string, err error)
 }
 
 // A set of player-submitted orders for a round of the game.
@@ -24,8 +24,8 @@ type Season string
 
 // A pre-configured board used for the game.
 type Board struct {
-	// Areas on the board that player units can move to.
-	Areas map[string]Area `json:"area"`
+	// Regions on the board that player units can move to.
+	Regions map[string]Region `json:"region"`
 
 	// Name of this type of board.
 	Name string
@@ -34,60 +34,60 @@ type Board struct {
 	WinningCastleCount int `json:"winningCastleCount"`
 }
 
-// An area on the board map.
-type Area struct {
-	// Name of the area on the board.
+// An region on the board map.
+type Region struct {
+	// Name of the region on the board.
 	Name string `json:"name"`
 
-	// Adjacent areas.
+	// Adjacent regions.
 	Neighbors []Neighbor `json:"neighbors"`
 
-	// Whether the area is a sea area that can only have ship units.
+	// Whether the region is a sea region that can only have ship units.
 	Sea bool `json:"sea"`
 
-	// For land areas: affects the difficulty of conquering the area.
+	// For land regions: affects the difficulty of conquering the region.
 	Forest bool `json:"forest"`
 
-	// For land areas: affects the difficulty of conquering the area, and the points gained from it.
+	// For land regions: affects the difficulty of conquering the region, and the points gained from it.
 	Castle bool `json:"castle"`
 
-	// For land areas: the collection of areas that the area belongs to (affects units gained from conquering).
+	// For land regions: the collection of regions that the region belongs to (affects units gained from conquering).
 	Nation string `json:"nation"`
 
-	// For land areas that are a starting area for a player.
+	// For land regions that are a starting region for a player.
 	HomePlayer string `json:"homePlayer,omitempty"`
 
-	// The unit that currently occupies the area.
+	// The unit that currently occupies the region.
 	Unit Unit `json:"unit"`
 
-	// The player that currently controls the area.
+	// The player that currently controls the region.
 	ControllingPlayer string `json:"controllingPlayer,omitempty"`
 
-	// For land areas with castles: the number of times an occupying unit has besieged the castle.
+	// For land regions with castles: the number of times an occupying unit has besieged the castle.
 	SiegeCount int `json:"siegeCount"`
 
-	// Order for the occupying unit in the area. Resets every round.
+	// Order for the occupying unit in the region. Resets every round.
 	Order Order `json:"-"` // Excluded from JSON responses.
 
-	// Incoming move orders to the area. Resets every round.
+	// Incoming move orders to the region. Resets every round.
 	IncomingMoves []Order `json:"-"` // Excluded from JSON responses.
 
-	// Incoming support orders to the area. Resets every round.
+	// Incoming support orders to the region. Resets every round.
 	IncomingSupports []Order `json:"-"` // Excluded from JSON responses.
 }
 
-// The relationship between two adjacent areas.
+// The relationship between two adjacent regions.
 type Neighbor struct {
-	// Name of the adjacent area.
+	// Name of the adjacent region.
 	Name string `json:"name"`
 
-	// Whether a river separates the two areas.
+	// Whether a river separates the two regions.
 	AcrossWater bool `json:"acrossWater"`
 
-	// Whether coast between neighboring land areas have cliffs (impassable to ships).
+	// Whether coast between neighboring land regions have cliffs (impassable to ships).
 	Cliffs bool `json:"cliffs"`
 
-	// If not "": the name of the danger zone that the neighboring area lies across (requires check to pass).
+	// If not "": the name of the danger zone that the neighboring region lies across (requires check to pass).
 	DangerZone string `json:"dangerZone"`
 }
 
@@ -106,7 +106,7 @@ type UnitType string
 
 // An order submitted by a player for one of their units in a given round.
 type Order struct {
-	// The type of order submitted. Restricted by unit type and area.
+	// The type of order submitted. Restricted by unit type and region.
 	Type OrderType `json:"type"`
 
 	// The player submitting the order.
@@ -117,10 +117,10 @@ type Order struct {
 	// Server includes this field on the order to keep track of units between battles.
 	Unit Unit `json:"-"`
 
-	// Name of the area where the order is placed.
+	// Name of the region where the order is placed.
 	From string `json:"from"`
 
-	// For move and support orders: name of destination area.
+	// For move and support orders: name of destination region.
 	To string `json:"to"`
 
 	// For move orders: name of DangerZone the order tries to pass through, if any.
@@ -130,11 +130,11 @@ type Order struct {
 	Build UnitType `json:"build"`
 }
 
-// Type of submitted order (restricted by unit type and area).
+// Type of submitted order (restricted by unit type and region).
 // See OrderType constants for possible values.
 type OrderType string
 
-// Results of a battle from conflicting move orders, an attempt to conquer a neutral area,
+// Results of a battle from conflicting move orders, an attempt to conquer a neutral region,
 // or an attempt to cross a danger zone.
 type Battle struct {
 	// The dice and modifier results of the battle.
@@ -157,8 +157,8 @@ type Result struct {
 	// If result of a move order to the battle: the move order in question.
 	Move Order `json:"move"`
 
-	// If result of a defending unit in an area: the name of the area.
-	DefenderArea string `json:"defenderArea"`
+	// If result of a defending unit in an region: the name of the region.
+	DefenderRegion string `json:"defenderRegion"`
 }
 
 // A typed number that adds to a player's result in a battle.
@@ -178,7 +178,7 @@ type ModifierType string
 
 // Numbers to beat in different types of battles.
 const (
-	// Number to beat when attempting to conquer a neutral area.
+	// Number to beat when attempting to conquer a neutral region.
 	RequirementConquer int = 4
 
 	// Number to beat when attempting to cross a danger zone.
@@ -200,10 +200,10 @@ const (
 	// A land unit that gets a +1 modifier in battle.
 	UnitFootman UnitType = "footman"
 
-	// A land unit that moves 2 areas at a time.
+	// A land unit that moves 2 regions at a time.
 	UnitHorse UnitType = "horse"
 
-	// A unit that can move into sea areas and coastal areas.
+	// A unit that can move into sea regions and coastal regions.
 	UnitShip UnitType = "ship"
 
 	// A land unit that instantly conquers neutral castles, and gets a +1 modifier in attacks on castles.
@@ -212,20 +212,20 @@ const (
 
 // Valid values for a player-submitted order's type.
 const (
-	// An order for a unit to move from one area to another.
+	// An order for a unit to move from one region to another.
 	// Includes internal moves in winter.
 	OrderMove OrderType = "move"
 
-	// An order for a unit to support battle in an adjacent area.
+	// An order for a unit to support battle in an adjacent region.
 	OrderSupport OrderType = "support"
 
 	// For ship unit at sea: an order to transport a land unit across the sea.
 	OrderTransport OrderType = "transport"
 
-	// For land unit in unconquered castle area: an order to besiege the castle.
+	// For land unit in unconquered castle region: an order to besiege the castle.
 	OrderBesiege OrderType = "besiege"
 
-	// For player-controlled area in winter: an order for what type of unit to build in the area.
+	// For player-controlled region in winter: an order for what type of unit to build in the region.
 	OrderBuild OrderType = "build"
 )
 
@@ -237,10 +237,10 @@ const (
 	// Bonus for the type of unit.
 	ModifierUnit ModifierType = "unit"
 
-	// Penalty for attacking a neutral or defended forested area.
+	// Penalty for attacking a neutral or defended forested region.
 	ModifierForest ModifierType = "forest"
 
-	// Penalty for attacking a neutral or defended castle area.
+	// Penalty for attacking a neutral or defended castle region.
 	ModifierCastle ModifierType = "castle"
 
 	// Penalty for attacking across a river, from the sea, or across a transport.

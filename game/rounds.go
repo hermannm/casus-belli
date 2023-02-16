@@ -106,11 +106,11 @@ func sortOrders(playerOrders map[string][]board.Order, brd board.Board) (
 
 	for _, orders := range playerOrders {
 		for _, order := range orders {
-			fromArea := brd.Areas[order.From]
+			fromRegion := brd.Regions[order.From]
 
 			// If order origin has no unit, or unit of different color,
 			// then order is a second horse move and should be processed after all others.
-			if fromArea.IsEmpty() || fromArea.Unit.Player != order.Player {
+			if fromRegion.IsEmpty() || fromRegion.Unit.Player != order.Player {
 				secondOrders = append(secondOrders, order)
 			} else {
 				firstOrders = append(firstOrders, order)

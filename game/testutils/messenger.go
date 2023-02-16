@@ -10,10 +10,10 @@ func (MockMessenger) SendBattleResults(battles []board.Battle) error {
 	return nil
 }
 
-func (MockMessenger) SendSupportRequest(to string, supportingArea string, battlers []string) error {
+func (MockMessenger) SendSupportRequest(to string, supportingRegion string, battlers []string) error {
 	return nil
 }
 
-func (MockMessenger) ReceiveSupport(from string, fromArea string) (supportTo string, err error) {
+func (MockMessenger) ReceiveSupport(from string, fromRegion string) (supportTo string, err error) {
 	return "", nil
 }
