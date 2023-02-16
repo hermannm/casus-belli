@@ -3,7 +3,10 @@ package board
 // Resolves transport of the given move to the given destination if it requires transport.
 // If transported, returns whether the transport path is attacked,
 // and a list of danger zones that the order must cross to transport, if any.
-func (board Board) resolveTransports(move Order, destination Region) (transportAttacked bool, dangerZones []string) {
+func (board Board) resolveTransports(
+	move Order,
+	destination Region,
+) (transportAttacked bool, dangerZones []string) {
 	if destination.HasNeighbor(move.From) {
 		return false, nil
 	}
@@ -13,7 +16,11 @@ func (board Board) resolveTransports(move Order, destination Region) (transportA
 		return false, nil
 	}
 
-	canTransport, transportAttacked, dangerZones := from.canTransportTo(move.To, board, make(map[string]struct{}))
+	canTransport, transportAttacked, dangerZones := from.canTransportTo(
+		move.To,
+		board,
+		make(map[string]struct{}),
+	)
 
 	if !canTransport {
 		board.removeMove(move)
@@ -23,7 +30,8 @@ func (board Board) resolveTransports(move Order, destination Region) (transportA
 	return transportAttacked, dangerZones
 }
 
-// Checks if a unit from the region can be transported to an region with the same name as the given destination.
+// Checks if a unit from the region can be transported to a region with the same name as the given
+// destination.
 // Returns whether the unit can be transported, and if so, whether the transports are attacked,
 // as well as any potential danger zones the transported unit must cross.
 func (region Region) CanTransportTo(destination string, board Board) (
@@ -56,7 +64,7 @@ func (region Region) canTransportTo(destination string, board Board, exclude map
 	// Declares a list of potential transport paths to destination, in order to compare them.
 	var paths []transportPath
 
-	// Goes through the region's transporting neighbors to find potential transport paths through them.
+	// Goes through the region's transporting neighbors to find potential transport paths.
 	for _, transportNeighbor := range transportingNeighbors {
 		transportRegion := board.Regions[transportNeighbor.Name]
 
@@ -155,8 +163,8 @@ func (region Region) findDestination(destination string) (adjacent bool, dangerZ
 	return adjacent, dangerZone
 }
 
-// From the given paths, returns the best path.
-// Prioritizes paths that are not attacked first, then paths that have to cross the fewest danger zones.
+// From the given transport paths, returns the best path. Prioritizes paths that are not attacked
+// first, then paths that have to cross the fewest danger zones.
 //
 // If the given path list contains no paths, returns canTransport = false.
 func bestTransportPath(paths []transportPath) (bestPath transportPath, canTransport bool) {

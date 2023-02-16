@@ -51,7 +51,11 @@ func lobbyList(res http.ResponseWriter, req *http.Request) {
 
 	lobbyListJSON, err := json.Marshal(lobbyList)
 	if err != nil {
-		http.Error(res, "error in reading lobby fetching lobby list", http.StatusInternalServerError)
+		http.Error(
+			res,
+			"error in reading lobby fetching lobby list",
+			http.StatusInternalServerError,
+		)
 		return
 	}
 
@@ -66,14 +70,22 @@ func joinLobby(res http.ResponseWriter, req *http.Request) {
 
 	params, ok := checkParams(req, lobbyParam, usernameParam)
 	if !ok {
-		http.Error(res, "lobby name and username are required to join lobby", http.StatusBadRequest)
+		http.Error(
+			res,
+			"lobby name and username are required to join lobby",
+			http.StatusBadRequest,
+		)
 		return
 	}
 
 	lobbyName := params.Get(lobbyParam)
 	lobby, ok := lobbyRegistry.getLobby(lobbyName)
 	if !ok {
-		http.Error(res, fmt.Sprintf("no lobby found with name \"%s\"", lobbyName), http.StatusNotFound)
+		http.Error(
+			res,
+			fmt.Sprintf("no lobby found with name \"%s\"", lobbyName),
+			http.StatusNotFound,
+		)
 		return
 	}
 

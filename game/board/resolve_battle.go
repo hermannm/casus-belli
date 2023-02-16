@@ -43,7 +43,8 @@ func (board Board) resolveBorderBattle(battle Battle) (retreats []Order) {
 
 	for _, move := range []Order{move1, move2} {
 		if move.Player == winner {
-			// If destination region is uncontrolled, the player must win a singleplayer battle there before taking control.
+			// If destination region is uncontrolled, the player must win a singleplayer battle
+			// there before taking control.
 			if board.Regions[move.To].IsControlled() {
 				board.succeedMove(move)
 			}

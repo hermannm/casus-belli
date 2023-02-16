@@ -17,12 +17,17 @@ func (region Region) defenseModifiers() []Modifier {
 	return mods
 }
 
-// Returns modifiers (including dice roll) of move order attacking an region.
+// Returns modifiers (including dice roll) of move order attacking a region.
 // Other parameters affect which modifiers are added:
 // otherAttackers for whether there are other moves involved in this battle,
 // borderBattle for whether this is a battle between two moves moving against each other,
 // includeDefender for whether a potential defending unit in the region should be included.
-func (move Order) attackModifiers(region Region, otherAttackers bool, borderBattle bool, includeDefender bool) []Modifier {
+func (move Order) attackModifiers(
+	region Region,
+	otherAttackers bool,
+	borderBattle bool,
+	includeDefender bool,
+) []Modifier {
 	mods := []Modifier{}
 
 	neighbor, adjacent := region.GetNeighbor(move.From, move.Via)
@@ -47,8 +52,8 @@ func (move Order) attackModifiers(region Region, otherAttackers bool, borderBatt
 			mods = append(mods, Modifier{Type: ModifierCastle, Value: -1})
 		}
 
-		// If origin region is not adjacent to destination, the move is transported and takes water penalty.
-		// Moves across rivers or from sea to land also take this penalty.
+		// If origin region is not adjacent to destination, the move is transported and takes water
+		// penalty. Moves across rivers or from sea to land also take this penalty.
 		if !adjacent || neighbor.AcrossWater {
 			mods = append(mods, Modifier{Type: ModifierWater, Value: -1})
 		}
@@ -93,7 +98,12 @@ type supportDeclaration struct {
 // Appends support modifiers to receiving players' results in the given map,
 // but only if the result is tied to a move order to the region.
 // Calls support to defender in the region if includeDefender is true.
-func appendSupportMods(results map[string]Result, region Region, includeDefender bool, messenger Messenger) {
+func appendSupportMods(
+	results map[string]Result,
+	region Region,
+	includeDefender bool,
+	messenger Messenger,
+) {
 	supports := region.IncomingSupports
 	supportCount := len(supports)
 	supportReceiver := make(chan supportDeclaration, supportCount)
@@ -127,16 +137,20 @@ func appendSupportMods(results map[string]Result, region Region, includeDefender
 
 		result, isPlayer := results[support.toPlayer]
 		if isPlayer {
-			result.Parts = append(result.Parts, Modifier{Type: ModifierSupport, Value: 1, SupportingPlayer: support.fromPlayer})
+			result.Parts = append(
+				result.Parts,
+				Modifier{Type: ModifierSupport, Value: 1, SupportingPlayer: support.fromPlayer},
+			)
 			results[support.toPlayer] = result
 		}
 	}
 }
 
-// Finds out which player a given support order supports in a battle.
-// Sends the resulting support declaration to the given supportReceiver, and decrements the wait group by 1.
+// Finds out which player a given support order supports in a battle. Sends the resulting support
+// declaration to the given supportReceiver, and decrements the wait group by 1.
 //
-// If the support order's player matches a player in the battle, support is automatically given to themselves.
+// If the support order's player matches a player in the battle, support is automatically given to
+// themselves.
 // If support is not given to any player in the battle, the to field on the declaration is "".
 func callSupport(
 	support Order,
@@ -156,7 +170,10 @@ func callSupport(
 
 	for _, move := range moves {
 		if support.Player == move.Player {
-			supportReceiver <- supportDeclaration{fromPlayer: support.Player, toPlayer: support.Player}
+			supportReceiver <- supportDeclaration{
+				fromPlayer: support.Player,
+				toPlayer:   support.Player,
+			}
 			return
 		}
 	}
@@ -178,7 +195,11 @@ func callSupport(
 
 	supported, err := messenger.ReceiveSupport(support.Player, region.Name)
 	if err != nil {
-		log.Println(fmt.Errorf("failed to receive support declaration from player %s: %w", support.Player, err))
+		log.Println(fmt.Errorf(
+			"failed to receive support declaration from player %s: %w",
+			support.Player,
+			err,
+		))
 		supportReceiver <- supportDeclaration{fromPlayer: support.Player, toPlayer: ""}
 		return
 	}

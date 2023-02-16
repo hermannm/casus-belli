@@ -252,7 +252,8 @@ func (board Board) resolveWinner() string {
 	return ""
 }
 
-// Resolves winter orders (builds and internal moves) on the board. Assumes they have already been validated.
+// Resolves winter orders (builds and internal moves) on the board.
+// Assumes they have already been validated.
 func (board Board) resolveWinter(orders []Order) {
 	for _, order := range orders {
 		switch order.Type {

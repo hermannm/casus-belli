@@ -30,7 +30,8 @@ func (registry *LobbyRegistry) getLobby(name string) (*Lobby, bool) {
 	return lobby, ok
 }
 
-// Attempts to add the given lobby to the lobby registry. Errors if lobby name is invalid or already taken.
+// Attempts to add the given lobby to the lobby registry.
+// Errors if lobby name is invalid or already taken.
 func (registry *LobbyRegistry) registerLobby(lobby *Lobby) error {
 	lobby.lock.RLock()
 	defer lobby.lock.RUnlock()

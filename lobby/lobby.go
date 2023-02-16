@@ -22,7 +22,8 @@ type Lobby struct {
 
 // Represents a game instance. Used by lobbies to enable different types of games.
 type Game interface {
-	// Takes a game-specific player identifier string and returns a receiver to handle messages from the player.
+	// Takes a game-specific player identifier string,
+	// returns a receiver to handle messages from the player.
 	AddPlayer(gameID string) (GameMessageReceiver, error)
 
 	// Returns the range of possible player IDs for this game.
@@ -84,7 +85,10 @@ func (lobby *Lobby) SendMessageToAll(msg map[string]any) error {
 func (lobby *Lobby) SendMessage(playerGameID string, msg map[string]any) error {
 	player, ok := lobby.getPlayer(playerGameID)
 	if !ok {
-		return fmt.Errorf("failed to send message to player with id %s: player not found", playerGameID)
+		return fmt.Errorf(
+			"failed to send message to player with id %s: player not found",
+			playerGameID,
+		)
 	}
 
 	err := player.send(msg)
@@ -164,7 +168,11 @@ func (lobby *Lobby) close() error {
 		err := player.socket.Close()
 		if err != nil {
 			player.lock.Unlock()
-			log.Println(fmt.Errorf("failed to close socket connection to player %s: %w", player.String(), err))
+			log.Println(fmt.Errorf(
+				"failed to close socket connection to player %s: %w",
+				player.String(),
+				err,
+			))
 		}
 
 		player.lock.Unlock()
@@ -175,7 +183,8 @@ func (lobby *Lobby) close() error {
 	return nil
 }
 
-// Starts the lobby's game. Errors if not all game IDs are selected, or if not all players are ready yet.
+// Starts the lobby's game.
+// Errors if not all game IDs are selected, or if not all players are ready yet.
 func (lobby *Lobby) startGame() error {
 	lobby.lock.RLock()
 	defer lobby.lock.RUnlock()

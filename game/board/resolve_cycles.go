@@ -35,7 +35,11 @@ func (board Board) resolveCycle(
 	// Skips multiplayer battles if player conflicts are not allowed.
 	for _, region := range battleRegions {
 		if len(region.IncomingMoves) == 1 {
-			go region.calculateSingleplayerBattle(region.IncomingMoves[0], battleReceiver, messenger)
+			go region.calculateSingleplayerBattle(
+				region.IncomingMoves[0],
+				battleReceiver,
+				messenger,
+			)
 			processing[region.Name] = struct{}{}
 		} else if allowPlayerConflict {
 			go region.calculateMultiplayerBattle(false, battleReceiver, messenger)

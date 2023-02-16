@@ -58,7 +58,11 @@ func (game *Game) Start() {
 // Waits for the given player to submit orders, then validates them.
 // If valid, sends the order set to the given output channel.
 // If invalid, informs the client and waits for a new order set.
-func (game Game) receiveAndValidateOrders(player string, season board.Season, orderChan chan<- []board.Order) {
+func (game Game) receiveAndValidateOrders(
+	player string,
+	season board.Season,
+	orderChan chan<- []board.Order,
+) {
 	for {
 		err := game.messenger.SendOrderRequest(player)
 		if err != nil {

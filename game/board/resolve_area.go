@@ -1,14 +1,16 @@
 package board
 
-// Resolves moves to the given region on the board. Assumes that the region has incoming moves (moveCount > 0).
+// Resolves moves to the given region on the board.
+// Assumes that the region has incoming moves (moveCount > 0).
 //
-// Immediately resolves regions that do not require battle, and adds them to the given processed map.
+// Immediately resolves regions that do not require battle, and adds them to the given processed
+// map.
 //
-// Adds embattled regions to the given processing map, and forwards them to appropriate battle calculation functions,
-// which send results to the given battleReceiver.
+// Adds embattled regions to the given processing map, and forwards them to appropriate battle
+// calculation functions, which send results to the given battleReceiver.
 //
 // Skips regions that have outgoing moves, unless they are part of a move cycle.
-// If allowPlayerConflict is true, skips regions that require battle between players.
+// If allowPlayerConflict is false, skips regions that require battle between players.
 func (board Board) resolveRegionMoves(
 	region Region,
 	moveCount int,
@@ -18,7 +20,8 @@ func (board Board) resolveRegionMoves(
 	processed map[string]struct{},
 	messenger Messenger,
 ) {
-	// Finds out if the move is part of a two-way cycle (moves moving against each other), and resolves it.
+	// Finds out if the move is part of a two-way cycle (moves moving against each other),
+	// and resolves it.
 	twoWayCycle, region2, samePlayer := board.discoverTwoWayCycle(region)
 	if twoWayCycle {
 		if samePlayer {
@@ -39,12 +42,20 @@ func (board Board) resolveRegionMoves(
 		// If there is a cycle longer than 2 moves, forwards the resolving to 'resolveCycle'.
 		cycle, _ := board.discoverCycle(region.Order, region.Name)
 		if cycle != nil {
-			board.resolveCycle(cycle, allowPlayerConflict, battleReceiver, processing, processed, messenger)
+			board.resolveCycle(
+				cycle,
+				allowPlayerConflict,
+				battleReceiver,
+				processing,
+				processed,
+				messenger,
+			)
 			return
 		}
 	}
 
-	// Empty regions with only a single incoming move are either auto-successes or a singleplayer battle.
+	// Empty regions with only a single incoming move are either auto-successes or a singleplayer
+	// battle.
 	if moveCount == 1 && region.IsEmpty() {
 		move := region.IncomingMoves[0]
 
@@ -59,8 +70,7 @@ func (board Board) resolveRegionMoves(
 		return
 	}
 
-	// If the destination region has an outgoing move order,
-	// that must be resolved first.
+	// If the destination region has an outgoing move order, that must be resolved first.
 	if region.Order.Type == OrderMove {
 		return
 	}
@@ -72,7 +82,11 @@ func (board Board) resolveRegionMoves(
 
 // Calculates battle between a single attacker and an unconquered region.
 // Sends the resulting battle to the given battleReceiver.
-func (region Region) calculateSingleplayerBattle(move Order, battleReceiver chan<- Battle, messenger Messenger) {
+func (region Region) calculateSingleplayerBattle(
+	move Order,
+	battleReceiver chan<- Battle,
+	messenger Messenger,
+) {
 	playerResults := map[string]Result{
 		move.Player: {Parts: move.attackModifiers(region, false, false, true), Move: move},
 	}
@@ -85,15 +99,25 @@ func (region Region) calculateSingleplayerBattle(move Order, battleReceiver chan
 // Calculates battle when attacked region is defended or has multiple attackers.
 // Takes in parameter for whether to account for defender in battle (most often true).
 // Sends the resulting battle to the given battleReceiver.
-func (region Region) calculateMultiplayerBattle(includeDefender bool, battleReceiver chan<- Battle, messenger Messenger) {
+func (region Region) calculateMultiplayerBattle(
+	includeDefender bool,
+	battleReceiver chan<- Battle,
+	messenger Messenger,
+) {
 	playerResults := make(map[string]Result)
 
 	for _, move := range region.IncomingMoves {
-		playerResults[move.Player] = Result{Parts: move.attackModifiers(region, true, false, includeDefender), Move: move}
+		playerResults[move.Player] = Result{
+			Parts: move.attackModifiers(region, true, false, includeDefender),
+			Move:  move,
+		}
 	}
 
 	if !region.IsEmpty() && includeDefender {
-		playerResults[region.Unit.Player] = Result{Parts: region.defenseModifiers(), DefenderRegion: region.Name}
+		playerResults[region.Unit.Player] = Result{
+			Parts:          region.defenseModifiers(),
+			DefenderRegion: region.Name,
+		}
 	}
 
 	appendSupportMods(playerResults, region, includeDefender, messenger)

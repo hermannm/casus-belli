@@ -38,7 +38,10 @@ func (receiver Receiver) ReceiveMessage(msgID string, rawMsg json.RawMessage) {
 			if ok {
 				supportChan <- msg
 			} else {
-				err = fmt.Errorf("support receiver uninitialized for region %s", msg.SupportingRegion)
+				err = fmt.Errorf(
+					"support receiver uninitialized for region %s",
+					msg.SupportingRegion,
+				)
 			}
 		}
 	case winterVoteMsgID:
@@ -69,17 +72,26 @@ func (receiver Receiver) ReceiveMessage(msgID string, rawMsg json.RawMessage) {
 func (messenger Messenger) ReceiveOrders(from string) ([]board.Order, error) {
 	receiver, ok := messenger.receivers[from]
 	if !ok {
-		return nil, fmt.Errorf("failed to get order message from player %s: receiver not found", from)
+		return nil, fmt.Errorf(
+			"failed to get order message from player %s: receiver not found",
+			from,
+		)
 	}
 
 	orders := <-receiver.Orders
 	return orders.Orders, nil
 }
 
-func (messenger Messenger) ReceiveSupport(from string, supportingRegion string) (supportTo string, err error) {
+func (messenger Messenger) ReceiveSupport(
+	from string,
+	supportingRegion string,
+) (supportTo string, err error) {
 	receiver, ok := messenger.receivers[from]
 	if !ok {
-		return "", fmt.Errorf("failed to get support message from player %s: receiver not found", from)
+		return "", fmt.Errorf(
+			"failed to get support message from player %s: receiver not found",
+			from,
+		)
 	}
 
 	supportChan, ok := receiver.Support[supportingRegion]

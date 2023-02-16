@@ -34,7 +34,7 @@ type Board struct {
 	WinningCastleCount int `json:"winningCastleCount"`
 }
 
-// An region on the board map.
+// A region on the board map.
 type Region struct {
 	// Name of the region on the board.
 	Name string `json:"name"`
@@ -48,10 +48,12 @@ type Region struct {
 	// For land regions: affects the difficulty of conquering the region.
 	Forest bool `json:"forest"`
 
-	// For land regions: affects the difficulty of conquering the region, and the points gained from it.
+	// For land regions: affects the difficulty of conquering the region, and the points gained from
+	// it.
 	Castle bool `json:"castle"`
 
-	// For land regions: the collection of regions that the region belongs to (affects units gained from conquering).
+	// For land regions: the collection of regions that the region belongs to (affects units gained
+	// from conquering).
 	Nation string `json:"nation"`
 
 	// For land regions that are a starting region for a player.
@@ -87,7 +89,8 @@ type Neighbor struct {
 	// Whether coast between neighboring land regions have cliffs (impassable to ships).
 	Cliffs bool `json:"cliffs"`
 
-	// If not "": the name of the danger zone that the neighboring region lies across (requires check to pass).
+	// If not "": the name of the danger zone that the neighboring region lies across (requires
+	// check to pass).
 	DangerZone string `json:"dangerZone"`
 }
 
@@ -157,7 +160,7 @@ type Result struct {
 	// If result of a move order to the battle: the move order in question.
 	Move Order `json:"move"`
 
-	// If result of a defending unit in an region: the name of the region.
+	// If result of a defending unit in a region: the name of the region.
 	DefenderRegion string `json:"defenderRegion"`
 }
 
@@ -206,7 +209,8 @@ const (
 	// A unit that can move into sea regions and coastal regions.
 	UnitShip UnitType = "ship"
 
-	// A land unit that instantly conquers neutral castles, and gets a +1 modifier in attacks on castles.
+	// A land unit that instantly conquers neutral castles, and gets a +1 modifier in attacks on
+	// castles.
 	UnitCatapult UnitType = "catapult"
 )
 
@@ -225,7 +229,7 @@ const (
 	// For land unit in unconquered castle region: an order to besiege the castle.
 	OrderBesiege OrderType = "besiege"
 
-	// For player-controlled region in winter: an order for what type of unit to build in the region.
+	// For player-controlled region in winter: an order for the type of unit to build in the region.
 	OrderBuild OrderType = "build"
 )
 

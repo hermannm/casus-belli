@@ -62,7 +62,8 @@ func (player *Player) receiveMessage(lobby *Lobby) (socketClosed bool, err error
 		return false, fmt.Errorf("error in handling lobby message: %w", err)
 	}
 
-	// If msg ID is not a lobby message ID, the message is forwarded to the player's game message receiver.
+	// If msg ID is not a lobby message ID, the message is forwarded to the player's game message
+	// receiver.
 	if !isLobbyMsg && player.gameMsgReceiver != nil {
 		go player.gameMsgReceiver.ReceiveMessage(msgID, rawMsg)
 	}
@@ -89,7 +90,10 @@ func (player *Player) receiveLobbyMessage(
 
 		err = lobby.sendPlayerStatusMsg(player)
 		if err != nil {
-			return true, fmt.Errorf("failed to update other players about game ID selection: %w", err)
+			return true, fmt.Errorf(
+				"failed to update other players about game ID selection: %w",
+				err,
+			)
 		}
 
 		return true, nil

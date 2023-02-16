@@ -24,7 +24,10 @@ func (player *Player) sendLobbyJoinedMsg(lobby *Lobby) error {
 			gameID = &player.gameID
 		}
 
-		statuses = append(statuses, playerStatusMsg{Username: player.username, GameID: gameID, Ready: player.ready})
+		statuses = append(
+			statuses,
+			playerStatusMsg{Username: player.username, GameID: gameID, Ready: player.ready},
+		)
 
 		player.lock.RUnlock()
 	}

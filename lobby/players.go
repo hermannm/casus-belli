@@ -15,10 +15,14 @@ type Player struct {
 
 	username string
 
-	gameID          string              // Blank until selected. Must be selected before starting the game.
-	gameMsgReceiver GameMessageReceiver // nil until gameID is set.
+	// Blank until selected. Must be selected before starting the game.
+	gameID string
 
-	ready bool // Starts as false, must be true before starting the game.
+	// nil until gameID is set.
+	gameMsgReceiver GameMessageReceiver
+
+	// Starts as false, must be true before starting the game.
+	ready bool
 }
 
 // Returns the player's username, with the player's game ID if it is set.

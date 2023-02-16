@@ -169,7 +169,12 @@ func (expected ExpectedControl) Check(brd board.Board, t *testing.T) {
 		}
 
 		if region.ControllingPlayer != expectation.ControllingPlayer {
-			t.Errorf("unexpected control of %v, want %v, got %v", name, region.ControllingPlayer, expectation.ControllingPlayer)
+			t.Errorf(
+				"unexpected control of %v, want %v, got %v",
+				name,
+				region.ControllingPlayer,
+				expectation.ControllingPlayer,
+			)
 		}
 		if region.Unit != expectation.Unit {
 			t.Errorf("unexpected unit in %v, want %v, got %v", name, region.Unit, expectation.Unit)

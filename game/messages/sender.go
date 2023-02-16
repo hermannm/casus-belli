@@ -54,9 +54,13 @@ func (messenger Messenger) SendOrdersConfirmation(player string) error {
 	return nil
 }
 
-func (messenger Messenger) SendSupportRequest(to string, supportingRegion string, supportablePlayers []string) error {
-	msg := message{
-		supportRequestMsgID: supportRequestMsg{SupportingRegion: supportingRegion, SupportablePlayers: supportablePlayers},
+func (messenger Messenger) SendSupportRequest(
+	to string,
+	supportingRegion string,
+	supportablePlayers []string,
+) error {
+	msg := message{supportRequestMsgID: supportRequestMsg{
+		SupportingRegion: supportingRegion, SupportablePlayers: supportablePlayers},
 	}
 
 	err := messenger.sender.SendMessage(to, msg)

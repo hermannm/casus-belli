@@ -10,9 +10,9 @@ func (region Region) IsControlled() bool {
 	return region.ControllingPlayer != ""
 }
 
-// Returns an region's neighbor of the given name, and whether it was found.
-// If the region has several neighbor relations to the region, returns the one matching the provided 'via' string
-// (currently the name of the neighbor relation's danger zone).
+// Returns a region's neighbor of the given name, and whether it was found.
+// If the region has several neighbor relations to the region, returns the one matching the provided
+// 'via' string (currently the name of the neighbor relation's danger zone).
 func (region Region) GetNeighbor(neighborName string, via string) (Neighbor, bool) {
 	neighbor := Neighbor{}
 	hasNeighbor := false
@@ -33,7 +33,7 @@ func (region Region) GetNeighbor(neighborName string, via string) (Neighbor, boo
 	return neighbor, hasNeighbor
 }
 
-// Returns whether the region is adjacent to an region of the given name.
+// Returns whether the region is adjacent to a region of the given name.
 func (region Region) HasNeighbor(neighborName string) bool {
 	for _, neighbor := range region.Neighbors {
 		if neighbor.Name == neighborName {

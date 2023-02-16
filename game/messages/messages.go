@@ -99,7 +99,8 @@ type swordMsg struct {
 	BattleIndex int `json:"battleIndex"`
 }
 
-// Message passed from the client with the ravenMsg when they want to spy on another player's orders.
+// Message passed from the client with the ravenMsg when they want to spy on another player's
+// orders.
 // Used for the throne expansion.
 type ravenMsg struct {
 	// ID of the player on whom to spy.
