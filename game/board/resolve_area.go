@@ -28,8 +28,8 @@ func (board Board) resolveRegionMoves(
 			// If both moves are by the same player, removes the units from their origin regions,
 			// as they may not be allowed to retreat if their origin region is taken.
 			for _, cycleRegion := range [2]Region{region, region2} {
-				cycleRegion = cycleRegion.setUnit(Unit{})
-				cycleRegion = cycleRegion.setOrder(Order{})
+				cycleRegion.Unit = Unit{}
+				cycleRegion.Order = Order{}
 				board.Regions[cycleRegion.Name] = cycleRegion
 			}
 		} else {

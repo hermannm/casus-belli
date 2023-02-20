@@ -137,7 +137,8 @@ OuterLoop:
 				moveCount := len(region.IncomingMoves)
 				if moveCount == 0 {
 					if hasRetreat && region.IsEmpty() {
-						board.Regions[regionName] = region.setUnit(retreat.Unit)
+						region.Unit = retreat.Unit
+						board.Regions[regionName] = region
 						delete(retreats, regionName)
 					}
 
@@ -192,7 +193,8 @@ func (board Board) crossDangerZones() []Battle {
 		// If support fails crossing, only the order fails.
 		if !survived {
 			if order.Type == OrderMove {
-				board.Regions[regionName] = region.setUnit(Unit{})
+				region.Unit = Unit{}
+				board.Regions[regionName] = region
 				board.removeMove(order)
 			} else {
 				board.removeSupport(order)

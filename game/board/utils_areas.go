@@ -61,21 +61,3 @@ func (region Region) IsCoast(board Board) bool {
 
 	return false
 }
-
-// Returns a copy of the region, with its unit set to the given unit.
-func (region Region) setUnit(unit Unit) Region {
-	region.Unit = unit
-	return region
-}
-
-// Returns a copy of the region, with control set to the given player.
-func (region Region) setControl(player string) Region {
-	region.ControllingPlayer = player
-	return region
-}
-
-// Returns a copy of the region, with its order field set to the given order.
-func (region Region) setOrder(order Order) Region {
-	region.Order = order
-	return region
-}

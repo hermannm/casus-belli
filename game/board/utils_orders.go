@@ -14,10 +14,10 @@ func (order Order) IsNone() bool {
 func (board Board) succeedMove(move Order) {
 	to := board.Regions[move.To]
 
-	to = to.setUnit(move.Unit)
-	to = to.setOrder(Order{})
+	to.Unit = move.Unit
+	to.Order = Order{}
 	if !to.Sea {
-		to = to.setControl(move.Player)
+		to.ControllingPlayer = move.Player
 	}
 	board.Regions[move.To] = to
 
@@ -31,7 +31,8 @@ func (board Board) removeOriginUnit(move Order) {
 	from := board.Regions[move.From]
 
 	if move.Unit == from.Unit {
-		board.Regions[move.From] = from.setUnit(Unit{})
+		from.Unit = Unit{}
+		board.Regions[move.From] = from
 	}
 }
 
@@ -67,7 +68,9 @@ func (order Order) crossDangerZones(dangerZones []string) (survivedAll bool, res
 }
 
 func (board Board) addOrder(order Order) {
-	board.Regions[order.From] = board.Regions[order.From].setOrder(order)
+	from := board.Regions[order.From]
+	from.Order = order
+	board.Regions[order.From] = from
 
 	if order.To == "" {
 		return
@@ -85,40 +88,36 @@ func (board Board) addOrder(order Order) {
 
 // Removes the given move order from the regions on the board.
 func (board Board) removeMove(move Order) {
-	board.Regions[move.From] = board.Regions[move.From].setOrder(Order{})
-	board.Regions[move.To] = board.Regions[move.To].removeIncomingMove(move)
-}
+	from := board.Regions[move.From]
+	from.Order = Order{}
+	board.Regions[move.From] = from
 
-// Returns the given region with the given order removed from its list of incoming moves.
-// Assumes the given order is a move order.
-func (region Region) removeIncomingMove(move Order) Region {
+	to := board.Regions[move.To]
 	newMoves := make([]Order, 0)
-	for _, incMove := range region.IncomingMoves {
+	for _, incMove := range to.IncomingMoves {
 		if incMove != move {
 			newMoves = append(newMoves, incMove)
 		}
 	}
-	region.IncomingMoves = newMoves
-	return region
+	to.IncomingMoves = newMoves
+	board.Regions[move.To] = to
 }
 
 // Removes the given support order from the regions on the board.
 func (board Board) removeSupport(support Order) {
-	board.Regions[support.From] = board.Regions[support.From].setOrder(Order{})
-	board.Regions[support.To] = board.Regions[support.To].removeIncomingSupport(support)
-}
+	from := board.Regions[support.From]
+	from.Order = Order{}
+	board.Regions[support.From] = from
 
-// Returns the given region with the given order removed from its list of incoming supports.
-// Assumes the given order is a support order.
-func (region Region) removeIncomingSupport(support Order) Region {
+	to := board.Regions[support.To]
 	newSupports := make([]Order, 0)
-	for _, incSupport := range region.IncomingSupports {
+	for _, incSupport := range to.IncomingSupports {
 		if incSupport != support {
 			newSupports = append(newSupports, incSupport)
 		}
 	}
-	region.IncomingSupports = newSupports
-	return region
+	to.IncomingSupports = newSupports
+	board.Regions[support.To] = to
 }
 
 // Attempts to move the unit of the given move order back to its origin.
@@ -134,6 +133,7 @@ func (board Board) attemptRetreat(move Order) bool {
 		return false
 	}
 
-	board.Regions[move.From] = from.setUnit(move.Unit)
+	from.Unit = move.Unit
+	board.Regions[move.From] = from
 	return true
 }
