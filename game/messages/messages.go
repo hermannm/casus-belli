@@ -1,7 +1,7 @@
 package messages
 
 import (
-	"hermannm.dev/bfh-server/game/board"
+	"hermannm.dev/bfh-server/game/gameboard"
 )
 
 // Messages map a single key, the message ID, to an object determined by the message ID.
@@ -43,7 +43,7 @@ type orderRequestMsg struct{}
 // Message sent from server to all clients when valid orders are received from all players.
 type ordersReceivedMsg struct {
 	// Maps a player's ID to their submitted orders.
-	PlayerOrders map[string][]board.Order `json:"playerOrders"`
+	PlayerOrders map[string][]gameboard.Order `json:"playerOrders"`
 }
 
 // Message sent from server to all clients when valid orders are received from a player.
@@ -56,7 +56,7 @@ type ordersConfirmationMsg struct {
 // Message sent from server to all clients when a battle result is calculated.
 type battleResultsMsg struct {
 	// The relevant battle result.
-	Battles []board.Battle `json:"battles"`
+	Battles []gameboard.Battle `json:"battles"`
 }
 
 // Message sent from server to all clients when the game is won.
@@ -68,7 +68,7 @@ type winnerMsg struct {
 // Message sent from client when submitting orders.
 type submitOrdersMsg struct {
 	// List of submitted orders.
-	Orders []board.Order `json:"orders"`
+	Orders []gameboard.Order `json:"orders"`
 }
 
 // Message sent from client when declaring who to support with their support order.

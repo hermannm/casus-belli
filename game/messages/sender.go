@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"hermannm.dev/bfh-server/game/board"
+	"hermannm.dev/bfh-server/game/gameboard"
 )
 
 type Sender interface {
@@ -32,7 +32,7 @@ func (messenger Messenger) SendOrderRequest(to string) error {
 	return nil
 }
 
-func (messenger Messenger) SendOrdersReceived(playerOrders map[string][]board.Order) error {
+func (messenger Messenger) SendOrdersReceived(playerOrders map[string][]gameboard.Order) error {
 	msg := message{ordersReceivedMsgID: ordersReceivedMsg{PlayerOrders: playerOrders}}
 
 	err := messenger.sender.SendMessageToAll(msg)
@@ -71,7 +71,7 @@ func (messenger Messenger) SendSupportRequest(
 	return nil
 }
 
-func (messenger Messenger) SendBattleResults(battles []board.Battle) error {
+func (messenger Messenger) SendBattleResults(battles []gameboard.Battle) error {
 	msg := message{battleResultsMsgID: battleResultsMsg{Battles: battles}}
 
 	err := messenger.sender.SendMessageToAll(msg)

@@ -3,18 +3,18 @@ package testutils
 import (
 	"testing"
 
-	"hermannm.dev/bfh-server/game/board"
+	"hermannm.dev/bfh-server/game/gameboard"
 )
 
 // Returns an empty, limited example board for testing.
-func NewMockBoard() board.Board {
-	brd := board.Board{
-		Regions:            make(map[string]board.Region),
+func NewMockBoard() gameboard.Board {
+	board := gameboard.Board{
+		Regions:            make(map[string]gameboard.Region),
 		Name:               "Mock board",
 		WinningCastleCount: 5,
 	}
 
-	regions := []board.Region{
+	regions := []gameboard.Region{
 		{Name: "Lusía", Castle: true},
 		{Name: "Lomone", Forest: true},
 		{Name: "Limbol", Forest: true},
@@ -99,39 +99,39 @@ func NewMockBoard() board.Board {
 	}
 
 	for _, region := range regions {
-		region.Neighbors = make([]board.Neighbor, 0)
-		region.IncomingMoves = make([]board.Order, 0)
-		region.IncomingSupports = make([]board.Order, 0)
-		brd.Regions[region.Name] = region
+		region.Neighbors = make([]gameboard.Neighbor, 0)
+		region.IncomingMoves = make([]gameboard.Order, 0)
+		region.IncomingSupports = make([]gameboard.Order, 0)
+		board.Regions[region.Name] = region
 	}
 
 	for _, neighbor := range neighbors {
-		region1 := brd.Regions[neighbor.a1]
-		region2 := brd.Regions[neighbor.a2]
+		region1 := board.Regions[neighbor.a1]
+		region2 := board.Regions[neighbor.a2]
 
-		region1.Neighbors = append(region1.Neighbors, board.Neighbor{
+		region1.Neighbors = append(region1.Neighbors, gameboard.Neighbor{
 			Name:        neighbor.a2,
 			AcrossWater: neighbor.river || (region1.Sea && !region2.Sea),
 			Cliffs:      neighbor.cliffs,
 			DangerZone:  neighbor.dangerZone,
 		})
-		brd.Regions[neighbor.a1] = region1
+		board.Regions[neighbor.a1] = region1
 
-		region2.Neighbors = append(region2.Neighbors, board.Neighbor{
+		region2.Neighbors = append(region2.Neighbors, gameboard.Neighbor{
 			Name:        neighbor.a1,
 			AcrossWater: neighbor.river || (region2.Sea && !region1.Sea),
 			Cliffs:      neighbor.cliffs,
 			DangerZone:  neighbor.dangerZone,
 		})
-		brd.Regions[neighbor.a2] = region2
+		board.Regions[neighbor.a2] = region2
 	}
 
-	return brd
+	return board
 }
 
 // Utility function for placing units on the given board.
 // Takes a map of region names to units to be placed there.
-func PlaceUnits(units map[string]board.Unit, board board.Board) {
+func PlaceUnits(units map[string]gameboard.Unit, board gameboard.Board) {
 	for regionName, unit := range units {
 		region := board.Regions[regionName]
 		region.Unit = unit
@@ -142,9 +142,9 @@ func PlaceUnits(units map[string]board.Unit, board board.Board) {
 
 // Attaches units from the board to the given set of orders.
 // Also sets the player field on each order to the player of the ordered unit.
-func PlaceOrders(orders []board.Order, brd board.Board) {
+func PlaceOrders(orders []gameboard.Order, board gameboard.Board) {
 	for i, order := range orders {
-		region, ok := brd.Regions[order.From]
+		region, ok := board.Regions[order.From]
 		if !ok {
 			continue
 		}
@@ -158,11 +158,11 @@ func PlaceOrders(orders []board.Order, brd board.Board) {
 // Utility type for setting up expected outcomes of a test of board resolving.
 type ExpectedControl map[string]struct {
 	ControllingPlayer string
-	Unit              board.Unit
+	Unit              gameboard.Unit
 }
 
-func (expected ExpectedControl) Check(brd board.Board, t *testing.T) {
-	for name, region := range brd.Regions {
+func (expected ExpectedControl) Check(board gameboard.Board, t *testing.T) {
+	for name, region := range board.Regions {
 		expectation, ok := expected[name]
 		if !ok {
 			continue

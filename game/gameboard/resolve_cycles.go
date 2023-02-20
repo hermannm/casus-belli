@@ -1,4 +1,4 @@
-package board
+package gameboard
 
 // Resolves the board regions touched by the moves in the given cycle.
 //

@@ -1,4 +1,4 @@
-package board
+package gameboard
 
 // Resolves moves to the given region on the board.
 // Assumes that the region has incoming moves (moveCount > 0).

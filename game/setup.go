@@ -3,16 +3,16 @@ package game
 import (
 	"fmt"
 
-	"hermannm.dev/bfh-server/game/board"
 	"hermannm.dev/bfh-server/game/boardsetup"
+	"hermannm.dev/bfh-server/game/gameboard"
 	"hermannm.dev/bfh-server/game/messages"
 	"hermannm.dev/bfh-server/lobby"
 )
 
 type Game struct {
 	name      string
-	board     board.Board
-	rounds    []board.Round
+	board     gameboard.Board
+	rounds    []gameboard.Round
 	options   GameOptions
 	messenger messages.Messenger
 }
@@ -23,14 +23,14 @@ type GameOptions struct {
 
 // Constructs a game instance. Initializes player slots for each region home tag on the given board.
 func New(boardName string, options GameOptions, msgSender messages.Sender) (*Game, error) {
-	brd, err := boardsetup.ReadBoard(boardName)
+	board, err := boardsetup.ReadBoard(boardName)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Game{
-		board:     brd,
-		rounds:    make([]board.Round, 0),
+		board:     board,
+		rounds:    make([]gameboard.Round, 0),
 		options:   options,
 		messenger: messages.NewMessenger(msgSender),
 	}, nil
@@ -68,11 +68,11 @@ func (game Game) AddPlayer(playerID string) (lobby.GameMessageReceiver, error) {
 	return receiver, nil
 }
 
-func playerIDsFromBoard(brd board.Board) []string {
+func playerIDsFromBoard(board gameboard.Board) []string {
 	ids := make([]string, 0)
 
 OuterLoop:
-	for _, region := range brd.Regions {
+	for _, region := range board.Regions {
 		potentialID := region.HomePlayer
 		if potentialID == "" {
 			continue

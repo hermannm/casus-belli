@@ -1,4 +1,4 @@
-package board
+package gameboard
 
 type Messenger interface {
 	SendBattleResults(battles []Battle) error

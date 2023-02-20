@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 
-	"hermannm.dev/bfh-server/game/board"
+	"hermannm.dev/bfh-server/game/gameboard"
 )
 
 // boards embeds the json files of boards from this folder.
@@ -46,78 +46,78 @@ type neighbor struct {
 }
 
 // Reads and constructs the board matching the given ID.
-func ReadBoard(boardID string) (board.Board, error) {
+func ReadBoard(boardID string) (gameboard.Board, error) {
 	content, err := boards.ReadFile(fmt.Sprintf("%s.json", boardID))
 	if err != nil {
-		return board.Board{}, err
+		return gameboard.Board{}, err
 	}
 
 	var jsonBoard jsonBoard
 
 	err = json.Unmarshal(content, &jsonBoard)
 	if err != nil {
-		return board.Board{}, err
+		return gameboard.Board{}, err
 	}
 
 	if jsonBoard.WinningCastleCount <= 0 {
-		return board.Board{}, errors.New("invalid winningCastleCount in board config")
+		return gameboard.Board{}, errors.New("invalid winningCastleCount in board config")
 	}
 
-	brd := board.Board{
-		Regions:            make(map[string]board.Region),
+	board := gameboard.Board{
+		Regions:            make(map[string]gameboard.Region),
 		Name:               jsonBoard.Name,
 		WinningCastleCount: jsonBoard.WinningCastleCount,
 	}
 
 	for nation, regions := range jsonBoard.Nations {
 		for _, landRegion := range regions {
-			region := board.Region{
+			region := gameboard.Region{
 				Name:              landRegion.Name,
 				Nation:            nation,
 				ControllingPlayer: landRegion.HomePlayer,
 				HomePlayer:        landRegion.HomePlayer,
 				Forest:            landRegion.Forest,
 				Castle:            landRegion.Castle,
-				Neighbors:         make([]board.Neighbor, 0),
-				IncomingMoves:     make([]board.Order, 0),
-				IncomingSupports:  make([]board.Order, 0),
+				Neighbors:         make([]gameboard.Neighbor, 0),
+				IncomingMoves:     make([]gameboard.Order, 0),
+				IncomingSupports:  make([]gameboard.Order, 0),
 			}
 
-			brd.Regions[region.Name] = region
+			board.Regions[region.Name] = region
 		}
 	}
 
 	for _, sea := range jsonBoard.Seas {
-		region := board.Region{
+		region := gameboard.Region{
 			Name:             sea.Name,
-			Neighbors:        make([]board.Neighbor, 0),
-			IncomingMoves:    make([]board.Order, 0),
-			IncomingSupports: make([]board.Order, 0),
+			Neighbors:        make([]gameboard.Neighbor, 0),
+			IncomingMoves:    make([]gameboard.Order, 0),
+			IncomingSupports: make([]gameboard.Order, 0),
 		}
 
-		brd.Regions[region.Name] = region
+		board.Regions[region.Name] = region
 	}
 
 	for _, neighbor := range jsonBoard.Neighbors {
-		region1, ok1 := brd.Regions[neighbor.Region1]
-		region2, ok2 := brd.Regions[neighbor.Region2]
+		region1, ok1 := board.Regions[neighbor.Region1]
+		region2, ok2 := board.Regions[neighbor.Region2]
 
 		if !ok1 || !ok2 {
-			return board.Board{}, fmt.Errorf(
+			return gameboard.Board{}, fmt.Errorf(
 				"error in board config: neighbor relation %s <-> %s",
 				neighbor.Region1,
 				neighbor.Region2,
 			)
 		}
 
-		region1.Neighbors = append(region1.Neighbors, board.Neighbor{
+		region1.Neighbors = append(region1.Neighbors, gameboard.Neighbor{
 			Name:        region2.Name,
 			AcrossWater: neighbor.River || (region1.Sea && !region2.Sea),
 			Cliffs:      neighbor.Cliffs,
 			DangerZone:  neighbor.DangerZone,
 		})
 
-		region2.Neighbors = append(region2.Neighbors, board.Neighbor{
+		region2.Neighbors = append(region2.Neighbors, gameboard.Neighbor{
 			Name:        region1.Name,
 			AcrossWater: neighbor.River || (region2.Sea && !region1.Sea),
 			Cliffs:      neighbor.Cliffs,
@@ -125,5 +125,5 @@ func ReadBoard(boardID string) (board.Board, error) {
 		})
 	}
 
-	return brd, nil
+	return board, nil
 }

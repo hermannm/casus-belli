@@ -3,13 +3,13 @@ package game
 import (
 	"log"
 
-	"hermannm.dev/bfh-server/game/board"
+	"hermannm.dev/bfh-server/game/gameboard"
 	"hermannm.dev/bfh-server/game/validation"
 )
 
 // Initializes a new round of the game.
 func (game *Game) Start() {
-	var season board.Season
+	var season gameboard.Season
 	var winner string
 
 	// Starts new rounds until there is a winner.
@@ -19,14 +19,14 @@ func (game *Game) Start() {
 		// Waits for submitted orders from each player, then adds them to the round.
 		players := game.messenger.ReceiverIDs()
 
-		orderChans := make(map[string]chan []board.Order)
+		orderChans := make(map[string]chan []gameboard.Order)
 		for _, player := range players {
-			orderChan := make(chan []board.Order, 1)
+			orderChan := make(chan []gameboard.Order, 1)
 			orderChans[player] = orderChan
 			go game.receiveAndValidateOrders(player, season, orderChan)
 		}
 
-		playerOrders := make(map[string][]board.Order)
+		playerOrders := make(map[string][]gameboard.Order)
 		for player, orderChan := range orderChans {
 			orders := <-orderChan
 			playerOrders[player] = orders
@@ -39,7 +39,7 @@ func (game *Game) Start() {
 
 		firstOrders, secondOrders := sortOrders(playerOrders, game.board)
 
-		round := board.Round{Season: season, FirstOrders: firstOrders, SecondOrders: secondOrders}
+		round := gameboard.Round{Season: season, FirstOrders: firstOrders, SecondOrders: secondOrders}
 
 		game.rounds = append(game.rounds, round)
 
@@ -60,21 +60,21 @@ func (game *Game) Start() {
 // If invalid, informs the client and waits for a new order set.
 func (game Game) receiveAndValidateOrders(
 	player string,
-	season board.Season,
-	orderChan chan<- []board.Order,
+	season gameboard.Season,
+	orderChan chan<- []gameboard.Order,
 ) {
 	for {
 		err := game.messenger.SendOrderRequest(player)
 		if err != nil {
 			log.Println(err)
-			orderChan <- []board.Order{}
+			orderChan <- []gameboard.Order{}
 			return
 		}
 
 		orders, err := game.messenger.ReceiveOrders(player)
 		if err != nil {
 			log.Println(err)
-			orderChan <- []board.Order{}
+			orderChan <- []gameboard.Order{}
 			return
 		}
 
@@ -101,16 +101,16 @@ func (game Game) receiveAndValidateOrders(
 
 // Takes a set of orders, and sorts them into two sets based on their sequence in the round.
 // Also takes the board for deciding the sequence.
-func sortOrders(playerOrders map[string][]board.Order, brd board.Board) (
-	firstOrders []board.Order,
-	secondOrders []board.Order,
+func sortOrders(playerOrders map[string][]gameboard.Order, board gameboard.Board) (
+	firstOrders []gameboard.Order,
+	secondOrders []gameboard.Order,
 ) {
-	firstOrders = make([]board.Order, 0)
-	secondOrders = make([]board.Order, 0)
+	firstOrders = make([]gameboard.Order, 0)
+	secondOrders = make([]gameboard.Order, 0)
 
 	for _, orders := range playerOrders {
 		for _, order := range orders {
-			fromRegion := brd.Regions[order.From]
+			fromRegion := board.Regions[order.From]
 
 			// If order origin has no unit, or unit of different color,
 			// then order is a second horse move and should be processed after all others.
@@ -126,17 +126,17 @@ func sortOrders(playerOrders map[string][]board.Order, brd board.Board) (
 }
 
 // Returns the next season given the current season.
-func nextSeason(season board.Season) board.Season {
+func nextSeason(season gameboard.Season) gameboard.Season {
 	switch season {
-	case board.SeasonWinter:
-		return board.SeasonSpring
-	case board.SeasonSpring:
-		return board.SeasonSummer
-	case board.SeasonSummer:
-		return board.SeasonFall
-	case board.SeasonFall:
-		return board.SeasonWinter
+	case gameboard.SeasonWinter:
+		return gameboard.SeasonSpring
+	case gameboard.SeasonSpring:
+		return gameboard.SeasonSummer
+	case gameboard.SeasonSummer:
+		return gameboard.SeasonFall
+	case gameboard.SeasonFall:
+		return gameboard.SeasonWinter
 	default:
-		return board.SeasonWinter
+		return gameboard.SeasonWinter
 	}
 }

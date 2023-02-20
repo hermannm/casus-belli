@@ -1,4 +1,4 @@
-package board
+package gameboard
 
 // Checks whether the region contains a unit.
 func (region Region) IsEmpty() bool {

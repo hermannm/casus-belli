@@ -1,12 +1,12 @@
 package testutils
 
 import (
-	"hermannm.dev/bfh-server/game/board"
+	"hermannm.dev/bfh-server/game/gameboard"
 )
 
 type MockMessenger struct{}
 
-func (MockMessenger) SendBattleResults(battles []board.Battle) error {
+func (MockMessenger) SendBattleResults(battles []gameboard.Battle) error {
 	return nil
 }
 
