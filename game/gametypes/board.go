@@ -39,7 +39,7 @@ func (board Board) AddOrders(orders []Order) {
 
 	// Then adds all supports, except in those regions that are attacked.
 	for _, supportOrder := range supportOrders {
-		if len(board.Regions[supportOrder.Origin].IncomingMoves) == 0 {
+		if !board.Regions[supportOrder.Origin].IsAttacked() {
 			board.AddOrder(supportOrder)
 		}
 	}
@@ -91,9 +91,9 @@ func (board Board) RemoveOrder(order Order) {
 		destination := board.Regions[order.Destination]
 
 		newMoves := make([]Order, 0)
-		for _, incMove := range destination.IncomingMoves {
-			if incMove != order {
-				newMoves = append(newMoves, incMove)
+		for _, incomingMove := range destination.IncomingMoves {
+			if incomingMove != order {
+				newMoves = append(newMoves, incomingMove)
 			}
 		}
 		destination.IncomingMoves = newMoves

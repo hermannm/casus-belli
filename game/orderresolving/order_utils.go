@@ -33,7 +33,7 @@ func attemptRetreat(move gametypes.Order, board gametypes.Board) bool {
 		return true
 	}
 
-	if len(origin.IncomingMoves) != 0 {
+	if origin.IsAttacked() {
 		return false
 	}
 

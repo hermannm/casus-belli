@@ -71,8 +71,7 @@ OuterLoop:
 					}
 				}
 
-				moveCount := len(region.IncomingMoves)
-				if moveCount == 0 {
+				if !region.IsAttacked() {
 					if hasRetreat && region.IsEmpty() {
 						region.Unit = retreat.Unit
 						board.Regions[regionName] = region
@@ -86,7 +85,6 @@ OuterLoop:
 				resolveRegionMoves(
 					region,
 					board,
-					moveCount,
 					allowPlayerConflict,
 					battleReceiver,
 					processing,
@@ -105,7 +103,7 @@ OuterLoop:
 }
 
 // Resolves moves to the given region on the board.
-// Assumes that the region has incoming moves (moveCount > 0).
+// Assumes that the region has incoming moves.
 //
 // Immediately resolves regions that do not require battle, and adds them to the given processed
 // map.
@@ -118,7 +116,6 @@ OuterLoop:
 func resolveRegionMoves(
 	region gametypes.Region,
 	board gametypes.Board,
-	moveCount int,
 	allowPlayerConflict bool,
 	battleReceiver chan gametypes.Battle,
 	processing map[string]struct{},
@@ -162,7 +159,7 @@ func resolveRegionMoves(
 
 	// Empty regions with only a single incoming move are either auto-successes or a singleplayer
 	// battle.
-	if moveCount == 1 && region.IsEmpty() {
+	if len(region.IncomingMoves) == 1 && region.IsEmpty() {
 		move := region.IncomingMoves[0]
 
 		if region.IsControlled() || region.Sea {

@@ -34,7 +34,6 @@ func (board Board) recursivelyFindTransportPath(
 	for _, transportNeighbor := range transportingNeighbors {
 		transportRegion := board.Regions[transportNeighbor.Name]
 
-		attacked := len(transportRegion.IncomingMoves) > 0
 		destinationAdjacent, destinationDangerZone := region.
 			checkNeighborsForDestination(destination)
 
@@ -46,13 +45,13 @@ func (board Board) recursivelyFindTransportPath(
 		var subPaths []transportPath
 		if destinationAdjacent {
 			subPaths = append(subPaths, transportPath{
-				attacked:    attacked,
+				attacked:    transportRegion.IsAttacked(),
 				dangerZones: []string{destinationDangerZone},
 			})
 		}
 		if nextCanTransport {
 			subPaths = append(subPaths, transportPath{
-				attacked:    attacked || nextTransportAttacked,
+				attacked:    transportRegion.IsAttacked() || nextTransportAttacked,
 				dangerZones: nextDangerZones,
 			})
 		}

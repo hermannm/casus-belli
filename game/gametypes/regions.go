@@ -70,6 +70,11 @@ func (region Region) IsControlled() bool {
 	return region.ControllingPlayer != ""
 }
 
+// Checks if any players have move orders against the region.
+func (region Region) IsAttacked() bool {
+	return len(region.IncomingMoves) != 0
+}
+
 // Returns a region's neighbor of the given name, and whether it was found.
 // If the region has several neighbor relations to the region, returns the one matching the provided
 // 'via' string (currently the name of the neighbor relation's danger zone).
