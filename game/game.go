@@ -12,13 +12,8 @@ import (
 
 type Game struct {
 	board     gametypes.Board
-	rounds    []orderresolving.Round
 	options   GameOptions
 	messenger messages.Messenger
-}
-
-type GameOptions struct {
-	ThroneExpansion bool // Whether the game has the "Raven, Sword and Throne" expansion enabled.
 }
 
 // Constructs a game instance. Initializes player slots for each region home tag on the given board.
@@ -28,24 +23,52 @@ func New(boardName string, options GameOptions, msgSender messages.Sender) (*Gam
 		return nil, err
 	}
 
-	return &Game{
-		board:     board,
-		rounds:    make([]orderresolving.Round, 0),
-		options:   options,
-		messenger: messages.NewMessenger(msgSender),
-	}, nil
+	return &Game{board: board, options: options, messenger: messages.NewMessenger(msgSender)}, nil
 }
 
-func DefaultOptions() GameOptions {
-	return GameOptions{
-		ThroneExpansion: true,
+// Initializes a new round of the game.
+func (game *Game) Start() {
+	season := gametypes.SeasonWinter
+
+	// Starts new rounds until there is a winner.
+	for {
+		orders := game.gatherAndValidateOrderSets(season)
+
+		_, winner, hasWinner := orderresolving.ResolveOrders(
+			game.board, orders, season, game.messenger,
+		)
+
+		if hasWinner {
+			game.messenger.SendWinner(winner)
+			break
+		}
+
+		season = season.Next()
 	}
 }
 
 // Dynamically finds the possible player IDs for the game
 // by going through the board and finding all the different Home values.
 func (game Game) PlayerIDs() []string {
-	return playerIDsFromBoard(game.board)
+	ids := make([]string, 0)
+
+OuterLoop:
+	for _, region := range game.board.Regions {
+		potentialID := region.HomePlayer
+		if potentialID == "" {
+			continue
+		}
+
+		for _, id := range ids {
+			if potentialID == id {
+				continue OuterLoop
+			}
+		}
+
+		ids = append(ids, potentialID)
+	}
+
+	return ids
 }
 
 // Returns the name of the board played in this game.
@@ -68,24 +91,12 @@ func (game Game) AddPlayer(playerID string) (lobby.GameMessageReceiver, error) {
 	return receiver, nil
 }
 
-func playerIDsFromBoard(board gametypes.Board) []string {
-	ids := make([]string, 0)
+type GameOptions struct {
+	ThroneExpansion bool // Whether the game has the "Raven, Sword and Throne" expansion enabled.
+}
 
-OuterLoop:
-	for _, region := range board.Regions {
-		potentialID := region.HomePlayer
-		if potentialID == "" {
-			continue
-		}
-
-		for _, id := range ids {
-			if potentialID == id {
-				continue OuterLoop
-			}
-		}
-
-		ids = append(ids, potentialID)
+func DefaultOptions() GameOptions {
+	return GameOptions{
+		ThroneExpansion: true,
 	}
-
-	return ids
 }

@@ -6,18 +6,6 @@ import (
 	"hermannm.dev/bfh-server/game/gametypes"
 )
 
-// A set of player-submitted orders for a round of the game.
-type Round struct {
-	// Affects the type of orders that can be played in the round.
-	Season gametypes.Season `json:"season"`
-
-	// The main set of orders for the round.
-	FirstOrders []gametypes.Order `json:"firstOrders"`
-
-	// Set of orders that are known to be executed after the first orders (e.g. horse moves).
-	SecondOrders []gametypes.Order `json:"secondOrders"`
-}
-
 type Messenger interface {
 	SendBattleResults(battles []gametypes.Battle) error
 	SendSupportRequest(to string, supportingRegion string, battlers []string) error
@@ -27,28 +15,48 @@ type Messenger interface {
 // Adds the round's orders to the board, and resolves them.
 // Returns a list of any potential battles from the round.
 func ResolveOrders(
-	board gametypes.Board, round Round, messenger Messenger,
+	board gametypes.Board, orders []gametypes.Order, season gametypes.Season, messenger Messenger,
 ) (battles []gametypes.Battle, winner string, hasWinner bool) {
 	battles = make([]gametypes.Battle, 0)
 
-	switch round.Season {
-	case gametypes.SeasonWinter:
-		resolveWinterOrders(board, round.FirstOrders)
-	default:
-		firstBattles := resolveNonWinterOrders(board, round.FirstOrders, messenger)
-		battles = append(battles, firstBattles...)
-
-		secondBattles := resolveNonWinterOrders(board, round.SecondOrders, messenger)
-		battles = append(battles, secondBattles...)
-
-		resolveSieges(board)
-
-		winner, hasWinner = board.CheckWinner()
+	if season == gametypes.SeasonWinter {
+		resolveWinterOrders(board, orders)
+		return nil, "", false
 	}
 
-	board.RemoveOrders()
+	firstOrders, secondOrders := SortNonWinterOrders(orders, board)
+
+	firstBattles := resolveNonWinterOrders(board, firstOrders, messenger)
+	battles = append(battles, firstBattles...)
+
+	secondBattles := resolveNonWinterOrders(board, secondOrders, messenger)
+	battles = append(battles, secondBattles...)
+
+	resolveSieges(board)
+
+	winner, hasWinner = board.CheckWinner()
 
 	return battles, winner, hasWinner
+}
+
+// Takes a set of orders, and sorts them into two sets based on their sequence in the round.
+// Also takes the board for deciding the sequence.
+func SortNonWinterOrders(
+	orders []gametypes.Order, board gametypes.Board,
+) (firstOrders []gametypes.Order, secondOrders []gametypes.Order) {
+	for _, order := range orders {
+		fromRegion := board.Regions[order.From]
+
+		// If order origin has no unit, or unit of different color,
+		// then order is a second horse move and should be processed after all others.
+		if fromRegion.IsEmpty() || fromRegion.Unit.Player != order.Player {
+			secondOrders = append(secondOrders, order)
+		} else {
+			firstOrders = append(firstOrders, order)
+		}
+	}
+
+	return firstOrders, secondOrders
 }
 
 // Resolves results of the given orders on the board.
