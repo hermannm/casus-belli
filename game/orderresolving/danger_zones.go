@@ -4,24 +4,42 @@ import (
 	"hermannm.dev/bfh-server/game/gametypes"
 )
 
-// Moves the unit of the given move order to its destination,
-// killing any unit that may have already been there,
-// and sets control of the region to the order's player.
-//
-// Then removes references to this move on the board,
-// and removes any potential order from the destination region.
-func succeedMove(move gametypes.Order, board gametypes.Board) {
-	to := board.Regions[move.To]
-	to.Unit = move.Unit
-	to.Order = gametypes.Order{}
-	if !to.Sea {
-		to.ControllingPlayer = move.Player
+// Finds move and support orders attempting to cross danger zones to their destinations,
+// and fail them if they don't make it across.
+// Returns a battle result for each danger zone crossing.
+func resolveDangerZones(board gametypes.Board) []gametypes.Battle {
+	battles := make([]gametypes.Battle, 0)
+
+	for regionName, region := range board.Regions {
+		order := region.Order
+
+		if order.Type != gametypes.OrderMove && order.Type != gametypes.OrderSupport {
+			continue
+		}
+
+		// Checks if the order tries to cross a danger zone.
+		destination, adjacent := region.GetNeighbor(order.To, order.Via)
+		if !adjacent || destination.DangerZone == "" {
+			continue
+		}
+
+		// Resolves the danger zone crossing.
+		survived, battle := crossDangerZone(order, destination.DangerZone)
+		battles = append(battles, battle)
+
+		// If move fails danger zone crossing, the unit dies.
+		// If support fails crossing, only the order fails.
+		if !survived {
+			if order.Type == gametypes.OrderMove {
+				region.Unit = gametypes.Unit{}
+				board.Regions[regionName] = region
+			}
+
+			board.RemoveOrder(order)
+		}
 	}
-	board.Regions[move.To] = to
 
-	board.RemoveUnit(move.Unit, move.From)
-
-	board.RemoveOrder(move)
+	return battles
 }
 
 // Rolls dice to see if order makes it across danger zone.
@@ -59,22 +77,4 @@ func crossDangerZones(
 	}
 
 	return survivedAll, results
-}
-
-// Attempts to move the unit of the given move order back to its origin.
-// Returns whether the retreat succeeded.
-func attemptRetreat(move gametypes.Order, board gametypes.Board) bool {
-	from := board.Regions[move.From]
-
-	if from.Unit == move.Unit {
-		return true
-	}
-
-	if len(from.IncomingMoves) != 0 {
-		return false
-	}
-
-	from.Unit = move.Unit
-	board.Regions[move.From] = from
-	return true
 }
