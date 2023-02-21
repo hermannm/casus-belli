@@ -11,7 +11,7 @@ import (
 func resolveMoves(
 	board gametypes.Board, allowPlayerConflict bool, messenger Messenger,
 ) []gametypes.Battle {
-	battles := make([]gametypes.Battle, 0)
+	var battles []gametypes.Battle
 
 	battleReceiver := make(chan gametypes.Battle)
 	processing := make(map[string]struct{})

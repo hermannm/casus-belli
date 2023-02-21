@@ -75,8 +75,6 @@ func (board Board) recursivelyFindTransportPath(
 func (region Region) getTransportingNeighbors(
 	board Board, exclude map[string]struct{},
 ) (transports []Neighbor, newExclude map[string]struct{}) {
-	transports = make([]Neighbor, 0)
-
 	newExclude = make(map[string]struct{})
 	for excluded := range exclude {
 		newExclude[excluded] = struct{}{}

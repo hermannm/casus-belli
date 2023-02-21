@@ -78,9 +78,6 @@ func ReadBoardFromConfigFile(boardID string) (gametypes.Board, error) {
 				HomePlayer:        landRegion.HomePlayer,
 				Forest:            landRegion.Forest,
 				Castle:            landRegion.Castle,
-				Neighbors:         make([]gametypes.Neighbor, 0),
-				IncomingMoves:     make([]gametypes.Order, 0),
-				IncomingSupports:  make([]gametypes.Order, 0),
 			}
 
 			board.Regions[region.Name] = region
@@ -88,13 +85,7 @@ func ReadBoardFromConfigFile(boardID string) (gametypes.Board, error) {
 	}
 
 	for _, sea := range jsonBoard.Seas {
-		region := gametypes.Region{
-			Name:             sea.Name,
-			Neighbors:        make([]gametypes.Neighbor, 0),
-			IncomingMoves:    make([]gametypes.Order, 0),
-			IncomingSupports: make([]gametypes.Order, 0),
-		}
-
+		region := gametypes.Region{Name: sea.Name, Sea: true}
 		board.Regions[region.Name] = region
 	}
 

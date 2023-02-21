@@ -138,7 +138,7 @@ func attackModifiers(
 
 // Calculates totals for the given map of player IDs to results, and returns them as a list.
 func calculateTotals(playerResults map[string]gametypes.Result) []gametypes.Result {
-	results := make([]gametypes.Result, 0)
+	results := make([]gametypes.Result, 0, len(playerResults))
 
 	for _, result := range playerResults {
 		total := 0

@@ -43,87 +43,84 @@ func NewMockBoard() gametypes.Board {
 
 	// Defines a utility struct for two-way neighbor declaration, to avoid repetition.
 	neighbors := []struct {
-		a1         string
-		a2         string
+		region1    string
+		region2    string
 		river      bool
 		cliffs     bool
 		dangerZone string
 	}{
-		{a1: "Lusía", a2: "Lomone"},
-		{a1: "Lusía", a2: "Limbol"},
-		{a1: "Lusía", a2: "Leil"},
-		{a1: "Lomone", a2: "Limbol"},
-		{a1: "Limbol", a2: "Leil"},
-		{a1: "Limbol", a2: "Worp"},
-		{a1: "Leil", a2: "Worp"},
-		{a1: "Leil", a2: "Winde"},
-		{a1: "Leil", a2: "Ovo", river: true},
-		{a1: "Worp", a2: "Winde"},
-		{a1: "Worp", a2: "Mare Gond"},
-		{a1: "Winde", a2: "Mare Gond"},
-		{a1: "Winde", a2: "Mare Elle"},
-		{a1: "Winde", a2: "Ovo", river: true},
-		{a1: "Ovo", a2: "Mare Elle"},
-		{a1: "Zona", a2: "Mare Elle"},
-		{a1: "Zona", a2: "Mare Gond"},
-		{a1: "Tond", a2: "Tige", dangerZone: "Bankene"},
-		{a1: "Tond", a2: "Mare Elle"},
-		{a1: "Tond", a2: "Mare Gond"},
-		{a1: "Tond", a2: "Mare Ovond"},
-		{a1: "Tige", a2: "Mare Elle"},
-		{a1: "Tige", a2: "Mare Ovond"},
-		{a1: "Tige", a2: "Tusser"},
-		{a1: "Tusser", a2: "Gron", dangerZone: "Shangrila"},
-		{a1: "Furie", a2: "Firril"},
-		{a1: "Furie", a2: "Mare Ovond"},
-		{a1: "Firril", a2: "Fond"},
-		{a1: "Firril", a2: "Gron"},
-		{a1: "Firril", a2: "Gnade"},
-		{a1: "Firril", a2: "Mare Ovond"},
-		{a1: "Fond", a2: "Mare Ovond"},
-		{a1: "Fond", a2: "Mare Unna"},
-		{a1: "Gron", a2: "Gnade"},
-		{a1: "Gron", a2: "Gewel"},
-		{a1: "Gron", a2: "Emman"},
-		{a1: "Gnade", a2: "Gewel"},
-		{a1: "Gewel", a2: "Mare Unna"},
-		{a1: "Gewel", a2: "Emman", cliffs: true},
-		{a1: "Emman", a2: "Erren", cliffs: true},
-		{a1: "Emman", a2: "Mare Unna"},
-		{a1: "Erren", a2: "Mare Bøso"},
-		{a1: "Mare Gond", a2: "Mare Elle"},
-		{a1: "Mare Gond", a2: "Mare Ovond"},
-		{a1: "Mare Elle", a2: "Mare Ovond", dangerZone: "Bankene"},
-		{a1: "Mare Ovond", a2: "Mare Unna"},
-		{a1: "Mare Unna", a2: "Mare Bøso"},
+		{region1: "Lusía", region2: "Lomone"},
+		{region1: "Lusía", region2: "Limbol"},
+		{region1: "Lusía", region2: "Leil"},
+		{region1: "Lomone", region2: "Limbol"},
+		{region1: "Limbol", region2: "Leil"},
+		{region1: "Limbol", region2: "Worp"},
+		{region1: "Leil", region2: "Worp"},
+		{region1: "Leil", region2: "Winde"},
+		{region1: "Leil", region2: "Ovo", river: true},
+		{region1: "Worp", region2: "Winde"},
+		{region1: "Worp", region2: "Mare Gond"},
+		{region1: "Winde", region2: "Mare Gond"},
+		{region1: "Winde", region2: "Mare Elle"},
+		{region1: "Winde", region2: "Ovo", river: true},
+		{region1: "Ovo", region2: "Mare Elle"},
+		{region1: "Zona", region2: "Mare Elle"},
+		{region1: "Zona", region2: "Mare Gond"},
+		{region1: "Tond", region2: "Tige", dangerZone: "Bankene"},
+		{region1: "Tond", region2: "Mare Elle"},
+		{region1: "Tond", region2: "Mare Gond"},
+		{region1: "Tond", region2: "Mare Ovond"},
+		{region1: "Tige", region2: "Mare Elle"},
+		{region1: "Tige", region2: "Mare Ovond"},
+		{region1: "Tige", region2: "Tusser"},
+		{region1: "Tusser", region2: "Gron", dangerZone: "Shangrila"},
+		{region1: "Furie", region2: "Firril"},
+		{region1: "Furie", region2: "Mare Ovond"},
+		{region1: "Firril", region2: "Fond"},
+		{region1: "Firril", region2: "Gron"},
+		{region1: "Firril", region2: "Gnade"},
+		{region1: "Firril", region2: "Mare Ovond"},
+		{region1: "Fond", region2: "Mare Ovond"},
+		{region1: "Fond", region2: "Mare Unna"},
+		{region1: "Gron", region2: "Gnade"},
+		{region1: "Gron", region2: "Gewel"},
+		{region1: "Gron", region2: "Emman"},
+		{region1: "Gnade", region2: "Gewel"},
+		{region1: "Gewel", region2: "Mare Unna"},
+		{region1: "Gewel", region2: "Emman", cliffs: true},
+		{region1: "Emman", region2: "Erren", cliffs: true},
+		{region1: "Emman", region2: "Mare Unna"},
+		{region1: "Erren", region2: "Mare Bøso"},
+		{region1: "Mare Gond", region2: "Mare Elle"},
+		{region1: "Mare Gond", region2: "Mare Ovond"},
+		{region1: "Mare Elle", region2: "Mare Ovond", dangerZone: "Bankene"},
+		{region1: "Mare Ovond", region2: "Mare Unna"},
+		{region1: "Mare Unna", region2: "Mare Bøso"},
 	}
 
 	for _, region := range regions {
-		region.Neighbors = make([]gametypes.Neighbor, 0)
-		region.IncomingMoves = make([]gametypes.Order, 0)
-		region.IncomingSupports = make([]gametypes.Order, 0)
 		board.Regions[region.Name] = region
 	}
 
 	for _, neighbor := range neighbors {
-		region1 := board.Regions[neighbor.a1]
-		region2 := board.Regions[neighbor.a2]
+		region1 := board.Regions[neighbor.region1]
+		region2 := board.Regions[neighbor.region2]
 
 		region1.Neighbors = append(region1.Neighbors, gametypes.Neighbor{
-			Name:        neighbor.a2,
+			Name:        neighbor.region2,
 			AcrossWater: neighbor.river || (region1.Sea && !region2.Sea),
 			Cliffs:      neighbor.cliffs,
 			DangerZone:  neighbor.dangerZone,
 		})
-		board.Regions[neighbor.a1] = region1
+		board.Regions[neighbor.region1] = region1
 
 		region2.Neighbors = append(region2.Neighbors, gametypes.Neighbor{
-			Name:        neighbor.a1,
+			Name:        neighbor.region1,
 			AcrossWater: neighbor.river || (region2.Sea && !region1.Sea),
 			Cliffs:      neighbor.cliffs,
 			DangerZone:  neighbor.dangerZone,
 		})
-		board.Regions[neighbor.a2] = region2
+		board.Regions[neighbor.region2] = region2
 	}
 
 	return board

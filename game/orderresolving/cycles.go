@@ -21,7 +21,7 @@ func resolveCycle(
 	processed map[string]struct{},
 	messenger Messenger,
 ) {
-	battleRegions := make([]gametypes.Region, 0)
+	var battleRegions []gametypes.Region
 
 	// First, resolves non-conflicting cycle moves.
 	for _, move := range cycle {

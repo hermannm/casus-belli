@@ -45,7 +45,7 @@ func (messenger Messenger) RemoveReceiver(playerID string) {
 }
 
 func (messenger Messenger) ReceiverIDs() []string {
-	ids := make([]string, 0)
+	ids := make([]string, 0, len(messenger.receivers))
 	for id := range messenger.receivers {
 		ids = append(ids, id)
 	}

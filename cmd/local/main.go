@@ -42,7 +42,7 @@ func main() {
 func selectGame(games map[string]lobby.GameConstructor) lobby.GameConstructor {
 	fmt.Print("Available games:\n")
 
-	gameTitles := make([]string, 0)
+	var gameTitles []string
 	for key := range games {
 		gameTitles = append(gameTitles, key)
 	}

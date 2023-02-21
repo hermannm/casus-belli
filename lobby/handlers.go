@@ -36,7 +36,7 @@ func RegisterLobbyCreationEndpoints(mux *http.ServeMux, games map[string]GameCon
 	// Endpoint for clients to create their own lobbies if the server is set to enable that.
 	mux.Handle("/create", createLobbyHandler{games: games})
 
-	gameTitles := make([]string, len(games))
+	gameTitles := make([]string, 0, len(games))
 	for key := range games {
 		gameTitles = append(gameTitles, key)
 	}

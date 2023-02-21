@@ -47,7 +47,7 @@ func (battle Battle) RegionNames() []string {
 		}
 	}
 
-	names := make([]string, 0)
+	names := make([]string, 0, len(nameMap))
 	for name := range nameMap {
 		names = append(names, name)
 	}
@@ -76,17 +76,17 @@ func (battle Battle) WinnersAndLosers() (winners []string, losers []string) {
 		// Checks that order meets the requirement for crossing the danger zone.
 		if battle.DangerZone != "" {
 			if result.Total >= RequirementDangerZone {
-				return []string{result.Move.Player}, make([]string, 0)
+				return []string{result.Move.Player}, nil
 			} else {
-				return make([]string, 0), []string{result.Move.Player}
+				return nil, []string{result.Move.Player}
 			}
 		}
 
 		// Checks that order meets the requirement for conquering the neutral region.
 		if result.Total >= RequirementConquer {
-			return []string{result.Move.Player}, make([]string, 0)
+			return []string{result.Move.Player}, nil
 		} else {
-			return make([]string, 0), []string{result.Move.Player}
+			return nil, []string{result.Move.Player}
 		}
 	}
 
@@ -99,8 +99,6 @@ func (battle Battle) WinnersAndLosers() (winners []string, losers []string) {
 	}
 
 	// Sorts combatants based on whether they exceeded the highest result.
-	winners = make([]string, 0)
-	losers = make([]string, 0)
 	for _, result := range battle.Results {
 		if result.Total >= highestResult {
 			winners = append(winners, result.Move.Player)

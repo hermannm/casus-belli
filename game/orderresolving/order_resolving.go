@@ -17,8 +17,6 @@ type Messenger interface {
 func ResolveOrders(
 	board gametypes.Board, orders []gametypes.Order, season gametypes.Season, messenger Messenger,
 ) (battles []gametypes.Battle, winner string, hasWinner bool) {
-	battles = make([]gametypes.Battle, 0)
-
 	if season == gametypes.SeasonWinter {
 		resolveWinterOrders(board, orders)
 		return nil, "", false
@@ -63,7 +61,7 @@ func SortNonWinterOrders(
 func resolveNonWinterOrders(
 	board gametypes.Board, orders []gametypes.Order, messenger Messenger,
 ) []gametypes.Battle {
-	battles := make([]gametypes.Battle, 0)
+	var battles []gametypes.Battle
 
 	board.AddOrders(orders)
 

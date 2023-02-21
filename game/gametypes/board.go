@@ -35,7 +35,7 @@ func (board Board) RemoveUnit(unit Unit, regionName string) {
 // Takes a list of orders, and populates the appropriate regions on the board with those orders.
 // Does not add support orders that have moves against them, as that cancels them.
 func (board Board) AddOrders(orders []Order) {
-	supportOrders := make([]Order, 0, len(orders))
+	var supportOrders []Order
 
 	// First adds all orders except supports, so that supports can check IncomingMoves.
 	for _, order := range orders {
@@ -78,13 +78,8 @@ func (board Board) AddOrder(order Order) {
 func (board Board) RemoveOrders() {
 	for regionName, region := range board.Regions {
 		region.Order = Order{}
-
-		if len(region.IncomingMoves) > 0 {
-			region.IncomingMoves = make([]Order, 0)
-		}
-		if len(region.IncomingSupports) > 0 {
-			region.IncomingSupports = make([]Order, 0)
-		}
+		region.IncomingMoves = nil
+		region.IncomingSupports = nil
 
 		board.Regions[regionName] = region
 	}
@@ -100,7 +95,7 @@ func (board Board) RemoveOrder(order Order) {
 	case OrderMove:
 		destination := board.Regions[order.Destination]
 
-		newMoves := make([]Order, 0)
+		var newMoves []Order
 		for _, incomingMove := range destination.IncomingMoves {
 			if incomingMove != order {
 				newMoves = append(newMoves, incomingMove)
@@ -112,7 +107,7 @@ func (board Board) RemoveOrder(order Order) {
 	case OrderSupport:
 		destination := board.Regions[order.Destination]
 
-		newSupports := make([]Order, 0)
+		var newSupports []Order
 		for _, incSupport := range destination.IncomingSupports {
 			if incSupport != order {
 				newSupports = append(newSupports, incSupport)

@@ -8,7 +8,7 @@ import (
 // and fail them if they don't make it across.
 // Returns a battle result for each danger zone crossing.
 func resolveDangerZones(board gametypes.Board) []gametypes.Battle {
-	battles := make([]gametypes.Battle, 0)
+	var battles []gametypes.Battle
 
 	for regionName, region := range board.Regions {
 		order := region.Order
@@ -65,16 +65,13 @@ func crossDangerZone(
 func crossDangerZones(
 	order gametypes.Order, dangerZones []string,
 ) (survivedAll bool, results []gametypes.Battle) {
-	survivedAll = true
-	results = make([]gametypes.Battle, 0)
-
 	for _, dangerZone := range dangerZones {
 		survived, result := crossDangerZone(order, dangerZone)
 		results = append(results, result)
 		if !survived {
-			survivedAll = false
+			return false, results
 		}
 	}
 
-	return survivedAll, results
+	return true, results
 }

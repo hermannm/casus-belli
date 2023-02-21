@@ -50,7 +50,7 @@ type GameConstructor func(lobby *Lobby, options any) (Game, error)
 // and uses the given constructor to construct its game instance.
 // Returns error if lobby ID is already taken, or if game construction failed.
 func New(name string, gameConstructor GameConstructor) (*Lobby, error) {
-	lobby := &Lobby{name: name, lock: sync.RWMutex{}, players: make([]*Player, 0)}
+	lobby := &Lobby{name: name, lock: sync.RWMutex{}}
 
 	// TODO: Implement game options.
 	game, err := gameConstructor(lobby, nil)

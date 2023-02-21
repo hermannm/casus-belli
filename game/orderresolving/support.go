@@ -94,7 +94,7 @@ func callSupport(
 		}
 	}
 
-	battlers := make([]string, 0)
+	var battlers []string
 	for _, move := range moves {
 		battlers = append(battlers, move.Player)
 	}
