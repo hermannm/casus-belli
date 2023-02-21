@@ -3,7 +3,7 @@ package game
 import (
 	"fmt"
 
-	"hermannm.dev/bfh-server/game/boardsetup"
+	"hermannm.dev/bfh-server/game/boardconfig"
 	"hermannm.dev/bfh-server/game/gametypes"
 	"hermannm.dev/bfh-server/game/messages"
 	"hermannm.dev/bfh-server/game/orderresolving"
@@ -23,7 +23,7 @@ type GameOptions struct {
 
 // Constructs a game instance. Initializes player slots for each region home tag on the given board.
 func New(boardName string, options GameOptions, msgSender messages.Sender) (*Game, error) {
-	board, err := boardsetup.ReadBoard(boardName)
+	board, err := boardconfig.ReadBoardFromConfigFile(boardName)
 	if err != nil {
 		return nil, err
 	}

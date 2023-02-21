@@ -1,4 +1,4 @@
-package boardsetup
+package boardconfig
 
 import (
 	"embed"
@@ -9,10 +9,10 @@ import (
 	"hermannm.dev/bfh-server/game/gametypes"
 )
 
-// boards embeds the json files of boards from this folder.
+// Embeds the JSON board config files from this folder.
 //
 //go:embed bfh_5players.json
-var boards embed.FS
+var boardConfigFiles embed.FS
 
 // Utility type for json unmarshaling.
 type jsonBoard struct {
@@ -46,8 +46,8 @@ type neighbor struct {
 }
 
 // Reads and constructs the board matching the given ID.
-func ReadBoard(boardID string) (gametypes.Board, error) {
-	content, err := boards.ReadFile(fmt.Sprintf("%s.json", boardID))
+func ReadBoardFromConfigFile(boardID string) (gametypes.Board, error) {
+	content, err := boardConfigFiles.ReadFile(fmt.Sprintf("%s.json", boardID))
 	if err != nil {
 		return gametypes.Board{}, err
 	}
