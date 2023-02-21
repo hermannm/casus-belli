@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"hermannm.dev/bfh-server/game/gametypes"
-	"hermannm.dev/bfh-server/game/validation"
+	"hermannm.dev/bfh-server/game/ordervalidation"
 )
 
 func (game *Game) gatherAndValidateOrderSets(season gametypes.Season) []gametypes.Order {
@@ -61,7 +61,7 @@ func (game Game) gatherAndValidateOrderSet(
 			orders[i] = order
 		}
 
-		err = validation.ValidateOrders(orders, game.board, season)
+		err = ordervalidation.ValidateOrders(orders, game.board, season)
 		if err != nil {
 			log.Println(err)
 			game.messenger.SendError(player, err.Error())
