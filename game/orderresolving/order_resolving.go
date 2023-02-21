@@ -8,8 +8,8 @@ import (
 
 type Messenger interface {
 	SendBattleResults(battles []gametypes.Battle) error
-	SendSupportRequest(to string, supportingRegion string, battlers []string) error
-	ReceiveSupport(from string, fromRegion string) (supportTo string, err error)
+	SendSupportRequest(toPlayer string, supportingRegion string, battlers []string) error
+	ReceiveSupport(fromPlayer string, fromRegion string) (supportedPlayer string, err error)
 }
 
 // Adds the round's orders to the board, and resolves them.
@@ -45,7 +45,7 @@ func SortNonWinterOrders(
 	orders []gametypes.Order, board gametypes.Board,
 ) (firstOrders []gametypes.Order, secondOrders []gametypes.Order) {
 	for _, order := range orders {
-		fromRegion := board.Regions[order.From]
+		fromRegion := board.Regions[order.Origin]
 
 		// If order origin has no unit, or unit of different color,
 		// then order is a second horse move and should be processed after all others.
@@ -106,21 +106,21 @@ func resolveWinterOrders(board gametypes.Board, orders []gametypes.Order) {
 	for _, order := range orders {
 		switch order.Type {
 		case gametypes.OrderBuild:
-			from := board.Regions[order.From]
-			from.Unit = gametypes.Unit{
+			region := board.Regions[order.Origin]
+			region.Unit = gametypes.Unit{
 				Player: order.Player,
 				Type:   order.Build,
 			}
-			board.Regions[order.From] = from
+			board.Regions[order.Origin] = region
 		case gametypes.OrderMove:
-			from := board.Regions[order.From]
-			to := board.Regions[order.To]
+			origin := board.Regions[order.Origin]
+			destination := board.Regions[order.Destination]
 
-			to.Unit = from.Unit
-			from.Unit = gametypes.Unit{}
+			destination.Unit = origin.Unit
+			origin.Unit = gametypes.Unit{}
 
-			board.Regions[order.From] = from
-			board.Regions[order.To] = to
+			board.Regions[order.Origin] = origin
+			board.Regions[order.Destination] = destination
 		}
 	}
 }

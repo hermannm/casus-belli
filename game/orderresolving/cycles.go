@@ -25,15 +25,15 @@ func resolveCycle(
 
 	// First, resolves non-conflicting cycle moves.
 	for _, move := range cycle {
-		to := board.Regions[move.To]
+		destination := board.Regions[move.Destination]
 
-		if (to.IsControlled() || to.Sea) && len(to.IncomingMoves) == 1 {
+		if (destination.IsControlled() || destination.Sea) && len(destination.IncomingMoves) == 1 {
 			succeedMove(move, board)
-			processed[to.Name] = struct{}{}
+			processed[destination.Name] = struct{}{}
 			continue
 		}
 
-		battleRegions = append(battleRegions, to)
+		battleRegions = append(battleRegions, destination)
 	}
 
 	// Then resolves cycle moves that require battle.
@@ -64,19 +64,21 @@ func discoverCycle(
 		return nil, false
 	}
 
-	to := board.Regions[order.To]
+	destination := board.Regions[order.Destination]
 
 	// The cycle has outside attackers if more than just this order in the cycle is attacking the
 	// destination.
-	outsideAttackers = len(to.IncomingMoves) > 1
+	outsideAttackers = len(destination.IncomingMoves) > 1
 
 	// The base case: the destination is the beginning of the cycle.
-	if to.Name == firstRegionName {
+	if destination.Name == firstRegionName {
 		return []gametypes.Order{order}, outsideAttackers
 	}
 
 	// If the base case is not yet reached, passes cycle discovery to the next order in the chain.
-	continuedCycle, continuedOutsideAttackers := discoverCycle(firstRegionName, to.Order, board)
+	continuedCycle, continuedOutsideAttackers := discoverCycle(
+		firstRegionName, destination.Order, board,
+	)
 	if continuedCycle == nil {
 		return nil, false
 	} else {
@@ -95,11 +97,11 @@ func discoverTwoWayCycle(
 		return false, gametypes.Region{}, false
 	}
 
-	region2 = board.Regions[region1.Order.To]
+	region2 = board.Regions[region1.Order.Destination]
 	order2 := region2.Order
 	if order2.Type != gametypes.OrderMove {
 		return false, gametypes.Region{}, false
 	}
 
-	return order1.From == order2.To, region2, order1.Player == order2.Player
+	return order1.Origin == order2.Destination, region2, order1.Player == order2.Player
 }

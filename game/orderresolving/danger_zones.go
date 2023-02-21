@@ -18,7 +18,7 @@ func resolveDangerZones(board gametypes.Board) []gametypes.Battle {
 		}
 
 		// Checks if the order tries to cross a danger zone.
-		destination, adjacent := region.GetNeighbor(order.To, order.Via)
+		destination, adjacent := region.GetNeighbor(order.Destination, order.Via)
 		if !adjacent || destination.DangerZone == "" {
 			continue
 		}

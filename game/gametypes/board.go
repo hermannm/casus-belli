@@ -39,29 +39,29 @@ func (board Board) AddOrders(orders []Order) {
 
 	// Then adds all supports, except in those regions that are attacked.
 	for _, supportOrder := range supportOrders {
-		if len(board.Regions[supportOrder.From].IncomingMoves) == 0 {
+		if len(board.Regions[supportOrder.Origin].IncomingMoves) == 0 {
 			board.AddOrder(supportOrder)
 		}
 	}
 }
 
 func (board Board) AddOrder(order Order) {
-	from := board.Regions[order.From]
-	from.Order = order
-	board.Regions[order.From] = from
+	origin := board.Regions[order.Origin]
+	origin.Order = order
+	board.Regions[order.Origin] = origin
 
-	if order.To == "" {
+	if order.Destination == "" {
 		return
 	}
 
-	to := board.Regions[order.To]
+	destination := board.Regions[order.Destination]
 	switch order.Type {
 	case OrderMove:
-		to.IncomingMoves = append(to.IncomingMoves, order)
+		destination.IncomingMoves = append(destination.IncomingMoves, order)
 	case OrderSupport:
-		to.IncomingSupports = append(to.IncomingSupports, order)
+		destination.IncomingSupports = append(destination.IncomingSupports, order)
 	}
-	board.Regions[order.To] = to
+	board.Regions[order.Destination] = destination
 }
 
 // Cleans up remaining order references on the board after the round.
@@ -82,35 +82,35 @@ func (board Board) RemoveOrders() {
 
 // Removes the given order from the regions on the board.
 func (board Board) RemoveOrder(order Order) {
-	from := board.Regions[order.From]
-	from.Order = Order{}
-	board.Regions[order.From] = from
+	origin := board.Regions[order.Origin]
+	origin.Order = Order{}
+	board.Regions[order.Origin] = origin
 
 	switch order.Type {
 	case OrderMove:
-		to := board.Regions[order.To]
+		destination := board.Regions[order.Destination]
 
 		newMoves := make([]Order, 0)
-		for _, incMove := range to.IncomingMoves {
+		for _, incMove := range destination.IncomingMoves {
 			if incMove != order {
 				newMoves = append(newMoves, incMove)
 			}
 		}
-		to.IncomingMoves = newMoves
+		destination.IncomingMoves = newMoves
 
-		board.Regions[order.To] = to
+		board.Regions[order.Destination] = destination
 	case OrderSupport:
-		to := board.Regions[order.To]
+		destination := board.Regions[order.Destination]
 
 		newSupports := make([]Order, 0)
-		for _, incSupport := range to.IncomingSupports {
+		for _, incSupport := range destination.IncomingSupports {
 			if incSupport != order {
 				newSupports = append(newSupports, incSupport)
 			}
 		}
-		to.IncomingSupports = newSupports
+		destination.IncomingSupports = newSupports
 
-		board.Regions[order.To] = to
+		board.Regions[order.Destination] = destination
 	}
 }
 

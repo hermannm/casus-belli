@@ -14,10 +14,10 @@ type Order struct {
 	Unit Unit `json:"-"`
 
 	// Name of the region where the order is placed.
-	From string `json:"from"`
+	Origin string `json:"origin"`
 
 	// For move and support orders: name of destination region.
-	To string `json:"to"`
+	Destination string `json:"destination"`
 
 	// For move orders: name of DangerZone the order tries to pass through, if any.
 	Via string `json:"via"`

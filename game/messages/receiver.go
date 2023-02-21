@@ -69,12 +69,12 @@ func (receiver Receiver) ReceiveMessage(msgID string, rawMsg json.RawMessage) {
 	}
 }
 
-func (messenger Messenger) ReceiveOrders(from string) ([]gametypes.Order, error) {
-	receiver, ok := messenger.receivers[from]
+func (messenger Messenger) ReceiveOrders(fromPlayer string) ([]gametypes.Order, error) {
+	receiver, ok := messenger.receivers[fromPlayer]
 	if !ok {
 		return nil, fmt.Errorf(
 			"failed to get order message from player %s: receiver not found",
-			from,
+			fromPlayer,
 		)
 	}
 
@@ -83,14 +83,13 @@ func (messenger Messenger) ReceiveOrders(from string) ([]gametypes.Order, error)
 }
 
 func (messenger Messenger) ReceiveSupport(
-	from string,
-	supportingRegion string,
-) (supportTo string, err error) {
-	receiver, ok := messenger.receivers[from]
+	fromPlayer string, supportingRegion string,
+) (supportedPlayer string, err error) {
+	receiver, ok := messenger.receivers[fromPlayer]
 	if !ok {
 		return "", fmt.Errorf(
 			"failed to get support message from player %s: receiver not found",
-			from,
+			fromPlayer,
 		)
 	}
 
@@ -98,7 +97,7 @@ func (messenger Messenger) ReceiveSupport(
 	if !ok {
 		return "", fmt.Errorf(
 			"failed to get support message from player %s: support receiver uninitialized for region %s",
-			from,
+			fromPlayer,
 			supportingRegion,
 		)
 	}

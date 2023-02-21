@@ -51,12 +51,12 @@ func resolveBorderBattle(
 		if move.Player == winner {
 			// If destination region is uncontrolled, the player must win a singleplayer battle
 			// there before taking control.
-			if board.Regions[move.To].IsControlled() {
+			if board.Regions[move.Destination].IsControlled() {
 				succeedMove(move, board)
 			}
 		} else {
 			board.RemoveOrder(move)
-			board.RemoveUnit(move.Unit, move.From)
+			board.RemoveUnit(move.Unit, move.Origin)
 		}
 	}
 
@@ -114,7 +114,7 @@ func resolveMultiplayerBattle(
 
 		if lost {
 			board.RemoveOrder(move)
-			board.RemoveUnit(move.Unit, move.From)
+			board.RemoveUnit(move.Unit, move.Origin)
 			continue
 		}
 
@@ -126,7 +126,7 @@ func resolveMultiplayerBattle(
 			continue
 		}
 
-		if board.Regions[move.To].IsControlled() {
+		if board.Regions[move.Destination].IsControlled() {
 			succeedMove(move, board)
 		}
 	}

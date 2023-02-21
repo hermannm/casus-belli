@@ -42,8 +42,8 @@ func (battle Battle) RegionNames() []string {
 	for _, result := range battle.Results {
 		if result.DefenderRegion != "" {
 			nameMap[result.DefenderRegion] = struct{}{}
-		} else if result.Move.To != "" {
-			nameMap[result.Move.To] = struct{}{}
+		} else if result.Move.Destination != "" {
+			nameMap[result.Move.Destination] = struct{}{}
 		}
 	}
 
@@ -58,8 +58,8 @@ func (battle Battle) RegionNames() []string {
 // Returns whether the battle was between two moves moving against each other.
 func (battle Battle) IsBorderConflict() bool {
 	return len(battle.Results) == 2 &&
-		(battle.Results[0].Move.To == battle.Results[1].Move.From) &&
-		(battle.Results[1].Move.To == battle.Results[0].Move.From)
+		(battle.Results[0].Move.Destination == battle.Results[1].Move.Origin) &&
+		(battle.Results[1].Move.Destination == battle.Results[0].Move.Origin)
 }
 
 // Goes through the results of the battle and finds the winners and losers.

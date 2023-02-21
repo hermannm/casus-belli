@@ -98,7 +98,7 @@ func attackModifiers(
 ) []gametypes.Modifier {
 	mods := []gametypes.Modifier{}
 
-	neighbor, adjacent := region.GetNeighbor(move.From, move.Via)
+	neighbor, adjacent := region.GetNeighbor(move.Origin, move.Via)
 
 	// Assumes danger zone checks have been made before battle,
 	// and thus adds surprise modifier to attacker coming across such zones.

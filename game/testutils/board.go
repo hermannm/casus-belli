@@ -144,7 +144,7 @@ func PlaceUnits(units map[string]gametypes.Unit, board gametypes.Board) {
 // Also sets the player field on each order to the player of the ordered unit.
 func PlaceOrders(orders []gametypes.Order, board gametypes.Board) {
 	for i, order := range orders {
-		region, ok := board.Regions[order.From]
+		region, ok := board.Regions[order.Origin]
 		if !ok {
 			continue
 		}

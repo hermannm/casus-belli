@@ -10,11 +10,11 @@ import (
 func resolveTransports(
 	move gametypes.Order, destination gametypes.Region, board gametypes.Board,
 ) (transportAttacked bool, dangerZones []string) {
-	if destination.HasNeighbor(move.From) {
+	if destination.HasNeighbor(move.Origin) {
 		return false, nil
 	}
 
-	canTransport, transportAttacked, dangerZones := board.FindTransportPath(move.From, move.To)
+	canTransport, transportAttacked, dangerZones := board.FindTransportPath(move.Origin, move.Destination)
 
 	if !canTransport {
 		board.RemoveOrder(move)

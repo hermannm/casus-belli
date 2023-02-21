@@ -10,33 +10,34 @@ import (
 // Then removes references to this move on the board, and removes any potential order from the
 // destination region.
 func succeedMove(move gametypes.Order, board gametypes.Board) {
-	to := board.Regions[move.To]
-	to.Unit = move.Unit
-	to.Order = gametypes.Order{}
-	if !to.Sea {
-		to.ControllingPlayer = move.Player
+	destination := board.Regions[move.Destination]
+
+	destination.Unit = move.Unit
+	destination.Order = gametypes.Order{}
+	if !destination.Sea {
+		destination.ControllingPlayer = move.Player
 	}
-	board.Regions[move.To] = to
 
-	board.RemoveUnit(move.Unit, move.From)
+	board.Regions[move.Destination] = destination
 
+	board.RemoveUnit(move.Unit, move.Origin)
 	board.RemoveOrder(move)
 }
 
 // Attempts to move the unit of the given move order back to its origin.
 // Returns whether the retreat succeeded.
 func attemptRetreat(move gametypes.Order, board gametypes.Board) bool {
-	from := board.Regions[move.From]
+	origin := board.Regions[move.Origin]
 
-	if from.Unit == move.Unit {
+	if origin.Unit == move.Unit {
 		return true
 	}
 
-	if len(from.IncomingMoves) != 0 {
+	if len(origin.IncomingMoves) != 0 {
 		return false
 	}
 
-	from.Unit = move.Unit
-	board.Regions[move.From] = from
+	origin.Unit = move.Unit
+	board.Regions[move.Origin] = origin
 	return true
 }

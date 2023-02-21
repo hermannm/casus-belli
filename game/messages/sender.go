@@ -8,25 +8,25 @@ import (
 )
 
 type Sender interface {
-	SendMessage(to string, msg map[string]any) error
+	SendMessage(toPlayer string, msg map[string]any) error
 	SendMessageToAll(msg map[string]any) error
 }
 
-func (messenger Messenger) SendError(to string, errMsg string) {
+func (messenger Messenger) SendError(toPlayer string, errMsg string) {
 	msg := message{errorMsgID: errorMsg{Error: errMsg}}
 
-	err := messenger.sender.SendMessage(to, msg)
+	err := messenger.sender.SendMessage(toPlayer, msg)
 	if err != nil {
-		log.Println(fmt.Errorf("failed to send error message to player %s: %w", to, err))
+		log.Println(fmt.Errorf("failed to send error message to player %s: %w", toPlayer, err))
 	}
 }
 
-func (messenger Messenger) SendOrderRequest(to string) error {
+func (messenger Messenger) SendOrderRequest(toPlayer string) error {
 	msg := message{orderRequestMsgID: orderRequestMsg{}}
 
-	err := messenger.sender.SendMessage(to, msg)
+	err := messenger.sender.SendMessage(toPlayer, msg)
 	if err != nil {
-		return fmt.Errorf("failed to send order request message to player %s: %w", to, err)
+		return fmt.Errorf("failed to send order request message to player %s: %w", toPlayer, err)
 	}
 
 	return nil
@@ -55,7 +55,7 @@ func (messenger Messenger) SendOrdersConfirmation(player string) error {
 }
 
 func (messenger Messenger) SendSupportRequest(
-	to string,
+	toPlayer string,
 	supportingRegion string,
 	supportablePlayers []string,
 ) error {
@@ -63,9 +63,9 @@ func (messenger Messenger) SendSupportRequest(
 		SupportingRegion: supportingRegion, SupportablePlayers: supportablePlayers},
 	}
 
-	err := messenger.sender.SendMessage(to, msg)
+	err := messenger.sender.SendMessage(toPlayer, msg)
 	if err != nil {
-		return fmt.Errorf("failed to send support request message to player %s: %w", to, err)
+		return fmt.Errorf("failed to send support request message to player %s: %w", toPlayer, err)
 	}
 
 	return nil

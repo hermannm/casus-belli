@@ -35,7 +35,7 @@ func appendSupportMods(
 		if result.DefenderRegion != "" {
 			continue
 		}
-		if result.Move.To == region.Name {
+		if result.Move.Destination == region.Name {
 			moves = append(moves, result.Move)
 		}
 	}

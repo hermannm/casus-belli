@@ -27,7 +27,7 @@ OuterLoop:
 
 			newRetreats := resolveBattle(battle, board)
 			for _, retreat := range newRetreats {
-				retreats[retreat.From] = retreat
+				retreats[retreat.Origin] = retreat
 			}
 
 			for _, region := range battle.RegionNames() {
