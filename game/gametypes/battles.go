@@ -1,6 +1,42 @@
-package gameboard
+package gametypes
 
-func (battle Battle) regionNames() []string {
+// Results of a battle from conflicting move orders, an attempt to conquer a neutral region,
+// or an attempt to cross a danger zone.
+type Battle struct {
+	// The dice and modifier results of the battle.
+	// If length is one, the battle was a neutral conquer attempt.
+	// If length is more than one, the battle was between players.
+	Results []Result `json:"results"`
+
+	// In case of danger zone crossing: name of the danger zone.
+	DangerZone string `json:"dangerZone"`
+}
+
+// Dice and modifier result for a battle.
+type Result struct {
+	// The sum of the dice roll and modifiers.
+	Total int `json:"total"`
+
+	// The modifiers comprising the result, including the dice roll.
+	Parts []Modifier `json:"parts"`
+
+	// If result of a move order to the battle: the move order in question.
+	Move Order `json:"move"`
+
+	// If result of a defending unit in a region: the name of the region.
+	DefenderRegion string `json:"defenderRegion"`
+}
+
+// Numbers to beat in different types of battles.
+const (
+	// Number to beat when attempting to conquer a neutral region.
+	RequirementConquer int = 4
+
+	// Number to beat when attempting to cross a danger zone.
+	RequirementDangerZone int = 3
+)
+
+func (battle Battle) RegionNames() []string {
 	nameMap := make(map[string]struct{})
 
 	for _, result := range battle.Results {
@@ -20,20 +56,19 @@ func (battle Battle) regionNames() []string {
 }
 
 // Returns whether the battle was between two moves moving against each other.
-func (battle Battle) isBorderConflict() bool {
+func (battle Battle) IsBorderConflict() bool {
 	return len(battle.Results) == 2 &&
 		(battle.Results[0].Move.To == battle.Results[1].Move.From) &&
 		(battle.Results[1].Move.To == battle.Results[0].Move.From)
 }
 
-// Parses the results of the battle and finds the winners and losers.
+// Goes through the results of the battle and finds the winners and losers.
 //
-// In case of a battle against an unconquered region or a danger zone,
-// only one player is returned in one of the lists.
+// In case of a battle against an unconquered region or a danger zone, only one player is returned
+// in one of the lists.
 //
-// In case of a battle between players, multiple winners are returned
-// in the case of a tie.
-func (battle Battle) parseResults() (winners []string, losers []string) {
+// In case of a battle between players, multiple winners are returned in the case of a tie.
+func (battle Battle) WinnersAndLosers() (winners []string, losers []string) {
 	// Checks if the battle was against an unconquered region.
 	if len(battle.Results) == 1 {
 		result := battle.Results[0]
@@ -75,15 +110,4 @@ func (battle Battle) parseResults() (winners []string, losers []string) {
 	}
 
 	return winners, losers
-}
-
-// Checks if the given player is contained in the given list of players.
-func containsPlayer(players []string, player string) bool {
-	for _, otherPlayer := range players {
-		if otherPlayer == player {
-			return true
-		}
-	}
-
-	return false
 }

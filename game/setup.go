@@ -4,15 +4,15 @@ import (
 	"fmt"
 
 	"hermannm.dev/bfh-server/game/boardsetup"
-	"hermannm.dev/bfh-server/game/gameboard"
+	"hermannm.dev/bfh-server/game/gametypes"
 	"hermannm.dev/bfh-server/game/messages"
+	"hermannm.dev/bfh-server/game/orderresolving"
 	"hermannm.dev/bfh-server/lobby"
 )
 
 type Game struct {
-	name      string
-	board     gameboard.Board
-	rounds    []gameboard.Round
+	board     gametypes.Board
+	rounds    []orderresolving.Round
 	options   GameOptions
 	messenger messages.Messenger
 }
@@ -30,7 +30,7 @@ func New(boardName string, options GameOptions, msgSender messages.Sender) (*Gam
 
 	return &Game{
 		board:     board,
-		rounds:    make([]gameboard.Round, 0),
+		rounds:    make([]orderresolving.Round, 0),
 		options:   options,
 		messenger: messages.NewMessenger(msgSender),
 	}, nil
@@ -68,7 +68,7 @@ func (game Game) AddPlayer(playerID string) (lobby.GameMessageReceiver, error) {
 	return receiver, nil
 }
 
-func playerIDsFromBoard(board gameboard.Board) []string {
+func playerIDsFromBoard(board gametypes.Board) []string {
 	ids := make([]string, 0)
 
 OuterLoop:

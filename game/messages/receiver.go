@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"hermannm.dev/bfh-server/game/gameboard"
+	"hermannm.dev/bfh-server/game/gametypes"
 )
 
 // The Receiver handles messages coming from client, and parses them
@@ -69,7 +69,7 @@ func (receiver Receiver) ReceiveMessage(msgID string, rawMsg json.RawMessage) {
 	}
 }
 
-func (messenger Messenger) ReceiveOrders(from string) ([]gameboard.Order, error) {
+func (messenger Messenger) ReceiveOrders(from string) ([]gametypes.Order, error) {
 	receiver, ok := messenger.receivers[from]
 	if !ok {
 		return nil, fmt.Errorf(

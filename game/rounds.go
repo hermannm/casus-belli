@@ -3,30 +3,30 @@ package game
 import (
 	"log"
 
-	"hermannm.dev/bfh-server/game/gameboard"
+	"hermannm.dev/bfh-server/game/gametypes"
+	"hermannm.dev/bfh-server/game/orderresolving"
 	"hermannm.dev/bfh-server/game/validation"
 )
 
 // Initializes a new round of the game.
 func (game *Game) Start() {
-	var season gameboard.Season
-	var winner string
+	var season gametypes.Season
 
 	// Starts new rounds until there is a winner.
-	for winner == "" {
-		season = nextSeason(season)
+	for {
+		season = season.Next()
 
 		// Waits for submitted orders from each player, then adds them to the round.
 		players := game.messenger.ReceiverIDs()
 
-		orderChans := make(map[string]chan []gameboard.Order)
+		orderChans := make(map[string]chan []gametypes.Order)
 		for _, player := range players {
-			orderChan := make(chan []gameboard.Order, 1)
+			orderChan := make(chan []gametypes.Order, 1)
 			orderChans[player] = orderChan
 			go game.receiveAndValidateOrders(player, season, orderChan)
 		}
 
-		playerOrders := make(map[string][]gameboard.Order)
+		playerOrders := make(map[string][]gametypes.Order)
 		for player, orderChan := range orderChans {
 			orders := <-orderChan
 			playerOrders[player] = orders
@@ -39,20 +39,26 @@ func (game *Game) Start() {
 
 		firstOrders, secondOrders := sortOrders(playerOrders, game.board)
 
-		round := gameboard.Round{Season: season, FirstOrders: firstOrders, SecondOrders: secondOrders}
+		round := orderresolving.Round{
+			Season: season, FirstOrders: firstOrders, SecondOrders: secondOrders,
+		}
 
 		game.rounds = append(game.rounds, round)
 
-		battles, newWinner := game.board.Resolve(round, game.messenger)
-		winner = newWinner
+		battles, winner, hasWinner := orderresolving.ResolveOrders(
+			game.board, round, game.messenger,
+		)
 
 		err = game.messenger.SendBattleResults(battles)
 		if err != nil {
 			log.Println(err)
 		}
-	}
 
-	game.messenger.SendWinner(winner)
+		if hasWinner {
+			game.messenger.SendWinner(winner)
+			break
+		}
+	}
 }
 
 // Waits for the given player to submit orders, then validates them.
@@ -60,21 +66,21 @@ func (game *Game) Start() {
 // If invalid, informs the client and waits for a new order set.
 func (game Game) receiveAndValidateOrders(
 	player string,
-	season gameboard.Season,
-	orderChan chan<- []gameboard.Order,
+	season gametypes.Season,
+	orderChan chan<- []gametypes.Order,
 ) {
 	for {
 		err := game.messenger.SendOrderRequest(player)
 		if err != nil {
 			log.Println(err)
-			orderChan <- []gameboard.Order{}
+			orderChan <- []gametypes.Order{}
 			return
 		}
 
 		orders, err := game.messenger.ReceiveOrders(player)
 		if err != nil {
 			log.Println(err)
-			orderChan <- []gameboard.Order{}
+			orderChan <- []gametypes.Order{}
 			return
 		}
 
@@ -101,12 +107,12 @@ func (game Game) receiveAndValidateOrders(
 
 // Takes a set of orders, and sorts them into two sets based on their sequence in the round.
 // Also takes the board for deciding the sequence.
-func sortOrders(playerOrders map[string][]gameboard.Order, board gameboard.Board) (
-	firstOrders []gameboard.Order,
-	secondOrders []gameboard.Order,
+func sortOrders(playerOrders map[string][]gametypes.Order, board gametypes.Board) (
+	firstOrders []gametypes.Order,
+	secondOrders []gametypes.Order,
 ) {
-	firstOrders = make([]gameboard.Order, 0)
-	secondOrders = make([]gameboard.Order, 0)
+	firstOrders = make([]gametypes.Order, 0)
+	secondOrders = make([]gametypes.Order, 0)
 
 	for _, orders := range playerOrders {
 		for _, order := range orders {
@@ -123,20 +129,4 @@ func sortOrders(playerOrders map[string][]gameboard.Order, board gameboard.Board
 	}
 
 	return firstOrders, secondOrders
-}
-
-// Returns the next season given the current season.
-func nextSeason(season gameboard.Season) gameboard.Season {
-	switch season {
-	case gameboard.SeasonWinter:
-		return gameboard.SeasonSpring
-	case gameboard.SeasonSpring:
-		return gameboard.SeasonSummer
-	case gameboard.SeasonSummer:
-		return gameboard.SeasonFall
-	case gameboard.SeasonFall:
-		return gameboard.SeasonWinter
-	default:
-		return gameboard.SeasonWinter
-	}
 }

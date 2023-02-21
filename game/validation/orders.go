@@ -4,12 +4,14 @@ import (
 	"errors"
 	"fmt"
 
-	"hermannm.dev/bfh-server/game/gameboard"
+	"hermannm.dev/bfh-server/game/gametypes"
 )
 
 // Checks if the given set of orders are valid for the state of the board in the given season.
 // Assumes that all orders are from the same player.
-func ValidateOrders(orders []gameboard.Order, board gameboard.Board, season gameboard.Season) error {
+func ValidateOrders(
+	orders []gametypes.Order, board gametypes.Board, season gametypes.Season,
+) error {
 	for _, order := range orders {
 		err := validateOrder(order, board, season)
 		if err != nil {
@@ -25,7 +27,7 @@ func ValidateOrders(orders []gameboard.Order, board gameboard.Board, season game
 	return nil
 }
 
-func validateOrder(order gameboard.Order, board gameboard.Board, season gameboard.Season) error {
+func validateOrder(order gametypes.Order, board gametypes.Board, season gametypes.Season) error {
 	from := board.Regions[order.From]
 
 	if order.Player != from.Unit.Player {
@@ -33,33 +35,37 @@ func validateOrder(order gameboard.Order, board gameboard.Board, season gameboar
 	}
 
 	switch season {
-	case gameboard.SeasonWinter:
+	case gametypes.SeasonWinter:
 		return validateWinterOrder(order, from, board)
 	default:
 		return validateNonWinterOrder(order, from, board)
 	}
 }
 
-func validateNonWinterOrder(order gameboard.Order, from gameboard.Region, board gameboard.Board) error {
+func validateNonWinterOrder(
+	order gametypes.Order, from gametypes.Region, board gametypes.Board,
+) error {
 	if order.Build != "" {
 		return errors.New("build orders can only be placed in winter")
 	}
 
 	switch order.Type {
-	case gameboard.OrderMove:
+	case gametypes.OrderMove:
 		fallthrough
-	case gameboard.OrderSupport:
+	case gametypes.OrderSupport:
 		return validateMoveOrSupport(order, from, board)
-	case gameboard.OrderBesiege:
+	case gametypes.OrderBesiege:
 		fallthrough
-	case gameboard.OrderTransport:
+	case gametypes.OrderTransport:
 		return validateBesiegeOrTransport(order, from)
 	default:
 		return errors.New("invalid order type")
 	}
 }
 
-func validateMoveOrSupport(order gameboard.Order, from gameboard.Region, board gameboard.Board) error {
+func validateMoveOrSupport(
+	order gametypes.Order, from gametypes.Region, board gametypes.Board,
+) error {
 	if order.To == "" {
 		return errors.New("moves and supports must have destination")
 	}
@@ -69,7 +75,7 @@ func validateMoveOrSupport(order gameboard.Order, from gameboard.Region, board g
 		return fmt.Errorf("destination region with name %s not found", order.To)
 	}
 
-	if from.Unit.Type == gameboard.UnitShip {
+	if from.Unit.Type == gametypes.UnitShip {
 		if !(to.Sea || to.IsCoast(board)) {
 			return errors.New("ship order destination must be sea or coast")
 		}
@@ -80,18 +86,20 @@ func validateMoveOrSupport(order gameboard.Order, from gameboard.Region, board g
 	}
 
 	switch order.Type {
-	case gameboard.OrderMove:
+	case gametypes.OrderMove:
 		return validateMove(order, from, to, board)
-	case gameboard.OrderSupport:
+	case gametypes.OrderSupport:
 		return validateSupport(order, from, to)
 	}
 
 	return errors.New("invalid order type")
 }
 
-func validateMove(order gameboard.Order, from gameboard.Region, to gameboard.Region, board gameboard.Board) error {
+func validateMove(
+	order gametypes.Order, from gametypes.Region, to gametypes.Region, board gametypes.Board,
+) error {
 	if !from.HasNeighbor(order.To) {
-		canTransport, _, _ := from.CanTransportTo(order.To, board)
+		canTransport, _, _ := board.FindTransportPath(from.Name, order.To)
 		if !canTransport {
 			return errors.New("move is not adjacent to destination, and cannot be transported")
 		}
@@ -101,7 +109,7 @@ func validateMove(order gameboard.Order, from gameboard.Region, to gameboard.Reg
 		secondHorseMove := false
 
 		for _, firstOrder := range from.IncomingMoves {
-			if from.Unit.Type == gameboard.UnitHorse &&
+			if from.Unit.Type == gametypes.UnitHorse &&
 				order.To == order.From &&
 				firstOrder.Player == order.Player {
 
@@ -117,7 +125,7 @@ func validateMove(order gameboard.Order, from gameboard.Region, to gameboard.Reg
 	return nil
 }
 
-func validateSupport(order gameboard.Order, from gameboard.Region, to gameboard.Region) error {
+func validateSupport(order gametypes.Order, from gametypes.Region, to gametypes.Region) error {
 	if !from.HasNeighbor(order.To) {
 		return errors.New("support order must be adjacent to destination")
 	}
@@ -125,22 +133,22 @@ func validateSupport(order gameboard.Order, from gameboard.Region, to gameboard.
 	return nil
 }
 
-func validateBesiegeOrTransport(order gameboard.Order, from gameboard.Region) error {
+func validateBesiegeOrTransport(order gametypes.Order, from gametypes.Region) error {
 	if order.To != "" {
 		return errors.New("besiege or transport orders cannot have destination")
 	}
 
 	switch order.Type {
-	case gameboard.OrderBesiege:
+	case gametypes.OrderBesiege:
 		return validateBesiege(order, from)
-	case gameboard.OrderTransport:
+	case gametypes.OrderTransport:
 		return validateTransport(order, from)
 	default:
 		return errors.New("invalid order type")
 	}
 }
 
-func validateBesiege(order gameboard.Order, from gameboard.Region) error {
+func validateBesiege(order gametypes.Order, from gametypes.Region) error {
 	if !from.Castle {
 		return errors.New("besieged region must have castle")
 	}
@@ -149,15 +157,15 @@ func validateBesiege(order gameboard.Order, from gameboard.Region) error {
 		return errors.New("besieged region cannot already be controlled")
 	}
 
-	if from.Unit.Type == gameboard.UnitShip {
+	if from.Unit.Type == gametypes.UnitShip {
 		return errors.New("ships cannot besiege")
 	}
 
 	return nil
 }
 
-func validateTransport(order gameboard.Order, from gameboard.Region) error {
-	if from.Unit.Type != gameboard.UnitShip {
+func validateTransport(order gametypes.Order, from gametypes.Region) error {
+	if from.Unit.Type != gametypes.UnitShip {
 		return errors.New("only ships can transport")
 	}
 
@@ -168,18 +176,20 @@ func validateTransport(order gameboard.Order, from gameboard.Region) error {
 	return nil
 }
 
-func validateWinterOrder(order gameboard.Order, from gameboard.Region, board gameboard.Board) error {
+func validateWinterOrder(
+	order gametypes.Order, from gametypes.Region, board gametypes.Board,
+) error {
 	switch order.Type {
-	case gameboard.OrderMove:
+	case gametypes.OrderMove:
 		return validateWinterMove(order, from, board)
-	case gameboard.OrderBuild:
+	case gametypes.OrderBuild:
 		return validateBuild(order, from, board)
 	}
 
 	return errors.New("invalid order type")
 }
 
-func validateWinterMove(order gameboard.Order, from gameboard.Region, board gameboard.Board) error {
+func validateWinterMove(order gametypes.Order, from gametypes.Region, board gametypes.Board) error {
 	if order.To == "" {
 		return errors.New("winter move orders must have destination")
 	}
@@ -193,7 +203,7 @@ func validateWinterMove(order gameboard.Order, from gameboard.Region, board game
 		return errors.New("must control destination region in winter move")
 	}
 
-	if from.Unit.Type == gameboard.UnitShip && !to.IsCoast(board) {
+	if from.Unit.Type == gametypes.UnitShip && !to.IsCoast(board) {
 		return errors.New("ship winter move destination must be coast")
 	}
 
@@ -204,19 +214,19 @@ func validateWinterMove(order gameboard.Order, from gameboard.Region, board game
 	return nil
 }
 
-func validateBuild(order gameboard.Order, from gameboard.Region, board gameboard.Board) error {
+func validateBuild(order gametypes.Order, from gametypes.Region, board gametypes.Board) error {
 	if !from.IsEmpty() {
 		return errors.New("cannot build in region already occupied")
 	}
 
 	switch order.Build {
-	case gameboard.UnitShip:
+	case gametypes.UnitShip:
 		if !from.IsCoast(board) {
 			return errors.New("ships can only be built on coast")
 		}
-	case gameboard.UnitFootman:
-	case gameboard.UnitHorse:
-	case gameboard.UnitCatapult:
+	case gametypes.UnitFootman:
+	case gametypes.UnitHorse:
+	case gametypes.UnitCatapult:
 	default:
 		return errors.New("invalid unit type")
 	}
@@ -224,7 +234,7 @@ func validateBuild(order gameboard.Order, from gameboard.Region, board gameboard
 	return nil
 }
 
-func validateOrderSet(orders []gameboard.Order, board gameboard.Board) error {
+func validateOrderSet(orders []gametypes.Order, board gametypes.Board) error {
 	err := validateUniqueMoveDestinations(orders, board)
 	if err != nil {
 		return err
@@ -238,11 +248,11 @@ func validateOrderSet(orders []gameboard.Order, board gameboard.Board) error {
 	return nil
 }
 
-func validateUniqueMoveDestinations(orders []gameboard.Order, board gameboard.Board) error {
+func validateUniqueMoveDestinations(orders []gametypes.Order, board gametypes.Board) error {
 	moveDestinations := make(map[string]struct{})
 
 	for _, order := range orders {
-		if order.Type == gameboard.OrderMove {
+		if order.Type == gametypes.OrderMove {
 			_, notUnique := moveDestinations[order.To]
 			if notUnique {
 				return fmt.Errorf("orders include two moves to region %s", order.To)
@@ -255,7 +265,7 @@ func validateUniqueMoveDestinations(orders []gameboard.Order, board gameboard.Bo
 	return nil
 }
 
-func validateOneOrderPerRegion(orders []gameboard.Order, board gameboard.Board) error {
+func validateOneOrderPerRegion(orders []gametypes.Order, board gametypes.Board) error {
 	orderedRegions := make(map[string]struct{})
 
 	for _, order := range orders {

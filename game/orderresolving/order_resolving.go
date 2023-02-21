@@ -1,99 +1,105 @@
-package gameboard
+package orderresolving
 
-import "log"
+import (
+	"log"
+
+	"hermannm.dev/bfh-server/game/gametypes"
+)
+
+// A set of player-submitted orders for a round of the game.
+type Round struct {
+	// Affects the type of orders that can be played in the round.
+	Season gametypes.Season `json:"season"`
+
+	// The main set of orders for the round.
+	FirstOrders []gametypes.Order `json:"firstOrders"`
+
+	// Set of orders that are known to be executed after the first orders (e.g. horse moves).
+	SecondOrders []gametypes.Order `json:"secondOrders"`
+}
+
+type Messenger interface {
+	SendBattleResults(battles []gametypes.Battle) error
+	SendSupportRequest(to string, supportingRegion string, battlers []string) error
+	ReceiveSupport(from string, fromRegion string) (supportTo string, err error)
+}
 
 // Adds the round's orders to the board, and resolves them.
 // Returns a list of any potential battles from the round.
-func (board Board) Resolve(round Round, messenger Messenger) (battles []Battle, winner string) {
-	battles = make([]Battle, 0)
+func ResolveOrders(
+	board gametypes.Board, round Round, messenger Messenger,
+) (battles []gametypes.Battle, winner string, hasWinner bool) {
+	battles = make([]gametypes.Battle, 0)
 
 	switch round.Season {
-	case SeasonWinter:
-		board.resolveWinter(round.FirstOrders)
+	case gametypes.SeasonWinter:
+		resolveWinter(board, round.FirstOrders)
 	default:
-		firstBattles := board.resolveOrders(round.FirstOrders, messenger)
+		firstBattles := resolveNonWinterOrders(board, round.FirstOrders, messenger)
 		battles = append(battles, firstBattles...)
 
-		secondBattles := board.resolveOrders(round.SecondOrders, messenger)
+		secondBattles := resolveNonWinterOrders(board, round.SecondOrders, messenger)
 		battles = append(battles, secondBattles...)
 
-		board.resolveSieges()
+		resolveSieges(board)
 
-		winner = board.resolveWinner()
+		winner, hasWinner = board.CheckWinner()
 	}
 
-	board.cleanup()
+	board.RemoveOrders()
 
-	return battles, winner
+	return battles, winner, hasWinner
 }
 
 // Resolves results of the given orders on the board.
-func (board Board) resolveOrders(orders []Order, messenger Messenger) []Battle {
-	battles := make([]Battle, 0)
+func resolveNonWinterOrders(
+	board gametypes.Board, orders []gametypes.Order, messenger Messenger,
+) []gametypes.Battle {
+	battles := make([]gametypes.Battle, 0)
 
-	board.populateRegionOrders(orders)
+	board.AddOrders(orders)
 
-	dangerZoneBattles := board.crossDangerZones()
+	dangerZoneBattles := resolveDangerZones(board)
 	battles = append(battles, dangerZoneBattles...)
 	err := messenger.SendBattleResults(dangerZoneBattles)
 	if err != nil {
 		log.Println(err)
 	}
 
-	singleplayerBattles := board.resolveMoves(false, messenger)
+	singleplayerBattles := resolveMoves(board, false, messenger)
 	battles = append(battles, singleplayerBattles...)
 
-	remainingBattles := board.resolveMoves(true, messenger)
+	remainingBattles := resolveMoves(board, true, messenger)
 	battles = append(battles, remainingBattles...)
 
 	return battles
 }
 
-// Takes a list of orders, and populates the appropriate regions on the board with those orders.
-// Does not add support orders that have moves against them, as that cancels them.
-func (board Board) populateRegionOrders(orders []Order) {
-	// First adds all orders except supports, so that supports can check IncomingMoves.
-	for _, order := range orders {
-		if order.Type == OrderSupport {
-			continue
-		}
-
-		board.addOrder(order)
-	}
-
-	// Then adds all supports, except in those regions that are attacked.
-	for _, order := range orders {
-		if order.Type != OrderSupport || len(board.Regions[order.From].IncomingMoves) > 0 {
-			continue
-		}
-
-		board.addOrder(order)
-	}
-}
-
 // Resolves moves on the board. Returns any resulting battles.
 // Only resolves battles between players if allowPlayerConflict is true.
-func (board Board) resolveMoves(allowPlayerConflict bool, messenger Messenger) []Battle {
-	battles := make([]Battle, 0)
+func resolveMoves(
+	board gametypes.Board, allowPlayerConflict bool, messenger Messenger,
+) []gametypes.Battle {
+	battles := make([]gametypes.Battle, 0)
 
-	battleReceiver := make(chan Battle)
+	battleReceiver := make(chan gametypes.Battle)
 	processing := make(map[string]struct{})
 	processed := make(map[string]struct{})
-	retreats := make(map[string]Order)
+	retreats := make(map[string]gametypes.Order)
 
 OuterLoop:
 	for {
 		select {
 		case battle := <-battleReceiver:
 			battles = append(battles, battle)
-			messenger.SendBattleResults([]Battle{battle})
+			messenger.SendBattleResults([]gametypes.Battle{battle})
 
-			newRetreats := board.resolveBattle(battle)
+			newRetreats := resolveBattle(battle, board)
 			for _, retreat := range newRetreats {
 				retreats[retreat.From] = retreat
 			}
 
-			for _, region := range battle.regionNames() {
+			for _, region := range battle.RegionNames() {
 				delete(processing, region)
 			}
 		default:
@@ -112,7 +118,7 @@ OuterLoop:
 				}
 
 				for _, move := range region.IncomingMoves {
-					transportAttacked, dangerZones := board.resolveTransports(move, region)
+					transportAttacked, dangerZones := resolveTransports(move, region, board)
 
 					if transportAttacked {
 						if allowPlayerConflict {
@@ -121,9 +127,9 @@ OuterLoop:
 							processed[regionName] = struct{}{}
 						}
 					} else if len(dangerZones) > 0 {
-						survived, dangerZoneCrossings := move.crossDangerZones(dangerZones)
+						survived, dangerZoneCrossings := crossDangerZones(move, dangerZones)
 						if !survived {
-							board.removeMove(move)
+							board.RemoveOrder(move)
 						}
 
 						battles = append(battles, dangerZoneCrossings...)
@@ -146,8 +152,9 @@ OuterLoop:
 					continue BoardLoop
 				}
 
-				board.resolveRegionMoves(
+				resolveRegionMoves(
 					region,
+					board,
 					moveCount,
 					allowPlayerConflict,
 					battleReceiver,
@@ -169,13 +176,13 @@ OuterLoop:
 // Finds move and support orders attempting to cross danger zones to their destinations,
 // and fail them if they don't make it across.
 // Returns a battle result for each danger zone crossing.
-func (board Board) crossDangerZones() []Battle {
-	battles := make([]Battle, 0)
+func resolveDangerZones(board gametypes.Board) []gametypes.Battle {
+	battles := make([]gametypes.Battle, 0)
 
 	for regionName, region := range board.Regions {
 		order := region.Order
 
-		if order.Type != OrderMove && order.Type != OrderSupport {
+		if order.Type != gametypes.OrderMove && order.Type != gametypes.OrderSupport {
 			continue
 		}
 
@@ -186,19 +193,18 @@ func (board Board) crossDangerZones() []Battle {
 		}
 
 		// Resolves the danger zone crossing.
-		survived, battle := order.crossDangerZone(destination.DangerZone)
+		survived, battle := crossDangerZone(order, destination.DangerZone)
 		battles = append(battles, battle)
 
 		// If move fails danger zone crossing, the unit dies.
 		// If support fails crossing, only the order fails.
 		if !survived {
-			if order.Type == OrderMove {
-				region.Unit = Unit{}
+			if order.Type == gametypes.OrderMove {
+				region.Unit = gametypes.Unit{}
 				board.Regions[regionName] = region
-				board.removeMove(order)
-			} else {
-				board.removeSupport(order)
 			}
+
+			board.RemoveOrder(order)
 		}
 	}
 
@@ -206,9 +212,9 @@ func (board Board) crossDangerZones() []Battle {
 }
 
 // Goes through regions with siege orders, and updates the region following the siege.
-func (board Board) resolveSieges() {
+func resolveSieges(board gametypes.Board) {
 	for regionName, region := range board.Regions {
-		if region.Order.IsNone() || region.Order.Type != OrderBesiege {
+		if region.Order.IsNone() || region.Order.Type != gametypes.OrderBesiege {
 			continue
 		}
 
@@ -222,75 +228,27 @@ func (board Board) resolveSieges() {
 	}
 }
 
-// Goes through the board to check if any player has met the board's winning castle count.
-// If there is a winner, and there is no tie, returns the tag of that player.
-// Otherwise, returns "".
-func (board Board) resolveWinner() string {
-	castleCount := make(map[string]int)
-
-	for _, region := range board.Regions {
-		if region.Castle && region.IsControlled() {
-			castleCount[region.ControllingPlayer]++
-		}
-	}
-
-	tie := false
-	highestCount := 0
-	var highestCountPlayer string
-	for player, count := range castleCount {
-		if count > highestCount {
-			highestCount = count
-			highestCountPlayer = player
-			tie = false
-		} else if count == highestCount {
-			tie = true
-		}
-	}
-
-	if !tie && highestCount > board.WinningCastleCount {
-		return highestCountPlayer
-	}
-
-	return ""
-}
-
 // Resolves winter orders (builds and internal moves) on the board.
 // Assumes they have already been validated.
-func (board Board) resolveWinter(orders []Order) {
+func resolveWinter(board gametypes.Board, orders []gametypes.Order) {
 	for _, order := range orders {
 		switch order.Type {
-		case OrderBuild:
+		case gametypes.OrderBuild:
 			from := board.Regions[order.From]
-			from.Unit = Unit{
+			from.Unit = gametypes.Unit{
 				Player: order.Player,
 				Type:   order.Build,
 			}
 			board.Regions[order.From] = from
-		case OrderMove:
+		case gametypes.OrderMove:
 			from := board.Regions[order.From]
 			to := board.Regions[order.To]
 
 			to.Unit = from.Unit
-			from.Unit = Unit{}
+			from.Unit = gametypes.Unit{}
 
 			board.Regions[order.From] = from
 			board.Regions[order.To] = to
 		}
-	}
-}
-
-// Cleans up remaining order references on the board after the round.
-func (board Board) cleanup() {
-	for regionName, region := range board.Regions {
-		region.Order = Order{}
-
-		if len(region.IncomingMoves) > 0 {
-			region.IncomingMoves = make([]Order, 0)
-		}
-		if len(region.IncomingSupports) > 0 {
-			region.IncomingSupports = make([]Order, 0)
-		}
-
-		board.Regions[regionName] = region
 	}
 }

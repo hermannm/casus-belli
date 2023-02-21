@@ -1,34 +1,35 @@
-package gameboard_test
+package orderresolving_test
 
 import (
 	"testing"
 
-	"hermannm.dev/bfh-server/game/gameboard"
+	"hermannm.dev/bfh-server/game/gametypes"
+	"hermannm.dev/bfh-server/game/orderresolving"
 	"hermannm.dev/bfh-server/game/testutils"
 )
 
 // Tests whether units correctly move in circle without outside interference.
 func TestResolveConflictFreeMoveCycle(t *testing.T) {
-	units := map[string]gameboard.Unit{
-		"Leil":   {Type: gameboard.UnitFootman, Player: "red"},
-		"Limbol": {Type: gameboard.UnitFootman, Player: "green"},
-		"Worp":   {Type: gameboard.UnitFootman, Player: "yellow"},
+	units := map[string]gametypes.Unit{
+		"Leil":   {Type: gametypes.UnitFootman, Player: "red"},
+		"Limbol": {Type: gametypes.UnitFootman, Player: "green"},
+		"Worp":   {Type: gametypes.UnitFootman, Player: "yellow"},
 	}
 
-	orders := []gameboard.Order{
-		{Type: gameboard.OrderMove, From: "Leil", To: "Limbol"},
-		{Type: gameboard.OrderMove, From: "Limbol", To: "Worp"},
-		{Type: gameboard.OrderMove, From: "Worp", To: "Leil"},
+	orders := []gametypes.Order{
+		{Type: gametypes.OrderMove, From: "Leil", To: "Limbol"},
+		{Type: gametypes.OrderMove, From: "Limbol", To: "Worp"},
+		{Type: gametypes.OrderMove, From: "Worp", To: "Leil"},
 	}
 
 	board := testutils.NewMockBoard()
 	testutils.PlaceUnits(units, board)
 	testutils.PlaceOrders(orders, board)
 
-	round := gameboard.Round{FirstOrders: orders}
+	round := orderresolving.Round{FirstOrders: orders}
 
 	// Runs the resolve function, mutating the board.
-	board.Resolve(round, testutils.MockMessenger{})
+	orderresolving.ResolveOrders(board, round, testutils.MockMessenger{})
 
 	// Expected: the units have switched places in a circle.
 	testutils.ExpectedControl{
