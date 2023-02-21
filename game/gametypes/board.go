@@ -12,6 +12,16 @@ type Board struct {
 	WinningCastleCount int `json:"winningCastleCount"`
 }
 
+func (board Board) RegionNames() []string {
+	regionNames := make([]string, 0, len(board.Regions))
+
+	for regionName := range board.Regions {
+		regionNames = append(regionNames, regionName)
+	}
+
+	return regionNames
+}
+
 // Removes the given unit from the region with the given name, if the unit still exists there.
 func (board Board) RemoveUnit(unit Unit, regionName string) {
 	region := board.Regions[regionName]

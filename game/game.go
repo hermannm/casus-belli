@@ -50,7 +50,7 @@ func (game *Game) Start() {
 // Dynamically finds the possible player IDs for the game
 // by going through the board and finding all the different Home values.
 func (game Game) PlayerIDs() []string {
-	ids := make([]string, 0)
+	var ids []string
 
 OuterLoop:
 	for _, region := range game.board.Regions {
@@ -79,12 +79,7 @@ func (game Game) Name() string {
 // Creates a new message receiver for the given player tag, and adds it to the game.
 // Returns error if tag is invalid or already taken.
 func (game Game) AddPlayer(playerID string) (lobby.GameMessageReceiver, error) {
-	regionNames := make([]string, 0)
-	for _, region := range game.board.Regions {
-		regionNames = append(regionNames, region.Name)
-	}
-
-	receiver, err := game.messenger.AddReceiver(playerID, regionNames)
+	receiver, err := game.messenger.AddReceiver(playerID, game.board.RegionNames())
 	if err != nil {
 		return nil, fmt.Errorf("failed to add player: %w", err)
 	}
