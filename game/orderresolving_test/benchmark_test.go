@@ -10,12 +10,14 @@ import (
 
 func BenchmarkBoardResolve(b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		board, round := setup()
-		orderresolving.ResolveOrders(board, round, testutils.MockMessenger{})
+		board, orders := setup()
+		orderresolving.ResolveOrders(
+			board, orders, gametypes.SeasonSpring, testutils.MockMessenger{},
+		)
 	}
 }
 
-func setup() (gametypes.Board, orderresolving.Round) {
+func setup() (gametypes.Board, []gametypes.Order) {
 	units := map[string]gametypes.Unit{
 		"Emman": {Type: gametypes.UnitFootman, Player: "white"},
 
@@ -47,46 +49,44 @@ func setup() (gametypes.Board, orderresolving.Round) {
 
 	orders := []gametypes.Order{
 		// Auto-success
-		{Type: gametypes.OrderMove, From: "Emman", To: "Erren"},
+		{Type: gametypes.OrderMove, Origin: "Emman", Destination: "Erren"},
 
 		// PvP battle with defender
-		{Type: gametypes.OrderMove, From: "Lomone", To: "Lusía"},
+		{Type: gametypes.OrderMove, Origin: "Lomone", Destination: "Lusía"},
 
 		// PvP battle, no defender
-		{Type: gametypes.OrderMove, From: "Gron", To: "Gewel"},
-		{Type: gametypes.OrderMove, From: "Gnade", To: "Gewel"},
+		{Type: gametypes.OrderMove, Origin: "Gron", Destination: "Gewel"},
+		{Type: gametypes.OrderMove, Origin: "Gnade", Destination: "Gewel"},
 
 		// PvE battle
-		{Type: gametypes.OrderMove, From: "Firril", To: "Furie"},
+		{Type: gametypes.OrderMove, Origin: "Firril", Destination: "Furie"},
 
 		// PvE battle, transport not attacked
-		{Type: gametypes.OrderMove, From: "Ovo", To: "Zona"},
-		{Type: gametypes.OrderTransport, From: "Mare Elle"},
+		{Type: gametypes.OrderMove, Origin: "Ovo", Destination: "Zona"},
+		{Type: gametypes.OrderTransport, Origin: "Mare Elle"},
 
 		// PvE battle, transport attacked
-		{Type: gametypes.OrderMove, From: "Winde", To: "Fond"},
-		{Type: gametypes.OrderTransport, From: "Mare Gond"},
-		{Type: gametypes.OrderTransport, From: "Mare Ovond"},
-		{Type: gametypes.OrderMove, From: "Mare Unna", To: "Mare Ovond"},
+		{Type: gametypes.OrderMove, Origin: "Winde", Destination: "Fond"},
+		{Type: gametypes.OrderTransport, Origin: "Mare Gond"},
+		{Type: gametypes.OrderTransport, Origin: "Mare Ovond"},
+		{Type: gametypes.OrderMove, Origin: "Mare Unna", Destination: "Mare Ovond"},
 
 		// Border battle
-		{Type: gametypes.OrderMove, From: "Tusser", To: "Tige"},
-		{Type: gametypes.OrderMove, From: "Tige", To: "Tusser"},
+		{Type: gametypes.OrderMove, Origin: "Tusser", Destination: "Tige"},
+		{Type: gametypes.OrderMove, Origin: "Tige", Destination: "Tusser"},
 
 		// Danger zone, dependent move
-		{Type: gametypes.OrderMove, From: "Tond", To: "Tige"},
+		{Type: gametypes.OrderMove, Origin: "Tond", Destination: "Tige"},
 
 		// Move cycle
-		{Type: gametypes.OrderMove, From: "Leil", To: "Limbol"},
-		{Type: gametypes.OrderMove, From: "Limbol", To: "Worp"},
-		{Type: gametypes.OrderMove, From: "Worp", To: "Leil"},
+		{Type: gametypes.OrderMove, Origin: "Leil", Destination: "Limbol"},
+		{Type: gametypes.OrderMove, Origin: "Limbol", Destination: "Worp"},
+		{Type: gametypes.OrderMove, Origin: "Worp", Destination: "Leil"},
 	}
 
 	board := testutils.NewMockBoard()
 	testutils.PlaceUnits(units, board)
 	testutils.PlaceOrders(orders, board)
 
-	round := orderresolving.Round{FirstOrders: orders}
-
-	return board, round
+	return board, orders
 }

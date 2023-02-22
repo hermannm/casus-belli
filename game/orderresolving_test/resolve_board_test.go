@@ -17,19 +17,17 @@ func TestResolveConflictFreeMoveCycle(t *testing.T) {
 	}
 
 	orders := []gametypes.Order{
-		{Type: gametypes.OrderMove, From: "Leil", To: "Limbol"},
-		{Type: gametypes.OrderMove, From: "Limbol", To: "Worp"},
-		{Type: gametypes.OrderMove, From: "Worp", To: "Leil"},
+		{Type: gametypes.OrderMove, Origin: "Leil", Destination: "Limbol"},
+		{Type: gametypes.OrderMove, Origin: "Limbol", Destination: "Worp"},
+		{Type: gametypes.OrderMove, Origin: "Worp", Destination: "Leil"},
 	}
 
 	board := testutils.NewMockBoard()
 	testutils.PlaceUnits(units, board)
 	testutils.PlaceOrders(orders, board)
 
-	round := orderresolving.Round{FirstOrders: orders}
-
 	// Runs the resolve function, mutating the board.
-	orderresolving.ResolveOrders(board, round, testutils.MockMessenger{})
+	orderresolving.ResolveOrders(board, orders, gametypes.SeasonSpring, testutils.MockMessenger{})
 
 	// Expected: the units have switched places in a circle.
 	testutils.ExpectedControl{
