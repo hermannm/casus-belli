@@ -4,3 +4,5 @@ github.com/magefile/mage v1.14.0 h1:6QDX3g6z1YvJ4olPhT1wksUcSa/V0a1B+pJb73fBjyo=
 github.com/magefile/mage v1.14.0/go.mod h1:z5UZb/iS3GoOSn0JgWuiw7dxlurVYTu+/jHXqQg881A=
 hermannm.dev/ipfinder v0.1.0 h1:xMzl5r+ogOK0lU+yDHyTrxWmQSxinxyqi8GkyF/xqHA=
 hermannm.dev/ipfinder v0.1.0/go.mod h1:JUu/zyLkASihzxyf9oSRYW9VapzV+z/xBfW38HUcucA=
+hermannm.dev/set v0.1.0 h1:uxpaIf7w8b5OJoLDBOOMQZrpVhZEiwMm87/NA4Xr32s=
+hermannm.dev/set v0.1.0/go.mod h1:8/X35bKB/zTbDzD0rInCaSQu/Cn9qktAjcWM5Oj3bPQ=
