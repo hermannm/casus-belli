@@ -2,6 +2,7 @@ package orderresolving
 
 import (
 	"hermannm.dev/bfh-server/game/gametypes"
+	"hermannm.dev/set"
 )
 
 // Resolves the board regions touched by the moves in the given cycle.
@@ -17,8 +18,8 @@ func resolveCycle(
 	board gametypes.Board,
 	allowPlayerConflict bool,
 	battleReceiver chan<- gametypes.Battle,
-	processing map[string]struct{},
-	processed map[string]struct{},
+	processing set.Set[string],
+	processed set.Set[string],
 	messenger Messenger,
 ) {
 	var battleRegions []gametypes.Region
@@ -29,7 +30,7 @@ func resolveCycle(
 
 		if (destination.IsControlled() || destination.Sea) && len(destination.IncomingMoves) == 1 {
 			succeedMove(move, board)
-			processed[destination.Name] = struct{}{}
+			processed.Add(destination.Name)
 			continue
 		}
 
@@ -43,12 +44,12 @@ func resolveCycle(
 			go calculateSingleplayerBattle(
 				region, region.IncomingMoves[0], battleReceiver, messenger,
 			)
-			processing[region.Name] = struct{}{}
+			processing.Add(region.Name)
 		} else if allowPlayerConflict {
 			go calculateMultiplayerBattle(region, false, battleReceiver, messenger)
-			processing[region.Name] = struct{}{}
+			processing.Add(region.Name)
 		} else {
-			processed[region.Name] = struct{}{}
+			processed.Add(region.Name)
 		}
 	}
 }

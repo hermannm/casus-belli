@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"hermannm.dev/bfh-server/game/gametypes"
+	"hermannm.dev/set"
 )
 
 func validateOrderSet(orders []gametypes.Order, board gametypes.Board) error {
@@ -21,16 +22,15 @@ func validateOrderSet(orders []gametypes.Order, board gametypes.Board) error {
 }
 
 func validateUniqueMoveDestinations(orders []gametypes.Order, board gametypes.Board) error {
-	moveDestinations := make(map[string]struct{})
+	moveDestinations := set.New[string]()
 
 	for _, order := range orders {
 		if order.Type == gametypes.OrderMove {
-			_, notUnique := moveDestinations[order.Destination]
-			if notUnique {
+			if moveDestinations.Contains(order.Destination) {
 				return fmt.Errorf("orders include two moves to region %s", order.Destination)
 			}
 
-			moveDestinations[order.Destination] = struct{}{}
+			moveDestinations.Add(order.Destination)
 		}
 	}
 
@@ -38,15 +38,14 @@ func validateUniqueMoveDestinations(orders []gametypes.Order, board gametypes.Bo
 }
 
 func validateOneOrderPerRegion(orders []gametypes.Order, board gametypes.Board) error {
-	orderedRegions := make(map[string]struct{})
+	orderedRegions := set.New[string]()
 
 	for _, order := range orders {
-		_, alreadyOrdered := orderedRegions[order.Origin]
-		if alreadyOrdered {
+		if orderedRegions.Contains(order.Origin) {
 			return fmt.Errorf("unit in region %s is ordered twice", order.Origin)
 		}
 
-		orderedRegions[order.Origin] = struct{}{}
+		orderedRegions.Add(order.Origin)
 	}
 
 	return nil

@@ -1,5 +1,7 @@
 package gametypes
 
+import "hermannm.dev/set"
+
 // Results of a battle from conflicting move orders, an attempt to conquer a neutral region,
 // or an attempt to cross a danger zone.
 type Battle struct {
@@ -37,22 +39,17 @@ const (
 )
 
 func (battle Battle) RegionNames() []string {
-	nameMap := make(map[string]struct{})
+	nameSet := set.New[string]()
 
 	for _, result := range battle.Results {
 		if result.DefenderRegion != "" {
-			nameMap[result.DefenderRegion] = struct{}{}
+			nameSet.Add(result.DefenderRegion)
 		} else if result.Move.Destination != "" {
-			nameMap[result.Move.Destination] = struct{}{}
+			nameSet.Add(result.Move.Destination)
 		}
 	}
 
-	names := make([]string, 0, len(nameMap))
-	for name := range nameMap {
-		names = append(names, name)
-	}
-
-	return names
+	return nameSet.ToSlice()
 }
 
 // Returns whether the battle was between two moves moving against each other.

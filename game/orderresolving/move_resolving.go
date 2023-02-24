@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"hermannm.dev/bfh-server/game/gametypes"
+	"hermannm.dev/set"
 )
 
 // Resolves moves on the board. Returns any resulting battles.
@@ -14,8 +15,8 @@ func resolveMoves(
 	var battles []gametypes.Battle
 
 	battleReceiver := make(chan gametypes.Battle)
-	processing := make(map[string]struct{})
-	processed := make(map[string]struct{})
+	processing := set.New[string]()
+	processed := set.New[string]()
 	retreats := make(map[string]gametypes.Order)
 
 OuterLoop:
@@ -31,20 +32,18 @@ OuterLoop:
 			}
 
 			for _, region := range battle.RegionNames() {
-				delete(processing, region)
+				processing.Remove(region)
 			}
 		default:
 		BoardLoop:
 			for regionName, region := range board.Regions {
 				retreat, hasRetreat := retreats[regionName]
 
-				_, isProcessed := processed[regionName]
-				if isProcessed && !hasRetreat {
+				if processed.Contains(regionName) && !hasRetreat {
 					continue BoardLoop
 				}
 
-				_, isProcessing := processing[regionName]
-				if isProcessing {
+				if processing.Contains(regionName) {
 					continue BoardLoop
 				}
 
@@ -55,7 +54,7 @@ OuterLoop:
 						if allowPlayerConflict {
 							continue BoardLoop
 						} else {
-							processed[regionName] = struct{}{}
+							processed.Add(regionName)
 						}
 					} else if len(dangerZones) > 0 {
 						survived, dangerZoneCrossings := crossDangerZones(move, dangerZones)
@@ -78,7 +77,7 @@ OuterLoop:
 						delete(retreats, regionName)
 					}
 
-					processed[region.Name] = struct{}{}
+					processed.Add(region.Name)
 					continue BoardLoop
 				}
 
@@ -93,7 +92,7 @@ OuterLoop:
 				)
 			}
 
-			if len(processing) == 0 && len(retreats) == 0 {
+			if processing.IsEmpty() && len(retreats) == 0 {
 				break OuterLoop
 			}
 		}
@@ -106,9 +105,9 @@ OuterLoop:
 // Assumes that the region has incoming moves.
 //
 // Immediately resolves regions that do not require battle, and adds them to the given processed
-// map.
+// set.
 //
-// Adds embattled regions to the given processing map, and forwards them to appropriate battle
+// Adds embattled regions to the given processing set, and forwards them to appropriate battle
 // calculation functions, which send results to the given battleReceiver.
 //
 // Skips regions that have outgoing moves, unless they are part of a move cycle.
@@ -118,8 +117,8 @@ func resolveRegionMoves(
 	board gametypes.Board,
 	allowPlayerConflict bool,
 	battleReceiver chan gametypes.Battle,
-	processing map[string]struct{},
-	processed map[string]struct{},
+	processing set.Set[string],
+	processed set.Set[string],
 	messenger Messenger,
 ) {
 	// Finds out if the move is part of a two-way cycle (moves moving against each other),
@@ -137,7 +136,7 @@ func resolveRegionMoves(
 		} else {
 			// If the moves are from different players, they battle in the middle.
 			go calculateBorderBattle(region, region2, battleReceiver, messenger)
-			processing[region.Name], processing[region2.Name] = struct{}{}, struct{}{}
+			processing.Add(region.Name, region2.Name)
 			return
 		}
 	} else {
@@ -164,12 +163,12 @@ func resolveRegionMoves(
 
 		if region.IsControlled() || region.Sea {
 			succeedMove(move, board)
-			processed[region.Name] = struct{}{}
+			processed.Add(region.Name)
 			return
 		}
 
 		go calculateSingleplayerBattle(region, move, battleReceiver, messenger)
-		processing[region.Name] = struct{}{}
+		processing.Add(region.Name)
 		return
 	}
 
@@ -180,5 +179,5 @@ func resolveRegionMoves(
 
 	// If the function has not returned yet, then it must be a multiplayer battle.
 	go calculateMultiplayerBattle(region, !region.IsEmpty(), battleReceiver, messenger)
-	processing[region.Name] = struct{}{}
+	processing.Add(region.Name)
 }

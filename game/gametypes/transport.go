@@ -1,5 +1,9 @@
 package gametypes
 
+import (
+	"hermannm.dev/set"
+)
+
 // Checks if a unit can be transported from the given origin region to the given destination.
 // Returns whether the unit can be transported, and if so, whether the transports are attacked,
 // as well as any potential danger zones the transported unit must cross.
@@ -11,7 +15,7 @@ func (board Board) FindTransportPath(
 		return false, false, nil
 	}
 
-	return board.recursivelyFindTransportPath(origin, destinationName, make(map[string]struct{}))
+	return board.recursivelyFindTransportPath(origin, destinationName, set.New[string]())
 }
 
 // Stores status of a path of transport orders to destination.
@@ -23,9 +27,11 @@ type transportPath struct {
 // Recursively checks neighbors of the region for available transports to the destination.
 // Takes a map of region names to exclude.
 func (board Board) recursivelyFindTransportPath(
-	region Region, destination string, exclude map[string]struct{},
+	region Region, destination string, regionsToExclude set.Set[string],
 ) (canTransport bool, transportAttacked bool, dangerZones []string) {
-	transportingNeighbors, newExclude := region.getTransportingNeighbors(board, exclude)
+	transportingNeighbors, newRegionsToExclude := region.getTransportingNeighbors(
+		board, regionsToExclude,
+	)
 
 	// Declares a list of potential transport paths to destination, in order to compare them.
 	var paths []transportPath
@@ -40,7 +46,7 @@ func (board Board) recursivelyFindTransportPath(
 		// Recursively calls this function on the transporting neighbor,
 		// in order to find potential transport chains.
 		nextCanTransport, nextTransportAttacked, nextDangerZones := board.
-			recursivelyFindTransportPath(transportRegion, destination, newExclude)
+			recursivelyFindTransportPath(transportRegion, destination, newRegionsToExclude)
 
 		var subPaths []transportPath
 		if destinationAdjacent {
@@ -73,32 +79,31 @@ func (board Board) recursivelyFindTransportPath(
 // Takes a map of region names to exclude,
 // and returns a copy of it with the transporting neighbors added.
 func (region Region) getTransportingNeighbors(
-	board Board, exclude map[string]struct{},
-) (transports []Neighbor, newExclude map[string]struct{}) {
-	newExclude = make(map[string]struct{})
-	for excluded := range exclude {
-		newExclude[excluded] = struct{}{}
+	board Board, regionsToExclude set.Set[string],
+) (transports []Neighbor, newRegionsToExclude set.Set[string]) {
+	newRegionsToExclude = set.New[string]()
+	for excluded := range regionsToExclude {
+		newRegionsToExclude.Add(excluded)
 	}
 
 	if region.IsEmpty() {
-		return transports, newExclude
+		return transports, newRegionsToExclude
 	}
 
 	for _, neighbor := range region.Neighbors {
 		neighborRegion := board.Regions[neighbor.Name]
-		_, excluded := exclude[neighbor.Name]
 
-		if excluded ||
+		if regionsToExclude.Contains(neighbor.Name) ||
 			neighborRegion.Order.Type != OrderTransport ||
 			neighborRegion.Unit.Player != region.Unit.Player {
 			continue
 		}
 
 		transports = append(transports, neighbor)
-		newExclude[neighbor.Name] = struct{}{}
+		newRegionsToExclude.Add(neighbor.Name)
 	}
 
-	return transports, newExclude
+	return transports, newRegionsToExclude
 }
 
 // Returns whether the region is adjacent to the given destination,
