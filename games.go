@@ -11,7 +11,7 @@ var Games = map[string]lobby.GameConstructor{
 }
 
 // Returns a constructor for new game instances with the given boardName.
-// The boardName must correspond to a .json file in game/boardsetup/.
+// The boardName must correspond to a .json file in game/boardconfig/
 func gameConstructor(boardName string) lobby.GameConstructor {
 	return func(lob *lobby.Lobby, options any) (lobby.Game, error) {
 		gameOptions, ok := options.(game.GameOptions)

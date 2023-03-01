@@ -55,13 +55,11 @@ func (messenger Messenger) SendOrdersConfirmation(player string) error {
 }
 
 func (messenger Messenger) SendSupportRequest(
-	toPlayer string,
-	supportingRegion string,
-	supportablePlayers []string,
+	toPlayer string, supportingRegion string, supportablePlayers []string,
 ) error {
 	msg := message{supportRequestMsgID: supportRequestMsg{
-		SupportingRegion: supportingRegion, SupportablePlayers: supportablePlayers},
-	}
+		SupportingRegion: supportingRegion, SupportablePlayers: supportablePlayers,
+	}}
 
 	err := messenger.sender.SendMessage(toPlayer, msg)
 	if err != nil {
