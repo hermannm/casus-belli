@@ -11,7 +11,7 @@ type Battle struct {
 	Results []Result `json:"results"`
 
 	// In case of danger zone crossing: name of the danger zone.
-	DangerZone string `json:"dangerZone"`
+	DangerZone string `json:"dangerZone,omitempty"`
 }
 
 // Dice and modifier result for a battle.
@@ -26,7 +26,7 @@ type Result struct {
 	Move Order `json:"move"`
 
 	// If result of a defending unit in a region: the name of the region.
-	DefenderRegion string `json:"defenderRegion"`
+	DefenderRegion string `json:"defenderRegion,omitempty"`
 }
 
 // Numbers to beat in different types of battles.

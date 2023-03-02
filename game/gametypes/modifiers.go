@@ -14,7 +14,7 @@ type Modifier struct {
 	Value int `json:"value"`
 
 	// If modifier was from a support: the supporting player.
-	SupportingPlayer string `json:"supportingPlayer"`
+	SupportingPlayer string `json:"supportingPlayer,omitempty"`
 }
 
 // The source of a modifier.

@@ -12,15 +12,15 @@ type Region struct {
 	Sea bool `json:"sea"`
 
 	// For land regions: affects the difficulty of conquering the region.
-	Forest bool `json:"forest"`
+	Forest bool `json:"forest,omitempty"`
 
 	// For land regions: affects the difficulty of conquering the region, and the points gained from
 	// it.
-	Castle bool `json:"castle"`
+	Castle bool `json:"castle,omitempty"`
 
 	// For land regions: the collection of regions that the region belongs to (affects units gained
 	// from conquering).
-	Nation string `json:"nation"`
+	Nation string `json:"nation,omitempty"`
 
 	// For land regions that are a starting region for a player.
 	HomePlayer string `json:"homePlayer,omitempty"`
@@ -32,7 +32,7 @@ type Region struct {
 	ControllingPlayer string `json:"controllingPlayer,omitempty"`
 
 	// For land regions with castles: the number of times an occupying unit has besieged the castle.
-	SiegeCount int `json:"siegeCount"`
+	SiegeCount int `json:"siegeCount,omitempty"`
 
 	// Order for the occupying unit in the region. Resets every round.
 	Order Order `json:"-"` // Excluded from JSON responses.
@@ -50,14 +50,14 @@ type Neighbor struct {
 	Name string `json:"name"`
 
 	// Whether a river separates the two regions.
-	AcrossWater bool `json:"acrossWater"`
+	AcrossWater bool `json:"acrossWater,omitempty"`
 
 	// Whether coast between neighboring land regions have cliffs (impassable to ships).
-	Cliffs bool `json:"cliffs"`
+	Cliffs bool `json:"cliffs,omitempty"`
 
 	// If not "": the name of the danger zone that the neighboring region lies across (requires
 	// check to pass).
-	DangerZone string `json:"dangerZone"`
+	DangerZone string `json:"dangerZone,omitempty"`
 }
 
 // Checks whether the region contains a unit.

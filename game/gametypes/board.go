@@ -6,7 +6,7 @@ type Board struct {
 	Regions map[string]Region `json:"region"`
 
 	// Name of this type of board.
-	Name string
+	Name string `json:"name"`
 
 	// The number of castles to capture to win a game round on this board.
 	WinningCastleCount int `json:"winningCastleCount"`

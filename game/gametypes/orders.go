@@ -8,22 +8,22 @@ type Order struct {
 	// The player submitting the order.
 	Player string `json:"player"`
 
-	// The unit the order affects.
-	// Excluded from JSON messages, as clients can deduce this from the From field.
-	// Server includes this field on the order to keep track of units between battles.
-	Unit Unit `json:"-"`
-
 	// Name of the region where the order is placed.
 	Origin string `json:"origin"`
 
 	// For move and support orders: name of destination region.
-	Destination string `json:"destination"`
+	Destination string `json:"destination,omitempty"`
 
 	// For move orders: name of DangerZone the order tries to pass through, if any.
-	Via string `json:"via"`
+	Via string `json:"via,omitempty"`
 
 	// For build orders: type of unit to build.
-	Build UnitType `json:"build"`
+	Build UnitType `json:"build,omitempty"`
+
+	// The unit the order affects.
+	// Excluded from JSON messages, as clients can deduce this from the From field.
+	// Server includes this field on the order to keep track of units between battles.
+	Unit Unit `json:"-"`
 }
 
 // Type of submitted order (restricted by unit type and region).
