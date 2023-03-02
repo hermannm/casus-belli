@@ -14,6 +14,10 @@ type Order struct {
 	// For move and support orders: name of destination region.
 	Destination string `json:"destination,omitempty"`
 
+	// For move orders with horse units: optional name of second destination region to move to if
+	// the first destination was reached.
+	SecondDestination string `json:"secondDestination,omitempty"`
+
 	// For move orders: name of DangerZone the order tries to pass through, if any.
 	Via string `json:"via,omitempty"`
 
@@ -52,4 +56,16 @@ const (
 // Checks whether the order is initialized.
 func (order Order) IsNone() bool {
 	return order.Type == ""
+}
+
+func (order Order) TryGetSecondHorseMove() (secondHorseMove Order, hasSecondHorseMove bool) {
+	if order.Type != OrderMove || order.SecondDestination == "" || order.Unit.Type != UnitHorse {
+		return Order{}, false
+	}
+
+	order.Origin = order.Destination
+	order.Destination = order.SecondDestination
+	order.SecondDestination = ""
+
+	return order, true
 }
