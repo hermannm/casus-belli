@@ -8,13 +8,11 @@ import (
 )
 
 func validateOrderSet(orders []gametypes.Order, board gametypes.Board) error {
-	err := validateUniqueMoveDestinations(orders, board)
-	if err != nil {
+	if err := validateUniqueMoveDestinations(orders, board); err != nil {
 		return err
 	}
 
-	err = validateOneOrderPerRegion(orders, board)
-	if err != nil {
+	if err := validateOneOrderPerRegion(orders, board); err != nil {
 		return err
 	}
 
@@ -28,6 +26,10 @@ func validateUniqueMoveDestinations(orders []gametypes.Order, board gametypes.Bo
 		if order.Type == gametypes.OrderMove {
 			if moveDestinations.Contains(order.Destination) {
 				return fmt.Errorf("orders include two moves to region %s", order.Destination)
+			}
+
+			if order.SecondDestination != "" && moveDestinations.Contains(order.SecondDestination) {
+				return fmt.Errorf("orders include two moves to region %s", order.SecondDestination)
 			}
 
 			moveDestinations.Add(order.Destination)

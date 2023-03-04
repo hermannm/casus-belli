@@ -7,6 +7,29 @@ import (
 	"hermannm.dev/bfh-server/game/gametypes"
 )
 
+func validateNonWinterOrders(orders []gametypes.Order, board gametypes.Board) error {
+	for _, order := range orders {
+		origin, ok := board.Regions[order.Origin]
+		if !ok {
+			return fmt.Errorf("invalid order: origin region with name '%s' not found", order.Origin)
+		}
+
+		if err := validateNonWinterOrder(order, origin, board); err != nil {
+			return fmt.Errorf("invalid order in region %s: %w", order.Origin, err)
+		}
+	}
+
+	if err := validateOrderSet(orders, board); err != nil {
+		return fmt.Errorf("invalid order set: %w", err)
+	}
+
+	if err := validateReachableMoveDestinations(orders, board); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func validateNonWinterOrder(
 	order gametypes.Order, origin gametypes.Region, board gametypes.Board,
 ) error {
@@ -28,7 +51,7 @@ func validateNonWinterOrder(
 	case gametypes.OrderTransport:
 		return validateBesiegeOrTransport(order, origin)
 	default:
-		return errors.New("invalid order type")
+		return fmt.Errorf("invalid order type: %s", order.Type)
 	}
 }
 
@@ -39,58 +62,43 @@ func validateMoveOrSupport(
 		return errors.New("moves and supports must have destination")
 	}
 
-	to, ok := board.Regions[order.Destination]
+	destination, ok := board.Regions[order.Destination]
 	if !ok {
-		return fmt.Errorf("destination region with name %s not found", order.Destination)
+		return fmt.Errorf("destination region with name '%s' not found", order.Destination)
 	}
 
 	if origin.Unit.Type == gametypes.UnitShip {
-		if !(to.Sea || to.IsCoast(board)) {
+		if !(destination.Sea || destination.IsCoast(board)) {
 			return errors.New("ship order destination must be sea or coast")
 		}
 	} else {
-		if to.Sea {
+		if destination.Sea {
 			return errors.New("only ships can order to seas")
 		}
 	}
 
 	switch order.Type {
 	case gametypes.OrderMove:
-		return validateMove(order, origin, to, board)
+		return validateMove(order, origin, board)
 	case gametypes.OrderSupport:
-		return validateSupport(order, origin, to)
+		return validateSupport(order, origin, destination)
 	}
 
 	return errors.New("invalid order type")
 }
 
-func validateMove(
-	order gametypes.Order,
-	origin gametypes.Region,
-	destination gametypes.Region,
-	board gametypes.Board,
-) error {
-	if !origin.HasNeighbor(order.Destination) {
-		canTransport, _, _ := board.FindTransportPath(origin.Name, order.Destination)
-		if !canTransport {
-			return errors.New("move is not adjacent to destination, and cannot be transported")
-		}
-	}
-
-	if origin.IsEmpty() || origin.Unit.Player != order.Player {
-		secondHorseMove := false
-
-		for _, firstOrder := range origin.IncomingMoves {
-			if origin.Unit.Type == gametypes.UnitHorse &&
-				order.Destination == order.Origin &&
-				firstOrder.Player == order.Player {
-
-				secondHorseMove = true
-			}
+func validateMove(order gametypes.Order, origin gametypes.Region, board gametypes.Board) error {
+	if order.SecondDestination != "" {
+		if origin.Unit.Type != gametypes.UnitHorse {
+			return errors.New(
+				"second destinations for move orders can only be applied to horse units",
+			)
 		}
 
-		if !secondHorseMove {
-			return errors.New("must have unit in origin region")
+		if _, ok := board.Regions[order.SecondDestination]; !ok {
+			return fmt.Errorf(
+				"second destination region with name '%s' not found", order.SecondDestination,
+			)
 		}
 	}
 
@@ -145,6 +153,53 @@ func validateTransport(order gametypes.Order, origin gametypes.Region) error {
 
 	if !origin.Sea {
 		return errors.New("transport orders can only be placed at sea")
+	}
+
+	return nil
+}
+
+func validateReachableMoveDestinations(orders []gametypes.Order, board gametypes.Board) error {
+	boardCopy := gametypes.Board{Regions: make(map[string]gametypes.Region, len(board.Regions))}
+	for regionName, region := range board.Regions {
+		boardCopy.Regions[regionName] = region
+	}
+
+	boardCopy.AddOrders(orders)
+
+	for _, order := range orders {
+		if order.Type == gametypes.OrderMove {
+			if err := validateReachableMoveDestination(order, boardCopy); err != nil {
+				return fmt.Errorf(
+					"invalid move from '%s' to '%s': %w", order.Origin, order.Destination, err,
+				)
+			}
+
+			secondHorseMove, hasSecondHorseMove := order.TryGetSecondHorseMove()
+			if hasSecondHorseMove {
+				if err := validateReachableMoveDestination(secondHorseMove, boardCopy); err != nil {
+					return fmt.Errorf(
+						"invalid second destination for horse move from '%s' to '%s': %w",
+						order.Origin,
+						order.SecondDestination,
+						err,
+					)
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+func validateReachableMoveDestination(move gametypes.Order, board gametypes.Board) error {
+	origin := board.Regions[move.Origin]
+
+	if !origin.HasNeighbor(move.Destination) {
+		canTransport, _, _ := board.FindTransportPath(move.Origin, move.Destination)
+
+		if !canTransport {
+			return errors.New("regions not adjacent, and no transport path available")
+		}
 	}
 
 	return nil
