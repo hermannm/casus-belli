@@ -24,7 +24,7 @@ type playerStatusMsg struct {
 	Username string `json:"username"`
 
 	// The user's selected game ID. Nil if not selected yet.
-	GameID *string `json:"gameID"`
+	GameID *string `json:"gameId"`
 
 	// Whether the user is ready to start the game.
 	Ready bool `json:"ready"`
@@ -34,7 +34,7 @@ type playerStatusMsg struct {
 type lobbyJoinedMsg struct {
 	// IDs that the player may select from for this lobby's game.
 	// Returns all game IDs, though some may already be taken by other players in the lobby.
-	GameIDs []string `json:"gameIDs"`
+	GameIDs []string `json:"gameIds"`
 
 	// Info about each other player in the lobby.
 	PlayerStatuses []playerStatusMsg `json:"playerStatuses"`
@@ -44,7 +44,7 @@ type lobbyJoinedMsg struct {
 type selectGameIDMsg struct {
 	// The ID that the player wants to select for the game.
 	// Will be rejected if already selected by another player.
-	GameID string `json:"gameID"`
+	GameID string `json:"gameId"`
 }
 
 // Message sent from client to mark themselves as ready to start the game.
