@@ -56,6 +56,12 @@ func (game Game) gatherAndValidateOrderSet(
 
 		for i, order := range orders {
 			order.Player = player
+
+			origin, ok := game.board.Regions[order.Origin]
+			if ok && !origin.IsEmpty() && order.Type != gametypes.OrderBuild {
+				order.Unit = origin.Unit
+			}
+
 			orders[i] = order
 		}
 
