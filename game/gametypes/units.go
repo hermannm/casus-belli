@@ -1,5 +1,7 @@
 package gametypes
 
+import "encoding/json"
+
 // A player unit on the board.
 type Unit struct {
 	// Affects how the unit moves and its battle capabilities.
@@ -29,6 +31,11 @@ const (
 	UnitCatapult UnitType = "catapult"
 )
 
+// Checks whether the unit is initialized.
+func (unit Unit) IsNone() bool {
+	return unit.Type == ""
+}
+
 func (unit Unit) BattleModifier(isAttackOnCastle bool) (modifier Modifier, hasModifier bool) {
 	modifierValue := 0
 	switch unit.Type {
@@ -43,4 +50,16 @@ func (unit Unit) BattleModifier(isAttackOnCastle bool) (modifier Modifier, hasMo
 	} else {
 		return Modifier{}, false
 	}
+}
+
+// Custom json.Marshaler implementation, to serialize uninitialized units to null.
+func (unit Unit) MarshalJSON() ([]byte, error) {
+	if unit.IsNone() {
+		return []byte("null"), nil
+	}
+
+	// Alias to avoid infinite loop of MarshalJSON.
+	type unitAlias Unit
+
+	return json.Marshal(unitAlias(unit))
 }

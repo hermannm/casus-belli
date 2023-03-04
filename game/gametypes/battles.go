@@ -1,6 +1,8 @@
 package gametypes
 
-import "hermannm.dev/set"
+import (
+	"hermannm.dev/set"
+)
 
 // Results of a battle from conflicting move orders, an attempt to conquer a neutral region,
 // or an attempt to cross a danger zone.

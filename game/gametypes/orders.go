@@ -1,5 +1,7 @@
 package gametypes
 
+import "encoding/json"
+
 // An order submitted by a player for one of their units in a given round.
 type Order struct {
 	// The type of order submitted. Restricted by unit type and region.
@@ -58,6 +60,10 @@ func (order Order) IsNone() bool {
 	return order.Type == ""
 }
 
+// Checks if the order is a move of a horse unit with a second destination.
+// If it is, returns the order with the original destination set as the origin, and the destination
+// set as the original second destination.
+// Otherwise, returns hasSecondHorseMove=false.
 func (order Order) TryGetSecondHorseMove() (secondHorseMove Order, hasSecondHorseMove bool) {
 	if order.Type != OrderMove || order.SecondDestination == "" || order.Unit.Type != UnitHorse {
 		return Order{}, false
@@ -68,4 +74,16 @@ func (order Order) TryGetSecondHorseMove() (secondHorseMove Order, hasSecondHors
 	order.SecondDestination = ""
 
 	return order, true
+}
+
+// Custom json.Marshaler implementation, to serialize uninitialized orders to null.
+func (order Order) MarshalJSON() ([]byte, error) {
+	if order.IsNone() {
+		return []byte("null"), nil
+	}
+
+	// Alias to avoid infinite loop of MarshalJSON.
+	type orderAlias Order
+
+	return json.Marshal(orderAlias(order))
 }

@@ -62,7 +62,7 @@ type Neighbor struct {
 
 // Checks whether the region contains a unit.
 func (region Region) IsEmpty() bool {
-	return region.Unit.Type == ""
+	return region.Unit.IsNone()
 }
 
 // Checks whether the region is controlled by a player.
