@@ -2,7 +2,6 @@ package orderresolving
 
 import (
 	"hermannm.dev/bfh-server/game/gametypes"
-	"hermannm.dev/set"
 )
 
 // Resolves the board regions touched by the moves in the given cycle.
@@ -16,10 +15,7 @@ import (
 func resolveCycle(
 	cycle []gametypes.Order,
 	board gametypes.Board,
-	allowPlayerConflict bool,
-	battleReceiver chan<- gametypes.Battle,
-	processing set.Set[string],
-	processed set.Set[string],
+	resolverState *ResolverState,
 	messenger Messenger,
 ) {
 	var battleRegions []gametypes.Region
@@ -30,7 +26,7 @@ func resolveCycle(
 
 		if (destination.IsControlled() || destination.Sea) && len(destination.IncomingMoves) == 1 {
 			succeedMove(move, board)
-			processed.Add(destination.Name)
+			resolverState.processed.Add(destination.Name)
 			continue
 		}
 
@@ -42,14 +38,14 @@ func resolveCycle(
 	for _, region := range battleRegions {
 		if len(region.IncomingMoves) == 1 {
 			go calculateSingleplayerBattle(
-				region, region.IncomingMoves[0], battleReceiver, messenger,
+				region, region.IncomingMoves[0], resolverState.battleReceiver, messenger,
 			)
-			processing.Add(region.Name)
-		} else if allowPlayerConflict {
-			go calculateMultiplayerBattle(region, false, battleReceiver, messenger)
-			processing.Add(region.Name)
+			resolverState.processing.Add(region.Name)
+		} else if resolverState.allowPlayerConflict {
+			go calculateMultiplayerBattle(region, false, resolverState.battleReceiver, messenger)
+			resolverState.processing.Add(region.Name)
 		} else {
-			processed.Add(region.Name)
+			resolverState.processed.Add(region.Name)
 		}
 	}
 }
@@ -88,7 +84,7 @@ func discoverCycle(
 }
 
 // Checks if the given region is part of a two-way move cycle (moves moving against each other).
-// Returns whether the region is aprt of a cycle, and if so, the second region in the cycle,
+// Returns whether the region is a part of a cycle, and if so, the second region in the cycle,
 // as well as whether the two moves are from the same player.
 func discoverTwoWayCycle(
 	region1 gametypes.Region, board gametypes.Board,
