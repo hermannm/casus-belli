@@ -4,52 +4,6 @@ import (
 	"hermannm.dev/bfh-server/game/gametypes"
 )
 
-// Resolves the board regions touched by the moves in the given cycle.
-//
-// Immediately resolves regions that do not require battle,
-// and adds them to the given processed map.
-//
-// Adds embattled regions to the given processing map,
-// and forwards them to appropriate battle calculators,
-// which send results to the given battleReceiver.
-func resolveCycle(
-	cycle []gametypes.Order,
-	board gametypes.Board,
-	resolverState *ResolverState,
-	messenger Messenger,
-) {
-	var battleRegions []gametypes.Region
-
-	// First, resolves non-conflicting cycle moves.
-	for _, move := range cycle {
-		destination := board.Regions[move.Destination]
-
-		if (destination.IsControlled() || destination.Sea) && len(destination.IncomingMoves) == 1 {
-			succeedMove(move, board)
-			resolverState.processed.Add(destination.Name)
-			continue
-		}
-
-		battleRegions = append(battleRegions, destination)
-	}
-
-	// Then resolves cycle moves that require battle.
-	// Skips multiplayer battles if player conflicts are not allowed.
-	for _, region := range battleRegions {
-		if len(region.IncomingMoves) == 1 {
-			go calculateSingleplayerBattle(
-				region, region.IncomingMoves[0], resolverState.battleReceiver, messenger,
-			)
-			resolverState.processing.Add(region.Name)
-		} else if resolverState.allowPlayerConflict {
-			go calculateMultiplayerBattle(region, false, resolverState.battleReceiver, messenger)
-			resolverState.processing.Add(region.Name)
-		} else {
-			resolverState.processed.Add(region.Name)
-		}
-	}
-}
-
 // Recursively finds a cycle of moves starting and ending with the given firstRegionName.
 // Assumes that cycles of only 2 moves are already resolved.
 // Returns the list of moves in the cycle, or nil if no cycle was found.
