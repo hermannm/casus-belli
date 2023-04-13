@@ -120,7 +120,6 @@ func (resolver *MoveResolver) resolveRegionMoves(
 
 		if region.IsControlled() || region.Sea {
 			resolver.succeedMove(move, board)
-			resolver.resolvedRegions.Add(region.Name)
 			return
 		}
 
@@ -199,7 +198,6 @@ func (resolver *MoveResolver) resolveCycle(
 
 		if (destination.IsControlled() || destination.Sea) && len(destination.IncomingMoves) == 1 {
 			resolver.succeedMove(move, board)
-			resolver.resolvedRegions.Add(destination.Name)
 			continue
 		}
 
@@ -239,4 +237,21 @@ func (resolver *MoveResolver) succeedMove(move gametypes.Order, board gametypes.
 
 	board.RemoveUnit(move.Unit, move.Origin)
 	board.RemoveOrder(move)
+
+	resolver.resolvedRegions.Add(move.Destination)
+
+	if secondHorseMove, hasSecondHorseMove := move.TryGetSecondHorseMove(); hasSecondHorseMove {
+		resolver.secondHorseMoves = append(resolver.secondHorseMoves, secondHorseMove)
+	}
+}
+
+// Goes through the second horse moves in the move resolver, adds them to the board, and removes
+// their destination regions from the resolver's set of resolved regions.
+func (resolver *MoveResolver) addSecondHorseMoves(board gametypes.Board) {
+	for _, secondHorseMove := range resolver.secondHorseMoves {
+		board.AddOrder(secondHorseMove)
+		resolver.resolvedRegions.Remove(secondHorseMove.Destination)
+	}
+
+	resolver.secondHorseMoves = nil
 }

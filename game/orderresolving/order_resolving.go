@@ -20,84 +20,14 @@ func ResolveOrders(
 	if season == gametypes.SeasonWinter {
 		resolveWinterOrders(board, orders)
 		return nil, "", false
-	}
-
-	firstOrders, secondOrders := SortNonWinterOrders(orders, board)
-
-	firstBattles := resolveNonWinterOrders(board, firstOrders, messenger)
-	battles = append(battles, firstBattles...)
-
-	secondBattles := resolveNonWinterOrders(board, secondOrders, messenger)
-	battles = append(battles, secondBattles...)
-
-	resolveSieges(board)
-
-	winner, hasWinner = board.CheckWinner()
-
-	return battles, winner, hasWinner
-}
-
-// Takes a set of orders, and sorts them into two sets based on their sequence in the round.
-// Also takes the board for deciding the sequence.
-func SortNonWinterOrders(
-	orders []gametypes.Order, board gametypes.Board,
-) (firstOrders []gametypes.Order, secondOrders []gametypes.Order) {
-	for _, order := range orders {
-		fromRegion := board.Regions[order.Origin]
-
-		// If order origin has no unit, or unit of different color,
-		// then order is a second horse move and should be processed after all others.
-		if fromRegion.IsEmpty() || fromRegion.Unit.Player != order.Player {
-			secondOrders = append(secondOrders, order)
-		} else {
-			firstOrders = append(firstOrders, order)
-		}
-	}
-
-	return firstOrders, secondOrders
-}
-
-// Resolves results of the given orders on the board.
-func resolveNonWinterOrders(
-	board gametypes.Board, orders []gametypes.Order, messenger Messenger,
-) []gametypes.Battle {
-	var battles []gametypes.Battle
-
-	board.AddOrders(orders)
-
-	dangerZoneBattles := resolveDangerZones(board)
-	battles = append(battles, dangerZoneBattles...)
-	err := messenger.SendBattleResults(dangerZoneBattles)
-	if err != nil {
-		log.Println(err)
-	}
-
-	resolver := newMoveResolver()
-	resolver.resolveMoves(board, messenger)
-	battles = append(battles, resolver.resolvedBattles...)
-
-	return battles
-}
-
-// Goes through regions with siege orders, and updates the region following the siege.
-func resolveSieges(board gametypes.Board) {
-	for regionName, region := range board.Regions {
-		if region.Order.IsNone() || region.Order.Type != gametypes.OrderBesiege {
-			continue
-		}
-
-		region.SiegeCount++
-		if region.SiegeCount == 2 {
-			region.ControllingPlayer = region.Unit.Player
-			region.SiegeCount = 0
-		}
-
-		board.Regions[regionName] = region
+	} else {
+		battles = resolveNonWinterOrders(board, orders, messenger)
+		winner, hasWinner = board.CheckWinner()
+		return battles, winner, hasWinner
 	}
 }
 
 // Resolves winter orders (builds and internal moves) on the board.
-// Assumes they have already been validated.
 func resolveWinterOrders(board gametypes.Board, orders []gametypes.Order) {
 	for _, order := range orders {
 		switch order.Type {
@@ -118,5 +48,48 @@ func resolveWinterOrders(board gametypes.Board, orders []gametypes.Order) {
 			board.Regions[order.Origin] = origin
 			board.Regions[order.Destination] = destination
 		}
+	}
+}
+
+// Resolves results of the given orders on the board.
+func resolveNonWinterOrders(
+	board gametypes.Board, orders []gametypes.Order, messenger Messenger,
+) []gametypes.Battle {
+	var battles []gametypes.Battle
+
+	board.AddOrders(orders)
+
+	dangerZoneBattles := resolveDangerZones(board)
+	battles = append(battles, dangerZoneBattles...)
+	if err := messenger.SendBattleResults(dangerZoneBattles); err != nil {
+		log.Println(err)
+	}
+
+	resolver := newMoveResolver()
+	resolver.resolveMoves(board, messenger)
+	resolver.addSecondHorseMoves(board)
+	resolver.resolveMoves(board, messenger)
+
+	battles = append(battles, resolver.resolvedBattles...)
+
+	resolveSieges(board)
+
+	return battles
+}
+
+// Goes through regions with siege orders, and updates the region following the siege.
+func resolveSieges(board gametypes.Board) {
+	for regionName, region := range board.Regions {
+		if region.Order.IsNone() || region.Order.Type != gametypes.OrderBesiege {
+			continue
+		}
+
+		region.SiegeCount++
+		if region.SiegeCount == 2 {
+			region.ControllingPlayer = region.Unit.Player
+			region.SiegeCount = 0
+		}
+
+		board.Regions[regionName] = region
 	}
 }

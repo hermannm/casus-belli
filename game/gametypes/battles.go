@@ -40,6 +40,8 @@ const (
 	RequirementDangerZone int = 3
 )
 
+// Returns the name of the regions that were involved in the battle (most likely 1, but may be 2 in
+// the case of a border battle).
 func (battle Battle) RegionNames() []string {
 	nameSet := set.New[string]()
 

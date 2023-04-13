@@ -28,7 +28,7 @@ func (resolver *MoveResolver) resolveBattle(battle gametypes.Battle, board gamet
 // that each result is tied to a move order, and that the battle had at least one winner.
 // Returns any retreating move orders that could not be resolved.
 func (resolver *MoveResolver) resolveBorderBattle(battle gametypes.Battle, board gametypes.Board) {
-	winners, _ := battle.WinnersAndLosers()
+	winners, losers := battle.WinnersAndLosers()
 	move1 := battle.Results[0].Move
 	move2 := battle.Results[1].Move
 
@@ -43,16 +43,13 @@ func (resolver *MoveResolver) resolveBorderBattle(battle gametypes.Battle, board
 		return
 	}
 
-	winner := winners[0]
+	loser := losers[0]
 
 	for _, move := range []gametypes.Order{move1, move2} {
-		if move.Player == winner {
-			// If destination region is uncontrolled, the player must win a singleplayer battle
-			// there before taking control.
-			if board.Regions[move.Destination].IsControlled() {
-				resolver.succeedMove(move, board)
-			}
-		} else {
+		// Only the loser is affected by the results of the border battle; the winner may still have
+		// to win a battle in the destination region, which will be handled by the next cycle of the
+		// move resolver.
+		if move.Player == loser {
 			board.RemoveOrder(move)
 			board.RemoveUnit(move.Unit, move.Origin)
 		}
@@ -61,7 +58,6 @@ func (resolver *MoveResolver) resolveBorderBattle(battle gametypes.Battle, board
 
 // Resolves effects on the board from the given singleplayer battle (player vs. neutral region).
 // Assumes that the battle has a single result, with a move order tied to it.
-// Returns the move order in a list if it fails retreat, or nil otherwise.
 func (resolver *MoveResolver) resolveSingleplayerBattle(
 	battle gametypes.Battle, board gametypes.Board,
 ) {
