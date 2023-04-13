@@ -74,9 +74,6 @@ func resolveNonWinterOrders(
 
 	resolver := newMoveResolver()
 	resolver.resolveMoves(board, messenger)
-	resolver.allowPlayerConflict = true
-	resolver.resolveMoves(board, messenger)
-
 	battles = append(battles, resolver.resolvedBattles...)
 
 	return battles
