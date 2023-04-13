@@ -74,17 +74,6 @@ func (board Board) AddOrder(order Order) {
 	board.Regions[order.Destination] = destination
 }
 
-// Cleans up remaining order references on the board after the round.
-func (board Board) RemoveOrders() {
-	for regionName, region := range board.Regions {
-		region.Order = Order{}
-		region.IncomingMoves = nil
-		region.IncomingSupports = nil
-
-		board.Regions[regionName] = region
-	}
-}
-
 // Removes the given order from the regions on the board.
 func (board Board) RemoveOrder(order Order) {
 	origin := board.Regions[order.Origin]
