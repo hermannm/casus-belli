@@ -74,6 +74,8 @@ func resolveNonWinterOrders(
 
 	resolveSieges(board)
 
+	board.RemoveOrders()
+
 	return battles
 }
 
