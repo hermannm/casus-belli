@@ -71,7 +71,7 @@ func (registry *LobbyRegistry) LobbyInfo() []LobbyInfo {
 
 	info := make([]LobbyInfo, 0, len(registry.lobbies))
 	for _, lobby := range registry.lobbies {
-		info = append(info, LobbyInfo{LobbyName: lobby.name, GameName: lobby.game.Board.Name})
+		info = append(info, LobbyInfo{LobbyName: lobby.name, GameName: lobby.game.Name()})
 	}
 
 	return info

@@ -19,13 +19,14 @@ type Lobby struct {
 }
 
 func New(lobbyName string, gameName string, gameOptions game.GameOptions) (*Lobby, error) {
-	lobby := &Lobby{name: lobbyName, players: nil, lock: sync.RWMutex{}}
+	lobby := &Lobby{name: lobbyName, lock: sync.RWMutex{}}
 
 	game, err := game.New(gameName, game.DefaultOptions(), lobby)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create game: %w", err)
 	}
 	lobby.game = game
+	lobby.players = make([]*Player, 0, len(game.PlayerIDs))
 
 	return lobby, nil
 }
@@ -58,16 +59,9 @@ func (lobby *Lobby) AddPlayer(username string, socket *websocket.Conn) (*Player,
 	lobby.lock.Lock()
 	defer lobby.lock.Unlock()
 
-	player := &Player{
-		lock:                sync.RWMutex{},
-		socket:              socket,
-		username:            username,
-		gameID:              "",
-		gameMessageReceiver: newGameMessageReceiver(lobby.game.Board.RegionNames()),
-		readyToStartGame:    false,
-	}
-
+	player := newPlayer(username, socket)
 	lobby.players = append(lobby.players, player)
+
 	go player.listen(lobby)
 
 	return player, nil

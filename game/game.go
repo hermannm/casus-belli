@@ -10,10 +10,10 @@ import (
 )
 
 type Game struct {
-	Board     gametypes.Board
-	PlayerIDs []string
+	board     gametypes.Board
 	options   GameOptions
 	messenger Messenger
+	PlayerIDs []string
 }
 
 type Messenger interface {
@@ -30,7 +30,7 @@ func New(boardName string, options GameOptions, messenger Messenger) (*Game, err
 	}
 
 	return &Game{
-		Board:     board,
+		board:     board,
 		PlayerIDs: board.AvailablePlayerIDs(),
 		options:   options,
 		messenger: messenger,
@@ -44,11 +44,11 @@ func (game *Game) Start() {
 	// Starts new rounds until there is a winner.
 	for {
 		orders := ordervalidation.GatherAndValidateOrders(
-			game.PlayerIDs, game.Board, season, game.messenger,
+			game.PlayerIDs, game.board, season, game.messenger,
 		)
 
 		_, winner, hasWinner := orderresolving.ResolveOrders(
-			game.Board, orders, season, game.messenger,
+			game.board, orders, season, game.messenger,
 		)
 
 		if hasWinner {
@@ -58,6 +58,10 @@ func (game *Game) Start() {
 
 		season = season.Next()
 	}
+}
+
+func (game *Game) Name() string {
+	return game.board.Name
 }
 
 type GameOptions struct {

@@ -19,6 +19,17 @@ type Player struct {
 	readyToStartGame bool            // Must hold lock to access safely.
 }
 
+func newPlayer(username string, socket *websocket.Conn) *Player {
+	return &Player{
+		username:            username,
+		gameMessageReceiver: newGameMessageReceiver(),
+		lock:                sync.RWMutex{},
+		socket:              socket,
+		gameID:              "",
+		readyToStartGame:    false,
+	}
+}
+
 // Attempts to select the given game ID for the player in the lobby.
 func (player *Player) selectGameID(gameID string, lobby *Lobby) error {
 	lobby.lock.RLock()

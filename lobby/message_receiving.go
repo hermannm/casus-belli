@@ -135,13 +135,8 @@ type GameMessageReceiver struct {
 	supportsCondition sync.Cond
 }
 
-func newGameMessageReceiver(boardRegionNames []string) *GameMessageReceiver {
-	supportChans := make(map[string]chan GiveSupportMessage, len(boardRegionNames))
-	for _, regionName := range boardRegionNames {
-		supportChans[regionName] = make(chan GiveSupportMessage)
-	}
-
-	receiver := &GameMessageReceiver{
+func newGameMessageReceiver() *GameMessageReceiver {
+	return &GameMessageReceiver{
 		orders:            make(chan SubmitOrdersMessage),
 		winterVote:        make(chan WinterVoteMessage),
 		sword:             make(chan SwordMessage),
@@ -149,8 +144,6 @@ func newGameMessageReceiver(boardRegionNames []string) *GameMessageReceiver {
 		supports:          nil,
 		supportsCondition: sync.Cond{L: &sync.Mutex{}},
 	}
-
-	return receiver
 }
 
 // Takes a message ID and an unserialized JSON message.
