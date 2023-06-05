@@ -8,8 +8,17 @@ import (
 
 type Messenger interface {
 	SendBattleResults(battles []gametypes.Battle) error
-	SendSupportRequest(toPlayer string, supportingRegion string, battlers []string) error
-	ReceiveSupport(fromPlayer string, fromRegion string) (supportedPlayer string, err error)
+
+	SendSupportRequest(
+		toPlayer string,
+		supportingRegion string,
+		embattledRegion string,
+		supportablePlayers []string,
+	) error
+
+	ReceiveSupport(
+		fromPlayer string, supportingRegion string, embattledRegion string,
+	) (supportedPlayer string, err error)
 }
 
 // Adds the round's orders to the board, and resolves them.

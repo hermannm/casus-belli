@@ -46,17 +46,17 @@ type neighbor struct {
 }
 
 // Reads and constructs the board matching the given ID.
-func ReadBoardFromConfigFile(boardID string) (gametypes.Board, error) {
-	content, err := boardConfigFiles.ReadFile(fmt.Sprintf("%s.json", boardID))
+func ReadBoardFromConfigFile(boardConfigFileName string) (gametypes.Board, error) {
+	content, err := boardConfigFiles.ReadFile(fmt.Sprintf("%s.json", boardConfigFileName))
 	if err != nil {
-		return gametypes.Board{}, err
+		return gametypes.Board{}, fmt.Errorf(
+			"failed to read config file '%s.json': %w", boardConfigFileName, err,
+		)
 	}
 
 	var jsonBoard jsonBoard
-
-	err = json.Unmarshal(content, &jsonBoard)
-	if err != nil {
-		return gametypes.Board{}, err
+	if err := json.Unmarshal(content, &jsonBoard); err != nil {
+		return gametypes.Board{}, fmt.Errorf("failed to deserialize board config file: %w", err)
 	}
 
 	if jsonBoard.WinningCastleCount <= 0 {
@@ -95,7 +95,7 @@ func ReadBoardFromConfigFile(boardID string) (gametypes.Board, error) {
 
 		if !ok1 || !ok2 {
 			return gametypes.Board{}, fmt.Errorf(
-				"error in board config: neighbor relation %s <-> %s",
+				"failed to find regions for neighbor relation %s <-> %s in board config",
 				neighbor.Region1,
 				neighbor.Region2,
 			)

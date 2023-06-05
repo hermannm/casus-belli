@@ -6,36 +6,29 @@ import (
 	"sync"
 )
 
-var lobbyRegistry = NewLobbyRegistry()
-
 type LobbyRegistry struct {
-	lock sync.RWMutex
-
-	lobbies map[string]*Lobby
+	lobbies []*Lobby
+	lock    sync.RWMutex
 }
 
 func NewLobbyRegistry() *LobbyRegistry {
-	return &LobbyRegistry{
-		lock:    sync.RWMutex{},
-		lobbies: make(map[string]*Lobby),
-	}
+	return &LobbyRegistry{lobbies: nil, lock: sync.RWMutex{}}
 }
 
-// Returns the lobby of the given name from the registry, or false if it is not found.
-func (registry *LobbyRegistry) getLobby(name string) (*Lobby, bool) {
+func (registry *LobbyRegistry) GetLobby(name string) (lobby *Lobby, lobbyFound bool) {
 	registry.lock.RLock()
 	defer registry.lock.RUnlock()
 
-	lobby, ok := registry.lobbies[name]
-	return lobby, ok
+	for _, lobby := range registry.lobbies {
+		if lobby.name == name {
+			return lobby, true
+		}
+	}
+
+	return nil, false
 }
 
-// Attempts to add the given lobby to the lobby registry.
-// Errors if lobby name is invalid or already taken.
-func (registry *LobbyRegistry) registerLobby(lobby *Lobby) error {
-	lobby.lock.RLock()
-	defer lobby.lock.RUnlock()
-
+func (registry *LobbyRegistry) RegisterLobby(lobby *Lobby) error {
 	if lobby.name == "" {
 		return errors.New("lobby name cannot be blank")
 	}
@@ -43,49 +36,42 @@ func (registry *LobbyRegistry) registerLobby(lobby *Lobby) error {
 	registry.lock.Lock()
 	defer registry.lock.Unlock()
 
-	uniqueName := true
 	for _, existingLobby := range registry.lobbies {
-		existingLobby.lock.RLock()
 		if existingLobby.name == lobby.name {
-			uniqueName = false
+			return fmt.Errorf("lobby name '%s' already taken", lobby.name)
 		}
-		existingLobby.lock.RUnlock()
-	}
-	if !uniqueName {
-		return fmt.Errorf("lobby name \"%s\" already taken", lobby.name)
 	}
 
-	registry.lobbies[lobby.name] = lobby
-
+	registry.lobbies = append(registry.lobbies, lobby)
 	return nil
 }
 
-// Removes the lobby of the given name from the lobby registry.
-func (registry *LobbyRegistry) removeLobby(lobbyName string) {
+func (registry *LobbyRegistry) RemoveLobby(lobbyName string) {
 	registry.lock.Lock()
 	defer registry.lock.Unlock()
 
-	delete(registry.lobbies, lobbyName)
+	remainingLobbies := make([]*Lobby, 0, cap(registry.lobbies))
+	for _, lobby := range registry.lobbies {
+		if lobby.name != lobbyName {
+			remainingLobbies = append(remainingLobbies, lobby)
+		}
+	}
+
+	registry.lobbies = remainingLobbies
 }
 
-type lobbyInfo struct {
+type LobbyInfo struct {
 	LobbyName string `json:"lobbyName"`
 	GameName  string `json:"gameName"`
 }
 
-// Returns an info object for each lobby in the registry.
-func (registry *LobbyRegistry) lobbyInfo() []lobbyInfo {
+func (registry *LobbyRegistry) LobbyInfo() []LobbyInfo {
 	registry.lock.RLock()
 	defer registry.lock.RUnlock()
 
-	info := make([]lobbyInfo, 0, len(registry.lobbies))
-
+	info := make([]LobbyInfo, 0, len(registry.lobbies))
 	for _, lobby := range registry.lobbies {
-		lobby.lock.RLock()
-
-		info = append(info, lobbyInfo{LobbyName: lobby.name, GameName: lobby.game.Name()})
-
-		lobby.lock.RUnlock()
+		info = append(info, LobbyInfo{LobbyName: lobby.name, GameName: lobby.game.Board.Name})
 	}
 
 	return info

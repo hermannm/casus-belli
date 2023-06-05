@@ -147,3 +147,26 @@ func (board Board) CheckWinner() (winner string, hasWinner bool) {
 	hasWinner = !tie && highestCount > board.WinningCastleCount
 	return highestCountPlayer, hasWinner
 }
+
+// Returns a list of the IDs that players can use on this board.
+func (board Board) AvailablePlayerIDs() []string {
+	var ids []string
+
+OuterLoop:
+	for _, region := range board.Regions {
+		potentialID := region.HomePlayer
+		if potentialID == "" {
+			continue
+		}
+
+		for _, id := range ids {
+			if potentialID == id {
+				continue OuterLoop
+			}
+		}
+
+		ids = append(ids, potentialID)
+	}
+
+	return ids
+}

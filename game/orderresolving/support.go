@@ -102,14 +102,14 @@ func callSupport(
 		battlers = append(battlers, region.Unit.Player)
 	}
 
-	err := messenger.SendSupportRequest(support.Player, region.Name, battlers)
+	err := messenger.SendSupportRequest(support.Player, support.Origin, region.Name, battlers)
 	if err != nil {
 		log.Println(fmt.Errorf("failed to send support request: %w", err))
 		supportReceiver <- supportDeclaration{fromPlayer: support.Player, toPlayer: ""}
 		return
 	}
 
-	supported, err := messenger.ReceiveSupport(support.Player, region.Name)
+	supported, err := messenger.ReceiveSupport(support.Player, support.Origin, region.Name)
 	if err != nil {
 		log.Println(fmt.Errorf(
 			"failed to receive support declaration from player %s: %w",

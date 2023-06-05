@@ -5,8 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"sync"
 
 	"github.com/gorilla/websocket"
+	"hermannm.dev/bfh-server/game/gametypes"
 )
 
 // Continuously listens for messages from the player's socket until it is closed.
@@ -21,7 +23,7 @@ func (player *Player) listen(lobby *Lobby) {
 		}
 		if err != nil {
 			log.Println(fmt.Errorf("message error for player %s: %w", player.String(), err))
-			player.sendErr(err.Error())
+			player.SendError(err)
 		}
 	}
 }
@@ -42,30 +44,34 @@ func (player *Player) receiveMessage(lobby *Lobby) (socketClosed bool, err error
 		}
 	}
 
-	var msgWithID map[string]json.RawMessage
-	err = json.Unmarshal(receivedMsg, &msgWithID)
-	if err != nil {
+	var messageWithType map[MessageType]json.RawMessage
+	if err := json.Unmarshal(receivedMsg, &messageWithType); err != nil {
 		return false, fmt.Errorf("failed to parse message: %w", err)
 	}
-	if len(msgWithID) != 1 {
+	if len(messageWithType) != 1 {
 		return false, errors.New("invalid message format")
 	}
 
-	var msgID string
+	var messageType MessageType
 	var rawMsg json.RawMessage
-	for msgID, rawMsg = range msgWithID {
+	for messageType, rawMsg = range messageWithType {
 		break
 	}
 
-	isLobbyMsg, err := player.receiveLobbyMessage(lobby, msgID, rawMsg)
+	isLobbyMessage, err := player.receiveLobbyMessage(lobby, messageType, rawMsg)
 	if err != nil {
 		return false, fmt.Errorf("error in handling lobby message: %w", err)
 	}
 
-	// If msg ID is not a lobby message ID, the message is forwarded to the player's game message
-	// receiver.
-	if !isLobbyMsg && player.gameMsgReceiver != nil {
-		go player.gameMsgReceiver.ReceiveMessage(msgID, rawMsg)
+	if !isLobbyMessage {
+		if player.gameID == "" {
+			return false, fmt.Errorf(
+				"received game message from player '%s' before their game ID was set",
+				player.String(),
+			)
+		} else {
+			go player.gameMessageReceiver.receiveGameMessage(messageType, rawMsg)
+		}
 	}
 
 	return false, nil
@@ -73,56 +79,167 @@ func (player *Player) receiveMessage(lobby *Lobby) (socketClosed bool, err error
 
 // Receives a lobby-specific message, and handles it according to its ID.
 func (player *Player) receiveLobbyMessage(
-	lobby *Lobby, msgID string, rawMsg json.RawMessage,
+	lobby *Lobby, messageType MessageType, rawMessage json.RawMessage,
 ) (isLobbyMsg bool, err error) {
-	switch msgID {
-	case selectGameIDMsgID:
-		var msg selectGameIDMsg
-		err := json.Unmarshal(rawMsg, &msg)
-		if err != nil {
-			return true, fmt.Errorf("failed to unmarshal %s message: %w", msgID, err)
+	switch messageType {
+	case messageTypeSelectGameID:
+		var message SelectGameIDMessage
+		if err := json.Unmarshal(rawMessage, &message); err != nil {
+			return true, fmt.Errorf("failed to unmarshal %s message: %w", messageType, err)
 		}
 
-		err = player.selectGameID(msg.GameID, lobby)
-		if err != nil {
+		if err := player.selectGameID(message.GameID, lobby); err != nil {
 			return true, fmt.Errorf("failed to select game ID: %w", err)
 		}
 
-		err = lobby.sendPlayerStatusMsg(player)
-		if err != nil {
+		if err := lobby.SendPlayerStatusMessage(player); err != nil {
 			return true, fmt.Errorf(
-				"failed to update other players about game ID selection: %w",
-				err,
+				"failed to update other players about game ID selection: %w", err,
 			)
 		}
 
 		return true, nil
-	case readyMsgID:
-		var msg readyMsg
-		err := json.Unmarshal(rawMsg, &msg)
-		if err != nil {
-			return true, fmt.Errorf("failed to unmarshal %s message: %w", msgID, err)
+	case messageTypeReady:
+		var message ReadyToStartGameMessage
+		if err := json.Unmarshal(rawMessage, &message); err != nil {
+			return true, fmt.Errorf("failed to unmarshal %s message: %w", messageType, err)
 		}
 
-		err = player.setReady(msg.Ready)
-		if err != nil {
+		if err := player.setReadyToStartGame(message.Ready); err != nil {
 			return true, fmt.Errorf("failed to set ready status: %w", err)
 		}
 
-		err = lobby.sendPlayerStatusMsg(player)
-		if err != nil {
+		if err := lobby.SendPlayerStatusMessage(player); err != nil {
 			return true, fmt.Errorf("failed to update other players about ready status: %w", err)
 		}
 
 		return true, nil
-	case startGameMsgID:
-		err := lobby.startGame()
-		if err != nil {
+	case messageTypeStartGame:
+		if err := lobby.startGame(); err != nil {
 			return true, fmt.Errorf("failed to start game: %w", err)
 		}
 
 		return true, nil
 	default:
 		return false, nil
+	}
+}
+
+type GameMessageReceiver struct {
+	orders     chan SubmitOrdersMessage
+	winterVote chan WinterVoteMessage
+	sword      chan SwordMessage
+	raven      chan RavenMessage
+
+	supports          []GiveSupportMessage // Must hold supportsCondition.L to access safely.
+	supportsCondition sync.Cond
+}
+
+func newGameMessageReceiver(boardRegionNames []string) *GameMessageReceiver {
+	supportChans := make(map[string]chan GiveSupportMessage, len(boardRegionNames))
+	for _, regionName := range boardRegionNames {
+		supportChans[regionName] = make(chan GiveSupportMessage)
+	}
+
+	receiver := &GameMessageReceiver{
+		orders:            make(chan SubmitOrdersMessage),
+		winterVote:        make(chan WinterVoteMessage),
+		sword:             make(chan SwordMessage),
+		raven:             make(chan RavenMessage),
+		supports:          nil,
+		supportsCondition: sync.Cond{L: &sync.Mutex{}},
+	}
+
+	return receiver
+}
+
+// Takes a message ID and an unserialized JSON message.
+// Unmarshals the message according to its type, and sends it to the appropraite receiver channel.
+func (receiver *GameMessageReceiver) receiveGameMessage(
+	messageType MessageType, rawMessage json.RawMessage,
+) {
+	var err error // Error declared here in order to handle it after the switch
+
+	switch messageType {
+	case messageTypeSubmitOrders:
+		var message SubmitOrdersMessage
+		if err = json.Unmarshal(rawMessage, &message); err == nil {
+			receiver.orders <- message
+		}
+	case messageTypeGiveSupport:
+		var message GiveSupportMessage
+		if err = json.Unmarshal(rawMessage, &message); err == nil {
+			receiver.supportsCondition.L.Lock()
+			receiver.supports = append(receiver.supports, message)
+			receiver.supportsCondition.L.Unlock()
+			receiver.supportsCondition.Broadcast()
+		}
+	case messageTypeWinterVote:
+		var message WinterVoteMessage
+		if err = json.Unmarshal(rawMessage, &message); err == nil {
+			receiver.winterVote <- message
+		}
+	case messageTypeSword:
+		var message SwordMessage
+		if err = json.Unmarshal(rawMessage, &message); err == nil {
+			receiver.sword <- message
+		}
+	case messageTypeRaven:
+		var message RavenMessage
+		if err = json.Unmarshal(rawMessage, &message); err == nil {
+			receiver.raven <- message
+		}
+	}
+
+	if err != nil {
+		log.Println(fmt.Errorf("failed to parse message of type '%s': %w", messageType, err))
+	}
+}
+
+func (lobby *Lobby) ReceiveOrders(fromPlayer string) ([]gametypes.Order, error) {
+	player, ok := lobby.getPlayer(fromPlayer)
+	if !ok {
+		return nil, fmt.Errorf(
+			"failed to get order message from player '%s': player not found", fromPlayer,
+		)
+	}
+
+	orders := <-player.gameMessageReceiver.orders
+	return orders.Orders, nil
+}
+
+func (lobby *Lobby) ReceiveSupport(
+	fromPlayer string, supportingRegion string, embattledRegion string,
+) (supportedPlayer string, err error) {
+	player, ok := lobby.getPlayer(fromPlayer)
+	if !ok {
+		return "", fmt.Errorf(
+			"failed to get support message from player '%s' in region '%s': player not found",
+			fromPlayer, supportingRegion,
+		)
+	}
+
+	receiver := player.gameMessageReceiver
+
+	receiver.supportsCondition.L.Lock()
+	for {
+		var supportedPlayer string
+		remainingSupports := make([]GiveSupportMessage, 0, cap(receiver.supports))
+		for _, support := range receiver.supports {
+			if support.SupportingRegion == supportingRegion &&
+				support.EmbattledRegion == embattledRegion {
+				supportedPlayer = *support.SupportedPlayer
+			} else {
+				remainingSupports = append(remainingSupports, support)
+			}
+		}
+
+		if supportedPlayer != "" {
+			receiver.supports = remainingSupports
+			receiver.supportsCondition.L.Unlock()
+			return supportedPlayer, nil
+		}
+
+		receiver.supportsCondition.Wait()
 	}
 }

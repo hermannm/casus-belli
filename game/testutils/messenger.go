@@ -11,13 +11,13 @@ func (MockMessenger) SendBattleResults(battles []gametypes.Battle) error {
 }
 
 func (MockMessenger) SendSupportRequest(
-	toPlayer string, supportingRegion string, battlers []string,
+	toPlayer string, supportingRegion string, embattledRegion string, supportablePlayers []string,
 ) error {
 	return nil
 }
 
 func (MockMessenger) ReceiveSupport(
-	fromPlayer string, fromRegion string,
+	fromPlayer string, supportingRegion string, embattledRegion string,
 ) (supportedPlayer string, err error) {
 	return "", nil
 }
