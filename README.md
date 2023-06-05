@@ -2,19 +2,17 @@
 
 _The Battle for Hermannia_ is a board game created as a gift by the father of [hermannm](https://github.com/hermannm), a developer of this project. This digital edition of _Hermannia_ is an online multiplayer implementation of the game. It consists of this server, written in Go, as well as a Unity client at [`immerse-ntnu/bfh-client`](https://github.com/immerse-ntnu/bfh-client).
 
-## Package Structure
+## Project Structure
 
-- Package `lobby` defines API endpoints for finding, creating and joining game lobbies, and manages WebSocket connections between players and the server. It is agnostic to the type of game played.
-- Package `game` implements _The Battle for Hermannia_ as a game for `lobby`. It contains all subpackages specific to this game.
-  - Package `board` contains the main game logic, mainly the resolving of orders on the board.
-  - Package `boardsetup` contains the JSON files for the game's boards, and functions for deserializing them.
-  - Package `messages` defines the game-specific types of messages sent between client and server, as well as the logic for sorting incoming messages.
-  - Package `validation` contains functions for validating player input.
-- `cmd` contains packages for each of the server's executables.
-  - Package `main` under `local` sets up a game server with a single, server-created lobby.
-  - Package `main` under `public` sets up a game server where anyone can create their own lobbies through an open endpoint.
-- Package `server` at the project root contains the common setup code for the server's executables, such as the configured games.
-- Package `main` under `magefiles` contains build scripts using [Mage](https://magefile.org/).
+- `lobby` manages lobbies of players with persistent connections to the server, and messages between them
+- `api` defines API endpoints for finding, creating and joining game lobbies
+- `game` contains the main game loop for _The Battle for Hermannia_
+  - `gametypes` provides core data types used by other game packages, and operations on them
+  - `ordervalidation` provides functions for gathering and validating game orders from players
+  - `orderresolving` contains the bulk of the game logic for _Hermannia_: resolving player orders on the board
+  - `boardconfig` contains the JSON files for the game's available boards, and functions for deserializing them
+- Package `main` at the project root contains a CLI application for launching the game server
+- Package `main` under `magefiles` contains build scripts using [Mage](https://magefile.org/)
 
 ## Credits
 
