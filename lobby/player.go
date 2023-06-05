@@ -12,11 +12,10 @@ import (
 type Player struct {
 	username            string
 	gameMessageReceiver *GameMessageReceiver
-
-	lock             sync.RWMutex
-	socket           *websocket.Conn // Must hold lock to access safely.
-	gameID           string          // Must hold lock to access safely. Blank until selected.
-	readyToStartGame bool            // Must hold lock to access safely.
+	socket              *websocket.Conn // Must hold lock to access safely.
+	gameID              string          // Must hold lock to access safely. Blank until selected.
+	readyToStartGame    bool            // Must hold lock to access safely.
+	lock                sync.RWMutex
 }
 
 func newPlayer(username string, socket *websocket.Conn) *Player {

@@ -126,23 +126,22 @@ func (player *Player) receiveLobbyMessage(
 }
 
 type GameMessageReceiver struct {
-	orders     chan SubmitOrdersMessage
-	winterVote chan WinterVoteMessage
-	sword      chan SwordMessage
-	raven      chan RavenMessage
-
-	supports          []GiveSupportMessage // Must hold supportsCondition.L to access safely.
-	supportsCondition sync.Cond
+	orders          chan SubmitOrdersMessage
+	winterVote      chan WinterVoteMessage
+	sword           chan SwordMessage
+	raven           chan RavenMessage
+	supports        []GiveSupportMessage // Must hold supportNotifier.L to access safely.
+	supportNotifier sync.Cond
 }
 
 func newGameMessageReceiver() *GameMessageReceiver {
 	return &GameMessageReceiver{
-		orders:            make(chan SubmitOrdersMessage),
-		winterVote:        make(chan WinterVoteMessage),
-		sword:             make(chan SwordMessage),
-		raven:             make(chan RavenMessage),
-		supports:          nil,
-		supportsCondition: sync.Cond{L: &sync.Mutex{}},
+		orders:          make(chan SubmitOrdersMessage),
+		winterVote:      make(chan WinterVoteMessage),
+		sword:           make(chan SwordMessage),
+		raven:           make(chan RavenMessage),
+		supports:        nil,
+		supportNotifier: sync.Cond{L: &sync.Mutex{}},
 	}
 }
 
@@ -162,10 +161,10 @@ func (receiver *GameMessageReceiver) receiveGameMessage(
 	case messageTypeGiveSupport:
 		var message GiveSupportMessage
 		if err = json.Unmarshal(rawMessage, &message); err == nil {
-			receiver.supportsCondition.L.Lock()
+			receiver.supportNotifier.L.Lock()
 			receiver.supports = append(receiver.supports, message)
-			receiver.supportsCondition.L.Unlock()
-			receiver.supportsCondition.Broadcast()
+			receiver.supportNotifier.L.Unlock()
+			receiver.supportNotifier.Broadcast()
 		}
 	case messageTypeWinterVote:
 		var message WinterVoteMessage
@@ -214,7 +213,7 @@ func (lobby *Lobby) ReceiveSupport(
 
 	receiver := player.gameMessageReceiver
 
-	receiver.supportsCondition.L.Lock()
+	receiver.supportNotifier.L.Lock()
 	for {
 		var supportedPlayer string
 		remainingSupports := make([]GiveSupportMessage, 0, cap(receiver.supports))
@@ -229,10 +228,10 @@ func (lobby *Lobby) ReceiveSupport(
 
 		if supportedPlayer != "" {
 			receiver.supports = remainingSupports
-			receiver.supportsCondition.L.Unlock()
+			receiver.supportNotifier.L.Unlock()
 			return supportedPlayer, nil
 		}
 
-		receiver.supportsCondition.Wait()
+		receiver.supportNotifier.Wait()
 	}
 }
