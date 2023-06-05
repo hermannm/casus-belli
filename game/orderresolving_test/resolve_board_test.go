@@ -25,10 +25,8 @@ func TestResolveConflictFreeMoveCycle(t *testing.T) {
 	placeUnits(units, board)
 	placeOrders(orders, board)
 
-	// Runs the resolve function, mutating the board.
 	orderresolving.ResolveOrders(board, orders, gametypes.SeasonSpring, MockMessenger{})
 
-	// Expected: the units have switched places in a circle.
 	ExpectedControl{
 		"Leil":   {ControllingPlayer: "yellow", Unit: units["Worp"]},
 		"Limbol": {ControllingPlayer: "red", Unit: units["Leil"]},

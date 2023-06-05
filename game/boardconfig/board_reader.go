@@ -10,8 +10,6 @@ import (
 	"hermannm.dev/bfh-server/game/gametypes"
 )
 
-// Embeds the JSON board config files from this folder.
-//
 //go:embed bfh_5players.json
 var boardConfigFiles embed.FS
 
@@ -72,8 +70,8 @@ func ReadBoardFromConfigFile(boardID string) (gametypes.Board, error) {
 				Nation:            nation,
 				ControllingPlayer: landRegion.HomePlayer,
 				HomePlayer:        landRegion.HomePlayer,
-				Forest:            landRegion.Forest,
-				Castle:            landRegion.Castle,
+				IsForest:          landRegion.Forest,
+				HasCastle:         landRegion.Castle,
 			}
 
 			board.Regions[region.Name] = region
@@ -81,7 +79,7 @@ func ReadBoardFromConfigFile(boardID string) (gametypes.Board, error) {
 	}
 
 	for _, sea := range jsonBoard.Seas {
-		region := gametypes.Region{Name: sea.Name, Sea: true}
+		region := gametypes.Region{Name: sea.Name, IsSea: true}
 		board.Regions[region.Name] = region
 	}
 
@@ -98,17 +96,17 @@ func ReadBoardFromConfigFile(boardID string) (gametypes.Board, error) {
 		}
 
 		region1.Neighbors = append(region1.Neighbors, gametypes.Neighbor{
-			Name:        region2.Name,
-			AcrossWater: neighbor.River || (region1.Sea && !region2.Sea),
-			Cliffs:      neighbor.Cliffs,
-			DangerZone:  neighbor.DangerZone,
+			Name:          region2.Name,
+			IsAcrossWater: neighbor.River || (region1.IsSea && !region2.IsSea),
+			HasCliffs:     neighbor.Cliffs,
+			DangerZone:    neighbor.DangerZone,
 		})
 
 		region2.Neighbors = append(region2.Neighbors, gametypes.Neighbor{
-			Name:        region1.Name,
-			AcrossWater: neighbor.River || (region2.Sea && !region1.Sea),
-			Cliffs:      neighbor.Cliffs,
-			DangerZone:  neighbor.DangerZone,
+			Name:          region1.Name,
+			IsAcrossWater: neighbor.River || (region2.IsSea && !region1.IsSea),
+			HasCliffs:     neighbor.Cliffs,
+			DangerZone:    neighbor.DangerZone,
 		})
 	}
 

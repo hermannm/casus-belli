@@ -29,7 +29,6 @@ func newPlayer(username string, socket *websocket.Conn) *Player {
 	}
 }
 
-// Attempts to select the given game ID for the player in the lobby.
 func (player *Player) selectGameID(gameID string, lobby *Lobby) error {
 	lobby.lock.RLock()
 	defer lobby.lock.RUnlock()
@@ -66,7 +65,6 @@ func (player *Player) selectGameID(gameID string, lobby *Lobby) error {
 	return nil
 }
 
-// Acquires the player's lock and sets their ready field.
 func (player *Player) setReadyToStartGame(ready bool) error {
 	player.lock.Lock()
 	defer player.lock.Unlock()
@@ -79,7 +77,7 @@ func (player *Player) setReadyToStartGame(ready bool) error {
 	return nil
 }
 
-// Returns the player's username, with the player's game ID if it is set.
+// Returns the player's username, along with the player's game ID if it is set.
 func (player *Player) String() string {
 	player.lock.RLock()
 	defer player.lock.RUnlock()

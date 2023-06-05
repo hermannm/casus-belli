@@ -29,8 +29,6 @@ func newMoveResolver() MoveResolver {
 	}
 }
 
-// Resolves moves on the board. Resulting battles are added to resolver.resolvedBattles.
-// Only resolves battles between players if resolver.allowPlayerConflict is true.
 func (resolver *MoveResolver) resolveMoves(board gametypes.Board, messenger Messenger) {
 OuterLoop:
 	for {
@@ -50,26 +48,21 @@ OuterLoop:
 	}
 }
 
-// Resolves moves to the given region on the board.
-//
-// Regions that do not require battle are immediately resolved. Regions that do require battle are
-// forwarded to appropriate battle calculation functions, which send results on the battle receiver
-// channel in the given ResolverState.
-//
-// Skips regions that have outgoing moves, unless they are part of a move cycle.
-// If resolverState.allowPlayerConflict is false, skips regions that require battle between players.
+// Immediately resolves region if it does not require battle. If it does require battle, forwards it
+// to appropriate battle calculation functions, which send results to resolver.battleReceiver.
+// Skips region if it depends on other moves to resolve first.
 func (resolver *MoveResolver) resolveRegionMoves(
 	region gametypes.Region, board gametypes.Board, messenger Messenger,
 ) {
 	retreat, hasRetreat := resolver.retreats[region.Name]
 
-	// Skips the region if it has already been processed.
+	// Skips the region if it has already been processed
 	if (resolver.resolvedRegions.Contains(region.Name) && !hasRetreat) ||
 		(resolver.resolvingRegions.Contains(region.Name)) {
 		return
 	}
 
-	// Resolves incoming moves that require transport.
+	// Resolves incoming moves that require transport
 	if !resolver.resolvedTransports.Contains(region.Name) {
 		resolver.resolvedTransports.Add(region.Name)
 
@@ -81,7 +74,7 @@ func (resolver *MoveResolver) resolveRegionMoves(
 		}
 	}
 
-	// Resolves retreats if region has no attackers.
+	// Resolves retreats if region has no attackers
 	if !region.IsAttacked() {
 		if hasRetreat && region.IsEmpty() {
 			region.Unit = retreat.Unit
@@ -93,32 +86,32 @@ func (resolver *MoveResolver) resolveRegionMoves(
 		return
 	}
 
-	// Finds out if the region part of a cycle (moves in a circle).
+	// Finds out if the region is part of a cycle (moves in a circle)
 	twoWayCycle, region2, samePlayer := discoverTwoWayCycle(region, board)
 	if twoWayCycle && samePlayer {
 		// If both moves are by the same player, removes the units from their origin regions,
-		// as they may not be allowed to retreat if their origin region is taken.
+		// as they may not be allowed to retreat if their origin region is taken
 		for _, cycleRegion := range [2]gametypes.Region{region, region2} {
 			cycleRegion.Unit = gametypes.Unit{}
 			cycleRegion.Order = gametypes.Order{}
 			board.Regions[cycleRegion.Name] = cycleRegion
 		}
 	} else if twoWayCycle {
-		// If the moves are from different players, they battle in the middle.
+		// If the moves are from different players, they battle in the middle
 		go calculateBorderBattle(region, region2, resolver.battleReceiver, messenger)
 		resolver.resolvingRegions.Add(region.Name, region2.Name)
 		return
 	} else if cycle, _ := discoverCycle(region.Name, region.Order, board); cycle != nil {
-		// If there is a cycle longer than 2 moves, forwards the resolving to resolveCycle.
+		// If there is a cycle longer than 2 moves, forwards the resolving to resolveCycle
 		resolver.resolveCycle(cycle, board, messenger)
 		return
 	}
 
-	// A single move to an empty region is either an autosuccess, or a singleplayer battle.
+	// A single move to an empty region is either an autosuccess, or a singleplayer battle
 	if len(region.IncomingMoves) == 1 && region.IsEmpty() {
 		move := region.IncomingMoves[0]
 
-		if region.IsControlled() || region.Sea {
+		if region.IsControlled() || region.IsSea {
 			resolver.succeedMove(move, board)
 			return
 		}
@@ -128,24 +121,22 @@ func (resolver *MoveResolver) resolveRegionMoves(
 		return
 	}
 
-	// If the destination region has an outgoing move order, that must be resolved first.
+	// If the destination region has an outgoing move order, that must be resolved first
 	if region.Order.Type == gametypes.OrderMove {
 		return
 	}
 
-	// If the function has not returned yet, then it must be a multiplayer battle.
+	// If the function has not returned yet, then it must be a multiplayer battle
 	go calculateMultiplayerBattle(
 		region, !region.IsEmpty(), resolver.battleReceiver, messenger,
 	)
 	resolver.resolvingRegions.Add(region.Name)
 }
 
-// Resolves transport of the given move to its destination, if it requires transport.
-// If the transport depends on other orders to resolve first, returns transportMustWait=true.
 func (resolver *MoveResolver) resolveTransport(
 	move gametypes.Order, board gametypes.Board, messenger Messenger,
 ) (transportMustWait bool) {
-	// If the move is between two adjacent regions, then it does not need transport.
+	// If the move is between two adjacent regions, then it does not need transport
 	if board.Regions[move.Destination].HasNeighbor(move.Origin) {
 		return false
 	}
@@ -179,24 +170,16 @@ func (resolver *MoveResolver) resolveTransport(
 	return false
 }
 
-// Resolves the board regions touched by the moves in the given cycle.
-//
-// Immediately resolves regions that do not require battle,
-// and adds them to the given processed map.
-//
-// Adds embattled regions to the given processing map,
-// and forwards them to appropriate battle calculators,
-// which send results to the given battleReceiver.
 func (resolver *MoveResolver) resolveCycle(
 	cycle []gametypes.Order, board gametypes.Board, messenger Messenger,
 ) {
 	var battleRegions []gametypes.Region
 
-	// First, resolves non-conflicting cycle moves.
+	// First resolves non-conflicting cycle moves
 	for _, move := range cycle {
 		destination := board.Regions[move.Destination]
 
-		if (destination.IsControlled() || destination.Sea) && len(destination.IncomingMoves) == 1 {
+		if (destination.IsControlled() || destination.IsSea) && len(destination.IncomingMoves) == 1 {
 			resolver.succeedMove(move, board)
 			continue
 		}
@@ -204,8 +187,7 @@ func (resolver *MoveResolver) resolveCycle(
 		battleRegions = append(battleRegions, destination)
 	}
 
-	// Then resolves cycle moves that require battle.
-	// Skips multiplayer battles if player conflicts are not allowed.
+	// Then resolves cycle moves that require battle
 	for _, region := range battleRegions {
 		if len(region.IncomingMoves) == 1 {
 			go calculateSingleplayerBattle(
@@ -219,17 +201,12 @@ func (resolver *MoveResolver) resolveCycle(
 	}
 }
 
-// Moves the unit of the given move order to its destination, killing any unit that may have already
-// been there, and sets control of the region to the order's player.
-//
-// Then removes references to this move on the board, and removes any potential order from the
-// destination region.
 func (resolver *MoveResolver) succeedMove(move gametypes.Order, board gametypes.Board) {
 	destination := board.Regions[move.Destination]
 
 	destination.Unit = move.Unit
 	destination.Order = gametypes.Order{}
-	if !destination.Sea {
+	if !destination.IsSea {
 		destination.ControllingPlayer = move.Player
 	}
 
@@ -245,8 +222,6 @@ func (resolver *MoveResolver) succeedMove(move gametypes.Order, board gametypes.
 	}
 }
 
-// Goes through the second horse moves in the move resolver, adds them to the board, and removes
-// their destination regions from the resolver's set of resolved regions.
 func (resolver *MoveResolver) addSecondHorseMoves(board gametypes.Board) {
 	for _, secondHorseMove := range resolver.secondHorseMoves {
 		board.AddOrder(secondHorseMove)

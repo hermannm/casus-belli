@@ -1,22 +1,19 @@
 package gametypes
 
-// A region on the board map.
+// A region on the board.
 type Region struct {
-	// Name of the region on the board.
-	Name string `json:"name"`
-
-	// Adjacent regions.
+	Name      string     `json:"name"`
 	Neighbors []Neighbor `json:"neighbors"`
 
 	// Whether the region is a sea region that can only have ship units.
-	Sea bool `json:"sea"`
+	IsSea bool `json:"isSea"`
 
 	// For land regions: affects the difficulty of conquering the region.
-	Forest bool `json:"forest,omitempty"`
+	IsForest bool `json:"isForest,omitempty"`
 
 	// For land regions: affects the difficulty of conquering the region, and the points gained from
 	// it.
-	Castle bool `json:"castle,omitempty"`
+	HasCastle bool `json:"hasCastle,omitempty"`
 
 	// For land regions: the collection of regions that the region belongs to (affects units gained
 	// from conquering).
@@ -44,16 +41,15 @@ type Region struct {
 	IncomingSupports []Order `json:"-"` // Excluded from JSON responses.
 }
 
-// The relationship between two adjacent regions.
 type Neighbor struct {
-	// Name of the adjacent region.
 	Name string `json:"name"`
 
-	// Whether a river separates the two regions.
-	AcrossWater bool `json:"acrossWater,omitempty"`
+	// Whether a river separates the neighboring regions, or this region is a sea and the neighbor
+	// is a land region.
+	IsAcrossWater bool `json:"isAcrossWater,omitempty"`
 
 	// Whether coast between neighboring land regions have cliffs (impassable to ships).
-	Cliffs bool `json:"cliffs,omitempty"`
+	HasCliffs bool `json:"hasCliffs,omitempty"`
 
 	// If not "": the name of the danger zone that the neighboring region lies across (requires
 	// check to pass).
@@ -112,14 +108,14 @@ func (region Region) HasNeighbor(neighborName string) bool {
 // Returns whether the region is a land region that borders the sea.
 // Takes the board in order to go through the region's neighbor regions.
 func (region Region) IsCoast(board Board) bool {
-	if region.Sea {
+	if region.IsSea {
 		return false
 	}
 
 	for _, neighbor := range region.Neighbors {
 		neighborRegion := board.Regions[neighbor.Name]
 
-		if neighborRegion.Sea {
+		if neighborRegion.IsSea {
 			return true
 		}
 	}

@@ -68,11 +68,11 @@ func validateMoveOrSupport(
 	}
 
 	if origin.Unit.Type == gametypes.UnitShip {
-		if !(destination.Sea || destination.IsCoast(board)) {
+		if !(destination.IsSea || destination.IsCoast(board)) {
 			return errors.New("ship order destination must be sea or coast")
 		}
 	} else {
-		if destination.Sea {
+		if destination.IsSea {
 			return errors.New("only ships can order to seas")
 		}
 	}
@@ -131,7 +131,7 @@ func validateBesiegeOrTransport(order gametypes.Order, origin gametypes.Region) 
 }
 
 func validateBesiege(order gametypes.Order, origin gametypes.Region) error {
-	if !origin.Castle {
+	if !origin.HasCastle {
 		return errors.New("besieged region must have castle")
 	}
 
@@ -151,7 +151,7 @@ func validateTransport(order gametypes.Order, origin gametypes.Region) error {
 		return errors.New("only ships can transport")
 	}
 
-	if !origin.Sea {
+	if !origin.IsSea {
 		return errors.New("transport orders can only be placed at sea")
 	}
 

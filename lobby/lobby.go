@@ -49,8 +49,6 @@ func (lobby *Lobby) getPlayer(gameID string) (player *Player, foundPlayer bool) 
 	return player, foundPlayer
 }
 
-// Adds a player with the given username and socket to the lobby.
-// Returns the player if they were successfully added to the lobby, or an error.
 func (lobby *Lobby) AddPlayer(username string, socket *websocket.Conn) (*Player, error) {
 	if !lobby.isUsernameTaken(username) {
 		return nil, fmt.Errorf("username %s already taken", username)
@@ -80,7 +78,6 @@ func (lobby *Lobby) isUsernameTaken(username string) bool {
 	return false
 }
 
-// Removes a lobby from the lobby map and closes its connections.
 func (lobby *Lobby) Close() error {
 	lobby.lock.Lock()
 	defer lobby.lock.Unlock()
@@ -104,7 +101,6 @@ func (lobby *Lobby) Close() error {
 	return nil
 }
 
-// Starts the lobby's game.
 // Errors if not all game IDs are selected, or if not all players are ready yet.
 func (lobby *Lobby) startGame() error {
 	lobby.lock.RLock()

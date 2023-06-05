@@ -21,8 +21,6 @@ type Messenger interface {
 	) (supportedPlayer string, err error)
 }
 
-// Adds the round's orders to the board, and resolves them.
-// Returns a list of any potential battles from the round.
 func ResolveOrders(
 	board gametypes.Board, orders []gametypes.Order, season gametypes.Season, messenger Messenger,
 ) (battles []gametypes.Battle, winner string, hasWinner bool) {
@@ -36,7 +34,6 @@ func ResolveOrders(
 	}
 }
 
-// Resolves winter orders (builds and internal moves) on the board.
 func resolveWinterOrders(board gametypes.Board, orders []gametypes.Order) {
 	for _, order := range orders {
 		switch order.Type {
@@ -60,7 +57,6 @@ func resolveWinterOrders(board gametypes.Board, orders []gametypes.Order) {
 	}
 }
 
-// Resolves results of the given orders on the board.
 func resolveNonWinterOrders(
 	board gametypes.Board, orders []gametypes.Order, messenger Messenger,
 ) []gametypes.Battle {
@@ -88,7 +84,6 @@ func resolveNonWinterOrders(
 	return battles
 }
 
-// Goes through regions with siege orders, and updates the region following the siege.
 func resolveSieges(board gametypes.Board) {
 	for regionName, region := range board.Regions {
 		if region.Order.IsNone() || region.Order.Type != gametypes.OrderBesiege {

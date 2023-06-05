@@ -4,11 +4,8 @@ import "encoding/json"
 
 // An order submitted by a player for one of their units in a given round.
 type Order struct {
-	// The type of order submitted. Restricted by unit type and region.
-	Type OrderType `json:"type"`
-
-	// The player submitting the order.
-	Player string `json:"player"`
+	Type   OrderType `json:"type"`
+	Player string    `json:"player"`
 
 	// Name of the region where the order is placed.
 	Origin string `json:"origin"`
@@ -21,7 +18,7 @@ type Order struct {
 	SecondDestination string `json:"secondDestination,omitempty"`
 
 	// For move orders: name of DangerZone the order tries to pass through, if any.
-	Via string `json:"via,omitempty"`
+	ViaDangerZone string `json:"viaDangerZone,omitempty"`
 
 	// For build orders: type of unit to build.
 	Build UnitType `json:"build,omitempty"`
@@ -32,17 +29,14 @@ type Order struct {
 	Unit Unit `json:"-"`
 }
 
-// Type of submitted order (restricted by unit type and region).
-// See OrderType constants for possible values.
 type OrderType string
 
-// Valid values for a player-submitted order's type.
 const (
 	// An order for a unit to move from one region to another.
 	// Includes internal moves in winter.
 	OrderMove OrderType = "move"
 
-	// An order for a unit to support battle in an adjacent region.
+	// An order for a unit to support battles in adjacent regions.
 	OrderSupport OrderType = "support"
 
 	// For ship unit at sea: an order to transport a land unit across the sea.
@@ -55,7 +49,6 @@ const (
 	OrderBuild OrderType = "build"
 )
 
-// Checks whether the order is initialized.
 func (order Order) IsNone() bool {
 	return order.Type == ""
 }
@@ -63,7 +56,6 @@ func (order Order) IsNone() bool {
 // Checks if the order is a move of a horse unit with a second destination.
 // If it is, returns the order with the original destination set as the origin, and the destination
 // set as the original second destination.
-// Otherwise, returns hasSecondHorseMove=false.
 func (order Order) TryGetSecondHorseMove() (secondHorseMove Order, hasSecondHorseMove bool) {
 	if order.Type != OrderMove || order.SecondDestination == "" || order.Unit.Type != UnitHorse {
 		return Order{}, false

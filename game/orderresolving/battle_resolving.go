@@ -4,9 +4,6 @@ import (
 	"hermannm.dev/bfh-server/game/gametypes"
 )
 
-// Resolves effects of the given battle on the board.
-// Forwards the given battle to the appropriate battle resolver based on its type.
-// Returns any retreating move orders that could not be resolved.
 func (resolver *MoveResolver) resolveBattle(battle gametypes.Battle, board gametypes.Board) {
 	if battle.IsBorderConflict() {
 		resolver.resolveBorderBattle(battle, board)
@@ -23,16 +20,12 @@ func (resolver *MoveResolver) resolveBattle(battle gametypes.Battle, board gamet
 	}
 }
 
-// Resolves effects on the board from the given border battle.
-// Assumes that the battle consists of exactly 2 results, for each of the regions in the battle,
-// that each result is tied to a move order, and that the battle had at least one winner.
-// Returns any retreating move orders that could not be resolved.
 func (resolver *MoveResolver) resolveBorderBattle(battle gametypes.Battle, board gametypes.Board) {
 	winners, losers := battle.WinnersAndLosers()
 	move1 := battle.Results[0].Move
 	move2 := battle.Results[1].Move
 
-	// If there is more than one winner, the battle was a tie, and both moves retreat.
+	// If battle was a tie, both moves retreat
 	if len(winners) > 1 {
 		board.RemoveOrder(move1)
 		board.RemoveOrder(move2)
@@ -48,7 +41,7 @@ func (resolver *MoveResolver) resolveBorderBattle(battle gametypes.Battle, board
 	for _, move := range []gametypes.Order{move1, move2} {
 		// Only the loser is affected by the results of the border battle; the winner may still have
 		// to win a battle in the destination region, which will be handled by the next cycle of the
-		// move resolver.
+		// move resolver
 		if move.Player == loser {
 			board.RemoveOrder(move)
 			board.RemoveUnit(move.Unit, move.Origin)
@@ -56,8 +49,6 @@ func (resolver *MoveResolver) resolveBorderBattle(battle gametypes.Battle, board
 	}
 }
 
-// Resolves effects on the board from the given singleplayer battle (player vs. neutral region).
-// Assumes that the battle has a single result, with a move order tied to it.
 func (resolver *MoveResolver) resolveSingleplayerBattle(
 	battle gametypes.Battle, board gametypes.Board,
 ) {
@@ -73,8 +64,6 @@ func (resolver *MoveResolver) resolveSingleplayerBattle(
 	resolver.succeedMove(move, board)
 }
 
-// Resolves effects on the board from the given multiplayer battle.
-// Assumes that the battle has at least 1 winner.
 func (resolver *MoveResolver) resolveMultiplayerBattle(
 	battle gametypes.Battle, board gametypes.Board,
 ) {
@@ -116,8 +105,6 @@ func (resolver *MoveResolver) resolveMultiplayerBattle(
 	}
 }
 
-// Attempts to move the unit of the given move order back to its origin.
-// Returns whether the retreat succeeded.
 func (resolver *MoveResolver) attemptRetreat(move gametypes.Order, board gametypes.Board) {
 	origin := board.Regions[move.Origin]
 

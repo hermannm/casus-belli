@@ -1,7 +1,6 @@
 package gametypes
 
-// Current season of a round (affects the type of orders that can be played).
-// See Season constants for possible values.
+// Current season of a round. Affects the type of orders that can be played.
 type Season string
 
 // Rounds where only build and internal move orders are allowed.
@@ -14,7 +13,6 @@ const (
 	SeasonFall   Season = "fall"
 )
 
-// Returns the next season given the current season.
 func (season Season) Next() Season {
 	switch season {
 	case SeasonWinter:

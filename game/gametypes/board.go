@@ -1,28 +1,12 @@
 package gametypes
 
-// A pre-configured board used for the game.
 type Board struct {
-	// Regions on the board that player units can move to.
-	Regions map[string]Region `json:"region"`
-
-	// Name of this type of board.
-	Name string `json:"name"`
-
-	// The number of castles to capture to win a game round on this board.
-	WinningCastleCount int `json:"winningCastleCount"`
+	// Maps region names to regions.
+	Regions            map[string]Region `json:"region"`
+	Name               string            `json:"name"`
+	WinningCastleCount int               `json:"winningCastleCount"`
 }
 
-func (board Board) RegionNames() []string {
-	regionNames := make([]string, 0, len(board.Regions))
-
-	for regionName := range board.Regions {
-		regionNames = append(regionNames, regionName)
-	}
-
-	return regionNames
-}
-
-// Removes the given unit from the region with the given name, if the unit still exists there.
 func (board Board) RemoveUnit(unit Unit, regionName string) {
 	region := board.Regions[regionName]
 
@@ -32,12 +16,11 @@ func (board Board) RemoveUnit(unit Unit, regionName string) {
 	}
 }
 
-// Takes a list of orders, and populates the appropriate regions on the board with those orders.
+// Populates regions on the board with the given orders.
 // Does not add support orders that have moves against them, as that cancels them.
 func (board Board) AddOrders(orders []Order) {
 	var supportOrders []Order
 
-	// First adds all orders except supports, so that supports can check IncomingMoves.
 	for _, order := range orders {
 		if order.Type == OrderSupport {
 			supportOrders = append(supportOrders, order)
@@ -47,7 +30,6 @@ func (board Board) AddOrders(orders []Order) {
 		board.AddOrder(order)
 	}
 
-	// Then adds all supports, except in those regions that are attacked.
 	for _, supportOrder := range supportOrders {
 		if !board.Regions[supportOrder.Origin].IsAttacked() {
 			board.AddOrder(supportOrder)
@@ -74,7 +56,6 @@ func (board Board) AddOrder(order Order) {
 	board.Regions[order.Destination] = destination
 }
 
-// Cleans up remaining order references on the board after the round.
 func (board Board) RemoveOrders() {
 	for regionName, region := range board.Regions {
 		region.Order = Order{}
@@ -85,7 +66,6 @@ func (board Board) RemoveOrders() {
 	}
 }
 
-// Removes the given order from the regions on the board.
 func (board Board) RemoveOrder(order Order) {
 	origin := board.Regions[order.Origin]
 	origin.Order = Order{}
@@ -119,14 +99,11 @@ func (board Board) RemoveOrder(order Order) {
 	}
 }
 
-// Goes through the board to check if any player has met the board's winning castle count.
-// If there is a winner, and there is no tie, returns the tag of that player.
-// Otherwise, returns hasWinner=false.
 func (board Board) CheckWinner() (winner string, hasWinner bool) {
 	castleCount := make(map[string]int)
 
 	for _, region := range board.Regions {
-		if region.Castle && region.IsControlled() {
+		if region.HasCastle && region.IsControlled() {
 			castleCount[region.ControllingPlayer]++
 		}
 	}

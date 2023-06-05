@@ -33,8 +33,6 @@ func (lobby *Lobby) sendMessage(toPlayer string, message Message) error {
 	return player.sendMessage(message)
 }
 
-// Marshals the given message to JSON and sends it to all connected players.
-// Returns an error if it failed to marshal or send to at least one of the players.
 func (lobby *Lobby) sendMessageToAll(message Message) error {
 	lobby.lock.RLock()
 	defer lobby.lock.RUnlock()
@@ -57,7 +55,6 @@ func (lobby *Lobby) sendMessageToAll(message Message) error {
 	}
 }
 
-// Gives an overview of other players to a player who has just joined a lobby.
 func (player *Player) SendLobbyJoinedMessage(lobby *Lobby) error {
 	lobby.lock.RLock()
 	defer lobby.lock.RUnlock()

@@ -22,7 +22,6 @@ type Messenger interface {
 	SendWinner(winner string) error
 }
 
-// Constructs a game instance. Initializes player slots for each region home tag on the given board.
 func New(boardID string, options GameOptions, messenger Messenger) (*Game, error) {
 	board, err := boardconfig.ReadBoardFromConfigFile(boardID)
 	if err != nil {
@@ -37,11 +36,9 @@ func New(boardID string, options GameOptions, messenger Messenger) (*Game, error
 	}, nil
 }
 
-// Initializes a new round of the game.
 func (game *Game) Start() {
 	season := gametypes.SeasonWinter
 
-	// Starts new rounds until there is a winner.
 	for {
 		orders := ordervalidation.GatherAndValidateOrders(
 			game.PlayerIDs, game.board, season, game.messenger,

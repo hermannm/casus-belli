@@ -4,18 +4,12 @@ import "encoding/json"
 
 // A player unit on the board.
 type Unit struct {
-	// Affects how the unit moves and its battle capabilities.
-	Type UnitType `json:"unit"`
-
-	// The player owning the unit.
-	Player string `json:"player"`
+	Type   UnitType `json:"unit"`
+	Player string   `json:"player"`
 }
 
-// Type of player unit on the board (affects how it moves and its battle capabilities).
-// See UnitType constants for possible values.
 type UnitType string
 
-// Valid values for a player unit's type.
 const (
 	// A land unit that gets a +1 modifier in battle.
 	UnitFootman UnitType = "footman"
@@ -31,7 +25,6 @@ const (
 	UnitCatapult UnitType = "catapult"
 )
 
-// Checks whether the unit is initialized.
 func (unit Unit) IsNone() bool {
 	return unit.Type == ""
 }
@@ -42,7 +35,9 @@ func (unit Unit) BattleModifier(isAttackOnCastle bool) (modifier Modifier, hasMo
 	case UnitFootman:
 		modifierValue = 1
 	case UnitCatapult:
-		modifierValue = 1
+		if isAttackOnCastle {
+			modifierValue = 1
+		}
 	}
 
 	if modifierValue != 0 {

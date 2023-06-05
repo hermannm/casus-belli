@@ -17,19 +17,18 @@ func (player *Player) listen(lobby *Lobby) {
 		socketClosed, err := player.receiveMessage(lobby)
 		if socketClosed {
 			if err != nil {
-				log.Println(err)
+				log.Println(fmt.Errorf("socket closed for player '%s': %w", player.String(), err))
 			}
 			break
 		}
 		if err != nil {
-			log.Println(fmt.Errorf("message error for player %s: %w", player.String(), err))
+			log.Println(fmt.Errorf("message error for player '%s': %w", player.String(), err))
 			player.SendError(err)
 		}
 	}
 }
 
 // Reads a message from the player's socket, and handles it appropriately.
-// Returns socketClosed=true if the socket closed, and an error if message handling failed.
 func (player *Player) receiveMessage(lobby *Lobby) (socketClosed bool, err error) {
 	player.lock.RLock()
 	defer player.lock.RUnlock()
@@ -38,7 +37,7 @@ func (player *Player) receiveMessage(lobby *Lobby) (socketClosed bool, err error
 	if err != nil {
 		switch err := err.(type) {
 		case *websocket.CloseError:
-			return true, fmt.Errorf("socket closed: %w", err)
+			return true, err
 		default:
 			return false, fmt.Errorf("socket connection error: %w", err)
 		}
@@ -65,10 +64,7 @@ func (player *Player) receiveMessage(lobby *Lobby) (socketClosed bool, err error
 
 	if !isLobbyMessage {
 		if player.gameID == "" {
-			return false, fmt.Errorf(
-				"received game message from player '%s' before their game ID was set",
-				player.String(),
-			)
+			return false, errors.New("received game message before the player's game ID was set")
 		} else {
 			go player.gameMessageReceiver.receiveGameMessage(messageType, rawMsg)
 		}
@@ -77,7 +73,6 @@ func (player *Player) receiveMessage(lobby *Lobby) (socketClosed bool, err error
 	return false, nil
 }
 
-// Receives a lobby-specific message, and handles it according to its ID.
 func (player *Player) receiveLobbyMessage(
 	lobby *Lobby, messageType MessageType, rawMessage json.RawMessage,
 ) (isLobbyMsg bool, err error) {
@@ -145,8 +140,6 @@ func newGameMessageReceiver() *GameMessageReceiver {
 	}
 }
 
-// Takes a message ID and an unserialized JSON message.
-// Unmarshals the message according to its type, and sends it to the appropraite receiver channel.
 func (receiver *GameMessageReceiver) receiveGameMessage(
 	messageType MessageType, rawMessage json.RawMessage,
 ) {
@@ -216,17 +209,22 @@ func (lobby *Lobby) ReceiveSupport(
 	receiver.supportNotifier.L.Lock()
 	for {
 		var supportedPlayer string
+		foundMatchingSupport := false
 		remainingSupports := make([]GiveSupportMessage, 0, cap(receiver.supports))
 		for _, support := range receiver.supports {
 			if support.SupportingRegion == supportingRegion &&
 				support.EmbattledRegion == embattledRegion {
-				supportedPlayer = *support.SupportedPlayer
+
+				foundMatchingSupport = true
+				if support.SupportedPlayer != nil {
+					supportedPlayer = *support.SupportedPlayer
+				}
 			} else {
 				remainingSupports = append(remainingSupports, support)
 			}
 		}
 
-		if supportedPlayer != "" {
+		if foundMatchingSupport {
 			receiver.supports = remainingSupports
 			receiver.supportNotifier.L.Unlock()
 			return supportedPlayer, nil

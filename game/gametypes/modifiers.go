@@ -5,19 +5,15 @@ import (
 	"time"
 )
 
-// A typed number that adds to a player's result in a battle.
+// Part of a player's result in a battle.
 type Modifier struct {
-	// The source of the modifier.
-	Type ModifierType `json:"type"`
+	Type  ModifierType `json:"type"`
+	Value int          `json:"value"`
 
-	// The positive or negative number that modifies the result total.
-	Value int `json:"value"`
-
-	// If modifier was from a support: the supporting player.
+	// If modifier was from a support: the supporting player, otherwise blank.
 	SupportingPlayer string `json:"supportingPlayer,omitempty"`
 }
 
-// The source of a modifier.
 type ModifierType string
 
 // Valid values for a result modifier's type.
@@ -45,12 +41,9 @@ const (
 )
 
 func RollDiceBonus() Modifier {
-	// Uses nanoseconds since 1970 as random seed generator, to approach random outcome.
+	// Uses nanoseconds since 1970 as random seed generator, to approach random outcome
 	rand.Seed(time.Now().UnixNano())
-
-	// Pseudo-random integer between 1 and 6.
 	diceValue := rand.Intn(6) + 1
-
 	return Modifier{Type: ModifierDice, Value: diceValue}
 }
 

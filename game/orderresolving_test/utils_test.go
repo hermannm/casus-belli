@@ -14,30 +14,30 @@ func newMockBoard() gametypes.Board {
 	}
 
 	regions := []gametypes.Region{
-		{Name: "Lusía", Castle: true},
-		{Name: "Lomone", Forest: true},
-		{Name: "Limbol", Forest: true},
+		{Name: "Lusía", HasCastle: true},
+		{Name: "Lomone", IsForest: true},
+		{Name: "Limbol", IsForest: true},
 		{Name: "Leil"},
-		{Name: "Worp", Forest: true, HomePlayer: "green", ControllingPlayer: "green"},
-		{Name: "Winde", Forest: true, Castle: true, HomePlayer: "green", ControllingPlayer: "green"},
-		{Name: "Ovo", Forest: true},
-		{Name: "Mare Gond", Sea: true},
-		{Name: "Mare Elle", Sea: true},
+		{Name: "Worp", IsForest: true, HomePlayer: "green", ControllingPlayer: "green"},
+		{Name: "Winde", IsForest: true, HasCastle: true, HomePlayer: "green", ControllingPlayer: "green"},
+		{Name: "Ovo", IsForest: true},
+		{Name: "Mare Gond", IsSea: true},
+		{Name: "Mare Elle", IsSea: true},
 		{Name: "Zona"},
 		{Name: "Tond"},
 		{Name: "Tige"},
 		{Name: "Tusser"},
-		{Name: "Mare Ovond", Sea: true},
-		{Name: "Furie", Castle: true},
+		{Name: "Mare Ovond", IsSea: true},
+		{Name: "Furie", HasCastle: true},
 		{Name: "Firril"},
 		{Name: "Fond"},
 		{Name: "Gron"},
 		{Name: "Gnade"},
-		{Name: "Gewel", Forest: true, Castle: true},
-		{Name: "Mare Unna", Sea: true},
-		{Name: "Emman", Forest: true, HomePlayer: "black", ControllingPlayer: "black"},
-		{Name: "Erren", Castle: true, HomePlayer: "black", ControllingPlayer: "black"},
-		{Name: "Mare Bøso", Sea: true},
+		{Name: "Gewel", IsForest: true, HasCastle: true},
+		{Name: "Mare Unna", IsSea: true},
+		{Name: "Emman", IsForest: true, HomePlayer: "black", ControllingPlayer: "black"},
+		{Name: "Erren", HasCastle: true, HomePlayer: "black", ControllingPlayer: "black"},
+		{Name: "Mare Bøso", IsSea: true},
 	}
 
 	// Defines a utility struct for two-way neighbor declaration, to avoid repetition.
@@ -45,7 +45,7 @@ func newMockBoard() gametypes.Board {
 		region1    string
 		region2    string
 		river      bool
-		cliffs     bool
+		hasCliffs  bool
 		dangerZone string
 	}{
 		{region1: "Lusía", region2: "Lomone"},
@@ -86,8 +86,8 @@ func newMockBoard() gametypes.Board {
 		{region1: "Gron", region2: "Emman"},
 		{region1: "Gnade", region2: "Gewel"},
 		{region1: "Gewel", region2: "Mare Unna"},
-		{region1: "Gewel", region2: "Emman", cliffs: true},
-		{region1: "Emman", region2: "Erren", cliffs: true},
+		{region1: "Gewel", region2: "Emman", hasCliffs: true},
+		{region1: "Emman", region2: "Erren", hasCliffs: true},
 		{region1: "Emman", region2: "Mare Unna"},
 		{region1: "Erren", region2: "Mare Bøso"},
 		{region1: "Mare Gond", region2: "Mare Elle"},
@@ -106,18 +106,18 @@ func newMockBoard() gametypes.Board {
 		region2 := board.Regions[neighbor.region2]
 
 		region1.Neighbors = append(region1.Neighbors, gametypes.Neighbor{
-			Name:        neighbor.region2,
-			AcrossWater: neighbor.river || (region1.Sea && !region2.Sea),
-			Cliffs:      neighbor.cliffs,
-			DangerZone:  neighbor.dangerZone,
+			Name:          neighbor.region2,
+			IsAcrossWater: neighbor.river || (region1.IsSea && !region2.IsSea),
+			HasCliffs:     neighbor.hasCliffs,
+			DangerZone:    neighbor.dangerZone,
 		})
 		board.Regions[neighbor.region1] = region1
 
 		region2.Neighbors = append(region2.Neighbors, gametypes.Neighbor{
-			Name:        neighbor.region1,
-			AcrossWater: neighbor.river || (region2.Sea && !region1.Sea),
-			Cliffs:      neighbor.cliffs,
-			DangerZone:  neighbor.dangerZone,
+			Name:          neighbor.region1,
+			IsAcrossWater: neighbor.river || (region2.IsSea && !region1.IsSea),
+			HasCliffs:     neighbor.hasCliffs,
+			DangerZone:    neighbor.dangerZone,
 		})
 		board.Regions[neighbor.region2] = region2
 	}

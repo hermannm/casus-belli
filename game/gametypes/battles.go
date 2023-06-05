@@ -4,30 +4,26 @@ import (
 	"hermannm.dev/set"
 )
 
-// Results of a battle from conflicting move orders, an attempt to conquer a neutral region,
-// or an attempt to cross a danger zone.
+// Results of a battle between players, an attempt to conquer a neutral region, or an attempt to
+// cross a danger zone.
 type Battle struct {
-	// The dice and modifier results of the battle.
-	// If length is one, the battle was a neutral conquer attempt.
+	// If length is one, the battle was a neutral region conquest attempt or danger zone crossing.
 	// If length is more than one, the battle was between players.
 	Results []Result `json:"results"`
 
-	// In case of danger zone crossing: name of the danger zone.
+	// If battle was from a danger zone crossing: name of the danger zone, otherwise blank.
 	DangerZone string `json:"dangerZone,omitempty"`
 }
 
 // Dice and modifier result for a battle.
 type Result struct {
-	// The sum of the dice roll and modifiers.
-	Total int `json:"total"`
-
-	// The modifiers comprising the result, including the dice roll.
+	Total int        `json:"total"`
 	Parts []Modifier `json:"parts"`
 
-	// If result of a move order to the battle: the move order in question.
+	// If result of a move order to the battle: the move order in question, otherwise empty.
 	Move Order `json:"move"`
 
-	// If result of a defending unit in a region: the name of the region.
+	// If result of a defending unit in a region: the name of the region, otherwise blank.
 	DefenderRegion string `json:"defenderRegion,omitempty"`
 }
 
@@ -40,8 +36,7 @@ const (
 	RequirementDangerZone int = 3
 )
 
-// Returns the name of the regions that were involved in the battle (most likely 1, but may be 2 in
-// the case of a border battle).
+// Returns regions involved in the battle - typically 1, but 2 if it was a border battle.
 func (battle Battle) RegionNames() []string {
 	nameSet := set.New[string]()
 
@@ -56,25 +51,20 @@ func (battle Battle) RegionNames() []string {
 	return nameSet.ToSlice()
 }
 
-// Returns whether the battle was between two moves moving against each other.
 func (battle Battle) IsBorderConflict() bool {
 	return len(battle.Results) == 2 &&
 		(battle.Results[0].Move.Destination == battle.Results[1].Move.Origin) &&
 		(battle.Results[1].Move.Destination == battle.Results[0].Move.Origin)
 }
 
-// Goes through the results of the battle and finds the winners and losers.
-//
 // In case of a battle against an unconquered region or a danger zone, only one player is returned
 // in one of the lists.
 //
 // In case of a battle between players, multiple winners are returned in the case of a tie.
 func (battle Battle) WinnersAndLosers() (winners []string, losers []string) {
-	// Checks if the battle was against an unconquered region.
 	if len(battle.Results) == 1 {
 		result := battle.Results[0]
 
-		// Checks that order meets the requirement for crossing the danger zone.
 		if battle.DangerZone != "" {
 			if result.Total >= RequirementDangerZone {
 				return []string{result.Move.Player}, nil
@@ -83,7 +73,6 @@ func (battle Battle) WinnersAndLosers() (winners []string, losers []string) {
 			}
 		}
 
-		// Checks that order meets the requirement for conquering the neutral region.
 		if result.Total >= RequirementConquer {
 			return []string{result.Move.Player}, nil
 		} else {
@@ -91,7 +80,6 @@ func (battle Battle) WinnersAndLosers() (winners []string, losers []string) {
 		}
 	}
 
-	// Finds the highest result among the players in the battle.
 	highestResult := 0
 	for _, result := range battle.Results {
 		if result.Total > highestResult {
@@ -99,7 +87,6 @@ func (battle Battle) WinnersAndLosers() (winners []string, losers []string) {
 		}
 	}
 
-	// Sorts combatants based on whether they exceeded the highest result.
 	for _, result := range battle.Results {
 		if result.Total >= highestResult {
 			winners = append(winners, result.Move.Player)

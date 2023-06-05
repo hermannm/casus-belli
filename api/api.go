@@ -13,11 +13,11 @@ import (
 	"hermannm.dev/bfh-server/lobby"
 )
 
+// Endpoint to list available game lobbies.
 type LobbyListHandler struct {
 	lobbyRegistry *lobby.LobbyRegistry
 }
 
-// Handler for returning information about all available lobbies.
 func (handler LobbyListHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	lobbyList := handler.lobbyRegistry.LobbyInfo()
 
@@ -34,33 +34,29 @@ func (handler LobbyListHandler) ServeHTTP(res http.ResponseWriter, req *http.Req
 	res.Write(lobbyListJSON)
 }
 
+// Endpoint for a player to join a lobby.
+// Expects query parameters "lobbyName" and "username".
 type JoinLobbyHandler struct {
 	lobbyRegistry *lobby.LobbyRegistry
 }
 
-// Handler for a player to join a lobby.
-// Expects query parameters "lobbyName" and "username" (name the user wants to join with).
 func (handler JoinLobbyHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
-	const lobbyParam = "lobbyName"
+	const lobbyNameParam = "lobbyName"
 	const usernameParam = "username"
 
-	params, ok := checkParams(req, lobbyParam, usernameParam)
+	params, ok := checkParams(req, lobbyNameParam, usernameParam)
 	if !ok {
 		http.Error(
-			res,
-			"lobby name and username are required to join lobby",
-			http.StatusBadRequest,
+			res, "lobby name and username are required to join lobby", http.StatusBadRequest,
 		)
 		return
 	}
 
-	lobbyName := params.Get(lobbyParam)
+	lobbyName := params.Get(lobbyNameParam)
 	lobby, ok := handler.lobbyRegistry.GetLobby(lobbyName)
 	if !ok {
 		http.Error(
-			res,
-			fmt.Sprintf("no lobby found with name '%s'", lobbyName),
-			http.StatusNotFound,
+			res, fmt.Sprintf("no lobby found with name '%s'", lobbyName), http.StatusNotFound,
 		)
 		return
 	}
@@ -91,16 +87,16 @@ func (handler JoinLobbyHandler) ServeHTTP(res http.ResponseWriter, req *http.Req
 	player.SendLobbyJoinedMessage(lobby)
 }
 
-const lobbyNameParam = "lobbyName"
-const gameNameParam = "gameName"
-
-// Handler for creating lobbies (for servers with public lobby creation).
+// Endpoint for creating lobbies (for servers with public lobby creation).
 // Expects query parameters "lobbyName" and "gameName".
 type CreateLobbyHandler struct {
 	lobbyRegistry *lobby.LobbyRegistry
 }
 
 func (handler CreateLobbyHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
+	const lobbyNameParam = "lobbyName"
+	const gameNameParam = "gameName"
+
 	params, ok := checkParams(req, lobbyNameParam, gameNameParam)
 	if !ok {
 		http.Error(res, "insufficient query parameters", http.StatusBadRequest)
@@ -135,7 +131,7 @@ func (handler CreateLobbyHandler) ServeHTTP(res http.ResponseWriter, req *http.R
 	res.Write([]byte("lobby created"))
 }
 
-// Endppint for showing the list of boards supported by the server.
+// Endpoint for showing the list of boards supported by the server.
 type BoardListHandler struct {
 	availableBoards []boardconfig.BoardInfo
 }

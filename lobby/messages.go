@@ -117,14 +117,12 @@ type GiveSupportMessage struct {
 // Message passed from the client during winter council voting.
 // Used for the throne expansion.
 type WinterVoteMessage struct {
-	// ID of the player that the submitting player votes for.
-	Player string `json:"player"`
+	PlayerVotedFor string `json:"playerVotedFor"`
 }
 
 // Message passed from the client with the SwordMessage to declare where they want to use it.
 // Used for the throne expansion.
 type SwordMessage struct {
-	// Name of the region in which the player wants to use the sword in battle.
 	Region string `json:"region"`
 
 	// Index of the battle in which to use the sword, in case of several battles in the region.
@@ -135,6 +133,5 @@ type SwordMessage struct {
 // orders.
 // Used for the throne expansion.
 type RavenMessage struct {
-	// ID of the player on whom to spy.
-	Player string `json:"player"`
+	PlayerToSpyOn string `json:"playerToSpyOn"`
 }
