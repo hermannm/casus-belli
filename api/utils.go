@@ -1,4 +1,4 @@
-package lobby
+package api
 
 import (
 	"net/http"
