@@ -5,14 +5,13 @@ import (
 
 	"hermannm.dev/bfh-server/game/gametypes"
 	"hermannm.dev/bfh-server/game/orderresolving"
-	"hermannm.dev/bfh-server/game/testutils"
 )
 
 func BenchmarkBoardResolve(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		board, orders := setup()
 		orderresolving.ResolveOrders(
-			board, orders, gametypes.SeasonSpring, testutils.MockMessenger{},
+			board, orders, gametypes.SeasonSpring, MockMessenger{},
 		)
 	}
 }
@@ -84,9 +83,9 @@ func setup() (gametypes.Board, []gametypes.Order) {
 		{Type: gametypes.OrderMove, Origin: "Worp", Destination: "Leil"},
 	}
 
-	board := testutils.NewMockBoard()
-	testutils.PlaceUnits(units, board)
-	testutils.PlaceOrders(orders, board)
+	board := newMockBoard()
+	placeUnits(units, board)
+	placeOrders(orders, board)
 
 	return board, orders
 }

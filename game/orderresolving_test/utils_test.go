@@ -1,4 +1,4 @@
-package testutils
+package orderresolving_test
 
 import (
 	"testing"
@@ -6,8 +6,7 @@ import (
 	"hermannm.dev/bfh-server/game/gametypes"
 )
 
-// Returns an empty, limited example board for testing.
-func NewMockBoard() gametypes.Board {
+func newMockBoard() gametypes.Board {
 	board := gametypes.Board{
 		Regions:            make(map[string]gametypes.Region),
 		Name:               "Mock board",
@@ -126,9 +125,7 @@ func NewMockBoard() gametypes.Board {
 	return board
 }
 
-// Utility function for placing units on the given board.
-// Takes a map of region names to units to be placed there.
-func PlaceUnits(units map[string]gametypes.Unit, board gametypes.Board) {
+func placeUnits(units map[string]gametypes.Unit, board gametypes.Board) {
 	for regionName, unit := range units {
 		region := board.Regions[regionName]
 		region.Unit = unit
@@ -137,9 +134,7 @@ func PlaceUnits(units map[string]gametypes.Unit, board gametypes.Board) {
 	}
 }
 
-// Attaches units from the board to the given set of orders.
-// Also sets the player field on each order to the player of the ordered unit.
-func PlaceOrders(orders []gametypes.Order, board gametypes.Board) {
+func placeOrders(orders []gametypes.Order, board gametypes.Board) {
 	for i, order := range orders {
 		region, ok := board.Regions[order.Origin]
 		if !ok {
@@ -152,13 +147,12 @@ func PlaceOrders(orders []gametypes.Order, board gametypes.Board) {
 	}
 }
 
-// Utility type for setting up expected outcomes of a test of board resolving.
 type ExpectedControl map[string]struct {
 	ControllingPlayer string
 	Unit              gametypes.Unit
 }
 
-func (expected ExpectedControl) Check(board gametypes.Board, t *testing.T) {
+func (expected ExpectedControl) check(board gametypes.Board, t *testing.T) {
 	for name, region := range board.Regions {
 		expectation, ok := expected[name]
 		if !ok {
@@ -177,4 +171,22 @@ func (expected ExpectedControl) Check(board gametypes.Board, t *testing.T) {
 			t.Errorf("unexpected unit in %v, want %v, got %v", name, region.Unit, expectation.Unit)
 		}
 	}
+}
+
+type MockMessenger struct{}
+
+func (MockMessenger) SendBattleResults(battles []gametypes.Battle) error {
+	return nil
+}
+
+func (MockMessenger) SendSupportRequest(
+	toPlayer string, supportingRegion string, embattledRegion string, supportablePlayers []string,
+) error {
+	return nil
+}
+
+func (MockMessenger) ReceiveSupport(
+	fromPlayer string, supportingRegion string, embattledRegion string,
+) (supportedPlayer string, err error) {
+	return "", nil
 }

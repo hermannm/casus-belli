@@ -5,7 +5,6 @@ import (
 
 	"hermannm.dev/bfh-server/game/gametypes"
 	"hermannm.dev/bfh-server/game/orderresolving"
-	"hermannm.dev/bfh-server/game/testutils"
 )
 
 // Tests whether units correctly move in circle without outside interference.
@@ -22,17 +21,17 @@ func TestResolveConflictFreeMoveCycle(t *testing.T) {
 		{Type: gametypes.OrderMove, Origin: "Worp", Destination: "Leil"},
 	}
 
-	board := testutils.NewMockBoard()
-	testutils.PlaceUnits(units, board)
-	testutils.PlaceOrders(orders, board)
+	board := newMockBoard()
+	placeUnits(units, board)
+	placeOrders(orders, board)
 
 	// Runs the resolve function, mutating the board.
-	orderresolving.ResolveOrders(board, orders, gametypes.SeasonSpring, testutils.MockMessenger{})
+	orderresolving.ResolveOrders(board, orders, gametypes.SeasonSpring, MockMessenger{})
 
 	// Expected: the units have switched places in a circle.
-	testutils.ExpectedControl{
+	ExpectedControl{
 		"Leil":   {ControllingPlayer: "yellow", Unit: units["Worp"]},
 		"Limbol": {ControllingPlayer: "red", Unit: units["Leil"]},
 		"Worp":   {ControllingPlayer: "green", Unit: units["Limbol"]},
-	}.Check(board, t)
+	}.check(board, t)
 }
