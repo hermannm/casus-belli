@@ -11,8 +11,6 @@ import (
 
 func CrossCompile() error {
 	appName := "bfh-server"
-	packages := []string{"local", "public"}
-	packageDir := "./cmd"
 	outputDir := "bin"
 
 	platforms := map[string][]string{
@@ -21,26 +19,22 @@ func CrossCompile() error {
 		"windows": {"386", "amd64", "arm64"},
 	}
 
-	for _, pkg := range packages {
-		inputLocation := fmt.Sprintf("%s/%s", packageDir, pkg)
+	for os, architectures := range platforms {
+		for _, arch := range architectures {
+			binName := fmt.Sprintf("%s-%s-%s", appName, os, arch)
+			if os == "windows" {
+				binName += ".exe"
+			}
 
-		for os, architectures := range platforms {
-			for _, arch := range architectures {
-				binName := fmt.Sprintf("%s_%s_%s-%s", appName, pkg, os, arch)
-				if os == "windows" {
-					binName += ".exe"
-				}
+			outputLocation := fmt.Sprintf("%s/%s", outputDir, binName)
 
-				outputLocation := fmt.Sprintf("%s/%s/%s", outputDir, pkg, binName)
+			env := map[string]string{"GOOS": os, "GOARCH": arch}
 
-				env := map[string]string{"GOOS": os, "GOARCH": arch}
+			fmt.Printf("%s %s\n", color.Blue.String("[Building]"), binName)
 
-				fmt.Printf("%s %s\n", color.Blue.String("[Building]"), binName)
-
-				err := sh.RunWithV(env, "go", "build", "-o", outputLocation, inputLocation)
-				if err != nil {
-					return fmt.Errorf("cross-compilation failed: %w", err)
-				}
+			err := sh.RunWithV(env, "go", "build", "-o", outputLocation)
+			if err != nil {
+				return fmt.Errorf("cross-compilation failed: %w", err)
 			}
 		}
 	}
