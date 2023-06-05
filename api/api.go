@@ -9,6 +9,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	"hermannm.dev/bfh-server/game"
+	"hermannm.dev/bfh-server/game/boardconfig"
 	"hermannm.dev/bfh-server/lobby"
 )
 
@@ -134,19 +135,13 @@ func (handler CreateLobbyHandler) ServeHTTP(res http.ResponseWriter, req *http.R
 	res.Write([]byte("lobby created"))
 }
 
-type GameOption struct {
-	DescriptiveName string `json:"descriptiveName"`
-	// Must correspond with a file in game/boardconfig
-	BoardConfigFileName string `json:"boardConfigFileName"`
+// Endppint for showing the list of boards supported by the server.
+type BoardListHandler struct {
+	availableBoards []boardconfig.BoardInfo
 }
 
-// Handler for showing the list of games supported by the server.
-type GameListHandler struct {
-	availableGames []GameOption
-}
-
-func (handler GameListHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
-	jsonResponse, err := json.Marshal(handler.availableGames)
+func (handler BoardListHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
+	jsonResponse, err := json.Marshal(handler.availableBoards)
 	if err != nil {
 		http.Error(res, "error fetching list of games", http.StatusInternalServerError)
 		return

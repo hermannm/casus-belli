@@ -23,8 +23,8 @@ type Messenger interface {
 }
 
 // Constructs a game instance. Initializes player slots for each region home tag on the given board.
-func New(boardName string, options GameOptions, messenger Messenger) (*Game, error) {
-	board, err := boardconfig.ReadBoardFromConfigFile(boardName)
+func New(boardID string, options GameOptions, messenger Messenger) (*Game, error) {
+	board, err := boardconfig.ReadBoardFromConfigFile(boardID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create board from config file: %w", err)
 	}

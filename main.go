@@ -12,36 +12,36 @@ import (
 
 	"hermannm.dev/bfh-server/api"
 	"hermannm.dev/bfh-server/game"
+	"hermannm.dev/bfh-server/game/boardconfig"
 	"hermannm.dev/bfh-server/lobby"
 	"hermannm.dev/ipfinder"
 )
-
-var availableGames = []api.GameOption{
-	{
-		DescriptiveName:     "The Battle for Hermannia (5 players)",
-		BoardConfigFileName: "bfh_5players",
-	},
-}
 
 const defaultPort string = "8000"
 
 func main() {
 	local, port := getCommandLineFlags()
 
+	availableBoards, err := boardconfig.GetAvailableBoards()
+	if err != nil {
+		log.Fatalln(fmt.Errorf("failed to get available boards for game server: %w", err))
+	}
+
 	lobbyRegistry := lobby.NewLobbyRegistry()
 	api.RegisterEndpoints(http.DefaultServeMux, lobbyRegistry)
 
 	if local {
-		selectedGame := selectGame(availableGames)
-		createLobby(selectedGame, lobbyRegistry)
+		selectedBoardID := selectBoard(availableBoards)
+		createLobby(selectedBoardID, lobbyRegistry)
 		printIPs(port)
 	} else {
-		api.RegisterLobbyCreationEndpoints(http.DefaultServeMux, lobbyRegistry, availableGames)
+		api.RegisterLobbyCreationEndpoints(http.DefaultServeMux, lobbyRegistry, availableBoards)
 	}
 
 	fmt.Printf("Listening on port %s...", port)
-	err := http.ListenAndServe(fmt.Sprintf(":%s", port), nil)
-	log.Fatal(err)
+	if err := http.ListenAndServe(fmt.Sprintf(":%s", port), nil); err != nil {
+		log.Fatalln(err)
+	}
 }
 
 func getCommandLineFlags() (local bool, port string) {
@@ -57,37 +57,37 @@ func getCommandLineFlags() (local bool, port string) {
 	return local, port
 }
 
-func selectGame(availableGames []api.GameOption) string {
-	fmt.Println("Available games:")
+func selectBoard(availableBoards []boardconfig.BoardInfo) string {
+	fmt.Println("Available boards:")
 
-	for index, game := range availableGames {
-		fmt.Printf("[%d] %s\n", index, game.DescriptiveName)
+	for index, board := range availableBoards {
+		fmt.Printf("[%d] %s\n", index, board.DescriptiveName)
 	}
 	fmt.Println()
 
-	var selectedGame string
+	var selectedBoardID string
 	for {
-		fmt.Print("Select game (type number from above list): ")
+		fmt.Print("Select board (type number from above list): ")
 		scanner := bufio.NewScanner(os.Stdin)
 		scanner.Scan()
 		input := scanner.Text()
 
 		index, err := strconv.Atoi(input)
-		if err != nil || index < 0 || index >= len(availableGames) {
-			fmt.Println("Invalid game selection, try again!")
+		if err != nil || index < 0 || index >= len(availableBoards) {
+			fmt.Println("Invalid board selection, try again!")
 			continue
 		}
 
-		selection := availableGames[index]
-		selectedGame = selection.BoardConfigFileName
+		selection := availableBoards[index]
+		selectedBoardID = selection.ID
 		fmt.Printf("Selected %s!\n\n", selection.DescriptiveName)
 		break
 	}
 
-	return selectedGame
+	return selectedBoardID
 }
 
-func createLobby(selectedGame string, lobbyRegistry *lobby.LobbyRegistry) {
+func createLobby(selectedBoardID string, lobbyRegistry *lobby.LobbyRegistry) {
 	var lobbyName string
 	for {
 		fmt.Print("Type name of lobby: ")
@@ -95,7 +95,7 @@ func createLobby(selectedGame string, lobbyRegistry *lobby.LobbyRegistry) {
 		scanner.Scan()
 		lobbyName = scanner.Text()
 
-		lobby, err := lobby.New(lobbyName, selectedGame, game.DefaultOptions())
+		lobby, err := lobby.New(lobbyName, selectedBoardID, game.DefaultOptions())
 		if err != nil {
 			fmt.Printf("Got error: '%s', try again!\n", err.Error())
 			continue

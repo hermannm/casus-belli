@@ -3,6 +3,7 @@ package api
 import (
 	"net/http"
 
+	"hermannm.dev/bfh-server/game/boardconfig"
 	"hermannm.dev/bfh-server/lobby"
 )
 
@@ -22,12 +23,12 @@ func RegisterEndpoints(mux *http.ServeMux, lobbyRegistry *lobby.LobbyRegistry) {
 // The endpoint expects a parameter corresponding to a key in the game constructor map
 // in order to know which type of game to create.
 func RegisterLobbyCreationEndpoints(
-	mux *http.ServeMux, lobbyRegistry *lobby.LobbyRegistry, availableGames []GameOption,
+	mux *http.ServeMux, lobbyRegistry *lobby.LobbyRegistry, availableBoards []boardconfig.BoardInfo,
 ) {
 	if mux == nil {
 		mux = http.DefaultServeMux
 	}
 
 	mux.Handle("/create", CreateLobbyHandler{lobbyRegistry})
-	mux.Handle("/games", GameListHandler{availableGames})
+	mux.Handle("/boards", BoardListHandler{availableBoards})
 }

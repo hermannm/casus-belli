@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 
 	"hermannm.dev/bfh-server/game/gametypes"
 )
@@ -14,30 +15,26 @@ import (
 //go:embed bfh_5players.json
 var boardConfigFiles embed.FS
 
-// Utility type for json unmarshaling.
-type jsonBoard struct {
-	Name               string                  `json:"name"`
-	WinningCastleCount int                     `json:"winningCastleCount"`
-	Nations            map[string][]landRegion `json:"nations"`
-	Seas               []seaRegion             `json:"seas"`
-	Neighbors          []neighbor              `json:"neighbors"`
+type JSONBoard struct {
+	Name               string                      `json:"name"`
+	WinningCastleCount int                         `json:"winningCastleCount"`
+	Nations            map[string][]JSONLandRegion `json:"nations"`
+	Seas               []JSONSeaRegion             `json:"seas"`
+	Neighbors          []JSONNeighbor              `json:"neighbors"`
 }
 
-// Utility type for json unmarshaling.
-type landRegion struct {
+type JSONLandRegion struct {
 	Name       string `json:"name"`
 	Forest     bool   `json:"forest"`
 	Castle     bool   `json:"castle"`
 	HomePlayer string `json:"homePlayer"`
 }
 
-// Utility type for json unmarshaling.
-type seaRegion struct {
+type JSONSeaRegion struct {
 	Name string `json:"name"`
 }
 
-// Utility type for json unmarshaling.
-type neighbor struct {
+type JSONNeighbor struct {
 	Region1    string `json:"region1"`
 	Region2    string `json:"region2"`
 	River      bool   `json:"river"`
@@ -45,16 +42,15 @@ type neighbor struct {
 	DangerZone string `json:"dangerZone"`
 }
 
-// Reads and constructs the board matching the given ID.
-func ReadBoardFromConfigFile(boardConfigFileName string) (gametypes.Board, error) {
-	content, err := boardConfigFiles.ReadFile(fmt.Sprintf("%s.json", boardConfigFileName))
+func ReadBoardFromConfigFile(boardID string) (gametypes.Board, error) {
+	content, err := boardConfigFiles.ReadFile(fmt.Sprintf("%s.json", boardID))
 	if err != nil {
 		return gametypes.Board{}, fmt.Errorf(
-			"failed to read config file '%s.json': %w", boardConfigFileName, err,
+			"failed to read config file '%s.json': %w", boardID, err,
 		)
 	}
 
-	var jsonBoard jsonBoard
+	var jsonBoard JSONBoard
 	if err := json.Unmarshal(content, &jsonBoard); err != nil {
 		return gametypes.Board{}, fmt.Errorf("failed to deserialize board config file: %w", err)
 	}
@@ -117,4 +113,54 @@ func ReadBoardFromConfigFile(boardConfigFileName string) (gametypes.Board, error
 	}
 
 	return board, nil
+}
+
+type PartialJSONBoard struct {
+	Name               string `json:"name"`
+	WinningCastleCount int    `json:"winningCastleCount"`
+}
+
+type BoardInfo struct {
+	ID                 string `json:"id"`
+	DescriptiveName    string `json:"descriptiveName"`
+	WinningCastleCount int    `json:"winningCastleCount"`
+}
+
+func GetAvailableBoards() ([]BoardInfo, error) {
+	directory, err := boardConfigFiles.ReadDir(".")
+	if err != nil {
+		return nil, fmt.Errorf("failed to read config file directory: %w", err)
+	}
+
+	availableBoards := make([]BoardInfo, 0, len(directory))
+
+	for _, directoryEntry := range directory {
+		fullName := directoryEntry.Name()
+		baseName, isJson := strings.CutSuffix(fullName, ".json")
+		if !isJson {
+			continue
+		}
+
+		content, err := boardConfigFiles.ReadFile(fullName)
+		if err != nil {
+			return nil, fmt.Errorf(
+				"failed to read config file '%s': %w", fullName, err,
+			)
+		}
+
+		var board PartialJSONBoard
+		if err := json.Unmarshal(content, &board); err != nil {
+			return nil, fmt.Errorf("failed to deserialize board config file: %w", err)
+		}
+
+		boardInfo := BoardInfo{
+			ID:                 baseName,
+			DescriptiveName:    board.Name,
+			WinningCastleCount: board.WinningCastleCount,
+		}
+
+		availableBoards = append(availableBoards, boardInfo)
+	}
+
+	return availableBoards, nil
 }
