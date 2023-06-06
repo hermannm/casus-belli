@@ -7,7 +7,7 @@ import (
 )
 
 type Messenger interface {
-	ReceiveOrders(fromPlayer string) ([]gametypes.Order, error)
+	AwaitOrders(fromPlayer string) ([]gametypes.Order, error)
 	SendOrderRequest(toPlayer string) error
 	SendOrdersConfirmation(playerWhoSubmittedOrders string) error
 	SendOrdersReceived(playerOrders map[string][]gametypes.Order) error
@@ -56,7 +56,7 @@ func gatherAndValidateOrderSet(
 			return
 		}
 
-		orders, err := messenger.ReceiveOrders(player)
+		orders, err := messenger.AwaitOrders(player)
 		if err != nil {
 			log.Println(err)
 			orderChan <- []gametypes.Order{}

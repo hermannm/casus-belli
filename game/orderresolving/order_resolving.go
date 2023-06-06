@@ -16,7 +16,7 @@ type Messenger interface {
 		supportablePlayers []string,
 	) error
 
-	ReceiveSupport(
+	AwaitSupport(
 		fromPlayer string, supportingRegion string, embattledRegion string,
 	) (supportedPlayer string, err error)
 }

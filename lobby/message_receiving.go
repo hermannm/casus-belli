@@ -145,9 +145,7 @@ func newGameMessageReceiver() GameMessageReceiver {
 	}
 }
 
-func (player *Player) handleGameMessage(
-	messageType MessageType, rawMessage json.RawMessage,
-) {
+func (player *Player) handleGameMessage(messageType MessageType, rawMessage json.RawMessage) {
 	var err error // Error declared here in order to handle it after the switch
 
 	switch messageType {
@@ -191,7 +189,7 @@ func (player *Player) handleGameMessage(
 	}
 }
 
-func (lobby *Lobby) ReceiveOrders(fromPlayer string) ([]gametypes.Order, error) {
+func (lobby *Lobby) AwaitOrders(fromPlayer string) ([]gametypes.Order, error) {
 	player, ok := lobby.getPlayer(fromPlayer)
 	if !ok {
 		return nil, fmt.Errorf(
@@ -203,7 +201,7 @@ func (lobby *Lobby) ReceiveOrders(fromPlayer string) ([]gametypes.Order, error) 
 	return orders.Orders, nil
 }
 
-func (lobby *Lobby) ReceiveSupport(
+func (lobby *Lobby) AwaitSupport(
 	fromPlayer string, supportingRegion string, embattledRegion string,
 ) (supportedPlayer string, err error) {
 	player, ok := lobby.getPlayer(fromPlayer)
