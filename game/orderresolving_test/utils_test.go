@@ -185,7 +185,7 @@ func (MockMessenger) SendSupportRequest(
 	return nil
 }
 
-func (MockMessenger) ReceiveSupport(
+func (MockMessenger) AwaitSupport(
 	fromPlayer string, supportingRegion string, embattledRegion string,
 ) (supportedPlayer string, err error) {
 	return "", nil

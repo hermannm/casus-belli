@@ -18,7 +18,11 @@ type Player struct {
 	lock                sync.RWMutex
 }
 
-func newPlayer(username string, socket *websocket.Conn) *Player {
+func newPlayer(username string, socket *websocket.Conn) (*Player, error) {
+	if username == "" {
+		return nil, errors.New("player cannot have blank username")
+	}
+
 	return &Player{
 		username:            username,
 		gameMessageReceiver: newGameMessageReceiver(),
@@ -26,7 +30,7 @@ func newPlayer(username string, socket *websocket.Conn) *Player {
 		socket:              socket,
 		gameID:              "",
 		readyToStartGame:    false,
-	}
+	}, nil
 }
 
 func (player *Player) selectGameID(gameID string, lobby *Lobby) error {

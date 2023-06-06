@@ -40,8 +40,7 @@ func (lobby *Lobby) sendMessageToAll(message Message) error {
 
 	var errs []error
 	for _, player := range lobby.players {
-		err := player.sendMessage(message)
-		if err != nil {
+		if err := player.sendMessage(message); err != nil {
 			errs = append(errs, err)
 		}
 	}
@@ -78,12 +77,12 @@ func (player *Player) SendLobbyJoinedMessage(lobby *Lobby) error {
 		player.lock.RUnlock()
 	}
 
-	err := player.sendMessage(Message{MessageTypeLobbyJoined: LobbyJoinedMessage{
+	if err := player.sendMessage(Message{MessageTypeLobbyJoined: LobbyJoinedMessage{
 		SelectableGameIDs: lobby.game.PlayerIDs, PlayerStatuses: statuses,
-	}})
-	if err != nil {
+	}}); err != nil {
 		return fmt.Errorf("failed to send lobby joined message to player %s: %w", player.String(), err)
 	}
+
 	return nil
 }
 

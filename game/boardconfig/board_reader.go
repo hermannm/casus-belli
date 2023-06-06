@@ -50,7 +50,7 @@ func ReadBoardFromConfigFile(boardID string) (gametypes.Board, error) {
 
 	var jsonBoard JSONBoard
 	if err := json.Unmarshal(content, &jsonBoard); err != nil {
-		return gametypes.Board{}, fmt.Errorf("failed to deserialize board config file: %w", err)
+		return gametypes.Board{}, fmt.Errorf("failed to parse board config file: %w", err)
 	}
 
 	if jsonBoard.WinningCastleCount <= 0 {
@@ -148,7 +148,7 @@ func GetAvailableBoards() ([]BoardInfo, error) {
 
 		var board PartialJSONBoard
 		if err := json.Unmarshal(content, &board); err != nil {
-			return nil, fmt.Errorf("failed to deserialize board config file: %w", err)
+			return nil, fmt.Errorf("failed to parse board config file: %w", err)
 		}
 
 		boardInfo := BoardInfo{

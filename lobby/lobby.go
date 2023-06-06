@@ -57,7 +57,11 @@ func (lobby *Lobby) AddPlayer(username string, socket *websocket.Conn) (*Player,
 	lobby.lock.Lock()
 	defer lobby.lock.Unlock()
 
-	player := newPlayer(username, socket)
+	player, err := newPlayer(username, socket)
+	if err != nil {
+		return nil, err
+	}
+
 	lobby.players = append(lobby.players, player)
 
 	go player.readMessagesUntilSocketCloses(lobby)
@@ -85,8 +89,7 @@ func (lobby *Lobby) Close() error {
 	for _, player := range lobby.players {
 		player.lock.Lock()
 
-		err := player.socket.Close()
-		if err != nil {
+		if err := player.socket.Close(); err != nil {
 			player.lock.Unlock()
 			log.Println(fmt.Errorf(
 				"failed to close socket connection to player %s: %w",

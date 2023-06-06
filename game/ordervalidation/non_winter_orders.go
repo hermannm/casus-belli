@@ -167,23 +167,23 @@ func validateReachableMoveDestinations(orders []gametypes.Order, board gametypes
 	boardCopy.AddOrders(orders)
 
 	for _, order := range orders {
-		if order.Type == gametypes.OrderMove {
-			if err := validateReachableMoveDestination(order, boardCopy); err != nil {
-				return fmt.Errorf(
-					"invalid move from '%s' to '%s': %w", order.Origin, order.Destination, err,
-				)
-			}
+		if order.Type != gametypes.OrderMove {
+			continue
+		}
 
-			secondHorseMove, hasSecondHorseMove := order.TryGetSecondHorseMove()
-			if hasSecondHorseMove {
-				if err := validateReachableMoveDestination(secondHorseMove, boardCopy); err != nil {
-					return fmt.Errorf(
-						"invalid second destination for horse move from '%s' to '%s': %w",
-						order.Origin,
-						order.SecondDestination,
-						err,
-					)
-				}
+		if err := validateReachableMoveDestination(order, boardCopy); err != nil {
+			return fmt.Errorf(
+				"invalid move from '%s' to '%s': %w", order.Origin, order.Destination, err,
+			)
+		}
+
+		secondHorseMove, hasSecondHorseMove := order.TryGetSecondHorseMove()
+		if hasSecondHorseMove {
+			if err := validateReachableMoveDestination(secondHorseMove, boardCopy); err != nil {
+				return fmt.Errorf(
+					"invalid second destination for horse move from '%s' to '%s': %w",
+					order.Origin, order.SecondDestination, err,
+				)
 			}
 		}
 	}
