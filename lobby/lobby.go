@@ -60,7 +60,7 @@ func (lobby *Lobby) AddPlayer(username string, socket *websocket.Conn) (*Player,
 	player := newPlayer(username, socket)
 	lobby.players = append(lobby.players, player)
 
-	go player.listen(lobby)
+	go player.readMessagesUntilSocketCloses(lobby)
 
 	return player, nil
 }

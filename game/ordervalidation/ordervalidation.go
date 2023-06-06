@@ -11,7 +11,7 @@ type Messenger interface {
 	SendOrderRequest(toPlayer string) error
 	SendOrdersConfirmation(playerWhoSubmittedOrders string) error
 	SendOrdersReceived(playerOrders map[string][]gametypes.Order) error
-	SendError(toPlayer string, err error) error
+	SendError(toPlayer string, err error)
 }
 
 func GatherAndValidateOrders(

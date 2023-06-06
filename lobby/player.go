@@ -11,7 +11,7 @@ import (
 // A player connected to a game lobby.
 type Player struct {
 	username            string
-	gameMessageReceiver *GameMessageReceiver
+	gameMessageReceiver GameMessageReceiver
 	socket              *websocket.Conn // Must hold lock to access safely.
 	gameID              string          // Must hold lock to access safely. Blank until selected.
 	readyToStartGame    bool            // Must hold lock to access safely.
