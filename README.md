@@ -6,13 +6,13 @@ _The Battle for Hermannia_ is a board game created as a gift by the father of [h
 
 - `lobby` manages lobbies of players with persistent connections to the server, and messages between them
 - `api` defines API endpoints for finding, creating and joining game lobbies
-- `game` contains the main game loop for _The Battle for Hermannia_
+- `game` contains the main game loop
   - `gametypes` provides core data types used by other game packages, and operations on them
   - `ordervalidation` provides functions for gathering and validating game orders from players
-  - `orderresolving` contains the bulk of the game logic for _Hermannia_: resolving player orders on the board
-  - `boardconfig` contains the JSON files for the game's available boards, and functions for deserializing them
+  - `orderresolving` contains the bulk of the game logic: resolving player orders on the board
+  - `boardconfig` contains JSON files for board setups that can be played, and functions for parsing them
 - Package `main` at the project root contains a CLI application for launching the game server
-- Package `main` under `magefiles` contains build scripts using [Mage](https://magefile.org/)
+- `magefiles` contains build scripts using [Mage](https://magefile.org/)
 
 ## Credits
 
