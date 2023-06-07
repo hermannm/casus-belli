@@ -21,7 +21,7 @@ type Lobby struct {
 func New(lobbyName string, boardID string, gameOptions game.GameOptions) (*Lobby, error) {
 	lobby := &Lobby{name: lobbyName, lock: sync.RWMutex{}}
 
-	game, err := game.New(boardID, game.DefaultOptions(), lobby)
+	game, err := game.New(boardID, gameOptions, lobby)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create game: %w", err)
 	}
