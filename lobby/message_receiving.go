@@ -214,36 +214,36 @@ func (lobby *Lobby) AwaitSupport(
 }
 
 type SupportMessageQueue struct {
-	messages []GiveSupportMessage // Must hold notifier.L to access safely.
-	notifier sync.Cond
+	messages           []GiveSupportMessage // Must hold newMessageNotifier.L to access safely.
+	newMessageNotifier sync.Cond
 }
 
 func NewSupportMessageQueue() SupportMessageQueue {
-	return SupportMessageQueue{messages: nil, notifier: sync.Cond{L: &sync.Mutex{}}}
+	return SupportMessageQueue{messages: nil, newMessageNotifier: sync.Cond{L: &sync.Mutex{}}}
 }
 
 func (queue *SupportMessageQueue) AddMessage(message GiveSupportMessage) {
-	queue.notifier.L.Lock()
+	queue.newMessageNotifier.L.Lock()
 	queue.messages = append(queue.messages, message)
-	queue.notifier.L.Unlock()
-	queue.notifier.Broadcast()
+	queue.newMessageNotifier.L.Unlock()
+	queue.newMessageNotifier.Broadcast()
 }
 
 // Reading a received support message involves these steps:
-//  1. Acquire the lock on notifier condition variable
+//  1. Acquire the lock on newMessageNotifier condition variable
 //  2. Go through received support messages, and check if any match the requested supporting and
 //     embattled regions
 //  3. If a match was found: take message from queue, release lock and return supported player
-//  4. If not: call notifier.Wait(), which releases the lock and waits
+//  4. If not: call newMessageNotifier.Wait(), which releases the lock and waits
 //  5. Once a new support message is received, SupportMessageQueue.AddMessage will call
-//     notifier.Broadcast(), which wakes all waiting goroutines
+//     newMessageNotifier.Broadcast(), which wakes all waiting goroutines
 //  6. Once Wait() returns in this goroutine, the lock is re-acquired, and we repeat from step 2
 //
 // For more info, see the docs on sync.Cond: https://pkg.go.dev/sync#Cond
 func (queue *SupportMessageQueue) AwaitSupportMatchingRegions(
 	supportingRegion string, embattledRegion string,
 ) (supportedPlayer string) {
-	queue.notifier.L.Lock()
+	queue.newMessageNotifier.L.Lock()
 	for {
 		foundMatchingSupport := false
 		remainingMessages := make([]GiveSupportMessage, 0, cap(queue.messages))
@@ -263,10 +263,10 @@ func (queue *SupportMessageQueue) AwaitSupportMatchingRegions(
 
 		if foundMatchingSupport {
 			queue.messages = remainingMessages
-			queue.notifier.L.Unlock()
+			queue.newMessageNotifier.L.Unlock()
 			return supportedPlayer
 		}
 
-		queue.notifier.Wait()
+		queue.newMessageNotifier.Wait()
 	}
 }
