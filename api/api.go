@@ -14,13 +14,44 @@ import (
 	"hermannm.dev/wrap"
 )
 
-// Endpoint to list available game lobbies.
-type LobbyListHandler struct {
-	lobbyRegistry *lobby.LobbyRegistry
+type LobbyAPI struct {
+	router          *http.ServeMux
+	lobbyRegistry   *lobby.LobbyRegistry
+	availableBoards []boardconfig.BoardInfo
 }
 
-func (handler LobbyListHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
-	lobbyList := handler.lobbyRegistry.LobbyInfo()
+func NewLobbyAPI(
+	router *http.ServeMux,
+	lobbyRegistry *lobby.LobbyRegistry,
+	availableBoards []boardconfig.BoardInfo,
+) LobbyAPI {
+	if router == nil {
+		router = http.DefaultServeMux
+	}
+
+	api := LobbyAPI{lobbyRegistry: lobbyRegistry, availableBoards: availableBoards, router: router}
+
+	router.HandleFunc("/lobbies", api.ListLobbies)
+	router.HandleFunc("/join", api.JoinLobby)
+
+	return api
+}
+
+func (api LobbyAPI) RegisterLobbyCreationEndpoints() {
+	api.router.HandleFunc("/create", api.CreateLobby)
+	api.router.HandleFunc("/boards", api.ListBoards)
+}
+
+func (api LobbyAPI) ListenAndServe(address string) error {
+	if err := http.ListenAndServe(address, api.router); err != nil {
+		return wrap.Error(err, "server stopped")
+	}
+	return nil
+}
+
+// Endpoint to list available game lobbies.
+func (api LobbyAPI) ListLobbies(res http.ResponseWriter, req *http.Request) {
+	lobbyList := api.lobbyRegistry.LobbyInfo()
 
 	lobbyListJSON, err := json.Marshal(lobbyList)
 	if err != nil {
@@ -37,11 +68,7 @@ func (handler LobbyListHandler) ServeHTTP(res http.ResponseWriter, req *http.Req
 
 // Endpoint for a player to join a lobby.
 // Expects query parameters "lobbyName" and "username".
-type JoinLobbyHandler struct {
-	lobbyRegistry *lobby.LobbyRegistry
-}
-
-func (handler JoinLobbyHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
+func (api LobbyAPI) JoinLobby(res http.ResponseWriter, req *http.Request) {
 	const lobbyNameParam = "lobbyName"
 	const usernameParam = "username"
 
@@ -54,7 +81,7 @@ func (handler JoinLobbyHandler) ServeHTTP(res http.ResponseWriter, req *http.Req
 	}
 
 	lobbyName := params.Get(lobbyNameParam)
-	lobby, ok := handler.lobbyRegistry.GetLobby(lobbyName)
+	lobby, ok := api.lobbyRegistry.GetLobby(lobbyName)
 	if !ok {
 		http.Error(
 			res, fmt.Sprintf("no lobby found with name '%s'", lobbyName), http.StatusNotFound,
@@ -90,11 +117,7 @@ func (handler JoinLobbyHandler) ServeHTTP(res http.ResponseWriter, req *http.Req
 
 // Endpoint for creating lobbies (for servers with public lobby creation).
 // Expects query parameters "lobbyName" and "gameName".
-type CreateLobbyHandler struct {
-	lobbyRegistry *lobby.LobbyRegistry
-}
-
-func (handler CreateLobbyHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
+func (api LobbyAPI) CreateLobby(res http.ResponseWriter, req *http.Request) {
 	const lobbyNameParam = "lobbyName"
 	const gameNameParam = "gameName"
 
@@ -122,7 +145,7 @@ func (handler CreateLobbyHandler) ServeHTTP(res http.ResponseWriter, req *http.R
 		return
 	}
 
-	if err := handler.lobbyRegistry.RegisterLobby(lobby); err != nil {
+	if err := api.lobbyRegistry.RegisterLobby(lobby); err != nil {
 		err = wrap.Error(err, "failed to register lobby")
 		log.Println(err)
 		http.Error(res, err.Error(), http.StatusInternalServerError)
@@ -133,12 +156,8 @@ func (handler CreateLobbyHandler) ServeHTTP(res http.ResponseWriter, req *http.R
 }
 
 // Endpoint for showing the list of boards supported by the server.
-type BoardListHandler struct {
-	availableBoards []boardconfig.BoardInfo
-}
-
-func (handler BoardListHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
-	jsonResponse, err := json.Marshal(handler.availableBoards)
+func (api LobbyAPI) ListBoards(res http.ResponseWriter, req *http.Request) {
+	jsonResponse, err := json.Marshal(api.availableBoards)
 	if err != nil {
 		http.Error(res, "error fetching list of games", http.StatusInternalServerError)
 		return

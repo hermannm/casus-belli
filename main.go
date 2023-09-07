@@ -29,19 +29,19 @@ func main() {
 	}
 
 	lobbyRegistry := lobby.NewLobbyRegistry()
-	api.RegisterEndpoints(http.DefaultServeMux, lobbyRegistry)
+	lobbyAPI := api.NewLobbyAPI(http.DefaultServeMux, lobbyRegistry, availableBoards)
 
 	if local {
 		selectedBoardID := selectBoard(availableBoards)
 		createLobby(selectedBoardID, lobbyRegistry)
 		printIPs(port)
 	} else {
-		api.RegisterLobbyCreationEndpoints(http.DefaultServeMux, lobbyRegistry, availableBoards)
+		lobbyAPI.RegisterLobbyCreationEndpoints()
 	}
 
 	fmt.Printf("Listening on port %s...", port)
-	if err := http.ListenAndServe(fmt.Sprintf(":%s", port), nil); err != nil {
-		fmt.Println(wrap.Error(err, "server stopped"))
+	if err := lobbyAPI.ListenAndServe(fmt.Sprintf(":%s", port)); err != nil {
+		fmt.Println(err)
 		os.Exit(1)
 	}
 }
