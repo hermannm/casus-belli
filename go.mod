@@ -1,6 +1,6 @@
 module hermannm.dev/bfh-server
 
-go 1.18
+go 1.21.0
 
 require (
 	github.com/gorilla/websocket v1.4.2
@@ -8,3 +8,5 @@ require (
 	hermannm.dev/ipfinder v0.1.0
 	hermannm.dev/set v0.1.0
 )
+
+require hermannm.dev/wrap v0.1.0 // indirect

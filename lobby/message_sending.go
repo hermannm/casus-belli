@@ -2,10 +2,10 @@ package lobby
 
 import (
 	"errors"
-	"fmt"
 	"log"
 
 	"hermannm.dev/bfh-server/game/gametypes"
+	"hermannm.dev/wrap"
 )
 
 func (player *Player) sendMessage(message Message) error {
@@ -13,9 +13,8 @@ func (player *Player) sendMessage(message Message) error {
 	defer player.lock.Unlock()
 
 	if err := player.socket.WriteJSON(message); err != nil {
-		return fmt.Errorf(
-			"failed to send message of type '%s' to player '%s': %w",
-			message.Type(), player.String(), err,
+		return wrap.Errorf(
+			err, "failed to send message of type '%s' to player %s", message.Type(), player.String(),
 		)
 	}
 
@@ -25,9 +24,11 @@ func (player *Player) sendMessage(message Message) error {
 func (lobby *Lobby) sendMessage(toPlayer string, message Message) error {
 	player, ok := lobby.getPlayer(toPlayer)
 	if !ok {
-		return fmt.Errorf(
-			"failed to send message of type '%s' to player with game ID '%s': player not found",
-			message.Type(), toPlayer,
+		return wrap.Errorf(
+			errors.New("player not found"),
+			"failed to send message of type '%s' to player with game ID '%s'",
+			message.Type(),
+			toPlayer,
 		)
 	}
 
@@ -51,7 +52,7 @@ func (lobby *Lobby) sendMessageToAll(message Message) error {
 	case 1:
 		return errs[0]
 	default:
-		return fmt.Errorf("failed to send message to multiple players:\n%w", errors.Join(errs...))
+		return wrap.Errors("failed to send message to multiple players", errs...)
 	}
 }
 
@@ -80,7 +81,7 @@ func (player *Player) SendLobbyJoinedMessage(lobby *Lobby) error {
 	if err := player.sendMessage(Message{MessageTypeLobbyJoined: LobbyJoinedMessage{
 		SelectableGameIDs: lobby.game.PlayerIDs, PlayerStatuses: statuses,
 	}}); err != nil {
-		return fmt.Errorf("failed to send lobby joined message to player %s: %w", player.String(), err)
+		return wrap.Errorf(err, "failed to send lobby joined message to player %s", player.String())
 	}
 
 	return nil
@@ -100,7 +101,7 @@ func (lobby *Lobby) SendPlayerStatusMessage(player *Player) error {
 	player.lock.RUnlock()
 
 	if err := lobby.sendMessageToAll(Message{MessageTypePlayerStatus: statusMsg}); err != nil {
-		return fmt.Errorf("failed to send player status message: %w", err)
+		return wrap.Error(err, "failed to send player status message")
 	}
 
 	return nil

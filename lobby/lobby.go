@@ -3,11 +3,11 @@ package lobby
 import (
 	"errors"
 	"fmt"
-	"log"
 	"sync"
 
 	"github.com/gorilla/websocket"
 	"hermannm.dev/bfh-server/game"
+	"hermannm.dev/wrap"
 )
 
 // A collection of players for a game.
@@ -23,7 +23,7 @@ func New(lobbyName string, boardID string, gameOptions game.GameOptions) (*Lobby
 
 	game, err := game.New(boardID, gameOptions, lobby)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create game: %w", err)
+		return nil, wrap.Error(err, "failed to create game")
 	}
 	lobby.game = game
 	lobby.players = make([]*Player, 0, len(game.PlayerIDs))
@@ -51,7 +51,7 @@ func (lobby *Lobby) getPlayer(gameID string) (player *Player, foundPlayer bool) 
 
 func (lobby *Lobby) AddPlayer(username string, socket *websocket.Conn) (*Player, error) {
 	if !lobby.isUsernameTaken(username) {
-		return nil, fmt.Errorf("username %s already taken", username)
+		return nil, fmt.Errorf("username '%s' already taken", username)
 	}
 
 	lobby.lock.Lock()
@@ -91,10 +91,8 @@ func (lobby *Lobby) Close() error {
 
 		if err := player.socket.Close(); err != nil {
 			player.lock.Unlock()
-			log.Println(fmt.Errorf(
-				"failed to close socket connection to player %s: %w",
-				player.String(),
-				err,
+			fmt.Println(wrap.Errorf(
+				err, "failed to close socket connection to player %s", player.String(),
 			))
 		}
 

@@ -1,12 +1,11 @@
 package game
 
 import (
-	"fmt"
-
 	"hermannm.dev/bfh-server/game/boardconfig"
 	"hermannm.dev/bfh-server/game/gametypes"
 	"hermannm.dev/bfh-server/game/orderresolving"
 	"hermannm.dev/bfh-server/game/ordervalidation"
+	"hermannm.dev/wrap"
 )
 
 type Game struct {
@@ -25,7 +24,7 @@ type Messenger interface {
 func New(boardID string, options GameOptions, messenger Messenger) (*Game, error) {
 	board, err := boardconfig.ReadBoardFromConfigFile(boardID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create board from config file: %w", err)
+		return nil, wrap.Error(err, "failed to create board from config file")
 	}
 
 	return &Game{

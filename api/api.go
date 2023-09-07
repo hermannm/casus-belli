@@ -11,6 +11,7 @@ import (
 	"hermannm.dev/bfh-server/game"
 	"hermannm.dev/bfh-server/game/boardconfig"
 	"hermannm.dev/bfh-server/lobby"
+	"hermannm.dev/wrap"
 )
 
 // Endpoint to list available game lobbies.
@@ -70,7 +71,7 @@ func (handler JoinLobbyHandler) ServeHTTP(res http.ResponseWriter, req *http.Req
 
 	socket, err := upgrader.Upgrade(res, req, nil)
 	if err != nil {
-		log.Println(fmt.Errorf("failed to establish socket connection: %w", err))
+		fmt.Println(wrap.Error(err, "failed to establish socket connection"))
 		http.Error(res, "unable to establish socket connection", http.StatusInternalServerError)
 		return
 	}
@@ -79,8 +80,8 @@ func (handler JoinLobbyHandler) ServeHTTP(res http.ResponseWriter, req *http.Req
 
 	player, err := lobby.AddPlayer(username, socket)
 	if err != nil {
-		log.Println(fmt.Errorf("failed to add player: %w", err))
-		player.SendError(fmt.Errorf("failed to join game: %w", err))
+		fmt.Println(wrap.Error(err, "failed to add player"))
+		player.SendError(wrap.Error(err, "failed to join game"))
 		return
 	}
 
@@ -122,7 +123,7 @@ func (handler CreateLobbyHandler) ServeHTTP(res http.ResponseWriter, req *http.R
 	}
 
 	if err := handler.lobbyRegistry.RegisterLobby(lobby); err != nil {
-		err = fmt.Errorf("failed to register lobby: %w", err)
+		err = wrap.Error(err, "failed to register lobby")
 		log.Println(err)
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 		return

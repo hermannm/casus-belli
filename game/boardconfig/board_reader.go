@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"hermannm.dev/bfh-server/game/gametypes"
+	"hermannm.dev/wrap"
 )
 
 //go:embed bfh_5players.json
@@ -43,14 +44,12 @@ type JSONNeighbor struct {
 func ReadBoardFromConfigFile(boardID string) (gametypes.Board, error) {
 	content, err := boardConfigFiles.ReadFile(fmt.Sprintf("%s.json", boardID))
 	if err != nil {
-		return gametypes.Board{}, fmt.Errorf(
-			"failed to read config file '%s.json': %w", boardID, err,
-		)
+		return gametypes.Board{}, wrap.Errorf(err, "failed to read config file '%s.json'", boardID)
 	}
 
 	var jsonBoard JSONBoard
 	if err := json.Unmarshal(content, &jsonBoard); err != nil {
-		return gametypes.Board{}, fmt.Errorf("failed to parse board config file: %w", err)
+		return gametypes.Board{}, wrap.Error(err, "failed to parse board config file")
 	}
 
 	if jsonBoard.WinningCastleCount <= 0 {
@@ -89,7 +88,7 @@ func ReadBoardFromConfigFile(boardID string) (gametypes.Board, error) {
 
 		if !ok1 || !ok2 {
 			return gametypes.Board{}, fmt.Errorf(
-				"failed to find regions for neighbor relation %s <-> %s in board config",
+				"failed to find regions for neighbor relation '%s' <-> '%s' in board config",
 				neighbor.Region1,
 				neighbor.Region2,
 			)
@@ -127,7 +126,7 @@ type BoardInfo struct {
 func GetAvailableBoards() ([]BoardInfo, error) {
 	directory, err := boardConfigFiles.ReadDir(".")
 	if err != nil {
-		return nil, fmt.Errorf("failed to read config file directory: %w", err)
+		return nil, wrap.Error(err, "failed to read config file directory")
 	}
 
 	availableBoards := make([]BoardInfo, 0, len(directory))
@@ -141,14 +140,12 @@ func GetAvailableBoards() ([]BoardInfo, error) {
 
 		content, err := boardConfigFiles.ReadFile(fullName)
 		if err != nil {
-			return nil, fmt.Errorf(
-				"failed to read config file '%s': %w", fullName, err,
-			)
+			return nil, wrap.Errorf(err, "failed to read config file '%s'", fullName)
 		}
 
 		var board PartialJSONBoard
 		if err := json.Unmarshal(content, &board); err != nil {
-			return nil, fmt.Errorf("failed to parse board config file: %w", err)
+			return nil, wrap.Error(err, "failed to parse board config file")
 		}
 
 		boardInfo := BoardInfo{

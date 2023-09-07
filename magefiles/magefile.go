@@ -7,6 +7,7 @@ import (
 
 	"github.com/magefile/mage/sh"
 	"hermannm.dev/bfh-server/magefiles/color"
+	"hermannm.dev/wrap"
 )
 
 func CrossCompile() error {
@@ -33,7 +34,7 @@ func CrossCompile() error {
 			fmt.Printf("%s %s\n", color.Blue.String("[Building]"), binName)
 
 			if err := sh.RunWithV(env, "go", "build", "-o", outputLocation); err != nil {
-				return fmt.Errorf("cross-compilation failed: %w", err)
+				return wrap.Error(err, "cross-compilation failed")
 			}
 		}
 	}

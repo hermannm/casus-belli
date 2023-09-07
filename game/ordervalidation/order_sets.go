@@ -25,11 +25,13 @@ func validateUniqueMoveDestinations(orders []gametypes.Order, board gametypes.Bo
 	for _, order := range orders {
 		if order.Type == gametypes.OrderMove {
 			if moveDestinations.Contains(order.Destination) {
-				return fmt.Errorf("orders include two moves to region %s", order.Destination)
+				return fmt.Errorf("orders include two moves to region '%s'", order.Destination)
 			}
 
 			if order.SecondDestination != "" && moveDestinations.Contains(order.SecondDestination) {
-				return fmt.Errorf("orders include two moves to region %s", order.SecondDestination)
+				return fmt.Errorf(
+					"orders include two moves to region '%s'", order.SecondDestination,
+				)
 			}
 
 			moveDestinations.Add(order.Destination)
@@ -44,7 +46,7 @@ func validateOneOrderPerRegion(orders []gametypes.Order, board gametypes.Board) 
 
 	for _, order := range orders {
 		if orderedRegions.Contains(order.Origin) {
-			return fmt.Errorf("unit in region %s is ordered twice", order.Origin)
+			return fmt.Errorf("unit in region '%s' is ordered twice", order.Origin)
 		}
 
 		orderedRegions.Add(order.Origin)

@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"sync"
 
 	"github.com/gorilla/websocket"
 	"hermannm.dev/bfh-server/game/gametypes"
+	"hermannm.dev/wrap"
 )
 
 func (player *Player) readMessagesUntilSocketCloses(lobby *Lobby) {
@@ -16,10 +16,10 @@ func (player *Player) readMessagesUntilSocketCloses(lobby *Lobby) {
 		socketIsClosed, err := player.readMessage(lobby)
 
 		if socketIsClosed {
-			log.Println(fmt.Errorf("socket closed for player '%s': %w", player.String(), err))
+			fmt.Println(wrap.Errorf(err, "socket closed for player %s", player.String()))
 			return
 		} else if err != nil {
-			log.Println(fmt.Errorf("message error for player '%s': %w", player.String(), err))
+			fmt.Println(wrap.Errorf(err, "message error for player %s", player.String()))
 			player.SendError(err)
 		}
 	}
@@ -35,13 +35,13 @@ func (player *Player) readMessage(lobby *Lobby) (socketIsClosed bool, err error)
 		case *websocket.CloseError:
 			return true, err
 		default:
-			return false, fmt.Errorf("failed to read message from WebSocket connection: %w", err)
+			return false, wrap.Error(err, "failed to read message from WebSocket connection")
 		}
 	}
 
 	var messageWithType map[MessageType]json.RawMessage
 	if err := json.Unmarshal(messageBytes, &messageWithType); err != nil {
-		return false, fmt.Errorf("failed to parse received message: %w", err)
+		return false, wrap.Error(err, "failed to parse received message")
 	}
 
 	if len(messageWithType) != 1 {
@@ -56,7 +56,7 @@ func (player *Player) readMessage(lobby *Lobby) (socketIsClosed bool, err error)
 
 	isLobbyMessage, err := player.handleLobbyMessage(messageType, rawMessage, lobby)
 	if err != nil {
-		return false, fmt.Errorf("failed to handle message of type '%s': %w", messageType, err)
+		return false, wrap.Errorf(err, "failed to handle message of type '%s'", messageType)
 	}
 
 	if !isLobbyMessage {
@@ -85,38 +85,36 @@ func (player *Player) handleLobbyMessage(
 	case MessageTypeSelectGameID:
 		var message SelectGameIDMessage
 		if err := json.Unmarshal(rawMessage, &message); err != nil {
-			return true, fmt.Errorf("failed to parse message: %w", err)
+			return true, wrap.Error(err, "failed to parse message")
 		}
 
 		if err := player.selectGameID(message.GameID, lobby); err != nil {
-			return true, fmt.Errorf("failed to select game ID: %w", err)
+			return true, wrap.Error(err, "failed to select game ID")
 		}
 
 		if err := lobby.SendPlayerStatusMessage(player); err != nil {
-			return true, fmt.Errorf(
-				"failed to update other players about game ID selection: %w", err,
-			)
+			return true, wrap.Error(err, "failed to update other players about game ID selection")
 		}
 
 		return true, nil
 	case MessageTypeReady:
 		var message ReadyToStartGameMessage
 		if err := json.Unmarshal(rawMessage, &message); err != nil {
-			return true, fmt.Errorf("failed to parse message: %w", err)
+			return true, wrap.Error(err, "failed to parse message")
 		}
 
 		if err := player.setReadyToStartGame(message.Ready); err != nil {
-			return true, fmt.Errorf("failed to set ready status: %w", err)
+			return true, wrap.Error(err, "failed to set ready status")
 		}
 
 		if err := lobby.SendPlayerStatusMessage(player); err != nil {
-			return true, fmt.Errorf("failed to update other players about ready status: %w", err)
+			return true, wrap.Error(err, "failed to update other players about ready status")
 		}
 
 		return true, nil
 	case MessageTypeStartGame:
 		if err := lobby.startGame(); err != nil {
-			return true, fmt.Errorf("failed to start game: %w", err)
+			return true, wrap.Error(err, "failed to start game")
 		}
 
 		return true, nil
@@ -177,8 +175,8 @@ func (player *Player) handleGameMessage(messageType MessageType, rawMessage json
 	}
 
 	if err != nil {
-		err = fmt.Errorf("failed to parse message of type '%s': %w", messageType, err)
-		log.Println(fmt.Errorf("message error for player '%s': %w", player.String(), err))
+		err = wrap.Errorf(err, "failed to parse message of type '%s'", messageType)
+		fmt.Println(wrap.Errorf(err, "message error for player %s", player.String()))
 		player.SendError(err)
 	}
 }

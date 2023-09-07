@@ -5,22 +5,25 @@ import (
 	"fmt"
 
 	"hermannm.dev/bfh-server/game/gametypes"
+	"hermannm.dev/wrap"
 )
 
 func validateWinterOrders(orders []gametypes.Order, board gametypes.Board) error {
 	for _, order := range orders {
 		origin, ok := board.Regions[order.Origin]
 		if !ok {
-			return fmt.Errorf("invalid order: origin region with name '%s' not found", order.Origin)
+			return wrap.Error(
+				fmt.Errorf("origin region with name '%s' not found", order.Origin), "invalid order",
+			)
 		}
 
 		if err := validateWinterOrder(order, origin, board); err != nil {
-			return fmt.Errorf("invalid winter order in region %s: %w", order.Origin, err)
+			return wrap.Errorf(err, "invalid winter order in region '%s'", order.Origin)
 		}
 	}
 
 	if err := validateOrderSet(orders, board); err != nil {
-		return fmt.Errorf("invalid winter order set: %w", err)
+		return wrap.Error(err, "invalid winter order set")
 	}
 
 	return nil
@@ -35,7 +38,7 @@ func validateWinterOrder(
 	case gametypes.OrderBuild:
 		return validateBuild(order, origin, board)
 	default:
-		return fmt.Errorf("invalid order type in winter: %s", order.Type)
+		return fmt.Errorf("order type '%s' is invalid in winter", order.Type)
 	}
 }
 
@@ -48,7 +51,7 @@ func validateWinterMove(
 
 	to, ok := board.Regions[order.Destination]
 	if !ok {
-		return fmt.Errorf("destination region with name %s not found", order.Destination)
+		return fmt.Errorf("destination region with name '%s' not found", order.Destination)
 	}
 
 	if to.ControllingPlayer != order.Player {

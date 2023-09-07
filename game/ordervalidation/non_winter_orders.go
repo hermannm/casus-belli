@@ -5,22 +5,25 @@ import (
 	"fmt"
 
 	"hermannm.dev/bfh-server/game/gametypes"
+	"hermannm.dev/wrap"
 )
 
 func validateNonWinterOrders(orders []gametypes.Order, board gametypes.Board) error {
 	for _, order := range orders {
 		origin, ok := board.Regions[order.Origin]
 		if !ok {
-			return fmt.Errorf("invalid order: origin region with name '%s' not found", order.Origin)
+			return wrap.Error(
+				fmt.Errorf("origin region with name '%s' not found", order.Origin), "invalid order",
+			)
 		}
 
 		if err := validateNonWinterOrder(order, origin, board); err != nil {
-			return fmt.Errorf("invalid order in region %s: %w", order.Origin, err)
+			return wrap.Errorf(err, "invalid order in region '%s'", order.Origin)
 		}
 	}
 
 	if err := validateOrderSet(orders, board); err != nil {
-		return fmt.Errorf("invalid order set: %w", err)
+		return wrap.Error(err, "invalid order set")
 	}
 
 	if err := validateReachableMoveDestinations(orders, board); err != nil {
@@ -51,7 +54,7 @@ func validateNonWinterOrder(
 	case gametypes.OrderTransport:
 		return validateBesiegeOrTransport(order, origin)
 	default:
-		return fmt.Errorf("invalid order type: %s", order.Type)
+		return fmt.Errorf("invalid order type '%s'", order.Type)
 	}
 }
 
@@ -172,17 +175,19 @@ func validateReachableMoveDestinations(orders []gametypes.Order, board gametypes
 		}
 
 		if err := validateReachableMoveDestination(order, boardCopy); err != nil {
-			return fmt.Errorf(
-				"invalid move from '%s' to '%s': %w", order.Origin, order.Destination, err,
+			return wrap.Errorf(
+				err, "invalid move from '%s' to '%s'", order.Origin, order.Destination,
 			)
 		}
 
 		secondHorseMove, hasSecondHorseMove := order.TryGetSecondHorseMove()
 		if hasSecondHorseMove {
 			if err := validateReachableMoveDestination(secondHorseMove, boardCopy); err != nil {
-				return fmt.Errorf(
-					"invalid second destination for horse move from '%s' to '%s': %w",
-					order.Origin, order.SecondDestination, err,
+				return wrap.Errorf(
+					err,
+					"invalid second destination for horse move from '%s' to '%s'",
+					order.Origin,
+					order.SecondDestination,
 				)
 			}
 		}

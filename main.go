@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -15,6 +14,7 @@ import (
 	"hermannm.dev/bfh-server/game/boardconfig"
 	"hermannm.dev/bfh-server/lobby"
 	"hermannm.dev/ipfinder"
+	"hermannm.dev/wrap"
 )
 
 const defaultPort string = "8000"
@@ -24,7 +24,8 @@ func main() {
 
 	availableBoards, err := boardconfig.GetAvailableBoards()
 	if err != nil {
-		log.Fatalln(fmt.Errorf("failed to get available boards for game server: %w", err))
+		fmt.Println(wrap.Error(err, "failed to get available boards for game server"))
+		os.Exit(1)
 	}
 
 	lobbyRegistry := lobby.NewLobbyRegistry()
@@ -40,7 +41,8 @@ func main() {
 
 	fmt.Printf("Listening on port %s...", port)
 	if err := http.ListenAndServe(fmt.Sprintf(":%s", port), nil); err != nil {
-		log.Fatalln(err)
+		fmt.Println(wrap.Error(err, "server stopped"))
+		os.Exit(1)
 	}
 }
 

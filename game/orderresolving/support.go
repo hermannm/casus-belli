@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"hermannm.dev/bfh-server/game/gametypes"
+	"hermannm.dev/wrap"
 )
 
 type supportDeclaration struct {
@@ -96,16 +97,15 @@ func callSupport(
 	if err := messenger.SendSupportRequest(
 		support.Player, support.Origin, region.Name, battlers,
 	); err != nil {
-		log.Println(fmt.Errorf("failed to send support request: %w", err))
+		fmt.Println(wrap.Error(err, "failed to send support request"))
 		supportReceiver <- supportDeclaration{fromPlayer: support.Player, toPlayer: ""}
 		return
 	}
 
 	supported, err := messenger.AwaitSupport(support.Player, support.Origin, region.Name)
 	if err != nil {
-		log.Println(fmt.Errorf(
-			"failed to receive support declaration from player %s: %w",
-			support.Player, err,
+		log.Println(wrap.Errorf(
+			err, "failed to receive support declaration from player '%s'", support.Player,
 		))
 		supportReceiver <- supportDeclaration{fromPlayer: support.Player, toPlayer: ""}
 		return
