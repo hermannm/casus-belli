@@ -6,5 +6,5 @@ hermannm.dev/ipfinder v0.1.0 h1:xMzl5r+ogOK0lU+yDHyTrxWmQSxinxyqi8GkyF/xqHA=
 hermannm.dev/ipfinder v0.1.0/go.mod h1:JUu/zyLkASihzxyf9oSRYW9VapzV+z/xBfW38HUcucA=
 hermannm.dev/set v0.1.0 h1:uxpaIf7w8b5OJoLDBOOMQZrpVhZEiwMm87/NA4Xr32s=
 hermannm.dev/set v0.1.0/go.mod h1:8/X35bKB/zTbDzD0rInCaSQu/Cn9qktAjcWM5Oj3bPQ=
-hermannm.dev/wrap v0.1.0 h1:IS+ntIwuVQWtgrSZvekYMdSJaqeC0LPf0VmdiKcZmd8=
-hermannm.dev/wrap v0.1.0/go.mod h1:W2PoHmpfK1VpZF01eZfAZ2lj02BL+3PAAQT/tP1aEt0=
+hermannm.dev/wrap v0.2.0 h1:/E4mYplwPHkyy1rqWZk4PSyYrFPVtGbKJlmsPgWrAX0=
+hermannm.dev/wrap v0.2.0/go.mod h1:W2PoHmpfK1VpZF01eZfAZ2lj02BL+3PAAQT/tP1aEt0=

@@ -7,6 +7,5 @@ require (
 	github.com/magefile/mage v1.14.0
 	hermannm.dev/ipfinder v0.1.0
 	hermannm.dev/set v0.1.0
+	hermannm.dev/wrap v0.2.0
 )
-
-require hermannm.dev/wrap v0.1.0 // indirect
