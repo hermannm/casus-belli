@@ -1,6 +1,6 @@
 # BfH Game Server
 
-_The Battle for Hermannia_ is a board game created as a gift by the father of [hermannm](https://github.com/hermannm), a developer of this project. This digital edition of _Hermannia_ is an online multiplayer implementation of the game. It consists of this server, written in Go, as well as a Unity client at [`immerse-ntnu/bfh-client`](https://github.com/immerse-ntnu/bfh-client).
+_The Battle for Hermannia_ is a board game created as a gift by the father of [hermannm](https://github.com/hermannm), a developer of this project. This digital edition of _Hermannia_ is an online multiplayer implementation of the game. It consists of this server, written in Go, as well as a Godot client at [`immerse-ntnu/bfh-client`](https://github.com/immerse-ntnu/bfh-client).
 
 ## Project Structure
 
