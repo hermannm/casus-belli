@@ -2,7 +2,6 @@ package gametypes
 
 import (
 	"math/rand"
-	"time"
 )
 
 // Part of a player's result in a battle.
@@ -41,8 +40,6 @@ const (
 )
 
 func RollDiceBonus() Modifier {
-	// Uses nanoseconds since 1970 as random seed generator, to approach random outcome
-	rand.Seed(time.Now().UnixNano())
 	diceValue := rand.Intn(6) + 1
 	return Modifier{Type: ModifierDice, Value: diceValue}
 }
