@@ -15,6 +15,10 @@ run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.1", "C#", "Forward Plus")
 config/icon="res://assets/icon.svg"
 
+[autoload]
+
+ApiClient="*res://src/Api/ApiClient.cs"
+
 [dotnet]
 
 project/assembly_name="bfh-client"
