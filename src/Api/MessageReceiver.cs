@@ -18,7 +18,6 @@ namespace Immerse.BfhClient.Api;
 internal class MessageReceiver
 {
     private readonly ClientWebSocket _connection;
-    private Thread? _receiveThread;
 
     private readonly Dictionary<string, IMessageReceiveQueue> _messageQueuesById = new();
     private readonly Dictionary<Type, IMessageReceiveQueue> _messageQueuesByType = new();
@@ -35,19 +34,11 @@ internal class MessageReceiver
 
     /// <summary>
     /// Spawns a thread that continuously listens for messages on the WebSocket connection.
+    /// Stops the thread when the given cancellation token is canceled.
     /// </summary>
-    public void StartReceivingMessages()
+    public void StartReceivingMessages(CancellationToken cancellationToken)
     {
-        _receiveThread = new Thread(ReceiveMessagesIntoQueues);
-    }
-
-    /// <summary>
-    /// Aborts the message receiving thread.
-    /// </summary>
-    public void StopReceivingMessages()
-    {
-        _receiveThread?.Abort();
-        _receiveThread = null;
+        new Thread(() => ReceiveMessagesIntoQueues(cancellationToken)).Start();
     }
 
     /// <summary>
@@ -69,8 +60,7 @@ internal class MessageReceiver
     public MessageReceiveQueue<TMessage> GetMessageQueueByType<TMessage>()
         where TMessage : IReceivableMessage
     {
-        IMessageReceiveQueue? queue;
-        if (!_messageQueuesByType.TryGetValue(typeof(TMessage), out queue))
+        if (!_messageQueuesByType.TryGetValue(typeof(TMessage), out var queue))
         {
             throw new ArgumentException($"Unrecognized message type: '{typeof(TMessage)}'");
         }
@@ -86,13 +76,16 @@ internal class MessageReceiver
     /// <remarks>
     /// Implementation based on https://www.patrykgalach.com/2019/11/11/implementing-websocket-in-unity/.
     /// </remarks>
-    private async void ReceiveMessagesIntoQueues()
+    private async void ReceiveMessagesIntoQueues(CancellationToken cancellationToken)
     {
         while (true)
         {
+            if (cancellationToken.IsCancellationRequested)
+                return;
+
             if (_connection.State != WebSocketState.Open)
             {
-                Task.Delay(50).Wait();
+                await Task.Delay(50, cancellationToken).WaitAsync(cancellationToken);
                 continue;
             }
 
@@ -103,7 +96,7 @@ internal class MessageReceiver
             {
                 var buffer = new ArraySegment<byte>(new byte[4 * 1024]);
 
-                var chunkResult = await _connection.ReceiveAsync(buffer, CancellationToken.None);
+                var chunkResult = await _connection.ReceiveAsync(buffer, cancellationToken);
                 if (chunkResult.MessageType == WebSocketMessageType.Text)
                 {
                     isTextMessage = false;
@@ -127,7 +120,7 @@ internal class MessageReceiver
             memoryStream.Seek(0, SeekOrigin.Begin);
 
             using var reader = new StreamReader(memoryStream, Encoding.UTF8);
-            var messageString = await reader.ReadToEndAsync();
+            var messageString = await reader.ReadToEndAsync(cancellationToken);
 
             try
             {
@@ -161,13 +154,13 @@ internal class MessageReceiver
         var messageId = firstMessageProperty.Name;
         var serializedMessage = firstMessageProperty.Value;
 
-        if (_messageQueuesById.TryGetValue(messageId, out var queue))
+        if (!_messageQueuesById.TryGetValue(messageId, out var queue))
         {
-            queue.DeserializeAndEnqueueMessage(serializedMessage);
-        }
-        else
             throw new ArgumentException(
                 $"Unrecognized message type received from server: '{messageId}'"
             );
+        }
+
+        queue.DeserializeAndEnqueueMessage(serializedMessage);
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
+using System.Threading;
 using System.Threading.Tasks;
 using Immerse.BfhClient.Api.Messages;
 using Newtonsoft.Json.Linq;
@@ -13,7 +14,7 @@ namespace Immerse.BfhClient.Api;
 /// </summary>
 internal interface IMessageReceiveQueue
 {
-    public Task CheckReceivedMessages();
+    public Task CheckReceivedMessages(CancellationToken cancellationToken);
     public void DeserializeAndEnqueueMessage(JToken serializedMessage);
 }
 
@@ -33,10 +34,13 @@ internal class MessageReceiveQueue<TMessage> : IMessageReceiveQueue
     /// When a message is received, calls all subscribers to <see cref="ReceivedMessage"/> with the
     /// message.
     /// </summary>
-    public async Task CheckReceivedMessages()
+    public async Task CheckReceivedMessages(CancellationToken cancellationToken)
     {
         while (true)
         {
+            if (cancellationToken.IsCancellationRequested)
+                return;
+
             if (_queue.TryDequeue(out var message))
             {
                 ReceivedMessage?.Invoke(message);

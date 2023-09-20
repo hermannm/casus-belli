@@ -11,17 +11,20 @@ namespace Immerse.BfhClient.Api;
 /// WebSocket client that connects to the game server.
 /// Provides methods for sending and receiving messages to and from the server.
 /// </summary>
+// ReSharper disable once ClassNeverInstantiated.Global
 public class ApiClient : Node
 {
     private readonly ClientWebSocket _connection;
     private readonly MessageSender _messageSender;
     private readonly MessageReceiver _messageReceiver;
+    private readonly CancellationTokenSource _cancellation;
 
     public ApiClient()
     {
         _connection = new ClientWebSocket();
         _messageSender = new MessageSender(_connection);
         _messageReceiver = new MessageReceiver(_connection);
+        _cancellation = new CancellationTokenSource();
 
         RegisterSendableMessages();
         RegisterReceivableMessages();
@@ -34,13 +37,13 @@ public class ApiClient : Node
     {
         foreach (var messageQueue in _messageReceiver.MessageQueues)
         {
-            Task.Run(messageQueue.CheckReceivedMessages);
+            Task.Run(() => messageQueue.CheckReceivedMessages(_cancellation.Token));
         }
 
-        _messageReceiver.StartReceivingMessages();
-        _messageSender.StartSendingMessages();
+        _messageReceiver.StartReceivingMessages(_cancellation.Token);
+        _messageSender.StartSendingMessages(_cancellation.Token);
 
-        return _connection.ConnectAsync(serverUri, CancellationToken.None);
+        return _connection.ConnectAsync(serverUri, _cancellation.Token);
     }
 
     /// <summary>
@@ -48,14 +51,12 @@ public class ApiClient : Node
     /// </summary>
     public Task Disconnect()
     {
-        // TODO: Cancel async tasks
-        _messageReceiver.StopReceivingMessages();
-        _messageSender.StopSendingMessages();
+        _cancellation.Cancel();
 
         return _connection.CloseAsync(
             WebSocketCloseStatus.NormalClosure,
             "Client initiated disconnect from game server",
-            CancellationToken.None
+            _cancellation.Token
         );
     }
 

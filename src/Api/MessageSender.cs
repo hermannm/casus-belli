@@ -23,7 +23,6 @@ internal class MessageSender
     public readonly BlockingCollection<ISendableMessage> SendQueue = new();
 
     private readonly ClientWebSocket _connection;
-    private Thread? _sendThread;
 
     private readonly Dictionary<Type, string> _messageIdMap = new();
 
@@ -34,19 +33,11 @@ internal class MessageSender
 
     /// <summary>
     /// Spawns a thread that continuously listens for messages on the WebSocket connection.
+    /// Stops the thread when the given cancellation token is canceled.
     /// </summary>
-    public void StartSendingMessages()
+    public void StartSendingMessages(CancellationToken cancellationToken)
     {
-        _sendThread = new Thread(SendMessagesFromQueue);
-    }
-
-    /// <summary>
-    /// Aborts the message sending thread.
-    /// </summary>
-    public void StopSendingMessages()
-    {
-        _sendThread?.Abort();
-        _sendThread = null;
+        new Thread(() => SendMessagesFromQueue(cancellationToken)).Start();
     }
 
     /// <summary>
@@ -66,13 +57,16 @@ internal class MessageSender
     /// <remarks>
     /// Implementation based on https://www.patrykgalach.com/2019/11/11/implementing-websocket-in-unity/.
     /// </remarks>
-    private async void SendMessagesFromQueue()
+    private async void SendMessagesFromQueue(CancellationToken cancellationToken)
     {
         while (true)
         {
+            if (cancellationToken.IsCancellationRequested)
+                return;
+
             if (_connection.State != WebSocketState.Open)
             {
-                Task.Delay(50).Wait();
+                await Task.Delay(50, cancellationToken).WaitAsync(cancellationToken);
                 continue;
             }
 
@@ -95,7 +89,7 @@ internal class MessageSender
                     serializedMessage,
                     WebSocketMessageType.Text,
                     true,
-                    CancellationToken.None
+                    cancellationToken
                 );
             }
         }
