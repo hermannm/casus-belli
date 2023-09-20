@@ -50,7 +50,8 @@ func (resolver *MoveResolver) resolveBorderBattle(battle gametypes.Battle, board
 }
 
 func (resolver *MoveResolver) resolveSingleplayerBattle(
-	battle gametypes.Battle, board gametypes.Board,
+	battle gametypes.Battle,
+	board gametypes.Board,
 ) {
 	winners, _ := battle.WinnersAndLosers()
 	move := battle.Results[0].Move
@@ -65,7 +66,8 @@ func (resolver *MoveResolver) resolveSingleplayerBattle(
 }
 
 func (resolver *MoveResolver) resolveMultiplayerBattle(
-	battle gametypes.Battle, board gametypes.Board,
+	battle gametypes.Battle,
+	board gametypes.Board,
 ) {
 	winners, losers := battle.WinnersAndLosers()
 	tie := len(winners) != 1

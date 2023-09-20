@@ -52,7 +52,9 @@ OuterLoop:
 // to appropriate battle calculation functions, which send results to resolver.battleReceiver.
 // Skips region if it depends on other moves to resolve first.
 func (resolver *MoveResolver) resolveRegionMoves(
-	region gametypes.Region, board gametypes.Board, messenger Messenger,
+	region gametypes.Region,
+	board gametypes.Board,
+	messenger Messenger,
 ) {
 	retreat, hasRetreat := resolver.retreats[region.Name]
 
@@ -127,21 +129,24 @@ func (resolver *MoveResolver) resolveRegionMoves(
 	}
 
 	// If the function has not returned yet, then it must be a multiplayer battle
-	go calculateMultiplayerBattle(
-		region, !region.IsEmpty(), resolver.battleReceiver, messenger,
-	)
+	go calculateMultiplayerBattle(region, !region.IsEmpty(), resolver.battleReceiver, messenger)
 	resolver.resolvingRegions.Add(region.Name)
 }
 
 func (resolver *MoveResolver) resolveTransport(
-	move gametypes.Order, board gametypes.Board, messenger Messenger,
+	move gametypes.Order,
+	board gametypes.Board,
+	messenger Messenger,
 ) (transportMustWait bool) {
 	// If the move is between two adjacent regions, then it does not need transport
 	if board.Regions[move.Destination].HasNeighbor(move.Origin) {
 		return false
 	}
 
-	canTransport, transportAttacked, dangerZones := board.FindTransportPath(move.Origin, move.Destination)
+	canTransport, transportAttacked, dangerZones := board.FindTransportPath(
+		move.Origin,
+		move.Destination,
+	)
 
 	if !canTransport {
 		board.RemoveOrder(move)
@@ -171,7 +176,9 @@ func (resolver *MoveResolver) resolveTransport(
 }
 
 func (resolver *MoveResolver) resolveCycle(
-	cycle []gametypes.Order, board gametypes.Board, messenger Messenger,
+	cycle []gametypes.Order,
+	board gametypes.Board,
+	messenger Messenger,
 ) {
 	var battleRegions []gametypes.Region
 
@@ -179,7 +186,8 @@ func (resolver *MoveResolver) resolveCycle(
 	for _, move := range cycle {
 		destination := board.Regions[move.Destination]
 
-		if (destination.IsControlled() || destination.IsSea) && len(destination.IncomingMoves) == 1 {
+		if (destination.IsControlled() || destination.IsSea) &&
+			len(destination.IncomingMoves) == 1 {
 			resolver.succeedMove(move, board)
 			continue
 		}
@@ -191,7 +199,10 @@ func (resolver *MoveResolver) resolveCycle(
 	for _, region := range battleRegions {
 		if len(region.IncomingMoves) == 1 {
 			go calculateSingleplayerBattle(
-				region, region.IncomingMoves[0], resolver.battleReceiver, messenger,
+				region,
+				region.IncomingMoves[0],
+				resolver.battleReceiver,
+				messenger,
 			)
 			resolver.resolvingRegions.Add(region.Name)
 		} else {

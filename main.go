@@ -47,12 +47,11 @@ func main() {
 }
 
 func getCommandLineFlags() (local bool, port string) {
-	flag.BoolVar(
-		&local, "local", false,
-		"Disable public endpoints for creating new lobbies",
-	)
+	flag.BoolVar(&local, "local", false, "Disable public endpoints for creating new lobbies")
 	flag.StringVar(
-		&port, "port", defaultPort,
+		&port,
+		"port",
+		defaultPort,
 		"The port on which the server should handle requests",
 	)
 	flag.Parse()

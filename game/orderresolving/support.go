@@ -40,7 +40,13 @@ func appendSupportModifiers(
 
 	for _, support := range supports {
 		go callSupport(
-			support, region, incomingMoves, includeDefender, supportReceiver, &waitGroup, messenger,
+			support,
+			region,
+			incomingMoves,
+			includeDefender,
+			supportReceiver,
+			&waitGroup,
+			messenger,
 		)
 	}
 
@@ -95,7 +101,10 @@ func callSupport(
 	}
 
 	if err := messenger.SendSupportRequest(
-		support.Player, support.Origin, region.Name, battlers,
+		support.Player,
+		support.Origin,
+		region.Name,
+		battlers,
 	); err != nil {
 		fmt.Println(wrap.Error(err, "failed to send support request"))
 		supportReceiver <- supportDeclaration{fromPlayer: support.Player, toPlayer: ""}
@@ -104,9 +113,13 @@ func callSupport(
 
 	supported, err := messenger.AwaitSupport(support.Player, support.Origin, region.Name)
 	if err != nil {
-		log.Println(wrap.Errorf(
-			err, "failed to receive support declaration from player '%s'", support.Player,
-		))
+		log.Println(
+			wrap.Errorf(
+				err,
+				"failed to receive support declaration from player '%s'",
+				support.Player,
+			),
+		)
 		supportReceiver <- supportDeclaration{fromPlayer: support.Player, toPlayer: ""}
 		return
 	}

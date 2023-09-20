@@ -94,7 +94,8 @@ func attackModifiers(
 	}
 
 	isOnlyAttackerOnUncontrolledRegion := !region.IsControlled() && !hasOtherAttackers
-	isAttackOnDefendedRegion := region.IsControlled() && !region.IsEmpty() && includeDefender && !isBorderBattle
+	isAttackOnDefendedRegion := region.IsControlled() && !region.IsEmpty() && includeDefender &&
+		!isBorderBattle
 	includeTerrainModifiers := isOnlyAttackerOnUncontrolledRegion || isAttackOnDefendedRegion
 
 	if includeTerrainModifiers {

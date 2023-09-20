@@ -37,7 +37,8 @@ func resolveDangerZones(board gametypes.Board) (results []gametypes.Battle) {
 
 // Rolls dice to see if order makes it across danger zone.
 func crossDangerZone(
-	order gametypes.Order, dangerZone string,
+	order gametypes.Order,
+	dangerZone string,
 ) (survived bool, result gametypes.Battle) {
 	diceMod := gametypes.RollDiceBonus()
 
@@ -54,7 +55,8 @@ func crossDangerZone(
 }
 
 func crossDangerZones(
-	order gametypes.Order, dangerZones []string,
+	order gametypes.Order,
+	dangerZones []string,
 ) (survivedAll bool, results []gametypes.Battle) {
 	for _, dangerZone := range dangerZones {
 		survived, result := crossDangerZone(order, dangerZone)

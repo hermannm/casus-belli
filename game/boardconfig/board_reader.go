@@ -94,19 +94,25 @@ func ReadBoardFromConfigFile(boardID string) (gametypes.Board, error) {
 			)
 		}
 
-		region1.Neighbors = append(region1.Neighbors, gametypes.Neighbor{
-			Name:          region2.Name,
-			IsAcrossWater: neighbor.River || (region1.IsSea && !region2.IsSea),
-			HasCliffs:     neighbor.Cliffs,
-			DangerZone:    neighbor.DangerZone,
-		})
+		region1.Neighbors = append(
+			region1.Neighbors,
+			gametypes.Neighbor{
+				Name:          region2.Name,
+				IsAcrossWater: neighbor.River || (region1.IsSea && !region2.IsSea),
+				HasCliffs:     neighbor.Cliffs,
+				DangerZone:    neighbor.DangerZone,
+			},
+		)
 
-		region2.Neighbors = append(region2.Neighbors, gametypes.Neighbor{
-			Name:          region1.Name,
-			IsAcrossWater: neighbor.River || (region2.IsSea && !region1.IsSea),
-			HasCliffs:     neighbor.Cliffs,
-			DangerZone:    neighbor.DangerZone,
-		})
+		region2.Neighbors = append(
+			region2.Neighbors,
+			gametypes.Neighbor{
+				Name:          region1.Name,
+				IsAcrossWater: neighbor.River || (region2.IsSea && !region1.IsSea),
+				HasCliffs:     neighbor.Cliffs,
+				DangerZone:    neighbor.DangerZone,
+			},
+		)
 	}
 
 	return board, nil

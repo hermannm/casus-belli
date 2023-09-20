@@ -58,7 +58,9 @@ func (player *Player) selectGameID(gameID string, lobby *Lobby) error {
 	}
 	if gameIDTakenBy != "" {
 		return fmt.Errorf(
-			"requested game ID '%s' already taken by user '%s'", gameID, gameIDTakenBy,
+			"requested game ID '%s' already taken by user '%s'",
+			gameID,
+			gameIDTakenBy,
 		)
 	}
 

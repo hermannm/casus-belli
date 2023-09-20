@@ -6,7 +6,8 @@ import (
 
 // Checks if a unit can be transported via ship from the given origin to the given destination.
 func (board Board) FindTransportPath(
-	originName string, destinationName string,
+	originName string,
+	destinationName string,
 ) (canTransport bool, isTransportAttacked bool, dangerZones []string) {
 	origin := board.Regions[originName]
 	if origin.IsEmpty() || origin.Unit.Type == UnitShip || origin.IsSea {
@@ -23,10 +24,13 @@ type transportPath struct {
 }
 
 func (board Board) recursivelyFindTransportPath(
-	region Region, destination string, regionsToExclude set.Set[string],
+	region Region,
+	destination string,
+	regionsToExclude set.Set[string],
 ) (canTransport bool, isTransportAttacked bool, dangerZones []string) {
 	transportingNeighbors, newRegionsToExclude := region.getTransportingNeighbors(
-		board, regionsToExclude,
+		board,
+		regionsToExclude,
 	)
 
 	var paths []transportPath
@@ -34,26 +38,36 @@ func (board Board) recursivelyFindTransportPath(
 	for _, transportNeighbor := range transportingNeighbors {
 		transportRegion := board.Regions[transportNeighbor.Name]
 
-		destinationAdjacent, destinationDangerZone := region.
-			checkNeighborsForDestination(destination)
+		destinationAdjacent, destinationDangerZone := region.checkNeighborsForDestination(
+			destination,
+		)
 
 		// Recursively calls this function on the transporting neighbor,
 		// in order to find potential transport chains.
-		nextCanTransport, nextTransportAttacked, nextDangerZones := board.
-			recursivelyFindTransportPath(transportRegion, destination, newRegionsToExclude)
+		nextCanTransport, nextTransportAttacked, nextDangerZones := board.recursivelyFindTransportPath(
+			transportRegion,
+			destination,
+			newRegionsToExclude,
+		)
 
 		var subPaths []transportPath
 		if destinationAdjacent {
-			subPaths = append(subPaths, transportPath{
-				isAttacked:  transportRegion.IsAttacked(),
-				dangerZones: []string{destinationDangerZone},
-			})
+			subPaths = append(
+				subPaths,
+				transportPath{
+					isAttacked:  transportRegion.IsAttacked(),
+					dangerZones: []string{destinationDangerZone},
+				},
+			)
 		}
 		if nextCanTransport {
-			subPaths = append(subPaths, transportPath{
-				isAttacked:  transportRegion.IsAttacked() || nextTransportAttacked,
-				dangerZones: nextDangerZones,
-			})
+			subPaths = append(
+				subPaths,
+				transportPath{
+					isAttacked:  transportRegion.IsAttacked() || nextTransportAttacked,
+					dangerZones: nextDangerZones,
+				},
+			)
 		}
 
 		// If both this neighbor and potential subpaths can transport, finds the best one.
@@ -70,7 +84,8 @@ func (board Board) recursivelyFindTransportPath(
 }
 
 func (region Region) getTransportingNeighbors(
-	board Board, regionsToExclude set.Set[string],
+	board Board,
+	regionsToExclude set.Set[string],
 ) (transports []Neighbor, newRegionsToExclude set.Set[string]) {
 	newRegionsToExclude = regionsToExclude.Copy()
 

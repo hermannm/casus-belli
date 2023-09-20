@@ -6,7 +6,9 @@ import (
 
 // Recursively finds a cycle of moves starting and ending with the given firstRegionName.
 func discoverCycle(
-	firstRegionName string, order gametypes.Order, board gametypes.Board,
+	firstRegionName string,
+	order gametypes.Order,
+	board gametypes.Board,
 ) (cycle []gametypes.Order, hasOutsideAttackers bool) {
 	if order.IsNone() || order.Type != gametypes.OrderMove {
 		return nil, false
@@ -36,7 +38,8 @@ func discoverCycle(
 
 // Checks if the given region is part of a two-way move cycle (moves moving against each other).
 func discoverTwoWayCycle(
-	region1 gametypes.Region, board gametypes.Board,
+	region1 gametypes.Region,
+	board gametypes.Board,
 ) (isCycle bool, region2 gametypes.Region, samePlayer bool) {
 	order1 := region1.Order
 	if order1.Type != gametypes.OrderMove {

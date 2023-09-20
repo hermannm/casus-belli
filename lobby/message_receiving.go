@@ -70,7 +70,8 @@ func (player *Player) readMessage(lobby *Lobby) (socketIsClosed bool, err error)
 			go player.handleGameMessage(messageType, rawMessage)
 		} else {
 			return false, fmt.Errorf(
-				"received game message of type '%s' before player's game ID was set", messageType,
+				"received game message of type '%s' before player's game ID was set",
+				messageType,
 			)
 		}
 	}
@@ -79,7 +80,9 @@ func (player *Player) readMessage(lobby *Lobby) (socketIsClosed bool, err error)
 }
 
 func (player *Player) handleLobbyMessage(
-	messageType MessageType, rawMessage json.RawMessage, lobby *Lobby,
+	messageType MessageType,
+	rawMessage json.RawMessage,
+	lobby *Lobby,
 ) (isLobbyMessage bool, err error) {
 	switch messageType {
 	case MessageTypeSelectGameID:
@@ -185,7 +188,8 @@ func (lobby *Lobby) AwaitOrders(fromPlayer string) ([]gametypes.Order, error) {
 	player, ok := lobby.getPlayer(fromPlayer)
 	if !ok {
 		return nil, fmt.Errorf(
-			"failed to get order message from player '%s': player not found", fromPlayer,
+			"failed to get order message from player '%s': player not found",
+			fromPlayer,
 		)
 	}
 
@@ -194,18 +198,22 @@ func (lobby *Lobby) AwaitOrders(fromPlayer string) ([]gametypes.Order, error) {
 }
 
 func (lobby *Lobby) AwaitSupport(
-	fromPlayer string, supportingRegion string, embattledRegion string,
+	fromPlayer string,
+	supportingRegion string,
+	embattledRegion string,
 ) (supportedPlayer string, err error) {
 	player, ok := lobby.getPlayer(fromPlayer)
 	if !ok {
 		return "", fmt.Errorf(
 			"failed to get support message from player '%s' in region '%s': player not found",
-			fromPlayer, supportingRegion,
+			fromPlayer,
+			supportingRegion,
 		)
 	}
 
 	supportedPlayer = player.gameMessageReceiver.supports.AwaitSupportMatchingRegions(
-		supportingRegion, embattledRegion,
+		supportingRegion,
+		embattledRegion,
 	)
 
 	return supportedPlayer, nil
@@ -239,7 +247,8 @@ func (queue *SupportMessageQueue) AddMessage(message GiveSupportMessage) {
 //
 // For more info, see the docs on sync.Cond: https://pkg.go.dev/sync#Cond
 func (queue *SupportMessageQueue) AwaitSupportMatchingRegions(
-	supportingRegion string, embattledRegion string,
+	supportingRegion string,
+	embattledRegion string,
 ) (supportedPlayer string) {
 	queue.newMessageNotifier.L.Lock()
 	for {

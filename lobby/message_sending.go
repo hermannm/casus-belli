@@ -14,7 +14,10 @@ func (player *Player) sendMessage(message Message) error {
 
 	if err := player.socket.WriteJSON(message); err != nil {
 		return wrap.Errorf(
-			err, "failed to send message of type '%s' to player %s", message.Type(), player.String(),
+			err,
+			"failed to send message of type '%s' to player %s",
+			message.Type(),
+			player.String(),
 		)
 	}
 
@@ -72,14 +75,19 @@ func (player *Player) SendLobbyJoinedMessage(lobby *Lobby) error {
 
 		statuses = append(
 			statuses,
-			PlayerStatusMessage{Username: player.username, GameID: gameID, ReadyToStartGame: player.readyToStartGame},
+			PlayerStatusMessage{
+				Username:         player.username,
+				GameID:           gameID,
+				ReadyToStartGame: player.readyToStartGame,
+			},
 		)
 
 		player.lock.RUnlock()
 	}
 
 	if err := player.sendMessage(Message{MessageTypeLobbyJoined: LobbyJoinedMessage{
-		SelectableGameIDs: lobby.game.PlayerIDs, PlayerStatuses: statuses,
+		SelectableGameIDs: lobby.game.PlayerIDs,
+		PlayerStatuses:    statuses,
 	}}); err != nil {
 		return wrap.Errorf(err, "failed to send lobby joined message to player %s", player.String())
 	}
@@ -91,7 +99,9 @@ func (lobby *Lobby) SendPlayerStatusMessage(player *Player) error {
 	player.lock.RLock()
 
 	statusMsg := PlayerStatusMessage{
-		Username: player.username, GameID: nil, ReadyToStartGame: player.readyToStartGame,
+		Username:         player.username,
+		GameID:           nil,
+		ReadyToStartGame: player.readyToStartGame,
 	}
 	if player.gameID != "" {
 		gameID := player.gameID
@@ -124,45 +134,46 @@ func (lobby *Lobby) SendError(toPlayer string, err error) {
 }
 
 func (lobby *Lobby) SendOrderRequest(toPlayer string) error {
-	return lobby.sendMessage(toPlayer, Message{
-		MessageTypeOrderRequest: OrderRequestMessage{},
-	})
+	return lobby.sendMessage(toPlayer, Message{MessageTypeOrderRequest: OrderRequestMessage{}})
 }
 
 func (lobby *Lobby) SendOrdersReceived(playerOrders map[string][]gametypes.Order) error {
-	return lobby.sendMessageToAll(Message{
-		MessageTypeOrdersReceived: OrdersReceivedMessage{PlayerOrders: playerOrders},
-	})
+	return lobby.sendMessageToAll(
+		Message{MessageTypeOrdersReceived: OrdersReceivedMessage{PlayerOrders: playerOrders}},
+	)
 }
 
 func (lobby *Lobby) SendOrdersConfirmation(playerWhoSubmittedOrders string) error {
-	return lobby.sendMessageToAll(Message{
-		MessageTypeOrdersConfirmation: OrdersConfirmationMessage{
-			PlayerWhoSubmittedOrders: playerWhoSubmittedOrders,
+	return lobby.sendMessageToAll(
+		Message{
+			MessageTypeOrdersConfirmation: OrdersConfirmationMessage{
+				PlayerWhoSubmittedOrders: playerWhoSubmittedOrders,
+			},
 		},
-	})
+	)
 }
 
 func (lobby *Lobby) SendSupportRequest(
 	toPlayer string, supportingRegion string, embattledRegion string, supportablePlayers []string,
 ) error {
-	return lobby.sendMessage(toPlayer, Message{
-		MessageTypeSupportRequest: SupportRequestMessage{
-			SupportingRegion:   supportingRegion,
-			EmbattledRegion:    embattledRegion,
-			SupportablePlayers: supportablePlayers,
+	return lobby.sendMessage(
+		toPlayer,
+		Message{
+			MessageTypeSupportRequest: SupportRequestMessage{
+				SupportingRegion:   supportingRegion,
+				EmbattledRegion:    embattledRegion,
+				SupportablePlayers: supportablePlayers,
+			},
 		},
-	})
+	)
 }
 
 func (lobby *Lobby) SendBattleResults(battles []gametypes.Battle) error {
-	return lobby.sendMessageToAll(Message{
-		MessageTypeBattleResults: BattleResultsMessage{Battles: battles},
-	})
+	return lobby.sendMessageToAll(
+		Message{MessageTypeBattleResults: BattleResultsMessage{Battles: battles}},
+	)
 }
 
 func (lobby *Lobby) SendWinner(winner string) error {
-	return lobby.sendMessageToAll(Message{
-		MessageTypeWinner: WinnerMessage{Winner: winner},
-	})
+	return lobby.sendMessageToAll(Message{MessageTypeWinner: WinnerMessage{Winner: winner}})
 }

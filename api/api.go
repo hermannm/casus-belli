@@ -74,9 +74,7 @@ func (api LobbyAPI) JoinLobby(res http.ResponseWriter, req *http.Request) {
 
 	params, ok := checkParams(req, lobbyNameParam, usernameParam)
 	if !ok {
-		http.Error(
-			res, "lobby name and username are required to join lobby", http.StatusBadRequest,
-		)
+		http.Error(res, "lobby name and username are required to join lobby", http.StatusBadRequest)
 		return
 	}
 
@@ -84,7 +82,9 @@ func (api LobbyAPI) JoinLobby(res http.ResponseWriter, req *http.Request) {
 	lobby, ok := api.lobbyRegistry.GetLobby(lobbyName)
 	if !ok {
 		http.Error(
-			res, fmt.Sprintf("no lobby found with name '%s'", lobbyName), http.StatusNotFound,
+			res,
+			fmt.Sprintf("no lobby found with name '%s'", lobbyName),
+			http.StatusNotFound,
 		)
 		return
 	}

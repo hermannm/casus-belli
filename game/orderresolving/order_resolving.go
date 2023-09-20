@@ -17,12 +17,17 @@ type Messenger interface {
 	) error
 
 	AwaitSupport(
-		fromPlayer string, supportingRegion string, embattledRegion string,
+		fromPlayer string,
+		supportingRegion string,
+		embattledRegion string,
 	) (supportedPlayer string, err error)
 }
 
 func ResolveOrders(
-	board gametypes.Board, orders []gametypes.Order, season gametypes.Season, messenger Messenger,
+	board gametypes.Board,
+	orders []gametypes.Order,
+	season gametypes.Season,
+	messenger Messenger,
 ) (battles []gametypes.Battle, winner string, hasWinner bool) {
 	if season == gametypes.SeasonWinter {
 		resolveWinterOrders(board, orders)
@@ -58,7 +63,9 @@ func resolveWinterOrders(board gametypes.Board, orders []gametypes.Order) {
 }
 
 func resolveNonWinterOrders(
-	board gametypes.Board, orders []gametypes.Order, messenger Messenger,
+	board gametypes.Board,
+	orders []gametypes.Order,
+	messenger Messenger,
 ) []gametypes.Battle {
 	var battles []gametypes.Battle
 
