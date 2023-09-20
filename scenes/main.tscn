@@ -1,0 +1,12 @@
+[gd_scene load_steps=3 format=3 uid="uid://cuhp8aw1xakuh"]
+
+[ext_resource type="Texture2D" uid="uid://c64xtru1je7k5" path="res://assets/icon.svg" id="1_7e86q"]
+[ext_resource type="Script" path="res://src/Example.cs" id="1_p7h4o"]
+
+[node name="main" type="Node2D"]
+
+[node name="example" type="Sprite2D" parent="."]
+texture = ExtResource("1_7e86q")
+offset = Vector2(500, 250)
+script = ExtResource("1_p7h4o")
+_amplitude = 100.0
