@@ -23,7 +23,8 @@ internal class MessageReceiver
     private readonly Dictionary<Type, IMessageReceiveQueue> _messageQueuesByType = new();
 
     /// <summary>
-    /// Queues where messages are placed as they are received from the server, one for each message type.
+    /// Queues where messages are placed as they are received from the server, one for each message
+    /// type.
     /// </summary>
     public IEnumerable<IMessageReceiveQueue> MessageQueues => _messageQueuesById.Values;
 
@@ -42,8 +43,8 @@ internal class MessageReceiver
     }
 
     /// <summary>
-    /// Registers the given message type, with the corresponding message ID, as a message that the client expects to
-    /// receive from the server.
+    /// Registers the given message type, with the corresponding message ID, as a message that the
+    /// client expects to receive from the server.
     /// </summary>
     public void RegisterReceivableMessage<TMessage>(string messageId)
         where TMessage : IReceivableMessage
@@ -70,8 +71,8 @@ internal class MessageReceiver
 
     /// <summary>
     /// Continuously reads incoming messages from the WebSocket connection.
-    /// After a message is read to completion, calls <see cref="DeserializeAndEnqueueMessage"/> to deserialize and
-    /// enqueue the message appropriately.
+    /// After a message is read to completion, calls <see cref="DeserializeAndEnqueueMessage"/> to
+    /// deserialize and enqueue the message appropriately.
     /// </summary>
     /// <remarks>
     /// Implementation based on https://www.patrykgalach.com/2019/11/11/implementing-websocket-in-unity/.
@@ -140,10 +141,13 @@ internal class MessageReceiver
     ///     "[messageId]": {...message}
     /// }
     /// </code>
-    /// This method takes the full message JSON string, deserializes the "wrapping object" to get the message ID,
-    /// then calls on the appropriate message queue to further deserialize and enqueue the wrapped message object.
+    /// This method takes the full message JSON string, deserializes the "wrapping object" to get
+    /// the message ID, then calls on the appropriate message queue to further deserialize and
+    /// enqueue the wrapped message object.
     /// </summary>
-    /// <exception cref="ArgumentException">If no message queue was found for the message's ID.</exception>
+    /// <exception cref="ArgumentException">
+    /// If no message queue was found for the message's ID.
+    /// </exception>
     private void DeserializeAndEnqueueMessage(string messageString)
     {
         var messageWithId = JsonDocument.Parse(messageString);

@@ -141,8 +141,8 @@ public struct SwordMessage : ISendableMessage
 }
 
 /// <summary>
-/// Message passed from the client with the ravenMsg when they want to spy on another player's orders.
-/// Used for the throne expansion.
+/// Message passed from the client with the ravenMsg when they want to spy on another player's
+/// orders. Used for the throne expansion.
 /// </summary>
 public struct RavenMessage : ISendableMessage
 {

@@ -8,8 +8,8 @@ using Immerse.BfhClient.Api.Messages;
 namespace Immerse.BfhClient.Api;
 
 /// <summary>
-/// Utility interface to enable keeping <see cref="MessageReceiveQueue{TMessage}"/>s of different types in a
-/// collection.
+/// Utility interface to enable keeping <see cref="MessageReceiveQueue{TMessage}"/>s of different
+/// types in a collection.
 /// </summary>
 internal interface IMessageReceiveQueue
 {
@@ -18,8 +18,8 @@ internal interface IMessageReceiveQueue
 }
 
 /// <summary>
-/// Provides a thread-safe queue for messages received from the server, and an event that is triggered when a
-/// message is received.
+/// Provides a thread-safe queue for messages received from the server, and an event that is
+/// triggered when a message is received.
 /// </summary>
 internal class MessageReceiveQueue<TMessage> : IMessageReceiveQueue
     where TMessage : IReceivableMessage

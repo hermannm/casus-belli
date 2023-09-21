@@ -31,7 +31,8 @@ public partial class ApiClient : Node
     }
 
     /// <summary>
-    /// Connects the API client to a server at the given URI, and starts sending and receiving messages.
+    /// Connects the API client to a server at the given URI, and starts sending and receiving
+    /// messages.
     /// </summary>
     public Task Connect(Uri serverUri)
     {
@@ -65,8 +66,8 @@ public partial class ApiClient : Node
     /// </summary>
     ///
     /// <typeparam name="TMessage">
-    /// Must be registered in <see cref="RegisterSendableMessages"/>, which should be all message types marked with
-    /// <see cref="ISendableMessage"/>.
+    /// Must be registered in <see cref="RegisterSendableMessages"/>, which should be all message
+    /// types marked with <see cref="ISendableMessage"/>.
     /// </typeparam>
     public void SendServerMessage<TMessage>(TMessage message)
         where TMessage : ISendableMessage
@@ -75,12 +76,13 @@ public partial class ApiClient : Node
     }
 
     /// <summary>
-    /// Registers the given method to be called whenever the server sends a message of the given type.
+    /// Registers the given method to be called whenever the server sends a message of the given
+    /// type.
     /// </summary>
     ///
     /// <typeparam name="TMessage">
-    /// Must be registered in <see cref="RegisterReceivableMessages"/>, which should be all message types marked
-    /// with <see cref="IReceivableMessage"/>.
+    /// Must be registered in <see cref="RegisterReceivableMessages"/>, which should be all message
+    /// types marked with <see cref="IReceivableMessage"/>.
     /// </typeparam>
     public void RegisterServerMessageHandler<TMessage>(Action<TMessage> messageHandler)
         where TMessage : IReceivableMessage
@@ -90,13 +92,13 @@ public partial class ApiClient : Node
     }
 
     /// <summary>
-    /// Deregisters the given message handler method.
-    /// Should be called when a message handler is disposed, to properly remove all references to it.
+    /// Deregisters the given message handler method. Should be called when a message handler is
+    /// disposed, to properly remove all references to it.
     /// </summary>
     ///
     /// <typeparam name="TMessage">
-    /// Must be registered in <see cref="RegisterReceivableMessages"/>, which should be all message types marked
-    /// with <see cref="IReceivableMessage"/>.
+    /// Must be registered in <see cref="RegisterReceivableMessages"/>, which should be all message
+    /// types marked with <see cref="IReceivableMessage"/>.
     /// </typeparam>
     public void DeregisterServerMessageHandler<TMessage>(Action<TMessage> messageHandler)
         where TMessage : IReceivableMessage
