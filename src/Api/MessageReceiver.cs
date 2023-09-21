@@ -17,7 +17,7 @@ namespace Immerse.BfhClient.Api;
 /// </summary>
 internal class MessageReceiver
 {
-    private readonly ClientWebSocket _connection;
+    private readonly ClientWebSocket _websocket;
 
     private readonly Dictionary<string, IMessageReceiveQueue> _messageQueuesById = new();
     private readonly Dictionary<Type, IMessageReceiveQueue> _messageQueuesByType = new();
@@ -28,9 +28,9 @@ internal class MessageReceiver
     /// </summary>
     public IEnumerable<IMessageReceiveQueue> MessageQueues => _messageQueuesById.Values;
 
-    public MessageReceiver(ClientWebSocket connection)
+    public MessageReceiver(ClientWebSocket websocket)
     {
-        _connection = connection;
+        _websocket = websocket;
     }
 
     /// <summary>
@@ -84,7 +84,7 @@ internal class MessageReceiver
             if (cancellationToken.IsCancellationRequested)
                 return;
 
-            if (_connection.State != WebSocketState.Open)
+            if (_websocket.State != WebSocketState.Open)
             {
                 await Task.Delay(50, cancellationToken).WaitAsync(cancellationToken);
                 continue;
@@ -97,7 +97,7 @@ internal class MessageReceiver
             {
                 var buffer = new ArraySegment<byte>(new byte[4 * 1024]);
 
-                var chunkResult = await _connection.ReceiveAsync(buffer, cancellationToken);
+                var chunkResult = await _websocket.ReceiveAsync(buffer, cancellationToken);
                 if (chunkResult.MessageType == WebSocketMessageType.Text)
                 {
                     isTextMessage = false;

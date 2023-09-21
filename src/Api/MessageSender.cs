@@ -22,13 +22,13 @@ internal class MessageSender
     /// </summary>
     public readonly BlockingCollection<ISendableMessage> SendQueue = new();
 
-    private readonly ClientWebSocket _connection;
+    private readonly ClientWebSocket _websocket;
 
     private readonly Dictionary<Type, string> _messageIdMap = new();
 
-    public MessageSender(ClientWebSocket connection)
+    public MessageSender(ClientWebSocket websocket)
     {
-        _connection = connection;
+        _websocket = websocket;
     }
 
     /// <summary>
@@ -64,7 +64,7 @@ internal class MessageSender
             if (cancellationToken.IsCancellationRequested)
                 return;
 
-            if (_connection.State != WebSocketState.Open)
+            if (_websocket.State != WebSocketState.Open)
             {
                 await Task.Delay(50, cancellationToken).WaitAsync(cancellationToken);
                 continue;
@@ -85,7 +85,7 @@ internal class MessageSender
                     continue;
                 }
 
-                await _connection.SendAsync(
+                await _websocket.SendAsync(
                     serializedMessage,
                     WebSocketMessageType.Text,
                     true,
