@@ -5,8 +5,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Immerse.BfhClient.Api.Messages;
 using Godot;
-using System.Net.Http;
 using System.Net.Http.Json;
+
 using HttpClient = System.Net.Http.HttpClient;
 
 namespace Immerse.BfhClient.Api;
