@@ -1,9 +1,13 @@
 using System;
+using System.Collections.Generic;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Immerse.BfhClient.Api.Messages;
 using Godot;
+using System.Net.Http;
+using System.Net.Http.Json;
+using HttpClient = System.Net.Http.HttpClient;
 
 namespace Immerse.BfhClient.Api;
 
@@ -14,37 +18,35 @@ namespace Immerse.BfhClient.Api;
 // ReSharper disable once ClassNeverInstantiated.Global
 public partial class ApiClient : Node
 {
-    private readonly ClientWebSocket _connection;
+    private readonly HttpClient _httpClient;
+    private readonly ClientWebSocket _websocket;
     private readonly MessageSender _messageSender;
     private readonly MessageReceiver _messageReceiver;
     private readonly CancellationTokenSource _cancellation;
 
+    private Uri? _serverUrl;
+
     public ApiClient()
     {
-        _connection = new ClientWebSocket();
-        _messageSender = new MessageSender(_connection);
-        _messageReceiver = new MessageReceiver(_connection);
+        _httpClient = new HttpClient();
+        _websocket = new ClientWebSocket();
+        _messageSender = new MessageSender(_websocket);
+        _messageReceiver = new MessageReceiver(_websocket);
         _cancellation = new CancellationTokenSource();
 
         RegisterSendableMessages();
         RegisterReceivableMessages();
     }
 
-    /// <summary>
-    /// Connects the API client to a server at the given URI, and starts sending and receiving
-    /// messages.
-    /// </summary>
-    public Task Connect(Uri serverUri)
+    public void Connect(string serverUrl)
     {
-        foreach (var messageQueue in _messageReceiver.MessageQueues)
+        if (!Uri.TryCreate(serverUrl, UriKind.Absolute, out var parsedUrl))
         {
-            Task.Run(() => messageQueue.CheckReceivedMessages(_cancellation.Token));
+            throw new Exception($"Failed to parse server URL '{serverUrl}'");
         }
 
-        _messageReceiver.StartReceivingMessages(_cancellation.Token);
-        _messageSender.StartSendingMessages(_cancellation.Token);
-
-        return _connection.ConnectAsync(serverUri, _cancellation.Token);
+        _serverUrl = parsedUrl;
+        _httpClient.BaseAddress = _serverUrl;
     }
 
     /// <summary>
@@ -52,13 +54,9 @@ public partial class ApiClient : Node
     /// </summary>
     public Task Disconnect()
     {
-        _cancellation.Cancel();
-
-        return _connection.CloseAsync(
-            WebSocketCloseStatus.NormalClosure,
-            "Client initiated disconnect from game server",
-            _cancellation.Token
-        );
+        _serverUrl = null;
+        _httpClient.BaseAddress = null;
+        return _websocket.State == WebSocketState.Open ? LeaveLobby() : Task.CompletedTask;
     }
 
     /// <summary>
@@ -105,6 +103,54 @@ public partial class ApiClient : Node
     {
         var queue = _messageReceiver.GetMessageQueueByType<TMessage>();
         queue.ReceivedMessage -= messageHandler;
+    }
+
+    public async Task<List<LobbyInfo>> ListLobbies()
+    {
+        var lobbies = await _httpClient.GetFromJsonAsync<List<LobbyInfo>>("/lobbies");
+        if (lobbies is null)
+        {
+            throw new Exception("Failed to get response from lobby list endpoint");
+        }
+        return lobbies;
+    }
+
+    /// <summary>
+    /// Connects the API client to a server at the given URI, and starts sending and receiving
+    /// messages.
+    /// </summary>
+    public Task JoinLobby(string lobbyName, string username)
+    {
+        if (_serverUrl is null)
+        {
+            throw new Exception("Tried to join lobby before setting server URL");
+        }
+
+        foreach (var messageQueue in _messageReceiver.MessageQueues)
+        {
+            Task.Run(() => messageQueue.CheckReceivedMessages(_cancellation.Token));
+        }
+
+        _messageReceiver.StartReceivingMessages(_cancellation.Token);
+        _messageSender.StartSendingMessages(_cancellation.Token);
+
+        var joinLobbyUrl = new UriBuilder(_serverUrl)
+        {
+            Path = "join",
+            Query = $"lobbyName={lobbyName}&username={username}"
+        };
+        return _websocket.ConnectAsync(joinLobbyUrl.Uri, _cancellation.Token);
+    }
+
+    public Task LeaveLobby()
+    {
+        _cancellation.Cancel();
+
+        return _websocket.CloseAsync(
+            WebSocketCloseStatus.NormalClosure,
+            "Client initiated disconnect from game server",
+            _cancellation.Token
+        );
     }
 
     /// <summary>
