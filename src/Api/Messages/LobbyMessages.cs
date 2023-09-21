@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Immerse.BfhClient.Api.Messages;
 
@@ -11,8 +11,8 @@ public struct ErrorMessage : IReceivableMessage
     /// <summary>
     /// The error message.
     /// </summary>
-    [JsonProperty("error")]
-    public string Error;
+    [JsonPropertyName("error")]
+    public required string Error;
 }
 
 /// <summary>
@@ -23,21 +23,21 @@ public struct PlayerStatusMessage : IReceivableMessage
     /// <summary>
     /// The user's chosen display name.
     /// </summary>
-    [JsonProperty("username")]
-    public string Username;
+    [JsonPropertyName("username")]
+    public required string Username;
 
     /// <summary>
     /// The user's selected game ID.
     /// Null if not selected yet.
     /// </summary>
-    [JsonProperty("gameId")]
+    [JsonPropertyName("gameId")]
     public string? GameId;
 
     /// <summary>
     /// Whether the user is ready to start the game.
     /// </summary>
-    [JsonProperty("ready")]
-    public bool Ready;
+    [JsonPropertyName("ready")]
+    public required bool Ready;
 }
 
 /// <summary>
@@ -49,14 +49,14 @@ public struct LobbyJoinedMessage : IReceivableMessage
     /// IDs that the player may select from for this lobby's game.
     /// Returns all game IDs, though some may already be taken by other players in the lobby.
     /// </summary>
-    [JsonProperty("gameIds")]
-    public List<string> GameIds;
+    [JsonPropertyName("gameIds")]
+    public required List<string> GameIds;
 
     /// <summary>
     /// Info about each other player in the lobby.
     /// </summary>
-    [JsonProperty("playerStatuses")]
-    public List<PlayerStatusMessage> PlayerStatuses;
+    [JsonPropertyName("playerStatuses")]
+    public required List<PlayerStatusMessage> PlayerStatuses;
 }
 
 /// <summary>
@@ -68,8 +68,8 @@ public struct SelectGameIdMessage : ISendableMessage
     /// The ID that the player wants to select for the game.
     /// Will be rejected if already selected by another player.
     /// </summary>
-    [JsonProperty("gameId")]
-    public string GameId;
+    [JsonPropertyName("gameId")]
+    public required string GameId;
 }
 
 /// <summary>
@@ -81,8 +81,8 @@ public struct ReadyMessage : ISendableMessage
     /// <summary>
     /// Whether the player is ready to start the game.
     /// </summary>
-    [JsonProperty("ready")]
-    public bool Ready;
+    [JsonPropertyName("ready")]
+    public required bool Ready;
 }
 
 /// <summary>

@@ -3,11 +3,11 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net.WebSockets;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Godot;
 using Immerse.BfhClient.Api.Messages;
-using Newtonsoft.Json.Linq;
 
 namespace Immerse.BfhClient.Api;
 
@@ -112,8 +112,8 @@ internal class MessageSender
             );
         }
 
-        var messageJson = new JObject(new JProperty(messageId, message));
-        var messageString = messageJson.ToString();
+        var messageJson = new Dictionary<string, object> { [messageId] = message };
+        var messageString = JsonSerializer.Serialize(messageJson);
         var messageBytes = Encoding.UTF8.GetBytes(messageString);
         return messageBytes;
     }

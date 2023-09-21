@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Immerse.BfhClient.Api.GameTypes;
 
@@ -14,12 +14,12 @@ public struct Battle
     /// If length is one, the battle was a neutral conquer attempt.
     /// If length is more than one, the battle was between players.
     /// </summary>
-    [JsonProperty("results", Required = Required.Always)]
-    public List<Result> Results;
+    [JsonPropertyName("results")]
+    public required List<Result> Results;
 
     /// <summary>
     /// In case of danger zone crossing: name of the danger zone.
     /// </summary>
-    [JsonProperty("dangerZone")]
+    [JsonPropertyName("dangerZone")]
     public string? DangerZone;
 }

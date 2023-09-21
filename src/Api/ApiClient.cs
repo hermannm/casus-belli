@@ -12,7 +12,7 @@ namespace Immerse.BfhClient.Api;
 /// Provides methods for sending and receiving messages to and from the server.
 /// </summary>
 // ReSharper disable once ClassNeverInstantiated.Global
-public class ApiClient : Node
+public partial class ApiClient : Node
 {
     private readonly ClientWebSocket _connection;
     private readonly MessageSender _messageSender;

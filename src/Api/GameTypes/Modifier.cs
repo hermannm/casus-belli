@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Immerse.BfhClient.Api.GameTypes;
 
@@ -11,19 +11,19 @@ public struct Modifier
     /// The source of the modifier.
     /// Can only be of the constants defined in <see cref="ModifierType"/>.
     /// </summary>
-    [JsonProperty("type", Required = Required.Always)]
-    public string Type;
+    [JsonPropertyName("type")]
+    public required string Type;
 
     /// <summary>
     /// The positive or negative number that modifies the result total.
     /// </summary>
-    [JsonProperty("value", Required = Required.Always)]
-    public int Value;
+    [JsonPropertyName("value")]
+    public required int Value;
 
     /// <summary>
     /// If modifier was from a support: the supporting player.
     /// </summary>
-    [JsonProperty("supportingPlayer")]
+    [JsonPropertyName("supportingPlayer")]
     public string? SupportingPlayer;
 }
 

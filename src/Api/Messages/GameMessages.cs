@@ -1,6 +1,6 @@
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 using Immerse.BfhClient.Api.GameTypes;
-using Newtonsoft.Json;
 
 namespace Immerse.BfhClient.Api.Messages;
 
@@ -12,14 +12,14 @@ public struct SupportRequestMessage : IReceivableMessage
     /// <summary>
     /// The region from which support is asked, where the asked player should have a support order.
     /// </summary>
-    [JsonProperty("supportingRegion")]
-    public string SupportingRegion;
+    [JsonPropertyName("supportingRegion")]
+    public required string SupportingRegion;
 
     /// <summary>
     /// List of possible players to support in the battle.
     /// </summary>
-    [JsonProperty("supportablePlayers")]
-    public List<string> SupportablePlayers;
+    [JsonPropertyName("supportablePlayers")]
+    public required List<string> SupportablePlayers;
 }
 
 /// <summary>
@@ -35,8 +35,8 @@ public struct OrdersReceivedMessage : IReceivableMessage
     /// <summary>
     /// Maps a player's ID to their submitted orders.
     /// </summary>
-    [JsonProperty("playerOrders")]
-    public Dictionary<string, List<Order>> PlayerOrders;
+    [JsonPropertyName("playerOrders")]
+    public required Dictionary<string, List<Order>> PlayerOrders;
 }
 
 /// <summary>
@@ -48,8 +48,8 @@ public struct OrdersConfirmationMessage : IReceivableMessage
     /// <summary>
     /// The player who submitted orders.
     /// </summary>
-    [JsonProperty("player")]
-    public string Player;
+    [JsonPropertyName("player")]
+    public required string Player;
 }
 
 /// <summary>
@@ -60,8 +60,8 @@ public struct BattleResultsMessage : IReceivableMessage
     /// <summary>
     /// The relevant battle result.
     /// </summary>
-    [JsonProperty("battles")]
-    public List<Battle> Battles;
+    [JsonPropertyName("battles")]
+    public required List<Battle> Battles;
 }
 
 /// <summary>
@@ -72,8 +72,8 @@ public struct WinnerMessage : IReceivableMessage
     /// <summary>
     /// Player tag of the game's winner.
     /// </summary>
-    [JsonProperty("winner")]
-    public string Winner;
+    [JsonPropertyName("winner")]
+    public required string Winner;
 }
 
 /// <summary>
@@ -84,8 +84,8 @@ public struct SubmitOrdersMessage : ISendableMessage
     /// <summary>
     /// List of submitted orders.
     /// </summary>
-    [JsonProperty("orders")]
-    public List<Order> Orders;
+    [JsonPropertyName("orders")]
+    public required List<Order> Orders;
 }
 
 /// <summary>
@@ -97,14 +97,14 @@ public struct GiveSupportMessage : IReceivableMessage, ISendableMessage
     /// <summary>
     /// Name of the region in which the support order is placed.
     /// </summary>
-    [JsonProperty("supportingRegion")]
-    public string SupportingRegion;
+    [JsonPropertyName("supportingRegion")]
+    public required string SupportingRegion;
 
     /// <summary>
     /// ID of the player in the destination region to support.
     /// Null if none were supported.
     /// </summary>
-    [JsonProperty("supportedPlayer")]
+    [JsonPropertyName("supportedPlayer")]
     public string? SupportedPlayer;
 }
 
@@ -117,8 +117,8 @@ public struct WinterVoteMessage : ISendableMessage
     /// <summary>
     /// ID of the player that the submitting player votes for.
     /// </summary>
-    [JsonProperty("player")]
-    public string Player;
+    [JsonPropertyName("player")]
+    public required string Player;
 }
 
 /// <summary>
@@ -130,14 +130,14 @@ public struct SwordMessage : ISendableMessage
     /// <summary>
     /// Name of the region in which the player wants to use the sword in battle.
     /// </summary>
-    [JsonProperty("region")]
-    public string Region;
+    [JsonPropertyName("region")]
+    public required string Region;
 
     /// <summary>
     /// Index of the battle in which to use the sword, in case of several battles in the region.
     /// </summary>
-    [JsonProperty("battleIndex")]
-    public int BattleIndex;
+    [JsonPropertyName("battleIndex")]
+    public required int BattleIndex;
 }
 
 /// <summary>
@@ -149,6 +149,6 @@ public struct RavenMessage : ISendableMessage
     /// <summary>
     /// ID of the player on whom to spy.
     /// </summary>
-    [JsonProperty("player")]
-    public string Player;
+    [JsonPropertyName("player")]
+    public required string Player;
 }

@@ -1,10 +1,9 @@
 using System;
-using System.Collections;
 using System.Collections.Concurrent;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Immerse.BfhClient.Api.Messages;
-using Newtonsoft.Json.Linq;
 
 namespace Immerse.BfhClient.Api;
 
@@ -15,7 +14,7 @@ namespace Immerse.BfhClient.Api;
 internal interface IMessageReceiveQueue
 {
     public Task CheckReceivedMessages(CancellationToken cancellationToken);
-    public void DeserializeAndEnqueueMessage(JToken serializedMessage);
+    public void DeserializeAndEnqueueMessage(JsonElement serializedMessage);
 }
 
 /// <summary>
@@ -57,13 +56,11 @@ internal class MessageReceiveQueue<TMessage> : IMessageReceiveQueue
     /// <exception cref="ArgumentException">
     /// If the given message could not be deserialized to message type of the queue.
     /// </exception>
-    public void DeserializeAndEnqueueMessage(JToken serializedMessage)
+    public void DeserializeAndEnqueueMessage(JsonElement serializedMessage)
     {
-        var message = serializedMessage.ToObject<TMessage>();
-        if (message == null)
-        {
-            throw new ArgumentException($"Failed to deserialize message \"{serializedMessage}\"");
-        }
+        var message =
+            serializedMessage.Deserialize<TMessage>()
+            ?? throw new ArgumentException($"Failed to deserialize message '{serializedMessage}'");
 
         _queue.Enqueue(message);
     }

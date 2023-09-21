@@ -4,10 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Net.WebSockets;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Immerse.BfhClient.Api.Messages;
-using Newtonsoft.Json.Linq;
 using Godot;
 
 namespace Immerse.BfhClient.Api;
@@ -146,11 +146,11 @@ internal class MessageReceiver
     /// <exception cref="ArgumentException">If no message queue was found for the message's ID.</exception>
     private void DeserializeAndEnqueueMessage(string messageString)
     {
-        var messageWithId = JObject.Parse(messageString);
+        var messageWithId = JsonDocument.Parse(messageString);
 
         // The wrapping JSON object is expected to have only a single field, with the message ID as key and the
         // serialized message as its value
-        var firstMessageProperty = messageWithId.Properties().First();
+        var firstMessageProperty = messageWithId.RootElement.EnumerateObject().First();
         var messageId = firstMessageProperty.Name;
         var serializedMessage = firstMessageProperty.Value;
 

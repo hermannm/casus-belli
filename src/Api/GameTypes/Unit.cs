@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Immerse.BfhClient.Api.GameTypes;
 
@@ -11,14 +11,14 @@ public struct Unit
     /// Affects how the unit moves and its battle capabilities.
     /// Can only be of the constants defined in <see cref="UnitType"/>.
     /// </summary>
-    [JsonProperty("type", Required = Required.Always)]
-    public string Type;
+    [JsonPropertyName("type")]
+    public required string Type;
 
     /// <summary>
     /// The player owning the unit.
     /// </summary>
-    [JsonProperty("player", Required = Required.Always)]
-    public string Player;
+    [JsonPropertyName("player")]
+    public required string Player;
 }
 
 /// <summary>

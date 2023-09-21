@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Immerse.BfhClient.Api.GameTypes;
 
@@ -11,45 +11,45 @@ public struct Order
     /// The type of order submitted. Restricted by unit type and region.
     /// Can only be of the constants defined in <see cref="OrderType"/>.
     /// </summary>
-    [JsonProperty("type", Required = Required.Always)]
-    public string Type;
+    [JsonPropertyName("type")]
+    public required string Type;
 
     /// <summary>
     /// The player submitting the order.
     /// </summary>
-    [JsonProperty("player", Required = Required.Always)]
-    public string Player;
+    [JsonPropertyName("player")]
+    public required string Player;
 
     /// <summary>
     /// Name of the region where the order is placed.
     /// </summary>
-    [JsonProperty("origin", Required = Required.Always)]
-    public string Origin;
+    [JsonPropertyName("origin")]
+    public required string Origin;
 
     /// <summary>
     /// For move and support orders: name of destination region.
     /// </summary>
-    [JsonProperty("destination")]
+    [JsonPropertyName("destination")]
     public string? Destination;
 
     /// <summary>
     /// For move orders with horse units: optional name of second destination region to move to if
     /// the first destination was reached.
     /// </summary>
-    [JsonProperty("secondDestination")]
+    [JsonPropertyName("secondDestination")]
     public string? SecondDestination;
 
     /// <summary>
     /// For move orders: name of DangerZone the order tries to pass through, if any.
     /// </summary>
-    [JsonProperty("via")]
+    [JsonPropertyName("via")]
     public string? Via;
 
     /// <summary>
     /// For build orders: type of unit to build.
     /// Can only be of the constants defined in <see cref="UnitType"/>.
     /// </summary>
-    [JsonProperty("build")]
+    [JsonPropertyName("build")]
     public string? Build;
 }
 

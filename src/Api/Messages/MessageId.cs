@@ -8,9 +8,9 @@ namespace Immerse.BfhClient.Api.Messages;
 ///
 /// <para>
 /// Message types are used as keys in the JSON messages to and from the server.
-/// Every message has the following format, where messageID is one of the
-/// <see cref="MessageId"/> constants, and
-/// {...message} is the corresponding "...Message" struct in <see cref="Immerse.BfhClient.Api.Messages"/>.
+/// Every message has the following format, where messageID is one of the <see cref="MessageId"/>
+/// constants, and {...message} is the corresponding "...Message" struct in
+/// <see cref="Immerse.BfhClient.Api.Messages"/>.
 /// <code>
 /// {
 ///     "[messageId]": {...message}
