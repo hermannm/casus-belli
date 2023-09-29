@@ -1,13 +1,14 @@
 package lobby
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"sync"
 
 	"github.com/gorilla/websocket"
 	"hermannm.dev/bfh-server/game/gametypes"
+	"hermannm.dev/condqueue"
 	"hermannm.dev/wrap"
 )
 
@@ -131,7 +132,7 @@ type GameMessageReceiver struct {
 	winterVote chan WinterVoteMessage
 	sword      chan SwordMessage
 	raven      chan RavenMessage
-	supports   SupportMessageQueue
+	supports   *condqueue.CondQueue[GiveSupportMessage]
 }
 
 func newGameMessageReceiver() GameMessageReceiver {
@@ -140,7 +141,7 @@ func newGameMessageReceiver() GameMessageReceiver {
 		winterVote: make(chan WinterVoteMessage),
 		sword:      make(chan SwordMessage),
 		raven:      make(chan RavenMessage),
-		supports:   NewSupportMessageQueue(),
+		supports:   condqueue.New[GiveSupportMessage](),
 	}
 }
 
@@ -156,7 +157,7 @@ func (player *Player) handleGameMessage(messageType MessageType, rawMessage json
 	case MessageTypeGiveSupport:
 		var message GiveSupportMessage
 		if err = json.Unmarshal(rawMessage, &message); err == nil {
-			player.gameMessageReceiver.supports.AddMessage(message)
+			player.gameMessageReceiver.supports.AddItem(context.Background(), message)
 		}
 	case MessageTypeWinterVote:
 		var message WinterVoteMessage
@@ -211,69 +212,25 @@ func (lobby *Lobby) AwaitSupport(
 		)
 	}
 
-	supportedPlayer = player.gameMessageReceiver.supports.AwaitSupportMatchingRegions(
-		supportingRegion,
-		embattledRegion,
+	supportMessage, err := player.gameMessageReceiver.supports.AwaitMatchingItem(
+		context.Background(),
+		func(candidate GiveSupportMessage) bool {
+			return candidate.SupportingRegion == supportingRegion &&
+				candidate.EmbattledRegion == embattledRegion
+		},
 	)
+	if err != nil {
+		return "", wrap.Errorf(
+			err,
+			"received no support message from region '%s' to region '%s'",
+			supportingRegion,
+			embattledRegion,
+		)
+	}
+
+	if supportMessage.SupportedPlayer != nil {
+		supportedPlayer = *supportMessage.SupportedPlayer
+	}
 
 	return supportedPlayer, nil
-}
-
-type SupportMessageQueue struct {
-	messages           []GiveSupportMessage // Must hold newMessageNotifier.L to access safely.
-	newMessageNotifier sync.Cond
-}
-
-func NewSupportMessageQueue() SupportMessageQueue {
-	return SupportMessageQueue{messages: nil, newMessageNotifier: sync.Cond{L: &sync.Mutex{}}}
-}
-
-func (queue *SupportMessageQueue) AddMessage(message GiveSupportMessage) {
-	queue.newMessageNotifier.L.Lock()
-	queue.messages = append(queue.messages, message)
-	queue.newMessageNotifier.L.Unlock()
-	queue.newMessageNotifier.Broadcast()
-}
-
-// Reading a received support message involves these steps:
-//  1. Acquire the lock on newMessageNotifier condition variable
-//  2. Go through received support messages, and check if any match the requested supporting and
-//     embattled regions
-//  3. If a match was found: take message from queue, release lock and return supported player
-//  4. If not: call newMessageNotifier.Wait(), which releases the lock and waits
-//  5. Once a new support message is received, SupportMessageQueue.AddMessage will call
-//     newMessageNotifier.Broadcast(), which wakes all waiting goroutines
-//  6. Once Wait() returns in this goroutine, the lock is re-acquired, and we repeat from step 2
-//
-// For more info, see the docs on sync.Cond: https://pkg.go.dev/sync#Cond
-func (queue *SupportMessageQueue) AwaitSupportMatchingRegions(
-	supportingRegion string,
-	embattledRegion string,
-) (supportedPlayer string) {
-	queue.newMessageNotifier.L.Lock()
-	for {
-		foundMatchingSupport := false
-		remainingMessages := make([]GiveSupportMessage, 0, cap(queue.messages))
-
-		for _, message := range queue.messages {
-			foundMatchingSupport = message.SupportingRegion == supportingRegion &&
-				message.EmbattledRegion == embattledRegion
-
-			if foundMatchingSupport {
-				if message.SupportedPlayer != nil {
-					supportedPlayer = *message.SupportedPlayer
-				}
-			} else {
-				remainingMessages = append(remainingMessages, message)
-			}
-		}
-
-		if foundMatchingSupport {
-			queue.messages = remainingMessages
-			queue.newMessageNotifier.L.Unlock()
-			return supportedPlayer
-		}
-
-		queue.newMessageNotifier.Wait()
-	}
 }
