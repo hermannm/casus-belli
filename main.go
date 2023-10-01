@@ -2,12 +2,14 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"flag"
 	"fmt"
 	"net/http"
 	"os"
 	"strconv"
 	"text/tabwriter"
+	"time"
 
 	"hermannm.dev/bfh-server/api"
 	"hermannm.dev/bfh-server/game"
@@ -114,10 +116,13 @@ func createLobby(selectedBoardID string, lobbyRegistry *lobby.LobbyRegistry) {
 }
 
 func printIPs(port string) {
-	publicIP, publicErr := ipfinder.FindPublicIP()
-	localIPs, localErr := ipfinder.FindLocalIPs()
-
 	fmt.Println("Game clients should now see lobby at:")
+
+	ctx, cancelCtx := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelCtx()
+
+	publicIP, publicErr := ipfinder.FindPublicIP(ctx)
+	localIPs, localErr := ipfinder.FindLocalIPs()
 
 	writer := tabwriter.NewWriter(os.Stdout, 1, 1, 1, ' ', 0)
 
@@ -128,13 +133,11 @@ func printIPs(port string) {
 	}
 
 	if localErr == nil {
-		for _, ips := range localIPs {
-			for _, localIP := range ips {
-				fmt.Fprintf(writer, "%s:%s\t(if on the same network)\n", localIP, port)
-			}
+		for _, ip := range localIPs {
+			fmt.Fprintf(writer, "%s:%s\t(if on the same network)\n", ip.Address.String(), port)
 		}
 	} else {
-		fmt.Printf("[Error finding local IPs] %s\n", publicErr.Error())
+		fmt.Printf("[Error finding local IPs] %s\n", localErr.Error())
 	}
 
 	writer.Flush()
