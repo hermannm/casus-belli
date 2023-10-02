@@ -41,7 +41,7 @@ func main() {
 		lobbyAPI.RegisterLobbyCreationEndpoints()
 	}
 
-	fmt.Printf("Listening on port %s...", port)
+	fmt.Printf("Listening on port %s...\n", port)
 	if err := lobbyAPI.ListenAndServe(fmt.Sprintf(":%s", port)); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
