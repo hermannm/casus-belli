@@ -5,20 +5,20 @@ namespace Immerse.BfhClient.Api.GameTypes;
 /// <summary>
 /// A player unit on the board.
 /// </summary>
-public struct Unit
+public record struct Unit
 {
     /// <summary>
     /// Affects how the unit moves and its battle capabilities.
     /// Can only be of the constants defined in <see cref="UnitType"/>.
     /// </summary>
     [JsonPropertyName("type")]
-    public required string Type;
+    public required string Type { get; set; }
 
     /// <summary>
     /// The player owning the unit.
     /// </summary>
     [JsonPropertyName("player")]
-    public required string Player;
+    public required string Player { get; set; }
 }
 
 /// <summary>

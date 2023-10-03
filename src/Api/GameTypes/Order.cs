@@ -5,52 +5,52 @@ namespace Immerse.BfhClient.Api.GameTypes;
 /// <summary>
 /// An order submitted by a player for one of their units in a given round.
 /// </summary>
-public struct Order
+public record struct Order
 {
     /// <summary>
     /// The type of order submitted. Restricted by unit type and region.
     /// Can only be of the constants defined in <see cref="OrderType"/>.
     /// </summary>
     [JsonPropertyName("type")]
-    public required string Type;
+    public required string Type { get; set; }
 
     /// <summary>
     /// The player submitting the order.
     /// </summary>
     [JsonPropertyName("player")]
-    public required string Player;
+    public required string Player { get; set; }
 
     /// <summary>
     /// Name of the region where the order is placed.
     /// </summary>
     [JsonPropertyName("origin")]
-    public required string Origin;
+    public required string Origin { get; set; }
 
     /// <summary>
     /// For move and support orders: name of destination region.
     /// </summary>
     [JsonPropertyName("destination")]
-    public string? Destination;
+    public string? Destination { get; set; }
 
     /// <summary>
     /// For move orders with horse units: optional name of second destination region to move to if
     /// the first destination was reached.
     /// </summary>
     [JsonPropertyName("secondDestination")]
-    public string? SecondDestination;
+    public string? SecondDestination { get; set; }
 
     /// <summary>
     /// For move orders: name of DangerZone the order tries to pass through, if any.
     /// </summary>
     [JsonPropertyName("via")]
-    public string? Via;
+    public string? Via { get; set; }
 
     /// <summary>
     /// For build orders: type of unit to build.
     /// Can only be of the constants defined in <see cref="UnitType"/>.
     /// </summary>
     [JsonPropertyName("build")]
-    public string? Build;
+    public string? Build { get; set; }
 }
 
 /// <summary>

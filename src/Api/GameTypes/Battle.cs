@@ -7,7 +7,7 @@ namespace Immerse.BfhClient.Api.GameTypes;
 /// Results of a battle from conflicting move orders, an attempt to conquer a neutral area,
 /// or an attempt to cross a danger zone.
 /// </summary>
-public struct Battle
+public record struct Battle
 {
     /// <summary>
     /// The dice and modifier results of the battle.
@@ -15,11 +15,11 @@ public struct Battle
     /// If length is more than one, the battle was between players.
     /// </summary>
     [JsonPropertyName("results")]
-    public required List<Result> Results;
+    public required List<Result> Results { get; set; }
 
     /// <summary>
     /// In case of danger zone crossing: name of the danger zone.
     /// </summary>
     [JsonPropertyName("dangerZone")]
-    public string? DangerZone;
+    public string? DangerZone { get; set; }
 }
