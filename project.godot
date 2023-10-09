@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="bfh-client"
-run/main_scene="res://scenes/main_menu.tscn"
+run/main_scene="res://scenes/main-menu.tscn"
 config/features=PackedStringArray("4.1", "C#", "Forward Plus")
 config/icon="res://assets/icon.svg"
 
