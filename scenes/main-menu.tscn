@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3 uid="uid://css0l6sta847s"]
+[gd_scene load_steps=5 format=3 uid="uid://css0l6sta847s"]
 
 [ext_resource type="Texture2D" uid="uid://dua6cf3bykx6" path="res://assets/immerse-logo-transparent-background-with-text-under.svg" id="1_0v6v8"]
 [ext_resource type="FontFile" uid="uid://bjjxiy03d51n0" path="res://assets/fonts/quantico/quantico-bold.ttf" id="2_b2wlg"]
-[ext_resource type="Script" path="res://src/Menu/QuitButton.cs" id="3_3uwyg"]
+[ext_resource type="Script" path="res://src/Menus/MainMenu/QuitButton.cs" id="3_3uwyg"]
+[ext_resource type="Script" path="res://src/Menus/MainMenu/PlayButton.cs" id="3_xaitc"]
 
 [node name="Control" type="Control"]
 layout_mode = 3
@@ -74,6 +75,7 @@ layout_mode = 2
 theme_override_fonts/font = ExtResource("2_b2wlg")
 theme_override_font_sizes/font_size = 50
 text = "Play"
+script = ExtResource("3_xaitc")
 
 [node name="QuitButton" type="Button" parent="MarginContainer/VBoxContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2

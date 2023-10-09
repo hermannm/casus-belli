@@ -1,6 +1,6 @@
 using Godot;
 
-namespace Immerse.BfhClient.Menu;
+namespace Immerse.BfhClient.Menus.MainMenu;
 
 public partial class QuitButton : Button
 {
