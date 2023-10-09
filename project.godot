@@ -11,13 +11,19 @@ config_version=5
 [application]
 
 config/name="bfh-client"
-run/main_scene="res://scenes/main.tscn"
+run/main_scene="res://scenes/main_menu.tscn"
 config/features=PackedStringArray("4.1", "C#", "Forward Plus")
 config/icon="res://assets/icon.svg"
 
 [autoload]
 
 ApiClient="*res://src/Api/ApiClient.cs"
+
+[display]
+
+window/size/viewport_width=1920
+window/size/viewport_height=1080
+window/size/mode=3
 
 [dotnet]
 
