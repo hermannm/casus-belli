@@ -2,9 +2,9 @@ package lobby
 
 import (
 	"errors"
-	"log"
 
 	"hermannm.dev/bfh-server/game/gametypes"
+	"hermannm.dev/bfh-server/log"
 	"hermannm.dev/wrap"
 )
 
@@ -121,7 +121,7 @@ func (player *Player) SendError(err error) {
 	if err := player.sendMessage(Message{
 		MessageTypeError: ErrorMessage{Error: err.Error()},
 	}); err != nil {
-		log.Println(err)
+		log.Error(err, "")
 	}
 }
 
@@ -129,7 +129,7 @@ func (lobby *Lobby) SendError(toPlayer string, err error) {
 	if err := lobby.sendMessage(toPlayer, Message{
 		MessageTypeError: ErrorMessage{Error: err.Error()},
 	}); err != nil {
-		log.Println(err)
+		log.Error(err, "")
 	}
 }
 

@@ -1,9 +1,8 @@
 package orderresolving
 
 import (
-	"log"
-
 	"hermannm.dev/bfh-server/game/gametypes"
+	"hermannm.dev/bfh-server/log"
 	"hermannm.dev/set"
 )
 
@@ -166,7 +165,7 @@ func (resolver *MoveResolver) resolveTransport(
 
 		resolver.resolvedBattles = append(resolver.resolvedBattles, dangerZoneBattles...)
 		if err := messenger.SendBattleResults(dangerZoneBattles); err != nil {
-			log.Println(err)
+			log.Error(err, "")
 		}
 
 		return false

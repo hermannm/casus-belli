@@ -3,7 +3,6 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 
@@ -11,6 +10,7 @@ import (
 	"hermannm.dev/bfh-server/game"
 	"hermannm.dev/bfh-server/game/boardconfig"
 	"hermannm.dev/bfh-server/lobby"
+	"hermannm.dev/bfh-server/log"
 	"hermannm.dev/wrap"
 )
 
@@ -98,7 +98,7 @@ func (api LobbyAPI) JoinLobby(res http.ResponseWriter, req *http.Request) {
 
 	socket, err := upgrader.Upgrade(res, req, nil)
 	if err != nil {
-		fmt.Println(wrap.Error(err, "failed to establish socket connection"))
+		log.Error(err, "failed to establish socket connection")
 		http.Error(res, "unable to establish socket connection", http.StatusInternalServerError)
 		return
 	}
@@ -107,7 +107,7 @@ func (api LobbyAPI) JoinLobby(res http.ResponseWriter, req *http.Request) {
 
 	player, err := lobby.AddPlayer(username, socket)
 	if err != nil {
-		fmt.Println(wrap.Error(err, "failed to add player"))
+		log.Error(err, "failed to add player")
 		player.SendError(wrap.Error(err, "failed to join game"))
 		return
 	}
@@ -140,14 +140,14 @@ func (api LobbyAPI) CreateLobby(res http.ResponseWriter, req *http.Request) {
 
 	lobby, err := lobby.New(lobbyName, gameName, game.DefaultOptions())
 	if err != nil {
-		log.Println(err)
+		log.Error(err, "")
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	if err := api.lobbyRegistry.RegisterLobby(lobby); err != nil {
 		err = wrap.Error(err, "failed to register lobby")
-		log.Println(err)
+		log.Error(err, "")
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 		return
 	}

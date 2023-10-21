@@ -7,6 +7,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	"hermannm.dev/bfh-server/game"
+	"hermannm.dev/bfh-server/log"
 	"hermannm.dev/wrap"
 )
 
@@ -91,9 +92,7 @@ func (lobby *Lobby) Close() error {
 
 		if err := player.socket.Close(); err != nil {
 			player.lock.Unlock()
-			fmt.Println(wrap.Errorf(
-				err, "failed to close socket connection to player %s", player.String(),
-			))
+			log.Errorf(err, "failed to close socket connection to player %s", player.String())
 		}
 
 		player.lock.Unlock()

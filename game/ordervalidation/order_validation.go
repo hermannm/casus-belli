@@ -1,9 +1,8 @@
 package ordervalidation
 
 import (
-	"log"
-
 	"hermannm.dev/bfh-server/game/gametypes"
+	"hermannm.dev/bfh-server/log"
 )
 
 type Messenger interface {
@@ -33,7 +32,7 @@ func GatherAndValidateOrders(
 	}
 
 	if err := messenger.SendOrdersReceived(playerOrders); err != nil {
-		log.Println(err)
+		log.Error(err, "")
 	}
 
 	return allOrders
@@ -51,14 +50,14 @@ func gatherAndValidateOrderSet(
 ) {
 	for {
 		if err := messenger.SendOrderRequest(player); err != nil {
-			log.Println(err)
+			log.Error(err, "")
 			orderChan <- []gametypes.Order{}
 			return
 		}
 
 		orders, err := messenger.AwaitOrders(player)
 		if err != nil {
-			log.Println(err)
+			log.Error(err, "")
 			orderChan <- []gametypes.Order{}
 			return
 		}
@@ -75,13 +74,13 @@ func gatherAndValidateOrderSet(
 		}
 
 		if err := validateOrders(orders, board, season); err != nil {
-			log.Println(err)
+			log.Error(err, "")
 			messenger.SendError(player, err)
 			continue
 		}
 
 		if err := messenger.SendOrdersConfirmation(player); err != nil {
-			log.Println(err)
+			log.Error(err, "")
 		}
 
 		orderChan <- orders

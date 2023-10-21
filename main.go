@@ -15,18 +15,20 @@ import (
 	"hermannm.dev/bfh-server/game"
 	"hermannm.dev/bfh-server/game/boardconfig"
 	"hermannm.dev/bfh-server/lobby"
+	"hermannm.dev/bfh-server/log"
 	"hermannm.dev/ipfinder"
-	"hermannm.dev/wrap"
 )
 
 const defaultPort string = "8000"
 
 func main() {
+	log.Initialize()
+
 	local, port := getCommandLineFlags()
 
 	availableBoards, err := boardconfig.GetAvailableBoards()
 	if err != nil {
-		fmt.Println(wrap.Error(err, "failed to get available boards for game server"))
+		log.Error(err, "failed to get available boards for game server")
 		os.Exit(1)
 	}
 
@@ -41,9 +43,9 @@ func main() {
 		lobbyAPI.RegisterLobbyCreationEndpoints()
 	}
 
-	fmt.Printf("Listening on port %s...\n", port)
+	log.Infof("Listening on port %s...", port)
 	if err := lobbyAPI.ListenAndServe(fmt.Sprintf(":%s", port)); err != nil {
-		fmt.Println(err)
+		log.Error(err, "")
 		os.Exit(1)
 	}
 }

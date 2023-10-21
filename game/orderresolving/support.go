@@ -1,12 +1,10 @@
 package orderresolving
 
 import (
-	"fmt"
-	"log"
 	"sync"
 
 	"hermannm.dev/bfh-server/game/gametypes"
-	"hermannm.dev/wrap"
+	"hermannm.dev/bfh-server/log"
 )
 
 type supportDeclaration struct {
@@ -106,20 +104,14 @@ func callSupport(
 		region.Name,
 		battlers,
 	); err != nil {
-		fmt.Println(wrap.Error(err, "failed to send support request"))
+		log.Error(err, "failed to send support request")
 		supportReceiver <- supportDeclaration{fromPlayer: support.Player, toPlayer: ""}
 		return
 	}
 
 	supported, err := messenger.AwaitSupport(support.Player, support.Origin, region.Name)
 	if err != nil {
-		log.Println(
-			wrap.Errorf(
-				err,
-				"failed to receive support declaration from player '%s'",
-				support.Player,
-			),
-		)
+		log.Errorf(err, "failed to receive support declaration from player '%s'", support.Player)
 		supportReceiver <- supportDeclaration{fromPlayer: support.Player, toPlayer: ""}
 		return
 	}

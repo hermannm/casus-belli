@@ -1,9 +1,8 @@
 package orderresolving
 
 import (
-	"log"
-
 	"hermannm.dev/bfh-server/game/gametypes"
+	"hermannm.dev/bfh-server/log"
 )
 
 type Messenger interface {
@@ -74,7 +73,7 @@ func resolveNonWinterOrders(
 	dangerZoneBattles := resolveDangerZones(board)
 	battles = append(battles, dangerZoneBattles...)
 	if err := messenger.SendBattleResults(dangerZoneBattles); err != nil {
-		log.Println(err)
+		log.Error(err, "")
 	}
 
 	resolver := newMoveResolver()
