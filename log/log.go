@@ -13,7 +13,7 @@ import (
 )
 
 func Initialize() {
-	logger := slog.New(devlog.NewHandler(os.Stdout, nil))
+	logger := slog.New(devlog.NewHandler(os.Stdout, &devlog.Options{Level: slog.LevelDebug}))
 	slog.SetDefault(logger)
 }
 
@@ -51,6 +51,14 @@ func Errorf(err error, format string, args ...any) {
 	} else {
 		log(slog.LevelError, wrap.Errorf(err, format, args...).Error())
 	}
+}
+
+func Debug(msg string, metadata ...slog.Attr) {
+	log(slog.LevelDebug, msg, metadata...)
+}
+
+func Debugf(format string, args ...any) {
+	log(slog.LevelDebug, fmt.Sprintf(format, args...))
 }
 
 func log(level slog.Level, msg string, metadata ...slog.Attr) {
