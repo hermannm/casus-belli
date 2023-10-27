@@ -4,7 +4,7 @@ import (
 	"sync"
 
 	"hermannm.dev/bfh-server/game/gametypes"
-	"hermannm.dev/bfh-server/log"
+	"hermannm.dev/devlog/log"
 )
 
 type supportDeclaration struct {

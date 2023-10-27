@@ -5,6 +5,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
 	"strconv"
@@ -15,14 +16,16 @@ import (
 	"hermannm.dev/bfh-server/game"
 	"hermannm.dev/bfh-server/game/boardconfig"
 	"hermannm.dev/bfh-server/lobby"
-	"hermannm.dev/bfh-server/log"
+	"hermannm.dev/devlog"
+	"hermannm.dev/devlog/log"
 	"hermannm.dev/ipfinder"
 )
 
 const defaultPort string = "8000"
 
 func main() {
-	log.Initialize()
+	logger := slog.New(devlog.NewHandler(os.Stdout, &devlog.Options{Level: slog.LevelDebug}))
+	slog.SetDefault(logger)
 
 	local, port := getCommandLineFlags()
 

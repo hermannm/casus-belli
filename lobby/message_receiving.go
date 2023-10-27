@@ -8,8 +8,8 @@ import (
 
 	"github.com/gorilla/websocket"
 	"hermannm.dev/bfh-server/game/gametypes"
-	"hermannm.dev/bfh-server/log"
 	"hermannm.dev/condqueue"
+	"hermannm.dev/devlog/log"
 	"hermannm.dev/wrap"
 )
 

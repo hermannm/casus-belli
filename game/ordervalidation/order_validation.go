@@ -2,7 +2,7 @@ package ordervalidation
 
 import (
 	"hermannm.dev/bfh-server/game/gametypes"
-	"hermannm.dev/bfh-server/log"
+	"hermannm.dev/devlog/log"
 )
 
 type Messenger interface {

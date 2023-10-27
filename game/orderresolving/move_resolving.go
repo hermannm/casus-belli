@@ -2,7 +2,7 @@ package orderresolving
 
 import (
 	"hermannm.dev/bfh-server/game/gametypes"
-	"hermannm.dev/bfh-server/log"
+	"hermannm.dev/devlog/log"
 	"hermannm.dev/set"
 )
 

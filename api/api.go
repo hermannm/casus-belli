@@ -10,7 +10,7 @@ import (
 	"hermannm.dev/bfh-server/game"
 	"hermannm.dev/bfh-server/game/boardconfig"
 	"hermannm.dev/bfh-server/lobby"
-	"hermannm.dev/bfh-server/log"
+	"hermannm.dev/devlog/log"
 	"hermannm.dev/wrap"
 )
 

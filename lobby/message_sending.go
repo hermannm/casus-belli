@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"hermannm.dev/bfh-server/game/gametypes"
-	"hermannm.dev/bfh-server/log"
+	"hermannm.dev/devlog/log"
 	"hermannm.dev/wrap"
 )
 

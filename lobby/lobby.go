@@ -7,7 +7,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	"hermannm.dev/bfh-server/game"
-	"hermannm.dev/bfh-server/log"
+	"hermannm.dev/devlog/log"
 	"hermannm.dev/wrap"
 )
 
