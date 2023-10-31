@@ -38,7 +38,7 @@ const (
 
 // Returns regions involved in the battle - typically 1, but 2 if it was a border battle.
 func (battle Battle) RegionNames() []string {
-	nameSet := set.New[string]()
+	nameSet := set.ArraySetWithCapacity[string](2)
 
 	for _, result := range battle.Results {
 		if result.DefenderRegion != "" {

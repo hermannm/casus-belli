@@ -7,9 +7,9 @@ import (
 )
 
 type MoveResolver struct {
-	resolvingRegions   set.Set[string]
-	resolvedRegions    set.Set[string]
-	resolvedTransports set.Set[string]
+	resolvingRegions   set.ArraySet[string]
+	resolvedRegions    set.ArraySet[string]
+	resolvedTransports set.ArraySet[string]
 	resolvedBattles    []gametypes.Battle
 	battleReceiver     chan gametypes.Battle
 	retreats           map[string]gametypes.Order
@@ -18,9 +18,9 @@ type MoveResolver struct {
 
 func newMoveResolver() MoveResolver {
 	return MoveResolver{
-		resolvingRegions:   set.New[string](),
-		resolvedRegions:    set.New[string](),
-		resolvedTransports: set.New[string](),
+		resolvingRegions:   set.NewArraySet[string](),
+		resolvedRegions:    set.NewArraySet[string](),
+		resolvedTransports: set.NewArraySet[string](),
 		resolvedBattles:    nil,
 		battleReceiver:     make(chan gametypes.Battle),
 		retreats:           make(map[string]gametypes.Order),
@@ -100,7 +100,7 @@ func (resolver *MoveResolver) resolveRegionMoves(
 	} else if twoWayCycle {
 		// If the moves are from different players, they battle in the middle
 		go calculateBorderBattle(region, region2, resolver.battleReceiver, messenger)
-		resolver.resolvingRegions.Add(region.Name, region2.Name)
+		resolver.resolvingRegions.AddMultiple(region.Name, region2.Name)
 		return
 	} else if cycle, _ := discoverCycle(region.Name, region.Order, board); cycle != nil {
 		// If there is a cycle longer than 2 moves, forwards the resolving to resolveCycle

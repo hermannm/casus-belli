@@ -20,7 +20,7 @@ func validateOrderSet(orders []gametypes.Order, board gametypes.Board) error {
 }
 
 func validateUniqueMoveDestinations(orders []gametypes.Order, board gametypes.Board) error {
-	moveDestinations := set.New[string]()
+	moveDestinations := set.ArraySetWithCapacity[string](len(orders))
 
 	for _, order := range orders {
 		if order.Type == gametypes.OrderMove {
@@ -42,7 +42,7 @@ func validateUniqueMoveDestinations(orders []gametypes.Order, board gametypes.Bo
 }
 
 func validateOneOrderPerRegion(orders []gametypes.Order, board gametypes.Board) error {
-	orderedRegions := set.New[string]()
+	orderedRegions := set.ArraySetWithCapacity[string](len(orders))
 
 	for _, order := range orders {
 		if orderedRegions.Contains(order.Origin) {

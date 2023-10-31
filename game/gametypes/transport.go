@@ -14,7 +14,7 @@ func (board Board) FindTransportPath(
 		return false, false, nil
 	}
 
-	return board.recursivelyFindTransportPath(origin, destinationName, set.New[string]())
+	return board.recursivelyFindTransportPath(origin, destinationName, &set.ArraySet[string]{})
 }
 
 // Stores status of a path of transport orders to destination.
