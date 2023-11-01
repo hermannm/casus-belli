@@ -158,7 +158,7 @@ func (player *Player) handleGameMessage(messageType MessageType, rawMessage json
 	case MessageTypeGiveSupport:
 		var message GiveSupportMessage
 		if err = json.Unmarshal(rawMessage, &message); err == nil {
-			player.gameMessageReceiver.supports.AddItem(context.Background(), message)
+			player.gameMessageReceiver.supports.Add(message)
 		}
 	case MessageTypeWinterVote:
 		var message WinterVoteMessage
@@ -214,7 +214,7 @@ func (lobby *Lobby) AwaitSupport(
 	}
 
 	supportMessage, err := player.gameMessageReceiver.supports.AwaitMatchingItem(
-		context.Background(),
+		context.Background(), // TODO: implement timeout/cancellation
 		func(candidate GiveSupportMessage) bool {
 			return candidate.SupportingRegion == supportingRegion &&
 				candidate.EmbattledRegion == embattledRegion
