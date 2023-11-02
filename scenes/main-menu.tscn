@@ -1,12 +1,9 @@
-[gd_scene load_steps=8 format=3 uid="uid://css0l6sta847s"]
+[gd_scene load_steps=5 format=3 uid="uid://css0l6sta847s"]
 
 [ext_resource type="Texture2D" uid="uid://dua6cf3bykx6" path="res://assets/immerse-logo-transparent-background-with-text-under.svg" id="1_0v6v8"]
 [ext_resource type="FontFile" uid="uid://bjjxiy03d51n0" path="res://assets/fonts/quantico/quantico-bold.ttf" id="2_b2wlg"]
 [ext_resource type="Script" path="res://src/Menus/MainMenu/QuitButton.cs" id="3_3uwyg"]
 [ext_resource type="Script" path="res://src/Menus/MainMenu/PlayButton.cs" id="3_xaitc"]
-[ext_resource type="Texture2D" uid="uid://byv5egtxjrsn" path="res://assets/ui/error-panel-texture.png" id="5_ir1xm"]
-[ext_resource type="FontFile" uid="uid://c2e14lo8x234b" path="res://assets/fonts/quantico/quantico-regular.ttf" id="6_861t2"]
-[ext_resource type="Texture2D" uid="uid://dn4fpma5vrnob" path="res://assets/ui/info-panel-texture.png" id="7_faskh"]
 
 [node name="Control" type="Control"]
 layout_mode = 3
@@ -87,61 +84,3 @@ theme_override_font_sizes/font_size = 50
 text = "Quit
 "
 script = ExtResource("3_3uwyg")
-
-[node name="NinePatchRect" type="NinePatchRect" parent="."]
-layout_mode = 0
-offset_left = 1024.0
-offset_top = 64.0
-offset_right = 1874.0
-offset_bottom = 200.0
-texture = ExtResource("5_ir1xm")
-patch_margin_left = 12
-patch_margin_top = 12
-patch_margin_right = 12
-patch_margin_bottom = 12
-axis_stretch_horizontal = 1
-axis_stretch_vertical = 1
-
-[node name="MarginContainer" type="MarginContainer" parent="NinePatchRect"]
-layout_mode = 0
-offset_right = 850.0
-offset_bottom = 136.0
-theme_override_constants/margin_left = 24
-theme_override_constants/margin_top = 24
-theme_override_constants/margin_right = 24
-theme_override_constants/margin_bottom = 24
-
-[node name="Label" type="Label" parent="NinePatchRect/MarginContainer"]
-layout_mode = 2
-theme_override_fonts/font = ExtResource("6_861t2")
-theme_override_font_sizes/font_size = 24
-text = "This is a test"
-
-[node name="NinePatchRect2" type="NinePatchRect" parent="."]
-layout_mode = 0
-offset_left = 1031.0
-offset_top = 229.0
-offset_right = 1881.0
-offset_bottom = 310.0
-texture = ExtResource("7_faskh")
-patch_margin_left = 12
-patch_margin_top = 12
-patch_margin_right = 12
-patch_margin_bottom = 12
-axis_stretch_horizontal = 1
-axis_stretch_vertical = 1
-
-[node name="MarginContainer" type="MarginContainer" parent="NinePatchRect2"]
-layout_mode = 0
-offset_right = 850.0
-offset_bottom = 86.0
-theme_override_constants/margin_left = 24
-theme_override_constants/margin_top = 24
-theme_override_constants/margin_right = 24
-theme_override_constants/margin_bottom = 24
-
-[node name="Label" type="Label" parent="NinePatchRect2/MarginContainer"]
-layout_mode = 2
-theme_override_fonts/font = ExtResource("6_861t2")
-theme_override_font_sizes/font_size = 24
-text = "This is a test"

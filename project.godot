@@ -17,6 +17,7 @@ config/icon="res://assets/icon.svg"
 
 [autoload]
 
+MessageDisplay="*res://src/UI/MessageDisplay.cs"
 ApiClient="*res://src/Api/ApiClient.cs"
 
 [display]

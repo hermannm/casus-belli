@@ -1,4 +1,3 @@
-using System;
 using Godot;
 using Immerse.BfhClient.Api;
 
@@ -17,14 +16,9 @@ public partial class ConnectButton : Button
 
     public override void _Pressed()
     {
-        try
+        if (!_apiClient.Connect(_serverAddressField.Text))
         {
-            _apiClient.Connect(_serverAddressField.Text);
-        }
-        catch (Exception e)
-        {
-            GD.PushError(e.Message);
-            throw;
+            return;
         }
     }
 }

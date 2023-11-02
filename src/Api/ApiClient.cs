@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Immerse.BfhClient.Api.Messages;
 using Godot;
 using System.Net.Http.Json;
-
+using Immerse.BfhClient.UI;
 using HttpClient = System.Net.Http.HttpClient;
 
 namespace Immerse.BfhClient.Api;
@@ -23,6 +23,7 @@ public partial class ApiClient : Node
     private readonly MessageSender _messageSender;
     private readonly MessageReceiver _messageReceiver;
     private readonly CancellationTokenSource _cancellation;
+    private MessageDisplay _messageDisplay = null!;
 
     private Uri? _serverUrl;
 
@@ -38,15 +39,23 @@ public partial class ApiClient : Node
         RegisterReceivableMessages();
     }
 
-    public void Connect(string serverUrl)
+    public override void _Ready()
+    {
+        _messageDisplay = this.GetMessageDisplay();
+        RegisterServerMessageHandler<ErrorMessage>(DisplayServerError);
+    }
+
+    public bool Connect(string serverUrl)
     {
         if (!Uri.TryCreate(serverUrl, UriKind.Absolute, out var parsedUrl))
         {
-            throw new Exception($"Failed to parse server URL '{serverUrl}'");
+            _messageDisplay.ShowError("failed to parse given server URL");
+            return false;
         }
 
         _serverUrl = parsedUrl;
         _httpClient.BaseAddress = _serverUrl;
+        return true;
     }
 
     /// <summary>
@@ -105,12 +114,13 @@ public partial class ApiClient : Node
         queue.ReceivedMessage -= messageHandler;
     }
 
-    public async Task<List<LobbyInfo>> ListLobbies()
+    public async Task<List<LobbyInfo>?> ListLobbies()
     {
         var lobbies = await _httpClient.GetFromJsonAsync<List<LobbyInfo>>("/lobbies");
         if (lobbies is null)
         {
-            throw new Exception("Failed to get response from lobby list endpoint");
+            _messageDisplay.ShowError("failed to get response from lobby list server");
+            return null;
         }
         return lobbies;
     }
@@ -119,11 +129,12 @@ public partial class ApiClient : Node
     /// Connects the API client to a server at the given URI, and starts sending and receiving
     /// messages.
     /// </summary>
-    public Task JoinLobby(string lobbyName, string username)
+    public async Task<bool> JoinLobby(string lobbyName, string username)
     {
         if (_serverUrl is null)
         {
-            throw new Exception("Tried to join lobby before setting server URL");
+            _messageDisplay.ShowError("tried to join lobby before setting server URL");
+            return false;
         }
 
         foreach (var messageQueue in _messageReceiver.MessageQueues)
@@ -139,7 +150,17 @@ public partial class ApiClient : Node
             Path = "join",
             Query = $"lobbyName={lobbyName}&username={username}"
         };
-        return _websocket.ConnectAsync(joinLobbyUrl.Uri, _cancellation.Token);
+
+        try
+        {
+            await _websocket.ConnectAsync(joinLobbyUrl.Uri, _cancellation.Token);
+            return true;
+        }
+        catch (Exception e)
+        {
+            _messageDisplay.ShowError("failed to create WebSocket connection to server", e.Message);
+            return false;
+        }
     }
 
     public Task LeaveLobby()
@@ -151,6 +172,11 @@ public partial class ApiClient : Node
             "Client initiated disconnect from game server",
             _cancellation.Token
         );
+    }
+
+    private void DisplayServerError(ErrorMessage errorMessage)
+    {
+        _messageDisplay.ShowError(errorMessage.Error);
     }
 
     /// <summary>
