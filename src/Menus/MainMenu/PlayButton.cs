@@ -10,22 +10,11 @@ public partial class PlayButton : Button
     {
         if (ApiClient.Instance.ServerUrl is null)
         {
-            var err = GetTree().ChangeSceneToFile(Scenes.ServerAddressMenu);
-            if (err != Error.Ok)
-            {
-                MessageDisplay.Instance.ShowError(
-                    "Failed to load server address menu",
-                    err.ToString()
-                );
-            }
+            SceneManager.Instance.LoadScene(Scenes.ServerAddressMenu);
         }
         else
         {
-            var err = GetTree().ChangeSceneToFile(Scenes.LobbyListMenu);
-            if (err != Error.Ok)
-            {
-                MessageDisplay.Instance.ShowError("Failed to load lobby list menu", err.ToString());
-            }
+            SceneManager.Instance.LoadScene(Scenes.LobbyListMenu);
         }
     }
 }
