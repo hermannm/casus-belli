@@ -1,8 +1,10 @@
-[gd_scene load_steps=4 format=3 uid="uid://css0l6sta847s"]
+[gd_scene load_steps=6 format=3 uid="uid://css0l6sta847s"]
 
 [ext_resource type="Texture2D" uid="uid://dua6cf3bykx6" path="res://assets/immerse-logo-transparent-background-with-text-under.svg" id="1_hlify"]
 [ext_resource type="FontFile" uid="uid://bjjxiy03d51n0" path="res://assets/fonts/quantico/quantico-bold.ttf" id="2_bhxow"]
 [ext_resource type="Script" path="res://src/Menus/LobbyListMenu/ServerAddressField.cs" id="3_xrdt1"]
+[ext_resource type="Script" path="res://src/Menus/LobbyListMenu/MainMenuButton.cs" id="4_3o82g"]
+[ext_resource type="Script" path="res://src/Menus/LobbyListMenu/ChangeServerButton.cs" id="5_hxvuf"]
 
 [node name="Control" type="Control"]
 layout_mode = 3
@@ -75,3 +77,29 @@ text = "Server: "
 horizontal_alignment = 1
 vertical_alignment = 1
 script = ExtResource("3_xrdt1")
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 300
+theme_override_constants/margin_right = 300
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer/MarginContainer"]
+layout_mode = 2
+
+[node name="MainMenuButton" type="Button" parent="MarginContainer/VBoxContainer/MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("2_bhxow")
+theme_override_font_sizes/font_size = 30
+text = "Main menu
+"
+script = ExtResource("4_3o82g")
+
+[node name="ChangeServerButton" type="Button" parent="MarginContainer/VBoxContainer/MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("2_bhxow")
+theme_override_font_sizes/font_size = 30
+text = "Change server
+"
+script = ExtResource("5_hxvuf")

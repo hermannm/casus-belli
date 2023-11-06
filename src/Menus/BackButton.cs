@@ -1,6 +1,6 @@
 using Godot;
 
-namespace Immerse.BfhClient.Menus.ServerAddressMenu;
+namespace Immerse.BfhClient.Menus;
 
 public partial class BackButton : Button
 {

@@ -4,8 +4,8 @@
 [ext_resource type="FontFile" uid="uid://bjjxiy03d51n0" path="res://assets/fonts/quantico/quantico-bold.ttf" id="2_xx15r"]
 [ext_resource type="FontFile" uid="uid://ogdr8ke6ljeh" path="res://assets/fonts/chakra-petch/chakra-petch-regular.ttf" id="3_md0cr"]
 [ext_resource type="FontFile" uid="uid://c2e14lo8x234b" path="res://assets/fonts/quantico/quantico-regular.ttf" id="3_mknma"]
-[ext_resource type="Script" path="res://src/Menus/ServerAddressMenu/BackButton.cs" id="4_jq80e"]
 [ext_resource type="Script" path="res://src/Menus/ServerAddressMenu/ConnectButton.cs" id="5_riaru"]
+[ext_resource type="Script" path="res://src/Menus/BackButton.cs" id="6_8od3s"]
 
 [node name="Control" type="Control"]
 layout_mode = 3
@@ -100,4 +100,4 @@ theme_override_fonts/font = ExtResource("2_xx15r")
 theme_override_font_sizes/font_size = 50
 text = "Back
 "
-script = ExtResource("4_jq80e")
+script = ExtResource("6_8od3s")
