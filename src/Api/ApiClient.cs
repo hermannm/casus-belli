@@ -49,7 +49,7 @@ public partial class ApiClient : Node
     {
         if (!Uri.TryCreate(serverUrl, UriKind.Absolute, out var parsedUrl))
         {
-            _messageDisplay.ShowError("failed to parse given server URL");
+            _messageDisplay.ShowError("Failed to parse given server URL");
             return false;
         }
 
@@ -119,7 +119,7 @@ public partial class ApiClient : Node
         var lobbies = await _httpClient.GetFromJsonAsync<List<LobbyInfo>>("/lobbies");
         if (lobbies is null)
         {
-            _messageDisplay.ShowError("failed to get response from lobby list server");
+            _messageDisplay.ShowError("Failed to get response from lobby list server");
             return null;
         }
         return lobbies;
@@ -133,7 +133,7 @@ public partial class ApiClient : Node
     {
         if (_serverUrl is null)
         {
-            _messageDisplay.ShowError("tried to join lobby before setting server URL");
+            _messageDisplay.ShowError("Tried to join lobby before setting server URL");
             return false;
         }
 
@@ -158,7 +158,7 @@ public partial class ApiClient : Node
         }
         catch (Exception e)
         {
-            _messageDisplay.ShowError("failed to create WebSocket connection to server", e.Message);
+            _messageDisplay.ShowError("Failed to create WebSocket connection to server", e.Message);
             return false;
         }
     }

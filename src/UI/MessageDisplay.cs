@@ -38,7 +38,8 @@ public partial class MessageDisplay : Panel
 
         var stringBuilder = new StringBuilder();
         stringBuilder.Append("Error: ");
-        stringBuilder.Append(errorMessage);
+        stringBuilder.Append(char.ToUpper(errorMessage[0]));
+        stringBuilder.Append(errorMessage.AsSpan(1));
         foreach (var error in subErrors)
         {
             stringBuilder.Append('\n');
