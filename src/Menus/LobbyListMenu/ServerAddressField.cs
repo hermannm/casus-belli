@@ -8,10 +8,10 @@ public partial class ServerAddressField : Label
 {
     public override void _Ready()
     {
-        var serverUrl = this.GetApiClient().ServerUrl;
+        var serverUrl = ApiClient.Instance.ServerUrl;
         if (serverUrl is null)
         {
-            this.GetMessageDisplay().ShowError("Failed to show server URL", "URL was null");
+            MessageDisplay.Instance.ShowError("Failed to show server URL", "URL was null");
             return;
         }
 

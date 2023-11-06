@@ -6,8 +6,21 @@ namespace Immerse.BfhClient.UI;
 
 public partial class MessageDisplay : Panel
 {
+    /// MessageDisplay singleton instance.
+    /// Should never be null, since it is configured to autoload in Godot, and set in _EnterTree.
+    public static MessageDisplay Instance { get; private set; } = null!;
+
     private VBoxContainer _messageContainer = null!;
     private PackedScene _errorMessageScene = null!;
+
+    public override void _EnterTree()
+    {
+        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+        if (Instance is null)
+        {
+            Instance = this;
+        }
+    }
 
     public override void _Ready()
     {

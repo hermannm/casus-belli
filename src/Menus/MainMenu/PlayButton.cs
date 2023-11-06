@@ -10,8 +10,7 @@ public partial class PlayButton : Button
         var err = GetTree().ChangeSceneToFile(Scenes.ServerAddressMenu);
         if (err != Error.Ok)
         {
-            this.GetMessageDisplay()
-                .ShowError("Failed to load server address menu", err.ToString());
+            MessageDisplay.Instance.ShowError("Failed to load server address menu", err.ToString());
         }
     }
 }

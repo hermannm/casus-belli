@@ -18,14 +18,26 @@ namespace Immerse.BfhClient.Api;
 // ReSharper disable once ClassNeverInstantiated.Global
 public partial class ApiClient : Node
 {
+    /// ApiClient singleton instance.
+    /// Should never be null, since it is configured to autoload in Godot, and set in _EnterTree.
+    public static ApiClient Instance { get; private set; } = null!;
+
+    public Uri? ServerUrl { get; private set; }
+
     private readonly HttpClient _httpClient;
     private readonly ClientWebSocket _websocket;
     private readonly MessageSender _messageSender;
     private readonly MessageReceiver _messageReceiver;
     private readonly CancellationTokenSource _cancellation;
-    private MessageDisplay _messageDisplay = null!;
 
-    public Uri? ServerUrl { get; private set; }
+    public override void _EnterTree()
+    {
+        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+        if (Instance is null)
+        {
+            Instance = this;
+        }
+    }
 
     public ApiClient()
     {
@@ -41,7 +53,6 @@ public partial class ApiClient : Node
 
     public override void _Ready()
     {
-        _messageDisplay = this.GetMessageDisplay();
         RegisterServerMessageHandler<ErrorMessage>(DisplayServerError);
     }
 
@@ -49,7 +60,7 @@ public partial class ApiClient : Node
     {
         if (!Uri.TryCreate(serverUrl, UriKind.Absolute, out var parsedUrl))
         {
-            _messageDisplay.ShowError("Failed to parse given server URL");
+            MessageDisplay.Instance.ShowError("Failed to parse given server URL");
             return false;
         }
 
@@ -119,7 +130,7 @@ public partial class ApiClient : Node
         var lobbies = await _httpClient.GetFromJsonAsync<List<LobbyInfo>>("/lobbies");
         if (lobbies is null)
         {
-            _messageDisplay.ShowError("Failed to get response from lobby list server");
+            MessageDisplay.Instance.ShowError("Failed to get response from lobby list server");
             return null;
         }
         return lobbies;
@@ -133,7 +144,7 @@ public partial class ApiClient : Node
     {
         if (ServerUrl is null)
         {
-            _messageDisplay.ShowError("Tried to join lobby before setting server URL");
+            MessageDisplay.Instance.ShowError("Tried to join lobby before setting server URL");
             return false;
         }
 
@@ -158,7 +169,10 @@ public partial class ApiClient : Node
         }
         catch (Exception e)
         {
-            _messageDisplay.ShowError("Failed to create WebSocket connection to server", e.Message);
+            MessageDisplay.Instance.ShowError(
+                "Failed to create WebSocket connection to server",
+                e.Message
+            );
             return false;
         }
     }
@@ -176,7 +190,7 @@ public partial class ApiClient : Node
 
     private void DisplayServerError(ErrorMessage errorMessage)
     {
-        _messageDisplay.ShowError(errorMessage.Error);
+        MessageDisplay.Instance.ShowError(errorMessage.Error);
     }
 
     /// <summary>

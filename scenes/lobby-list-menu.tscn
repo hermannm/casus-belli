@@ -1,9 +1,8 @@
-[gd_scene load_steps=5 format=3 uid="uid://bicblk77bes3e"]
+[gd_scene load_steps=4 format=3 uid="uid://css0l6sta847s"]
 
 [ext_resource type="Texture2D" uid="uid://dua6cf3bykx6" path="res://assets/immerse-logo-transparent-background-with-text-under.svg" id="1_hlify"]
 [ext_resource type="FontFile" uid="uid://bjjxiy03d51n0" path="res://assets/fonts/quantico/quantico-bold.ttf" id="2_bhxow"]
-[ext_resource type="Script" path="res://src/Menus/MainMenu/PlayButton.cs" id="3_b1act"]
-[ext_resource type="Script" path="res://src/Menus/MainMenu/QuitButton.cs" id="4_qikaq"]
+[ext_resource type="Script" path="res://src/Menus/LobbyListMenu/ServerAddressField.cs" id="3_xrdt1"]
 
 [node name="Control" type="Control"]
 layout_mode = 3
@@ -45,42 +44,34 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/margin_left = 300
-theme_override_constants/margin_top = 150
+theme_override_constants/margin_top = 50
 theme_override_constants/margin_right = 300
-theme_override_constants/margin_bottom = 150
+theme_override_constants/margin_bottom = 50
 
 [node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
 layout_mode = 2
-alignment = 1
 
 [node name="Label" type="Label" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_fonts/font = ExtResource("2_bhxow")
-theme_override_font_sizes/font_size = 100
-text = "The Battle for Hermannia"
+theme_override_font_sizes/font_size = 50
+text = "Available lobbies:"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/VBoxContainer"]
+[node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
-theme_override_constants/margin_left = 350
-theme_override_constants/margin_right = 350
+size_flags_vertical = 3
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/MarginContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/ScrollContainer"]
 layout_mode = 2
-theme_override_constants/separation = 20
 
-[node name="PlayButton" type="Button" parent="MarginContainer/VBoxContainer/MarginContainer/VBoxContainer"]
+[node name="ServerAddressField" type="Label" parent="MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_override_fonts/font = ExtResource("2_bhxow")
-theme_override_font_sizes/font_size = 50
-text = "Play"
-script = ExtResource("3_b1act")
-
-[node name="QuitButton" type="Button" parent="MarginContainer/VBoxContainer/MarginContainer/VBoxContainer"]
-layout_mode = 2
-theme_override_fonts/font = ExtResource("2_bhxow")
-theme_override_font_sizes/font_size = 50
-text = "Quit
-"
-script = ExtResource("4_qikaq")
+theme_override_font_sizes/font_size = 30
+text = "Server: "
+horizontal_alignment = 1
+vertical_alignment = 1
+script = ExtResource("3_xrdt1")
