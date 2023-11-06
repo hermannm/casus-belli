@@ -8,6 +8,7 @@ public partial class PlayButton : Button
 {
     public override void _Pressed()
     {
+        MessageDisplay.Instance.ShowError("test");
         if (ApiClient.Instance.ServerUrl is null)
         {
             SceneManager.Instance.LoadScene(Scenes.ServerAddressMenu);

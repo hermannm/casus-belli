@@ -1,4 +1,6 @@
-[gd_scene format=3 uid="uid://dnc8427jcvbhm"]
+[gd_scene load_steps=2 format=3 uid="uid://dnc8427jcvbhm"]
+
+[ext_resource type="Script" path="res://src/UI/MessageDisplay.cs" id="1_gk0yb"]
 
 [node name="MessageDisplay" type="ScrollContainer"]
 custom_minimum_size = Vector2(624, 0)
@@ -8,6 +10,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 0
 grow_vertical = 2
+script = ExtResource("1_gk0yb")
 
 [node name="MessageContainer" type="VBoxContainer" parent="."]
 unique_name_in_owner = true

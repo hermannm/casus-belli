@@ -14,6 +14,7 @@ public partial class ConnectButton : Button
 
     public override void _Pressed()
     {
+        GD.Print(_serverAddressField.Text);
         if (!ApiClient.Instance.Connect(_serverAddressField.Text))
         {
             return;

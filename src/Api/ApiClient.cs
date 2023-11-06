@@ -58,6 +58,7 @@ public partial class ApiClient : Node
 
     public bool Connect(string serverUrl)
     {
+        MessageDisplay.Instance.ShowError("test");
         if (!Uri.TryCreate(serverUrl, UriKind.Absolute, out var parsedUrl))
         {
             MessageDisplay.Instance.ShowError("Failed to parse given server URL");

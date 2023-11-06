@@ -4,7 +4,7 @@ using Godot;
 
 namespace Immerse.BfhClient.UI;
 
-public partial class MessageDisplay : Panel
+public partial class MessageDisplay : Node
 {
     /// MessageDisplay singleton instance.
     /// Should never be null, since it is configured to autoload in Godot, and set in _EnterTree.
@@ -26,15 +26,9 @@ public partial class MessageDisplay : Panel
     {
         _errorMessageScene = ResourceLoader.Load<PackedScene>(Scenes.ErrorMessage);
 
-        var messageDisplay =
-            ResourceLoader.Load<PackedScene>(Scenes.MessageDisplay).Instantiate()
-            ?? throw new Exception("Failed to instantiate message display scene");
-
         _messageContainer =
-            messageDisplay.GetNode<VBoxContainer>("%MessageContainer")
+            GetNode<VBoxContainer>("%MessageContainer")
             ?? throw new Exception("Failed to get message container for message display");
-
-        GetTree().Root.CallDeferred("add_child", messageDisplay);
     }
 
     public void ShowError(string errorMessage, params string[] subErrors)
