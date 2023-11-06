@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://dcad05xn8prap"]
+[gd_scene load_steps=4 format=3 uid="uid://dcad05xn8prap"]
 
 [ext_resource type="Texture2D" uid="uid://byv5egtxjrsn" path="res://assets/ui/error-panel-texture.png" id="1_lmvn4"]
 [ext_resource type="FontFile" uid="uid://c2e14lo8x234b" path="res://assets/fonts/quantico/quantico-regular.ttf" id="2_73td1"]
+[ext_resource type="Texture2D" uid="uid://cowbanm6b0svn" path="res://assets/icons/x.svg" id="3_0igc4"]
 
 [node name="ErrorMessage" type="MarginContainer"]
 anchors_preset = 10
@@ -29,11 +30,22 @@ theme_override_constants/margin_top = 12
 theme_override_constants/margin_right = 12
 theme_override_constants/margin_bottom = 12
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="MarginContainer/VBoxContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ErrorMessageLabel" type="Label" parent="MarginContainer/HBoxContainer/VBoxContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_override_fonts/font = ExtResource("2_73td1")
 theme_override_font_sizes/font_size = 24
 autowrap_mode = 2
+
+[node name="CloseErrorButton" type="TextureButton" parent="MarginContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+texture_normal = ExtResource("3_0igc4")
