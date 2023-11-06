@@ -1,5 +1,6 @@
 using Godot;
 using Immerse.BfhClient.Api;
+using Immerse.BfhClient.UI;
 
 namespace Immerse.BfhClient.Menus.ServerAddressMenu;
 
@@ -11,7 +12,7 @@ public partial class ConnectButton : Button
     public override void _Ready()
     {
         _apiClient = this.GetApiClient();
-        _serverAddressField = GetNode<TextEdit>("ServerAddressField");
+        _serverAddressField = GetNode<TextEdit>("%ServerAddressField");
     }
 
     public override void _Pressed()
@@ -19,6 +20,12 @@ public partial class ConnectButton : Button
         if (!_apiClient.Connect(_serverAddressField.Text))
         {
             return;
+        }
+
+        var err = GetTree().ChangeSceneToFile(Scenes.LobbyListMenu);
+        if (err != Error.Ok)
+        {
+            this.GetMessageDisplay().ShowError("Failed to load lobby list menu", err.ToString());
         }
     }
 }

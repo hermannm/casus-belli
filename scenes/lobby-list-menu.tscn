@@ -1,9 +1,9 @@
-[gd_scene load_steps=5 format=3 uid="uid://css0l6sta847s"]
+[gd_scene load_steps=5 format=3 uid="uid://bicblk77bes3e"]
 
-[ext_resource type="Texture2D" uid="uid://dua6cf3bykx6" path="res://assets/immerse-logo-transparent-background-with-text-under.svg" id="1_0v6v8"]
-[ext_resource type="FontFile" uid="uid://bjjxiy03d51n0" path="res://assets/fonts/quantico/quantico-bold.ttf" id="2_b2wlg"]
-[ext_resource type="Script" path="res://src/Menus/MainMenu/QuitButton.cs" id="3_3uwyg"]
-[ext_resource type="Script" path="res://src/Menus/MainMenu/PlayButton.cs" id="3_xaitc"]
+[ext_resource type="Texture2D" uid="uid://dua6cf3bykx6" path="res://assets/immerse-logo-transparent-background-with-text-under.svg" id="1_hlify"]
+[ext_resource type="FontFile" uid="uid://bjjxiy03d51n0" path="res://assets/fonts/quantico/quantico-bold.ttf" id="2_bhxow"]
+[ext_resource type="Script" path="res://src/Menus/MainMenu/PlayButton.cs" id="3_b1act"]
+[ext_resource type="Script" path="res://src/Menus/MainMenu/QuitButton.cs" id="4_qikaq"]
 
 [node name="Control" type="Control"]
 layout_mode = 3
@@ -33,7 +33,7 @@ offset_left = -181.0
 offset_top = -192.0
 grow_horizontal = 0
 grow_vertical = 0
-texture = ExtResource("1_0v6v8")
+texture = ExtResource("1_hlify")
 expand_mode = 1
 stretch_mode = 4
 
@@ -45,18 +45,19 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/margin_left = 300
-theme_override_constants/margin_top = 50
+theme_override_constants/margin_top = 150
 theme_override_constants/margin_right = 300
-theme_override_constants/margin_bottom = 50
+theme_override_constants/margin_bottom = 150
 
 [node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
 layout_mode = 2
+alignment = 1
 
 [node name="Label" type="Label" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
-theme_override_fonts/font = ExtResource("2_b2wlg")
-theme_override_font_sizes/font_size = 50
-text = "Available lobbies:"
+theme_override_fonts/font = ExtResource("2_bhxow")
+theme_override_font_sizes/font_size = 100
+text = "The Battle for Hermannia"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -71,15 +72,15 @@ theme_override_constants/separation = 20
 
 [node name="PlayButton" type="Button" parent="MarginContainer/VBoxContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
-theme_override_fonts/font = ExtResource("2_b2wlg")
+theme_override_fonts/font = ExtResource("2_bhxow")
 theme_override_font_sizes/font_size = 50
 text = "Play"
-script = ExtResource("3_xaitc")
+script = ExtResource("3_b1act")
 
 [node name="QuitButton" type="Button" parent="MarginContainer/VBoxContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
-theme_override_fonts/font = ExtResource("2_b2wlg")
+theme_override_fonts/font = ExtResource("2_bhxow")
 theme_override_font_sizes/font_size = 50
 text = "Quit
 "
-script = ExtResource("3_3uwyg")
+script = ExtResource("4_qikaq")

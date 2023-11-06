@@ -25,7 +25,7 @@ public partial class ApiClient : Node
     private readonly CancellationTokenSource _cancellation;
     private MessageDisplay _messageDisplay = null!;
 
-    private Uri? _serverUrl;
+    public Uri? ServerUrl { get; private set; }
 
     public ApiClient()
     {
@@ -53,8 +53,8 @@ public partial class ApiClient : Node
             return false;
         }
 
-        _serverUrl = parsedUrl;
-        _httpClient.BaseAddress = _serverUrl;
+        ServerUrl = parsedUrl;
+        _httpClient.BaseAddress = ServerUrl;
         return true;
     }
 
@@ -63,7 +63,7 @@ public partial class ApiClient : Node
     /// </summary>
     public Task Disconnect()
     {
-        _serverUrl = null;
+        ServerUrl = null;
         _httpClient.BaseAddress = null;
         return _websocket.State == WebSocketState.Open ? LeaveLobby() : Task.CompletedTask;
     }
@@ -131,7 +131,7 @@ public partial class ApiClient : Node
     /// </summary>
     public async Task<bool> JoinLobby(string lobbyName, string username)
     {
-        if (_serverUrl is null)
+        if (ServerUrl is null)
         {
             _messageDisplay.ShowError("Tried to join lobby before setting server URL");
             return false;
@@ -145,7 +145,7 @@ public partial class ApiClient : Node
         _messageReceiver.StartReceivingMessages(_cancellation.Token);
         _messageSender.StartSendingMessages(_cancellation.Token);
 
-        var joinLobbyUrl = new UriBuilder(_serverUrl)
+        var joinLobbyUrl = new UriBuilder(ServerUrl)
         {
             Path = "join",
             Query = $"lobbyName={lobbyName}&username={username}"
