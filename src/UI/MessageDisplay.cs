@@ -15,8 +15,7 @@ public partial class MessageDisplay : Node
 
     public override void _EnterTree()
     {
-        // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
-        Instance ??= this;
+        Instance = this;
     }
 
     public override void _Ready()

@@ -32,8 +32,7 @@ public partial class ApiClient : Node
 
     public override void _EnterTree()
     {
-        // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
-        Instance ??= this;
+        Instance = this;
         RegisterServerMessageHandler<ErrorMessage>(DisplayServerError);
     }
 
