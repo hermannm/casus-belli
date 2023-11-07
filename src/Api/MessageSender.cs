@@ -2,11 +2,9 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net.WebSockets;
-using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Godot;
 using Immerse.BfhClient.Api.Messages;
 using Immerse.BfhClient.UI;
 
@@ -25,7 +23,7 @@ internal class MessageSender
 
     private readonly ClientWebSocket _websocket;
 
-    private readonly Dictionary<Type, MessageType> _messageTypeMap = new();
+    private readonly Dictionary<Type, MessageTag> _messageTypeMap = new();
 
     public MessageSender(ClientWebSocket websocket)
     {
@@ -36,10 +34,10 @@ internal class MessageSender
     /// Registers the given message type, with the corresponding message ID, as a message that the
     /// client expects to be able to send to the server.
     /// </summary>
-    public void RegisterSendableMessage<TMessage>(MessageType messageType)
+    public void RegisterSendableMessage<TMessage>(MessageTag messageTag)
         where TMessage : ISendableMessage
     {
-        _messageTypeMap.Add(typeof(TMessage), messageType);
+        _messageTypeMap.Add(typeof(TMessage), messageTag);
     }
 
     /// <summary>
@@ -105,7 +103,7 @@ internal class MessageSender
         }
 
         return JsonSerializer.SerializeToUtf8Bytes(
-            new Message { Type = messageType, Data = message }
+            new Message { Tag = messageType, Data = message }
         );
     }
 }

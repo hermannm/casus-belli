@@ -6,17 +6,17 @@ namespace Immerse.BfhClient.Api.Messages;
 /// Messages sent between the game client and server look like this:
 /// <code>
 /// {
-///     "type": 4,
+///     "tag": 4,
 ///     "data": {"gameId": "green"}
 /// }
 /// </code>
-/// ...where the "type" field is one of the enum values defined in <see cref="MessageType"/>, and
+/// ...where the "tag" field is one of the enum values defined in <see cref="MessageTag"/>, and
 /// "data" is one of the message structs in <see cref="Immerse.BfhClient.Api.Messages"/>.
 /// </summary>
 public record struct Message
 {
-    [JsonPropertyName("type")]
-    public required MessageType Type;
+    [JsonPropertyName("tag")]
+    public required MessageTag Tag;
 
     [JsonPropertyName("data")]
     public required object Data;

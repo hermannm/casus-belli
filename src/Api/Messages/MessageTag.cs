@@ -1,6 +1,6 @@
 namespace Immerse.BfhClient.Api.Messages;
 
-public enum MessageType : byte
+public enum MessageTag : byte
 {
     Error = 1,
     PlayerStatus,
