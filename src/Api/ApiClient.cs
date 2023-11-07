@@ -53,11 +53,16 @@ public partial class ApiClient : Node
         RegisterServerMessageHandler<ErrorMessage>(DisplayServerError);
     }
 
-    public bool Connect(string serverUrl)
+    public bool TryConnect(string serverUrl)
     {
-        if (!Uri.TryCreate(serverUrl, UriKind.Absolute, out var parsedUrl))
+        Uri parsedUrl;
+        try
         {
-            MessageDisplay.Instance.ShowError("Failed to parse given server URL");
+            parsedUrl = new Uri(serverUrl, UriKind.Absolute);
+        }
+        catch (Exception e)
+        {
+            MessageDisplay.Instance.ShowError("Failed to parse given server URL", e.Message);
             return false;
         }
 
@@ -137,7 +142,7 @@ public partial class ApiClient : Node
     /// Connects the API client to a server at the given URI, and starts sending and receiving
     /// messages.
     /// </summary>
-    public async Task<bool> JoinLobby(string lobbyName, string username)
+    public async Task<bool> TryJoinLobby(string lobbyName, string username)
     {
         if (ServerUrl is null)
         {
