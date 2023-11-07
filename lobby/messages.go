@@ -2,34 +2,13 @@ package lobby
 
 import (
 	"hermannm.dev/bfh-server/game/gametypes"
+	"hermannm.dev/enumnames"
 )
 
 type Message struct {
 	Type MessageType `json:"type"`
 	Data any         `json:"data"`
 }
-
-type MessageType string
-
-const (
-	MessageTypeError              MessageType = "error"
-	MessageTypePlayerStatus       MessageType = "playerStatus"
-	MessageTypeLobbyJoined        MessageType = "lobbyJoined"
-	MessageTypeSelectGameID       MessageType = "selectGameId"
-	MessageTypeReady              MessageType = "ready"
-	MessageTypeStartGame          MessageType = "startGame"
-	MessageTypeSupportRequest     MessageType = "supportRequest"
-	MessageTypeOrderRequest       MessageType = "orderRequest"
-	MessageTypeOrdersReceived     MessageType = "ordersReceived"
-	MessageTypeOrdersConfirmation MessageType = "ordersConfirmation"
-	MessageTypeBattleResults      MessageType = "battleResults"
-	MessageTypeWinner             MessageType = "winner"
-	MessageTypeSubmitOrders       MessageType = "submitOrders"
-	MessageTypeGiveSupport        MessageType = "giveSupport"
-	MessageTypeWinterVote         MessageType = "winterVote"
-	MessageTypeSword              MessageType = "sword"
-	MessageTypeRaven              MessageType = "raven"
-)
 
 // Message sent from server when an error occurs.
 type ErrorMessage struct {
@@ -131,4 +110,50 @@ type SwordMessage struct {
 // Used for the throne expansion.
 type RavenMessage struct {
 	PlayerToSpyOn string `json:"playerToSpyOn"`
+}
+
+type MessageType uint8
+
+const (
+	MessageTypeError MessageType = iota + 1
+	MessageTypePlayerStatus
+	MessageTypeLobbyJoined
+	MessageTypeSelectGameID
+	MessageTypeReady
+	MessageTypeStartGame
+	MessageTypeSupportRequest
+	MessageTypeOrderRequest
+	MessageTypeOrdersReceived
+	MessageTypeOrdersConfirmation
+	MessageTypeBattleResults
+	MessageTypeWinner
+	MessageTypeSubmitOrders
+	MessageTypeGiveSupport
+	MessageTypeWinterVote
+	MessageTypeSword
+	MessageTypeRaven
+)
+
+var messageTypes = enumnames.NewMap(map[MessageType]string{
+	MessageTypeError:              "Error",
+	MessageTypePlayerStatus:       "PlayerStatus",
+	MessageTypeLobbyJoined:        "LobbyJoined",
+	MessageTypeSelectGameID:       "SelectGameId",
+	MessageTypeReady:              "Ready",
+	MessageTypeStartGame:          "StartGame",
+	MessageTypeSupportRequest:     "SupportRequest",
+	MessageTypeOrderRequest:       "OrderRequest",
+	MessageTypeOrdersReceived:     "OrdersReceived",
+	MessageTypeOrdersConfirmation: "OrdersConfirmation",
+	MessageTypeBattleResults:      "BattleResults",
+	MessageTypeWinner:             "Winner",
+	MessageTypeSubmitOrders:       "SubmitOrders",
+	MessageTypeGiveSupport:        "GiveSupport",
+	MessageTypeWinterVote:         "WinterVote",
+	MessageTypeSword:              "Sword",
+	MessageTypeRaven:              "Raven",
+})
+
+func (messageType MessageType) String() string {
+	return messageTypes.GetNameOrFallback(messageType, "InvalidMessageType")
 }
