@@ -50,8 +50,8 @@ public partial class LobbyJoinedMessage : GodotObject, IReceivableMessage
     /// IDs that the player may select from for this lobby's game.
     /// Returns all game IDs, though some may already be taken by other players in the lobby.
     /// </summary>
-    [JsonPropertyName("gameIds")]
-    public required List<string> GameIds { get; set; }
+    [JsonPropertyName("selectableGameIds")]
+    public required List<string> SelectableGameIDs { get; set; }
 
     /// <summary>
     /// Info about each other player in the lobby.
