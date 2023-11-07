@@ -42,6 +42,9 @@ public partial class ApiClient : Node
         Instance = this;
         AddMessageReceivedSignals();
         this.AddServerMessageHandler<ErrorMessage>(DisplayServerError);
+
+        if (OS.IsDebugBuild())
+            TryConnect("localhost:8000");
     }
 
     public override void _Process(double delta)
