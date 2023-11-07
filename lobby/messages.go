@@ -1,15 +1,12 @@
 package lobby
 
-import "hermannm.dev/bfh-server/game/gametypes"
+import (
+	"hermannm.dev/bfh-server/game/gametypes"
+)
 
-// Messages map a single key, the message type, to an object determined by its type.
-type Message map[MessageType]any
-
-func (message Message) Type() MessageType {
-	for messageType := range message {
-		return messageType
-	}
-	return "" // Messages should always have its type set, so this should never be reached
+type Message struct {
+	Type MessageType `json:"type"`
+	Data any         `json:"data"`
 }
 
 type MessageType string

@@ -16,7 +16,7 @@ func (player *Player) sendMessage(message Message) error {
 		return wrap.Errorf(
 			err,
 			"failed to send message of type '%s' to player %s",
-			message.Type(),
+			message.Type,
 			player.String(),
 		)
 	}
@@ -30,7 +30,7 @@ func (lobby *Lobby) sendMessage(toPlayer string, message Message) error {
 		return wrap.Errorf(
 			errors.New("player not found"),
 			"failed to send message of type '%s' to player with game ID '%s'",
-			message.Type(),
+			message.Type,
 			toPlayer,
 		)
 	}
@@ -85,10 +85,10 @@ func (player *Player) SendLobbyJoinedMessage(lobby *Lobby) error {
 		player.lock.RUnlock()
 	}
 
-	if err := player.sendMessage(Message{MessageTypeLobbyJoined: LobbyJoinedMessage{
-		SelectableGameIDs: lobby.game.PlayerIDs,
-		PlayerStatuses:    statuses,
-	}}); err != nil {
+	if err := player.sendMessage(Message{
+		Type: MessageTypeLobbyJoined,
+		Data: LobbyJoinedMessage{SelectableGameIDs: lobby.game.PlayerIDs, PlayerStatuses: statuses},
+	}); err != nil {
 		return wrap.Errorf(err, "failed to send lobby joined message to player %s", player.String())
 	}
 
@@ -110,7 +110,10 @@ func (lobby *Lobby) SendPlayerStatusMessage(player *Player) error {
 
 	player.lock.RUnlock()
 
-	if err := lobby.sendMessageToAll(Message{MessageTypePlayerStatus: statusMsg}); err != nil {
+	if err := lobby.sendMessageToAll(Message{
+		Type: MessageTypePlayerStatus,
+		Data: statusMsg,
+	}); err != nil {
 		return wrap.Error(err, "failed to send player status message")
 	}
 
@@ -119,7 +122,8 @@ func (lobby *Lobby) SendPlayerStatusMessage(player *Player) error {
 
 func (player *Player) SendError(err error) {
 	if err := player.sendMessage(Message{
-		MessageTypeError: ErrorMessage{Error: err.Error()},
+		Type: MessageTypeError,
+		Data: ErrorMessage{Error: err.Error()},
 	}); err != nil {
 		log.Error(err, "")
 	}
@@ -127,53 +131,56 @@ func (player *Player) SendError(err error) {
 
 func (lobby *Lobby) SendError(toPlayer string, err error) {
 	if err := lobby.sendMessage(toPlayer, Message{
-		MessageTypeError: ErrorMessage{Error: err.Error()},
+		Type: MessageTypeError,
+		Data: ErrorMessage{Error: err.Error()},
 	}); err != nil {
 		log.Error(err, "")
 	}
 }
 
 func (lobby *Lobby) SendOrderRequest(toPlayer string) error {
-	return lobby.sendMessage(toPlayer, Message{MessageTypeOrderRequest: OrderRequestMessage{}})
+	return lobby.sendMessage(toPlayer, Message{
+		Type: MessageTypeOrderRequest,
+		Data: OrderRequestMessage{},
+	})
 }
 
 func (lobby *Lobby) SendOrdersReceived(playerOrders map[string][]gametypes.Order) error {
-	return lobby.sendMessageToAll(
-		Message{MessageTypeOrdersReceived: OrdersReceivedMessage{PlayerOrders: playerOrders}},
-	)
+	return lobby.sendMessageToAll(Message{
+		Type: MessageTypeOrdersReceived,
+		Data: OrdersReceivedMessage{PlayerOrders: playerOrders},
+	})
 }
 
 func (lobby *Lobby) SendOrdersConfirmation(playerWhoSubmittedOrders string) error {
-	return lobby.sendMessageToAll(
-		Message{
-			MessageTypeOrdersConfirmation: OrdersConfirmationMessage{
-				PlayerWhoSubmittedOrders: playerWhoSubmittedOrders,
-			},
-		},
-	)
+	return lobby.sendMessageToAll(Message{
+		Type: MessageTypeOrdersConfirmation,
+		Data: OrdersConfirmationMessage{PlayerWhoSubmittedOrders: playerWhoSubmittedOrders},
+	})
 }
 
 func (lobby *Lobby) SendSupportRequest(
 	toPlayer string, supportingRegion string, embattledRegion string, supportablePlayers []string,
 ) error {
-	return lobby.sendMessage(
-		toPlayer,
-		Message{
-			MessageTypeSupportRequest: SupportRequestMessage{
-				SupportingRegion:   supportingRegion,
-				EmbattledRegion:    embattledRegion,
-				SupportablePlayers: supportablePlayers,
-			},
+	return lobby.sendMessage(toPlayer, Message{
+		Type: MessageTypeSupportRequest,
+		Data: SupportRequestMessage{
+			SupportingRegion:   supportingRegion,
+			EmbattledRegion:    embattledRegion,
+			SupportablePlayers: supportablePlayers,
 		},
-	)
+	})
 }
 
 func (lobby *Lobby) SendBattleResults(battles []gametypes.Battle) error {
-	return lobby.sendMessageToAll(
-		Message{MessageTypeBattleResults: BattleResultsMessage{Battles: battles}},
-	)
+	return lobby.sendMessageToAll(Message{
+		Type: MessageTypeBattleResults,
+		Data: BattleResultsMessage{Battles: battles},
+	})
 }
 
 func (lobby *Lobby) SendWinner(winner string) error {
-	return lobby.sendMessageToAll(Message{MessageTypeWinner: WinnerMessage{Winner: winner}})
+	return lobby.sendMessageToAll(Message{
+		Type: MessageTypeWinner,
+		Data: WinnerMessage{Winner: winner}})
 }

@@ -41,24 +41,17 @@ func (player *Player) readMessage(lobby *Lobby) (socketIsClosed bool, err error)
 		}
 	}
 
-	var messageWithType map[MessageType]json.RawMessage
-	if err := json.Unmarshal(messageBytes, &messageWithType); err != nil {
+	var message struct {
+		Type MessageType     `json:"type"`
+		Data json.RawMessage `json:"data"`
+	}
+	if err := json.Unmarshal(messageBytes, &message); err != nil {
 		return false, wrap.Error(err, "failed to parse received message")
 	}
 
-	if len(messageWithType) != 1 {
-		return false, errors.New("failed to parse received message: invalid message format")
-	}
-
-	var messageType MessageType
-	var rawMessage json.RawMessage
-	for messageType, rawMessage = range messageWithType {
-		break
-	}
-
-	isLobbyMessage, err := player.handleLobbyMessage(messageType, rawMessage, lobby)
+	isLobbyMessage, err := player.handleLobbyMessage(message.Type, message.Data, lobby)
 	if err != nil {
-		return false, wrap.Errorf(err, "failed to handle message of type '%s'", messageType)
+		return false, wrap.Errorf(err, "failed to handle message of type '%s'", message.Type)
 	}
 
 	if !isLobbyMessage {
@@ -69,11 +62,11 @@ func (player *Player) readMessage(lobby *Lobby) (socketIsClosed bool, err error)
 		if hasGameID {
 			// Launch in new goroutine, so it can send on channels while this goroutine keeps
 			// reading messages
-			go player.handleGameMessage(messageType, rawMessage)
+			go player.handleGameMessage(message.Type, message.Data)
 		} else {
 			return false, fmt.Errorf(
 				"received game message of type '%s' before player's game ID was set",
-				messageType,
+				message.Type,
 			)
 		}
 	}
