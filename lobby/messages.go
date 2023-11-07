@@ -6,8 +6,8 @@ import (
 )
 
 type Message struct {
-	Type MessageType `json:"type"`
-	Data any         `json:"data"`
+	Tag  MessageTag `json:"tag"`
+	Data any        `json:"data"`
 }
 
 // Message sent from server when an error occurs.
@@ -112,48 +112,48 @@ type RavenMessage struct {
 	PlayerToSpyOn string `json:"playerToSpyOn"`
 }
 
-type MessageType uint8
+type MessageTag uint8
 
 const (
-	MessageTypeError MessageType = iota + 1
-	MessageTypePlayerStatus
-	MessageTypeLobbyJoined
-	MessageTypeSelectGameID
-	MessageTypeReady
-	MessageTypeStartGame
-	MessageTypeSupportRequest
-	MessageTypeOrderRequest
-	MessageTypeOrdersReceived
-	MessageTypeOrdersConfirmation
-	MessageTypeBattleResults
-	MessageTypeWinner
-	MessageTypeSubmitOrders
-	MessageTypeGiveSupport
-	MessageTypeWinterVote
-	MessageTypeSword
-	MessageTypeRaven
+	MessageTagError MessageTag = iota + 1
+	MessageTagPlayerStatus
+	MessageTagLobbyJoined
+	MessageTagSelectGameID
+	MessageTagReady
+	MessageTagStartGame
+	MessageTagSupportRequest
+	MessageTagOrderRequest
+	MessageTagOrdersReceived
+	MessageTagOrdersConfirmation
+	MessageTagBattleResults
+	MessageTagWinner
+	MessageTagSubmitOrders
+	MessageTagGiveSupport
+	MessageTagWinterVote
+	MessageTagSword
+	MessageTagRaven
 )
 
-var messageTypes = enumnames.NewMap(map[MessageType]string{
-	MessageTypeError:              "Error",
-	MessageTypePlayerStatus:       "PlayerStatus",
-	MessageTypeLobbyJoined:        "LobbyJoined",
-	MessageTypeSelectGameID:       "SelectGameId",
-	MessageTypeReady:              "Ready",
-	MessageTypeStartGame:          "StartGame",
-	MessageTypeSupportRequest:     "SupportRequest",
-	MessageTypeOrderRequest:       "OrderRequest",
-	MessageTypeOrdersReceived:     "OrdersReceived",
-	MessageTypeOrdersConfirmation: "OrdersConfirmation",
-	MessageTypeBattleResults:      "BattleResults",
-	MessageTypeWinner:             "Winner",
-	MessageTypeSubmitOrders:       "SubmitOrders",
-	MessageTypeGiveSupport:        "GiveSupport",
-	MessageTypeWinterVote:         "WinterVote",
-	MessageTypeSword:              "Sword",
-	MessageTypeRaven:              "Raven",
+var messageTags = enumnames.NewMap(map[MessageTag]string{
+	MessageTagError:              "Error",
+	MessageTagPlayerStatus:       "PlayerStatus",
+	MessageTagLobbyJoined:        "LobbyJoined",
+	MessageTagSelectGameID:       "SelectGameId",
+	MessageTagReady:              "Ready",
+	MessageTagStartGame:          "StartGame",
+	MessageTagSupportRequest:     "SupportRequest",
+	MessageTagOrderRequest:       "OrderRequest",
+	MessageTagOrdersReceived:     "OrdersReceived",
+	MessageTagOrdersConfirmation: "OrdersConfirmation",
+	MessageTagBattleResults:      "BattleResults",
+	MessageTagWinner:             "Winner",
+	MessageTagSubmitOrders:       "SubmitOrders",
+	MessageTagGiveSupport:        "GiveSupport",
+	MessageTagWinterVote:         "WinterVote",
+	MessageTagSword:              "Sword",
+	MessageTagRaven:              "Raven",
 })
 
-func (messageType MessageType) String() string {
-	return messageTypes.GetNameOrFallback(messageType, "InvalidMessageType")
+func (tag MessageTag) String() string {
+	return messageTags.GetNameOrFallback(tag, "INVALID")
 }

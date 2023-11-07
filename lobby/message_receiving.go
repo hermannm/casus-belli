@@ -42,16 +42,16 @@ func (player *Player) readMessage(lobby *Lobby) (socketIsClosed bool, err error)
 	}
 
 	var message struct {
-		Type MessageType     `json:"type"`
+		Tag  MessageTag      `json:"tag"`
 		Data json.RawMessage `json:"data"`
 	}
 	if err := json.Unmarshal(messageBytes, &message); err != nil {
 		return false, wrap.Error(err, "failed to parse received message")
 	}
 
-	isLobbyMessage, err := player.handleLobbyMessage(message.Type, message.Data, lobby)
+	isLobbyMessage, err := player.handleLobbyMessage(message.Tag, message.Data, lobby)
 	if err != nil {
-		return false, wrap.Errorf(err, "failed to handle message of type '%s'", message.Type)
+		return false, wrap.Errorf(err, "failed to handle message of type '%s'", message.Tag)
 	}
 
 	if !isLobbyMessage {
@@ -62,11 +62,11 @@ func (player *Player) readMessage(lobby *Lobby) (socketIsClosed bool, err error)
 		if hasGameID {
 			// Launch in new goroutine, so it can send on channels while this goroutine keeps
 			// reading messages
-			go player.handleGameMessage(message.Type, message.Data)
+			go player.handleGameMessage(message.Tag, message.Data)
 		} else {
 			return false, fmt.Errorf(
 				"received game message of type '%s' before player's game ID was set",
-				message.Type,
+				message.Tag,
 			)
 		}
 	}
@@ -75,12 +75,12 @@ func (player *Player) readMessage(lobby *Lobby) (socketIsClosed bool, err error)
 }
 
 func (player *Player) handleLobbyMessage(
-	messageType MessageType,
+	messageTag MessageTag,
 	rawMessage json.RawMessage,
 	lobby *Lobby,
 ) (isLobbyMessage bool, err error) {
-	switch messageType {
-	case MessageTypeSelectGameID:
+	switch messageTag {
+	case MessageTagSelectGameID:
 		var message SelectGameIDMessage
 		if err := json.Unmarshal(rawMessage, &message); err != nil {
 			return true, wrap.Error(err, "failed to parse message")
@@ -95,7 +95,7 @@ func (player *Player) handleLobbyMessage(
 		}
 
 		return true, nil
-	case MessageTypeReady:
+	case MessageTagReady:
 		var message ReadyToStartGameMessage
 		if err := json.Unmarshal(rawMessage, &message); err != nil {
 			return true, wrap.Error(err, "failed to parse message")
@@ -110,7 +110,7 @@ func (player *Player) handleLobbyMessage(
 		}
 
 		return true, nil
-	case MessageTypeStartGame:
+	case MessageTagStartGame:
 		if err := lobby.startGame(); err != nil {
 			return true, wrap.Error(err, "failed to start game")
 		}
@@ -139,31 +139,31 @@ func newGameMessageReceiver() GameMessageReceiver {
 	}
 }
 
-func (player *Player) handleGameMessage(messageType MessageType, rawMessage json.RawMessage) {
+func (player *Player) handleGameMessage(tag MessageTag, rawMessage json.RawMessage) {
 	var err error // Error declared here in order to handle it after the switch
 
-	switch messageType {
-	case MessageTypeSubmitOrders:
+	switch tag {
+	case MessageTagSubmitOrders:
 		var message SubmitOrdersMessage
 		if err = json.Unmarshal(rawMessage, &message); err == nil {
 			player.gameMessageReceiver.orders <- message
 		}
-	case MessageTypeGiveSupport:
+	case MessageTagGiveSupport:
 		var message GiveSupportMessage
 		if err = json.Unmarshal(rawMessage, &message); err == nil {
 			player.gameMessageReceiver.supports.Add(message)
 		}
-	case MessageTypeWinterVote:
+	case MessageTagWinterVote:
 		var message WinterVoteMessage
 		if err = json.Unmarshal(rawMessage, &message); err == nil {
 			player.gameMessageReceiver.winterVote <- message
 		}
-	case MessageTypeSword:
+	case MessageTagSword:
 		var message SwordMessage
 		if err = json.Unmarshal(rawMessage, &message); err == nil {
 			player.gameMessageReceiver.sword <- message
 		}
-	case MessageTypeRaven:
+	case MessageTagRaven:
 		var message RavenMessage
 		if err = json.Unmarshal(rawMessage, &message); err == nil {
 			player.gameMessageReceiver.raven <- message
@@ -173,7 +173,7 @@ func (player *Player) handleGameMessage(messageType MessageType, rawMessage json
 	}
 
 	if err != nil {
-		err = wrap.Errorf(err, "failed to parse message of type '%s'", messageType)
+		err = wrap.Errorf(err, "failed to parse message of type '%s'", tag)
 		log.Errorf(err, "message error for player %s", player.String())
 		player.SendError(err)
 	}
