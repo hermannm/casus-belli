@@ -79,7 +79,7 @@ internal class MessageReceiver
             {
                 if (_websocket.State != WebSocketState.Open)
                 {
-                    Task.Delay(50, cancellationToken).Wait(cancellationToken);
+                    Task.Delay(50, cancellationToken).GetAwaiter().GetResult();
                     continue;
                 }
 
@@ -105,7 +105,10 @@ internal class MessageReceiver
         {
             var buffer = new ArraySegment<byte>(new byte[4 * 1024]);
 
-            var chunkResult = _websocket.ReceiveAsync(buffer, cancellationToken).Result;
+            var chunkResult = _websocket
+                .ReceiveAsync(buffer, cancellationToken)
+                .GetAwaiter()
+                .GetResult();
             if (chunkResult.MessageType != WebSocketMessageType.Text)
                 throw new Exception("Received non-text message");
 

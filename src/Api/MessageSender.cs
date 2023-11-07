@@ -60,7 +60,7 @@ internal class MessageSender
             {
                 if (_websocket.State != WebSocketState.Open)
                 {
-                    Task.Delay(50, cancellationToken).Wait(cancellationToken);
+                    Task.Delay(50, cancellationToken).GetAwaiter().GetResult();
                     continue;
                 }
 
@@ -73,7 +73,8 @@ internal class MessageSender
                         true,
                         cancellationToken
                     )
-                    .Wait(cancellationToken);
+                    .GetAwaiter()
+                    .GetResult();
             }
             catch (Exception e)
             {
