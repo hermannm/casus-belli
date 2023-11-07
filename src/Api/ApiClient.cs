@@ -129,12 +129,23 @@ public partial class ApiClient : Node
 
     public async Task<List<LobbyInfo>?> ListLobbies()
     {
-        var lobbies = await _httpClient.GetFromJsonAsync<List<LobbyInfo>>("/lobbies");
-        if (lobbies is null)
+        List<LobbyInfo>? lobbies;
+        try
         {
-            MessageDisplay.Instance.ShowError("Failed to get response from lobby list server");
+            lobbies = await _httpClient.GetFromJsonAsync<List<LobbyInfo>>("/lobbies");
+        }
+        catch (Exception e)
+        {
+            MessageDisplay.Instance.ShowError("Failed to get lobby list", e.Message);
             return null;
         }
+
+        if (lobbies is null)
+        {
+            MessageDisplay.Instance.ShowError("Failed to get lobby list", "Response was empty");
+            return null;
+        }
+
         return lobbies;
     }
 
