@@ -11,7 +11,6 @@ public partial class MessageDisplay : Node
     public static MessageDisplay Instance { get; private set; } = null!;
 
     private VBoxContainer _messageContainer = null!; // Set in _Ready
-    private PackedScene _errorMessageScene = ResourceLoader.Load<PackedScene>(Scenes.ErrorMessage);
 
     public override void _EnterTree()
     {
@@ -25,7 +24,7 @@ public partial class MessageDisplay : Node
 
     public void ShowError(string errorMessage, params string[] subErrors)
     {
-        var errorMessageNode = _errorMessageScene.Instantiate();
+        var errorMessageNode = ResourceLoader.Load<PackedScene>(Scenes.ErrorMessage).Instantiate();
         var label = errorMessageNode.GetNode<Label>("%ErrorMessageLabel");
         var button = errorMessageNode.GetNode<TextureButton>("%CloseErrorButton");
 
@@ -42,11 +41,11 @@ public partial class MessageDisplay : Node
         }
 
         label.Text = stringBuilder.ToString();
-        _messageContainer.CallThreadSafe("add_child", errorMessageNode);
+        _messageContainer.CallDeferred("add_child", errorMessageNode);
 
         button.Pressed += () =>
         {
-            _messageContainer.CallThreadSafe("remove_child", errorMessageNode);
+            _messageContainer.CallDeferred("remove_child", errorMessageNode);
         };
     }
 }
