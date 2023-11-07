@@ -1,6 +1,7 @@
-[gd_scene load_steps=6 format=3 uid="uid://css0l6sta847s"]
+[gd_scene load_steps=7 format=3 uid="uid://css0l6sta847s"]
 
 [ext_resource type="Texture2D" uid="uid://dua6cf3bykx6" path="res://assets/immerse-logo-transparent-background-with-text-under.svg" id="1_hlify"]
+[ext_resource type="Script" path="res://src/Menus/LobbyListMenu/LobbyListMenu.cs" id="1_qds6h"]
 [ext_resource type="FontFile" uid="uid://bjjxiy03d51n0" path="res://assets/fonts/quantico/quantico-bold.ttf" id="2_bhxow"]
 [ext_resource type="Script" path="res://src/Menus/LobbyListMenu/ServerAddressField.cs" id="3_xrdt1"]
 [ext_resource type="Script" path="res://src/Menus/LobbyListMenu/MainMenuButton.cs" id="4_3o82g"]
@@ -13,6 +14,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+script = ExtResource("1_qds6h")
 
 [node name="ColorRect" type="ColorRect" parent="."]
 layout_mode = 1
