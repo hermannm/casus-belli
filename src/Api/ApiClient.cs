@@ -34,6 +34,12 @@ public partial class ApiClient : Node
     {
         // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
         Instance ??= this;
+        RegisterServerMessageHandler<ErrorMessage>(DisplayServerError);
+    }
+
+    public override void _ExitTree()
+    {
+        DeregisterServerMessageHandler<ErrorMessage>(DisplayServerError);
     }
 
     public ApiClient()
@@ -46,11 +52,6 @@ public partial class ApiClient : Node
 
         RegisterSendableMessages();
         RegisterReceivableMessages();
-    }
-
-    public override void _Ready()
-    {
-        RegisterServerMessageHandler<ErrorMessage>(DisplayServerError);
     }
 
     public bool TryConnect(string serverUrl)
