@@ -1,12 +1,13 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using Godot;
 
 namespace Immerse.BfhClient.Api.Messages;
 
 /// <summary>
 /// Message sent from server when an error occurs.
 /// </summary>
-public record struct ErrorMessage : IReceivableMessage
+public partial class ErrorMessage : GodotObject, IReceivableMessage
 {
     /// <summary>
     /// The error message.
@@ -18,7 +19,7 @@ public record struct ErrorMessage : IReceivableMessage
 /// <summary>
 /// Message sent from server to all clients when a player's status changes.
 /// </summary>
-public record struct PlayerStatusMessage : IReceivableMessage
+public partial class PlayerStatusMessage : GodotObject, IReceivableMessage
 {
     /// <summary>
     /// The user's chosen display name.
@@ -43,7 +44,7 @@ public record struct PlayerStatusMessage : IReceivableMessage
 /// <summary>
 /// Message sent to a player when they join a lobby, to inform them about other players.
 /// </summary>
-public record struct LobbyJoinedMessage : IReceivableMessage
+public partial class LobbyJoinedMessage : GodotObject, IReceivableMessage
 {
     /// <summary>
     /// IDs that the player may select from for this lobby's game.
@@ -62,7 +63,7 @@ public record struct LobbyJoinedMessage : IReceivableMessage
 /// <summary>
 /// Message sent from client when they want to select a game ID.
 /// </summary>
-public record struct SelectGameIdMessage : ISendableMessage
+public partial class SelectGameIdMessage : GodotObject, ISendableMessage
 {
     /// <summary>
     /// The ID that the player wants to select for the game.
@@ -76,7 +77,7 @@ public record struct SelectGameIdMessage : ISendableMessage
 /// Message sent from client to mark themselves as ready to start the game.
 /// Requires game ID being selected.
 /// </summary>
-public record struct ReadyMessage : ISendableMessage
+public partial class ReadyMessage : GodotObject, ISendableMessage
 {
     /// <summary>
     /// Whether the player is ready to start the game.
@@ -89,4 +90,4 @@ public record struct ReadyMessage : ISendableMessage
 /// Message sent from a player when the lobby wants to start the game.
 /// Requires that all players are ready.
 /// </summary>
-public record struct StartGameMessage : ISendableMessage;
+public partial class StartGameMessage : GodotObject, ISendableMessage { }

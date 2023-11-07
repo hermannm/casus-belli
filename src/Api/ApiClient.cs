@@ -8,6 +8,8 @@ using Godot;
 using System.Net.Http.Json;
 using Immerse.BfhClient.UI;
 using HttpClient = System.Net.Http.HttpClient;
+using GodotArray = Godot.Collections.Array;
+using GodotDictionary = Godot.Collections.Dictionary;
 
 namespace Immerse.BfhClient.Api;
 
@@ -15,7 +17,6 @@ namespace Immerse.BfhClient.Api;
 /// WebSocket client that connects to the game server.
 /// Provides methods for sending and receiving messages to and from the server.
 /// </summary>
-// ReSharper disable once ClassNeverInstantiated.Global
 public partial class ApiClient : Node
 {
     /// ApiClient singleton instance.
@@ -23,34 +24,57 @@ public partial class ApiClient : Node
     public static ApiClient Instance { get; private set; } = null!;
 
     public Uri? ServerUrl { get; private set; }
-
-    private readonly HttpClient _httpClient;
-    private readonly ClientWebSocket _websocket;
+    private readonly HttpClient _httpClient = new();
+    private readonly ClientWebSocket _websocket = new();
+    private readonly CancellationTokenSource _cancellation = new();
     private readonly MessageSender _messageSender;
     private readonly MessageReceiver _messageReceiver;
-    private readonly CancellationTokenSource _cancellation;
+    private bool _lobbyJoined = false;
+
+    public ApiClient()
+    {
+        _messageSender = new MessageSender(_websocket);
+        _messageReceiver = new MessageReceiver(_websocket);
+    }
 
     public override void _EnterTree()
     {
         Instance = this;
-        RegisterServerMessageHandler<ErrorMessage>(DisplayServerError);
+        AddMessageReceivedSignals();
+        this.AddServerMessageHandler<ErrorMessage>(DisplayServerError);
     }
 
-    public override void _ExitTree()
+    public override void _Process(double delta)
     {
-        DeregisterServerMessageHandler<ErrorMessage>(DisplayServerError);
+        if (!_lobbyJoined)
+            return;
+
+        if (!_messageReceiver.MessageQueue.TryDequeue(out var message))
+            return;
+
+        var signal = GetMessageReceivedSignalName(message.Tag);
+        var err = EmitSignal(signal, message.Data);
+        if (err != Error.Ok)
+            GD.PushError($"Failed to emit signal '{signal}': {err}");
     }
 
-    public ApiClient()
+    private void AddMessageReceivedSignals()
     {
-        _httpClient = new HttpClient();
-        _websocket = new ClientWebSocket();
-        _messageSender = new MessageSender(_websocket);
-        _messageReceiver = new MessageReceiver(_websocket);
-        _cancellation = new CancellationTokenSource();
+        foreach (var tag in MessageDictionary.ReceivableMessageTags.Keys)
+        {
+            // https://cyoann.github.io/GodotSharpAPI/html/9ad4493d-f079-22f2-cdaf-37cb2660f34b.htm
+            var signalArg = new GodotDictionary();
+            // ReSharper disable once BuiltInTypeReferenceStyle
+            signalArg.Add("message", (Int32)Variant.Type.Object);
+            var signalArgs = new GodotArray();
+            signalArgs.Add(signalArg);
+            AddUserSignal(GetMessageReceivedSignalName(tag), signalArgs);
+        }
+    }
 
-        RegisterSendableMessages();
-        RegisterReceivableMessages();
+    public static string GetMessageReceivedSignalName(MessageTag tag)
+    {
+        return tag + "MessageReceived";
     }
 
     public bool TryConnect(string serverUrl)
@@ -78,7 +102,7 @@ public partial class ApiClient : Node
     {
         ServerUrl = null;
         _httpClient.BaseAddress = null;
-        return _websocket.State == WebSocketState.Open ? LeaveLobby() : Task.CompletedTask;
+        return _lobbyJoined ? LeaveLobby() : Task.CompletedTask;
     }
 
     /// <summary>
@@ -90,41 +114,9 @@ public partial class ApiClient : Node
     /// types marked with <see cref="ISendableMessage"/>.
     /// </typeparam>
     public void SendServerMessage<TMessage>(TMessage message)
-        where TMessage : ISendableMessage
+        where TMessage : GodotObject, ISendableMessage
     {
         _messageSender.SendQueue.Add(message);
-    }
-
-    /// <summary>
-    /// Registers the given method to be called whenever the server sends a message of the given
-    /// type.
-    /// </summary>
-    ///
-    /// <typeparam name="TMessage">
-    /// Must be registered in <see cref="RegisterReceivableMessages"/>, which should be all message
-    /// types marked with <see cref="IReceivableMessage"/>.
-    /// </typeparam>
-    public void RegisterServerMessageHandler<TMessage>(Action<TMessage> messageHandler)
-        where TMessage : IReceivableMessage
-    {
-        var queue = _messageReceiver.GetMessageQueueByType<TMessage>();
-        queue.ReceivedMessage += messageHandler;
-    }
-
-    /// <summary>
-    /// Deregisters the given message handler method. Should be called when a message handler is
-    /// disposed, to properly remove all references to it.
-    /// </summary>
-    ///
-    /// <typeparam name="TMessage">
-    /// Must be registered in <see cref="RegisterReceivableMessages"/>, which should be all message
-    /// types marked with <see cref="IReceivableMessage"/>.
-    /// </typeparam>
-    public void DeregisterServerMessageHandler<TMessage>(Action<TMessage> messageHandler)
-        where TMessage : IReceivableMessage
-    {
-        var queue = _messageReceiver.GetMessageQueueByType<TMessage>();
-        queue.ReceivedMessage -= messageHandler;
     }
 
     public async Task<List<LobbyInfo>?> ListLobbies()
@@ -161,15 +153,7 @@ public partial class ApiClient : Node
             return false;
         }
 
-        foreach (var messageQueue in _messageReceiver.MessageQueues)
-        {
-#pragma warning disable CS4014
-            // We explicitly don't await here, since we want these tasks to run in the background
-            Task.Run(() => messageQueue.CheckReceivedMessages(_cancellation.Token));
-#pragma warning restore CS4014
-        }
-
-        new Thread(() => _messageReceiver.ReceiveMessagesIntoQueues(_cancellation.Token)).Start();
+        new Thread(() => _messageReceiver.ReadMessagesIntoQueue(_cancellation.Token)).Start();
         new Thread(() => _messageSender.SendMessagesFromQueue(_cancellation.Token)).Start();
 
         var joinLobbyUrl = new UriBuilder(ServerUrl)
@@ -181,21 +165,25 @@ public partial class ApiClient : Node
         try
         {
             await _websocket.ConnectAsync(joinLobbyUrl.Uri, _cancellation.Token);
-            return true;
         }
         catch (Exception e)
         {
+            _cancellation.Cancel();
             MessageDisplay.Instance.ShowError(
                 "Failed to create WebSocket connection to server",
                 e.Message
             );
             return false;
         }
+
+        _lobbyJoined = true;
+        return true;
     }
 
     public Task LeaveLobby()
     {
         _cancellation.Cancel();
+        _lobbyJoined = false;
 
         return _websocket.CloseAsync(
             WebSocketCloseStatus.NormalClosure,
@@ -207,43 +195,5 @@ public partial class ApiClient : Node
     private static void DisplayServerError(ErrorMessage errorMessage)
     {
         MessageDisplay.Instance.ShowError(errorMessage.Error);
-    }
-
-    /// <summary>
-    /// Registers all message types that the client expects to be able to send to the server.
-    /// </summary>
-    private void RegisterSendableMessages()
-    {
-        _messageSender.RegisterSendableMessage<SelectGameIdMessage>(MessageTag.SelectGameId);
-        _messageSender.RegisterSendableMessage<ReadyMessage>(MessageTag.Ready);
-        _messageSender.RegisterSendableMessage<StartGameMessage>(MessageTag.StartGame);
-        _messageSender.RegisterSendableMessage<SubmitOrdersMessage>(MessageTag.SubmitOrders);
-        _messageSender.RegisterSendableMessage<GiveSupportMessage>(MessageTag.GiveSupport);
-        _messageSender.RegisterSendableMessage<WinterVoteMessage>(MessageTag.WinterVote);
-        _messageSender.RegisterSendableMessage<SwordMessage>(MessageTag.Sword);
-        _messageSender.RegisterSendableMessage<RavenMessage>(MessageTag.Raven);
-    }
-
-    /// <summary>
-    /// Registers all message types that the client expects to receive from the server.
-    /// </summary>
-    private void RegisterReceivableMessages()
-    {
-        _messageReceiver.RegisterReceivableMessage<ErrorMessage>(MessageTag.Error);
-        _messageReceiver.RegisterReceivableMessage<PlayerStatusMessage>(MessageTag.PlayerStatus);
-        _messageReceiver.RegisterReceivableMessage<LobbyJoinedMessage>(MessageTag.LobbyJoined);
-        _messageReceiver.RegisterReceivableMessage<SupportRequestMessage>(
-            MessageTag.SupportRequest
-        );
-        _messageReceiver.RegisterReceivableMessage<GiveSupportMessage>(MessageTag.GiveSupport);
-        _messageReceiver.RegisterReceivableMessage<OrderRequestMessage>(MessageTag.OrderRequest);
-        _messageReceiver.RegisterReceivableMessage<OrdersReceivedMessage>(
-            MessageTag.OrdersReceived
-        );
-        _messageReceiver.RegisterReceivableMessage<OrdersConfirmationMessage>(
-            MessageTag.OrdersConfirmation
-        );
-        _messageReceiver.RegisterReceivableMessage<BattleResultsMessage>(MessageTag.BattleResults);
-        _messageReceiver.RegisterReceivableMessage<WinnerMessage>(MessageTag.Winner);
     }
 }

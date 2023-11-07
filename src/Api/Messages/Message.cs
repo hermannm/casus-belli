@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Godot;
 
 namespace Immerse.BfhClient.Api.Messages;
 
@@ -19,5 +20,5 @@ public record struct Message
     public required MessageTag Tag;
 
     [JsonPropertyName("data")]
-    public required object Data;
+    public required GodotObject Data;
 }
