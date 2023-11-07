@@ -24,7 +24,7 @@ internal class MessageSender
 
     private readonly ClientWebSocket _websocket;
 
-    private readonly Dictionary<Type, string> _messageIdMap = new();
+    private readonly Dictionary<Type, MessageType> _messageTypeMap = new();
 
     public MessageSender(ClientWebSocket websocket)
     {
@@ -44,10 +44,10 @@ internal class MessageSender
     /// Registers the given message type, with the corresponding message ID, as a message that the
     /// client expects to be able to send to the server.
     /// </summary>
-    public void RegisterSendableMessage<TMessage>(string messageId)
+    public void RegisterSendableMessage<TMessage>(MessageType messageType)
         where TMessage : ISendableMessage
     {
-        _messageIdMap.Add(typeof(TMessage), messageId);
+        _messageTypeMap.Add(typeof(TMessage), messageType);
     }
 
     /// <summary>
@@ -105,16 +105,15 @@ internal class MessageSender
     /// </exception>
     private byte[] SerializeToJson(ISendableMessage message)
     {
-        if (!_messageIdMap.TryGetValue(message.GetType(), out var messageId))
+        if (!_messageTypeMap.TryGetValue(message.GetType(), out var messageType))
         {
             throw new ArgumentException(
                 $"Unrecognized type of message object: '{message.GetType()}'"
             );
         }
 
-        var messageJson = new Dictionary<string, object> { [messageId] = message };
-        var messageString = JsonSerializer.Serialize(messageJson);
-        var messageBytes = Encoding.UTF8.GetBytes(messageString);
-        return messageBytes;
+        return JsonSerializer.SerializeToUtf8Bytes(
+            new Message { Type = messageType, Data = message }
+        );
     }
 }

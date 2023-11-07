@@ -211,14 +211,14 @@ public partial class ApiClient : Node
     /// </summary>
     private void RegisterSendableMessages()
     {
-        _messageSender.RegisterSendableMessage<SelectGameIdMessage>(MessageId.SelectGameId);
-        _messageSender.RegisterSendableMessage<ReadyMessage>(MessageId.Ready);
-        _messageSender.RegisterSendableMessage<StartGameMessage>(MessageId.StartGame);
-        _messageSender.RegisterSendableMessage<SubmitOrdersMessage>(MessageId.SubmitOrders);
-        _messageSender.RegisterSendableMessage<GiveSupportMessage>(MessageId.GiveSupport);
-        _messageSender.RegisterSendableMessage<WinterVoteMessage>(MessageId.WinterVote);
-        _messageSender.RegisterSendableMessage<SwordMessage>(MessageId.Sword);
-        _messageSender.RegisterSendableMessage<RavenMessage>(MessageId.Raven);
+        _messageSender.RegisterSendableMessage<SelectGameIdMessage>(MessageType.SelectGameId);
+        _messageSender.RegisterSendableMessage<ReadyMessage>(MessageType.Ready);
+        _messageSender.RegisterSendableMessage<StartGameMessage>(MessageType.StartGame);
+        _messageSender.RegisterSendableMessage<SubmitOrdersMessage>(MessageType.SubmitOrders);
+        _messageSender.RegisterSendableMessage<GiveSupportMessage>(MessageType.GiveSupport);
+        _messageSender.RegisterSendableMessage<WinterVoteMessage>(MessageType.WinterVote);
+        _messageSender.RegisterSendableMessage<SwordMessage>(MessageType.Sword);
+        _messageSender.RegisterSendableMessage<RavenMessage>(MessageType.Raven);
     }
 
     /// <summary>
@@ -226,17 +226,17 @@ public partial class ApiClient : Node
     /// </summary>
     private void RegisterReceivableMessages()
     {
-        _messageReceiver.RegisterReceivableMessage<ErrorMessage>(MessageId.Error);
-        _messageReceiver.RegisterReceivableMessage<PlayerStatusMessage>(MessageId.PlayerStatus);
-        _messageReceiver.RegisterReceivableMessage<LobbyJoinedMessage>(MessageId.LobbyJoined);
-        _messageReceiver.RegisterReceivableMessage<SupportRequestMessage>(MessageId.SupportRequest);
-        _messageReceiver.RegisterReceivableMessage<GiveSupportMessage>(MessageId.GiveSupport);
-        _messageReceiver.RegisterReceivableMessage<OrderRequestMessage>(MessageId.OrderRequest);
-        _messageReceiver.RegisterReceivableMessage<OrdersReceivedMessage>(MessageId.OrdersReceived);
+        _messageReceiver.RegisterReceivableMessage<ErrorMessage>(MessageType.Error);
+        _messageReceiver.RegisterReceivableMessage<PlayerStatusMessage>(MessageType.PlayerStatus);
+        _messageReceiver.RegisterReceivableMessage<LobbyJoinedMessage>(MessageType.LobbyJoined);
+        _messageReceiver.RegisterReceivableMessage<SupportRequestMessage>(MessageType.SupportRequest);
+        _messageReceiver.RegisterReceivableMessage<GiveSupportMessage>(MessageType.GiveSupport);
+        _messageReceiver.RegisterReceivableMessage<OrderRequestMessage>(MessageType.OrderRequest);
+        _messageReceiver.RegisterReceivableMessage<OrdersReceivedMessage>(MessageType.OrdersReceived);
         _messageReceiver.RegisterReceivableMessage<OrdersConfirmationMessage>(
-            MessageId.OrdersConfirmation
+            MessageType.OrdersConfirmation
         );
-        _messageReceiver.RegisterReceivableMessage<BattleResultsMessage>(MessageId.BattleResults);
-        _messageReceiver.RegisterReceivableMessage<WinnerMessage>(MessageId.Winner);
+        _messageReceiver.RegisterReceivableMessage<BattleResultsMessage>(MessageType.BattleResults);
+        _messageReceiver.RegisterReceivableMessage<WinnerMessage>(MessageType.Winner);
     }
 }

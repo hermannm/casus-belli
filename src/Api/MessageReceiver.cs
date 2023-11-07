@@ -19,14 +19,15 @@ internal class MessageReceiver
 {
     private readonly ClientWebSocket _websocket;
 
-    private readonly Dictionary<string, IMessageReceiveQueue> _messageQueuesById = new();
-    private readonly Dictionary<Type, IMessageReceiveQueue> _messageQueuesByType = new();
+    private readonly Dictionary<MessageType, IMessageReceiveQueue> _messageQueuesByTypeField =
+        new();
+    private readonly Dictionary<Type, IMessageReceiveQueue> _messageQueuesByActualType = new();
 
     /// <summary>
     /// Queues where messages are placed as they are received from the server, one for each message
     /// type.
     /// </summary>
-    public IEnumerable<IMessageReceiveQueue> MessageQueues => _messageQueuesById.Values;
+    public IEnumerable<IMessageReceiveQueue> MessageQueues => _messageQueuesByTypeField.Values;
 
     public MessageReceiver(ClientWebSocket websocket)
     {
@@ -46,12 +47,12 @@ internal class MessageReceiver
     /// Registers the given message type, with the corresponding message ID, as a message that the
     /// client expects to receive from the server.
     /// </summary>
-    public void RegisterReceivableMessage<TMessage>(string messageId)
+    public void RegisterReceivableMessage<TMessage>(MessageType messageType)
         where TMessage : IReceivableMessage
     {
         var queue = new MessageReceiveQueue<TMessage>();
-        _messageQueuesById.Add(messageId, queue);
-        _messageQueuesByType.Add(typeof(TMessage), queue);
+        _messageQueuesByTypeField.Add(messageType, queue);
+        _messageQueuesByActualType.Add(typeof(TMessage), queue);
     }
 
     /// <summary>
@@ -61,7 +62,7 @@ internal class MessageReceiver
     public MessageReceiveQueue<TMessage> GetMessageQueueByType<TMessage>()
         where TMessage : IReceivableMessage
     {
-        if (!_messageQueuesByType.TryGetValue(typeof(TMessage), out var queue))
+        if (!_messageQueuesByActualType.TryGetValue(typeof(TMessage), out var queue))
         {
             throw new ArgumentException($"Unrecognized message type: '{typeof(TMessage)}'");
         }
@@ -150,21 +151,16 @@ internal class MessageReceiver
     /// </exception>
     private void DeserializeAndEnqueueMessage(string messageString)
     {
-        var messageWithId = JsonDocument.Parse(messageString);
+        var json = JsonDocument.Parse(messageString).RootElement;
+        var messageType = json.GetProperty("type").Deserialize<MessageType>();
 
-        // The wrapping JSON object is expected to have only a single field, with the message ID as key and the
-        // serialized message as its value
-        var firstMessageProperty = messageWithId.RootElement.EnumerateObject().First();
-        var messageId = firstMessageProperty.Name;
-        var serializedMessage = firstMessageProperty.Value;
-
-        if (!_messageQueuesById.TryGetValue(messageId, out var queue))
+        if (!_messageQueuesByTypeField.TryGetValue(messageType, out var queue))
         {
             throw new ArgumentException(
-                $"Unrecognized message type received from server: '{messageId}'"
+                $"Unrecognized message type received from server: '{messageType}'"
             );
         }
 
-        queue.DeserializeAndEnqueueMessage(serializedMessage);
+        queue.DeserializeAndEnqueueMessage(json.GetProperty("data"));
     }
 }
