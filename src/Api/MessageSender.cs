@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Godot;
 using Immerse.BfhClient.Api.Messages;
+using Immerse.BfhClient.UI;
 
 namespace Immerse.BfhClient.Api;
 
@@ -32,15 +33,6 @@ internal class MessageSender
     }
 
     /// <summary>
-    /// Spawns a thread that continuously listens for messages on the WebSocket connection.
-    /// Stops the thread when the given cancellation token is canceled.
-    /// </summary>
-    public void StartSendingMessages(CancellationToken cancellationToken)
-    {
-        new Thread(() => SendMessagesFromQueue(cancellationToken)).Start();
-    }
-
-    /// <summary>
     /// Registers the given message type, with the corresponding message ID, as a message that the
     /// client expects to be able to send to the server.
     /// </summary>
@@ -57,40 +49,39 @@ internal class MessageSender
     /// <remarks>
     /// Implementation based on https://www.patrykgalach.com/2019/11/11/implementing-websocket-in-unity/.
     /// </remarks>
-    private async void SendMessagesFromQueue(CancellationToken cancellationToken)
+    public void SendMessagesFromQueue(CancellationToken cancellationToken)
     {
-        while (true)
+        while (!SendQueue.IsCompleted)
         {
             if (cancellationToken.IsCancellationRequested)
                 return;
 
-            if (_websocket.State != WebSocketState.Open)
+            try
             {
-                await Task.Delay(50, cancellationToken).WaitAsync(cancellationToken);
-                continue;
-            }
-
-            while (!SendQueue.IsCompleted)
-            {
-                var message = SendQueue.Take();
-
-                byte[] serializedMessage;
-                try
+                if (_websocket.State != WebSocketState.Open)
                 {
-                    serializedMessage = SerializeToJson(message);
-                }
-                catch (Exception exception)
-                {
-                    GD.PrintErr($"Failed to serialize sent message: {exception.Message}");
+                    Task.Delay(50, cancellationToken).Wait(cancellationToken);
                     continue;
                 }
 
-                await _websocket.SendAsync(
-                    serializedMessage,
-                    WebSocketMessageType.Text,
-                    true,
-                    cancellationToken
-                );
+                var message = SendQueue.Take(cancellationToken);
+                var serializedMessage = SerializeToJson(message);
+                _websocket
+                    .SendAsync(
+                        serializedMessage,
+                        WebSocketMessageType.Text,
+                        true,
+                        cancellationToken
+                    )
+                    .Wait(cancellationToken);
+            }
+            catch (Exception e)
+            {
+                // If we were canceled, we don't want to show an error
+                if (cancellationToken.IsCancellationRequested)
+                    return;
+
+                MessageDisplay.Instance.ShowError("Failed to send message to server", e.Message);
             }
         }
     }

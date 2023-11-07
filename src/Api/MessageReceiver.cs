@@ -1,14 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Immerse.BfhClient.Api.Messages;
-using Godot;
+using Immerse.BfhClient.UI;
 
 namespace Immerse.BfhClient.Api;
 
@@ -32,15 +31,6 @@ internal class MessageReceiver
     public MessageReceiver(ClientWebSocket websocket)
     {
         _websocket = websocket;
-    }
-
-    /// <summary>
-    /// Spawns a thread that continuously listens for messages on the WebSocket connection.
-    /// Stops the thread when the given cancellation token is canceled.
-    /// </summary>
-    public void StartReceivingMessages(CancellationToken cancellationToken)
-    {
-        new Thread(() => ReceiveMessagesIntoQueues(cancellationToken)).Start();
     }
 
     /// <summary>
@@ -78,77 +68,61 @@ internal class MessageReceiver
     /// <remarks>
     /// Implementation based on https://www.patrykgalach.com/2019/11/11/implementing-websocket-in-unity/.
     /// </remarks>
-    private async void ReceiveMessagesIntoQueues(CancellationToken cancellationToken)
+    public void ReceiveMessagesIntoQueues(CancellationToken cancellationToken)
     {
         while (true)
         {
             if (cancellationToken.IsCancellationRequested)
                 return;
 
-            if (_websocket.State != WebSocketState.Open)
-            {
-                await Task.Delay(50, cancellationToken).WaitAsync(cancellationToken);
-                continue;
-            }
-
-            var memoryStream = new MemoryStream();
-            var isTextMessage = true;
-
-            while (true)
-            {
-                var buffer = new ArraySegment<byte>(new byte[4 * 1024]);
-
-                var chunkResult = await _websocket.ReceiveAsync(buffer, cancellationToken);
-                if (chunkResult.MessageType == WebSocketMessageType.Text)
-                {
-                    isTextMessage = false;
-                    break;
-                }
-
-                memoryStream.Write(buffer.Array!, buffer.Offset, chunkResult.Count);
-
-                if (chunkResult.EndOfMessage)
-                {
-                    break;
-                }
-            }
-
-            if (!isTextMessage)
-            {
-                GD.PrintErr("Received unexpected non-text message from WebSocket connection");
-                continue;
-            }
-
-            memoryStream.Seek(0, SeekOrigin.Begin);
-
-            using var reader = new StreamReader(memoryStream, Encoding.UTF8);
-            var messageString = await reader.ReadToEndAsync(cancellationToken);
-
             try
             {
-                DeserializeAndEnqueueMessage(messageString);
+                if (_websocket.State != WebSocketState.Open)
+                {
+                    Task.Delay(50, cancellationToken).Wait(cancellationToken);
+                    continue;
+                }
+
+                var message = ReadMessageFromSocket(cancellationToken);
+                DeserializeAndEnqueueMessage(message);
             }
-            catch (Exception exception)
+            catch (Exception e)
             {
-                GD.PrintErr($"Failed to deserialize received message: {exception.Message}");
+                // If we were canceled, we don't want to show an error
+                if (cancellationToken.IsCancellationRequested)
+                    return;
+
+                MessageDisplay.Instance.ShowError("Failed to read message from server", e.Message);
             }
         }
     }
 
-    /// <summary>
-    /// Messages received from the server are JSON on the following format:
-    /// <code>
-    /// {
-    ///     "[messageId]": {...message}
-    /// }
-    /// </code>
-    /// This method takes the full message JSON string, deserializes the "wrapping object" to get
-    /// the message ID, then calls on the appropriate message queue to further deserialize and
-    /// enqueue the wrapped message object.
-    /// </summary>
-    /// <exception cref="ArgumentException">
-    /// If no message queue was found for the message's ID.
-    /// </exception>
+    private string ReadMessageFromSocket(CancellationToken cancellationToken)
+    {
+        var memoryStream = new MemoryStream();
+
+        while (true)
+        {
+            var buffer = new ArraySegment<byte>(new byte[4 * 1024]);
+
+            var chunkResult = _websocket.ReceiveAsync(buffer, cancellationToken).Result;
+            if (chunkResult.MessageType != WebSocketMessageType.Text)
+                throw new Exception("Received non-text message");
+
+            memoryStream.Write(buffer.Array!, buffer.Offset, chunkResult.Count);
+
+            if (chunkResult.EndOfMessage)
+            {
+                break;
+            }
+        }
+
+        memoryStream.Seek(0, SeekOrigin.Begin);
+
+        using var reader = new StreamReader(memoryStream, Encoding.UTF8);
+        return reader.ReadToEnd();
+    }
+
     private void DeserializeAndEnqueueMessage(string messageString)
     {
         var json = JsonDocument.Parse(messageString).RootElement;

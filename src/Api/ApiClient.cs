@@ -163,11 +163,14 @@ public partial class ApiClient : Node
 
         foreach (var messageQueue in _messageReceiver.MessageQueues)
         {
+#pragma warning disable CS4014
+            // We explicitly don't await here, since we want these tasks to run in the background
             Task.Run(() => messageQueue.CheckReceivedMessages(_cancellation.Token));
+#pragma warning restore CS4014
         }
 
-        _messageReceiver.StartReceivingMessages(_cancellation.Token);
-        _messageSender.StartSendingMessages(_cancellation.Token);
+        new Thread(() => _messageReceiver.ReceiveMessagesIntoQueues(_cancellation.Token)).Start();
+        new Thread(() => _messageSender.SendMessagesFromQueue(_cancellation.Token)).Start();
 
         var joinLobbyUrl = new UriBuilder(ServerUrl)
         {
@@ -229,10 +232,14 @@ public partial class ApiClient : Node
         _messageReceiver.RegisterReceivableMessage<ErrorMessage>(MessageType.Error);
         _messageReceiver.RegisterReceivableMessage<PlayerStatusMessage>(MessageType.PlayerStatus);
         _messageReceiver.RegisterReceivableMessage<LobbyJoinedMessage>(MessageType.LobbyJoined);
-        _messageReceiver.RegisterReceivableMessage<SupportRequestMessage>(MessageType.SupportRequest);
+        _messageReceiver.RegisterReceivableMessage<SupportRequestMessage>(
+            MessageType.SupportRequest
+        );
         _messageReceiver.RegisterReceivableMessage<GiveSupportMessage>(MessageType.GiveSupport);
         _messageReceiver.RegisterReceivableMessage<OrderRequestMessage>(MessageType.OrderRequest);
-        _messageReceiver.RegisterReceivableMessage<OrdersReceivedMessage>(MessageType.OrdersReceived);
+        _messageReceiver.RegisterReceivableMessage<OrdersReceivedMessage>(
+            MessageType.OrdersReceived
+        );
         _messageReceiver.RegisterReceivableMessage<OrdersConfirmationMessage>(
             MessageType.OrdersConfirmation
         );
