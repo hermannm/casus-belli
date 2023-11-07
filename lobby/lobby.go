@@ -51,7 +51,7 @@ func (lobby *Lobby) getPlayer(gameID string) (player *Player, foundPlayer bool) 
 }
 
 func (lobby *Lobby) AddPlayer(username string, socket *websocket.Conn) (*Player, error) {
-	if !lobby.isUsernameTaken(username) {
+	if lobby.isUsernameTaken(username) {
 		return nil, fmt.Errorf("username '%s' already taken", username)
 	}
 

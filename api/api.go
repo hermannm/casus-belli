@@ -79,7 +79,7 @@ func (api LobbyAPI) JoinLobby(res http.ResponseWriter, req *http.Request) {
 	}
 
 	lobbyName := params.Get(lobbyNameParam)
-	lobby, ok := api.lobbyRegistry.GetLobby(lobbyName)
+	gameLobby, ok := api.lobbyRegistry.GetLobby(lobbyName)
 	if !ok {
 		http.Error(
 			res,
@@ -105,14 +105,18 @@ func (api LobbyAPI) JoinLobby(res http.ResponseWriter, req *http.Request) {
 
 	username := params.Get(usernameParam)
 
-	player, err := lobby.AddPlayer(username, socket)
+	player, err := gameLobby.AddPlayer(username, socket)
 	if err != nil {
 		log.Error(err, "failed to add player")
-		player.SendError(wrap.Error(err, "failed to join game"))
+		socket.WriteJSON(lobby.Message{
+			Tag:  lobby.MessageTagError,
+			Data: lobby.ErrorMessage{Error: wrap.Error(err, "failed to join game").Error()},
+		})
+		socket.Close()
 		return
 	}
 
-	player.SendLobbyJoinedMessage(lobby)
+	player.SendLobbyJoinedMessage(gameLobby)
 }
 
 // Endpoint for creating lobbies (for servers with public lobby creation).
