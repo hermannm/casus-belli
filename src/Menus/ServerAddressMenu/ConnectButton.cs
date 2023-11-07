@@ -5,7 +5,7 @@ namespace Immerse.BfhClient.Menus.ServerAddressMenu;
 
 public partial class ConnectButton : Button
 {
-    private TextEdit _serverAddressField = null!;
+    private TextEdit _serverAddressField = null!; // Set in _Ready
 
     public override void _Ready()
     {

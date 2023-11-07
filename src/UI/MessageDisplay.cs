@@ -10,38 +10,25 @@ public partial class MessageDisplay : Node
     /// Should never be null, since it is configured to autoload in Godot, and set in _EnterTree.
     public static MessageDisplay Instance { get; private set; } = null!;
 
-    private VBoxContainer _messageContainer = null!;
-    private PackedScene _errorMessageScene = null!;
+    private VBoxContainer _messageContainer = null!; // Set in _Ready
+    private PackedScene _errorMessageScene = ResourceLoader.Load<PackedScene>(Scenes.ErrorMessage);
 
     public override void _EnterTree()
     {
-        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-        if (Instance is null)
-        {
-            Instance = this;
-        }
+        // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
+        Instance ??= this;
     }
 
     public override void _Ready()
     {
-        _errorMessageScene = ResourceLoader.Load<PackedScene>(Scenes.ErrorMessage);
-
-        _messageContainer =
-            GetNode<VBoxContainer>("%MessageContainer")
-            ?? throw new Exception("Failed to get message container for message display");
+        _messageContainer = GetNode<VBoxContainer>("%MessageContainer");
     }
 
     public void ShowError(string errorMessage, params string[] subErrors)
     {
         var errorMessageNode = _errorMessageScene.Instantiate();
-
-        var label =
-            errorMessageNode.GetNode<Label>("%ErrorMessageLabel")
-            ?? throw new Exception("Failed to get label for error message node");
-
-        var button =
-            errorMessageNode.GetNode<TextureButton>("%CloseErrorButton")
-            ?? throw new Exception("Failed to get close button for error message node");
+        var label = errorMessageNode.GetNode<Label>("%ErrorMessageLabel");
+        var button = errorMessageNode.GetNode<TextureButton>("%CloseErrorButton");
 
         var stringBuilder = new StringBuilder();
         stringBuilder.Append("Error: ");

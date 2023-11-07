@@ -32,11 +32,8 @@ public partial class ApiClient : Node
 
     public override void _EnterTree()
     {
-        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-        if (Instance is null)
-        {
-            Instance = this;
-        }
+        // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
+        Instance ??= this;
     }
 
     public ApiClient()
@@ -188,7 +185,7 @@ public partial class ApiClient : Node
         );
     }
 
-    private void DisplayServerError(ErrorMessage errorMessage)
+    private static void DisplayServerError(ErrorMessage errorMessage)
     {
         MessageDisplay.Instance.ShowError(errorMessage.Error);
     }
