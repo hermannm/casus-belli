@@ -41,7 +41,7 @@ public partial class ApiClient : Node
     {
         Instance = this;
         AddMessageReceivedSignals();
-        this.AddServerMessageHandler<ErrorMessage>(DisplayServerError);
+        this.AddMessageHandler<ErrorMessage>(DisplayServerError);
 
         if (OS.IsDebugBuild())
             TryConnect("localhost:8000");
@@ -65,13 +65,17 @@ public partial class ApiClient : Node
     {
         foreach (var tag in MessageDictionary.ReceivableMessageTags.Keys)
         {
-            // https://cyoann.github.io/GodotSharpAPI/html/9ad4493d-f079-22f2-cdaf-37cb2660f34b.htm
-            var signalArg = new GodotDictionary();
-            // ReSharper disable once BuiltInTypeReferenceStyle
-            signalArg.Add("message", (Int32)Variant.Type.Object);
-            var signalArgs = new GodotArray();
-            signalArgs.Add(signalArg);
-            AddUserSignal(GetMessageReceivedSignalName(tag), signalArgs);
+            AddUserSignal(
+                GetMessageReceivedSignalName(tag),
+                new GodotArray
+                {
+                    new GodotDictionary
+                    {
+                        { "name", "message" },
+                        { "type", (int)Variant.Type.Object }
+                    }
+                }
+            );
         }
     }
 
@@ -85,6 +89,10 @@ public partial class ApiClient : Node
         Uri parsedUrl;
         try
         {
+            if (!serverUrl.StartsWith("http://"))
+            {
+                serverUrl = $"http://{serverUrl}";
+            }
             parsedUrl = new Uri(serverUrl, UriKind.Absolute);
         }
         catch (Exception e)
@@ -108,18 +116,30 @@ public partial class ApiClient : Node
         return _lobbyJoined ? LeaveLobby() : Task.CompletedTask;
     }
 
-    /// <summary>
-    /// Sends the given message to the server.
-    /// </summary>
-    ///
-    /// <typeparam name="TMessage">
-    /// Must be registered in <see cref="RegisterSendableMessages"/>, which should be all message
-    /// types marked with <see cref="ISendableMessage"/>.
-    /// </typeparam>
-    public void SendServerMessage<TMessage>(TMessage message)
+    public void SendMessage<TMessage>(TMessage message)
         where TMessage : GodotObject, ISendableMessage
     {
         _messageSender.SendQueue.Add(message);
+    }
+
+    public void AddMessageHandler<TMessage>(Action<TMessage> handler)
+        where TMessage : GodotObject, IReceivableMessage
+    {
+        if (
+            !MessageDictionary.ReceivableMessageTypes.TryGetValue(
+                typeof(TMessage),
+                out var messageTag
+            )
+        )
+        {
+            GD.PushError($"Invalid message type {typeof(TMessage)} for for server message handler");
+            return;
+        }
+
+        var signal = GetMessageReceivedSignalName(messageTag);
+        var err = Connect(signal, Callable.From(handler));
+        if (err != Error.Ok)
+            GD.PushError($"Failed to connect to signal '{signal}': {err}");
     }
 
     public async Task<List<LobbyInfo>?> ListLobbies()
@@ -159,11 +179,16 @@ public partial class ApiClient : Node
         new Thread(() => _messageReceiver.ReadMessagesIntoQueue(_cancellation.Token)).Start();
         new Thread(() => _messageSender.SendMessagesFromQueue(_cancellation.Token)).Start();
 
-        var joinLobbyUrl = new UriBuilder(ServerUrl)
+        var joinLobbyUrl = new UriBuilder
         {
-            Path = "join",
+            Scheme = ServerUrl.Scheme == "https" ? "wss" : "ws",
+            Host = ServerUrl.Host,
+            Port = ServerUrl.Port,
+            Path = "/join",
             Query = $"lobbyName={lobbyName}&username={username}"
         };
+
+        GD.Print(joinLobbyUrl.ToString());
 
         try
         {
