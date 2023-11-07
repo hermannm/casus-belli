@@ -42,11 +42,11 @@ public partial class MessageDisplay : Node
         }
 
         label.Text = stringBuilder.ToString();
-        _messageContainer.AddChild(errorMessageNode);
+        _messageContainer.CallThreadSafe("add_child", errorMessageNode);
 
         button.Pressed += () =>
         {
-            _messageContainer.RemoveChild(errorMessageNode);
+            _messageContainer.CallThreadSafe("remove_child", errorMessageNode);
         };
     }
 }
