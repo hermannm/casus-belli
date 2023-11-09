@@ -1,10 +1,8 @@
 package api
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
 
 	"github.com/gorilla/websocket"
 	"hermannm.dev/bfh-server/game"
@@ -51,41 +49,29 @@ func (api LobbyAPI) ListenAndServe(address string) error {
 
 // Endpoint to list available game lobbies.
 func (api LobbyAPI) ListLobbies(res http.ResponseWriter, req *http.Request) {
-	lobbyList := api.lobbyRegistry.LobbyInfo()
-
-	lobbyListJSON, err := json.Marshal(lobbyList)
-	if err != nil {
-		http.Error(
-			res,
-			"error in reading lobby fetching lobby list",
-			http.StatusInternalServerError,
-		)
-		return
-	}
-
-	res.Write(lobbyListJSON)
+	sendJSON(res, api.lobbyRegistry.LobbyInfo())
 }
 
 // Endpoint for a player to join a lobby.
 // Expects query parameters "lobbyName" and "username".
 func (api LobbyAPI) JoinLobby(res http.ResponseWriter, req *http.Request) {
-	const lobbyNameParam = "lobbyName"
-	const usernameParam = "username"
+	query := req.URL.Query()
 
-	params, ok := checkParams(req, lobbyNameParam, usernameParam)
-	if !ok {
-		http.Error(res, "lobby name and username are required to join lobby", http.StatusBadRequest)
+	lobbyName, err := getQueryParam(query, "lobbyName")
+	if err != nil {
+		sendClientError(res, err, "")
 		return
 	}
 
-	lobbyName := params.Get(lobbyNameParam)
+	username, err := getQueryParam(query, "username")
+	if err != nil {
+		sendClientError(res, err, "")
+		return
+	}
+
 	gameLobby, ok := api.lobbyRegistry.GetLobby(lobbyName)
 	if !ok {
-		http.Error(
-			res,
-			fmt.Sprintf("no lobby found with name '%s'", lobbyName),
-			http.StatusNotFound,
-		)
+		sendClientError(res, nil, fmt.Sprintf("no lobby found with name '%s'", lobbyName))
 		return
 	}
 
@@ -98,16 +84,19 @@ func (api LobbyAPI) JoinLobby(res http.ResponseWriter, req *http.Request) {
 
 	socket, err := upgrader.Upgrade(res, req, nil)
 	if err != nil {
-		log.Error(err, "failed to establish socket connection")
-		http.Error(res, "unable to establish socket connection", http.StatusInternalServerError)
+		sendServerError(res, err, "failed to establish socket connection")
+		log.Errorf(
+			err,
+			"failed to establish socket connection for player '%s' to lobby '%s'",
+			username,
+			lobbyName,
+		)
 		return
 	}
 
-	username := params.Get(usernameParam)
-
 	player, err := gameLobby.AddPlayer(username, socket)
 	if err != nil {
-		log.Error(err, "failed to add player")
+		log.Errorf(err, "failed to add player '%s' to lobby '%s'", username, lobbyName)
 		socket.WriteJSON(lobby.Message{
 			Tag:  lobby.MessageTagError,
 			Data: lobby.ErrorMessage{Error: wrap.Error(err, "failed to join game").Error()},
@@ -119,40 +108,33 @@ func (api LobbyAPI) JoinLobby(res http.ResponseWriter, req *http.Request) {
 	player.SendLobbyJoinedMessage(gameLobby)
 }
 
-// Endpoint for creating lobbies (for servers with public lobby creation).
+// Endpoint for creating lobbies (for servers with public lobby creation enabled).
 // Expects query parameters "lobbyName" and "gameName".
 func (api LobbyAPI) CreateLobby(res http.ResponseWriter, req *http.Request) {
-	const lobbyNameParam = "lobbyName"
-	const gameNameParam = "gameName"
+	query := req.URL.Query()
 
-	params, ok := checkParams(req, lobbyNameParam, gameNameParam)
-	if !ok {
-		http.Error(res, "insufficient query parameters", http.StatusBadRequest)
+	lobbyName, err := getQueryParam(query, "lobbyName")
+	if err != nil {
+		sendClientError(res, err, "")
 		return
 	}
 
-	lobbyName, err := url.QueryUnescape(params.Get(lobbyNameParam))
+	gameName, err := getQueryParam(query, "gameName")
 	if err != nil {
-		http.Error(res, "invalid lobby name provided", http.StatusBadRequest)
+		sendClientError(res, err, "")
 		return
-	}
-
-	gameName, err := url.QueryUnescape(params.Get(gameNameParam))
-	if err != nil {
-		http.Error(res, "invalid game title provided", http.StatusBadRequest)
 	}
 
 	lobby, err := lobby.New(lobbyName, gameName, game.DefaultOptions())
 	if err != nil {
+		sendServerError(res, err, "")
 		log.Error(err, "")
-		http.Error(res, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	if err := api.lobbyRegistry.RegisterLobby(lobby); err != nil {
-		err = wrap.Error(err, "failed to register lobby")
-		log.Error(err, "")
-		http.Error(res, err.Error(), http.StatusInternalServerError)
+		sendServerError(res, err, "")
+		log.Error(err, "failed to register lobby")
 		return
 	}
 
@@ -161,11 +143,5 @@ func (api LobbyAPI) CreateLobby(res http.ResponseWriter, req *http.Request) {
 
 // Endpoint for showing the list of boards supported by the server.
 func (api LobbyAPI) ListBoards(res http.ResponseWriter, req *http.Request) {
-	jsonResponse, err := json.Marshal(api.availableBoards)
-	if err != nil {
-		http.Error(res, "error fetching list of games", http.StatusInternalServerError)
-		return
-	}
-
-	res.Write(jsonResponse)
+	sendJSON(res, api.availableBoards)
 }
