@@ -3,6 +3,7 @@ package lobby
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"sync"
 
 	"github.com/gorilla/websocket"
@@ -68,6 +69,18 @@ func (lobby *Lobby) AddPlayer(username string, socket *websocket.Conn) (*Player,
 	go player.readMessagesUntilSocketCloses(lobby)
 
 	return player, nil
+}
+
+func (lobby *Lobby) RemovePlayer(username string) {
+	lobby.lock.Lock()
+	defer lobby.lock.Unlock()
+
+	for i, player := range lobby.players {
+		if player.username == username {
+			lobby.players = slices.Delete(lobby.players, i, i+1)
+			return
+		}
+	}
 }
 
 func (lobby *Lobby) isUsernameTaken(username string) bool {

@@ -18,7 +18,12 @@ func (player *Player) readMessagesUntilSocketCloses(lobby *Lobby) {
 		socketIsClosed, err := player.readMessage(lobby)
 
 		if socketIsClosed {
-			log.Errorf(err, "socket closed for player %s", player.String())
+			log.Errorf(
+				err,
+				"socket closed for player %s, removing them from lobby",
+				player.String(),
+			)
+			lobby.RemovePlayer(player.username)
 			return
 		} else if err != nil {
 			log.Errorf(err, "message error for player %s", player.String())
