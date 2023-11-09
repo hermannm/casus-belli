@@ -61,35 +61,12 @@ public partial class ApiClient : Node
             GD.PushError($"Failed to emit signal '{signal}': {err}");
     }
 
-    private void AddMessageReceivedSignals()
-    {
-        foreach (var tag in MessageDictionary.ReceivableMessageTags.Keys)
-        {
-            AddUserSignal(
-                GetMessageReceivedSignalName(tag),
-                new GodotArray
-                {
-                    new GodotDictionary
-                    {
-                        { "name", "message" },
-                        { "type", (int)Variant.Type.Object }
-                    }
-                }
-            );
-        }
-    }
-
-    public static string GetMessageReceivedSignalName(MessageTag tag)
-    {
-        return tag + "MessageReceived";
-    }
-
     public bool TryConnect(string serverUrl)
     {
         Uri parsedUrl;
         try
         {
-            if (!serverUrl.StartsWith("http://"))
+            if (!serverUrl.StartsWith("http"))
             {
                 serverUrl = $"http://{serverUrl}";
             }
@@ -188,8 +165,6 @@ public partial class ApiClient : Node
             Query = $"lobbyName={lobbyName}&username={username}"
         };
 
-        GD.Print(joinLobbyUrl.ToString());
-
         try
         {
             await _websocket.ConnectAsync(joinLobbyUrl.Uri, _cancellation.Token);
@@ -218,6 +193,29 @@ public partial class ApiClient : Node
             "Client initiated disconnect from game server",
             _cancellation.Token
         );
+    }
+
+    private static string GetMessageReceivedSignalName(MessageTag tag)
+    {
+        return tag + "MessageReceived";
+    }
+
+    private void AddMessageReceivedSignals()
+    {
+        foreach (var tag in MessageDictionary.ReceivableMessageTags.Keys)
+        {
+            AddUserSignal(
+                GetMessageReceivedSignalName(tag),
+                new GodotArray
+                {
+                    new GodotDictionary
+                    {
+                        { "name", "message" },
+                        { "type", (int)Variant.Type.Object }
+                    }
+                }
+            );
+        }
     }
 
     private static void DisplayServerError(ErrorMessage errorMessage)
