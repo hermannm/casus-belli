@@ -41,7 +41,7 @@ public partial class ApiClient : Node
     {
         Instance = this;
         AddMessageReceivedSignals();
-        this.AddMessageHandler<ErrorMessage>(DisplayServerError);
+        AddMessageHandler<ErrorMessage>(DisplayServerError);
 
         if (OS.IsDebugBuild())
             TryConnect("localhost:8000");
