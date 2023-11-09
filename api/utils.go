@@ -12,7 +12,7 @@ import (
 )
 
 func getQueryParam(query url.Values, paramName string) (string, error) {
-	value := query.Get("")
+	value := query.Get(paramName)
 	if value == "" {
 		return "", fmt.Errorf("required query param '%s' was blank", paramName)
 	}
