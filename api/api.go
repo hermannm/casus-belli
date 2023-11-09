@@ -59,19 +59,19 @@ func (api LobbyAPI) JoinLobby(res http.ResponseWriter, req *http.Request) {
 
 	lobbyName, err := getQueryParam(query, "lobbyName")
 	if err != nil {
-		sendClientError(res, err, "")
+		sendClientErrorWithHeader(res, err)
 		return
 	}
 
 	username, err := getQueryParam(query, "username")
 	if err != nil {
-		sendClientError(res, err, "")
+		sendClientErrorWithHeader(res, err)
 		return
 	}
 
 	gameLobby, ok := api.lobbyRegistry.GetLobby(lobbyName)
 	if !ok {
-		sendClientError(res, nil, fmt.Sprintf("no lobby found with name '%s'", lobbyName))
+		sendClientErrorWithHeader(res, fmt.Errorf("no lobby found with name '%s'", lobbyName))
 		return
 	}
 
@@ -84,7 +84,7 @@ func (api LobbyAPI) JoinLobby(res http.ResponseWriter, req *http.Request) {
 
 	socket, err := upgrader.Upgrade(res, req, nil)
 	if err != nil {
-		sendServerError(res, err, "failed to establish socket connection")
+		sendServerErrorWithHeader(res, wrap.Error(err, "failed to establish socket connection"))
 		log.Errorf(
 			err,
 			"failed to establish socket connection for player '%s' to lobby '%s'",
@@ -115,25 +115,25 @@ func (api LobbyAPI) CreateLobby(res http.ResponseWriter, req *http.Request) {
 
 	lobbyName, err := getQueryParam(query, "lobbyName")
 	if err != nil {
-		sendClientError(res, err, "")
+		sendClientError(res, err)
 		return
 	}
 
 	gameName, err := getQueryParam(query, "gameName")
 	if err != nil {
-		sendClientError(res, err, "")
+		sendClientError(res, err)
 		return
 	}
 
 	lobby, err := lobby.New(lobbyName, gameName, game.DefaultOptions())
 	if err != nil {
-		sendServerError(res, err, "")
+		sendServerError(res, err)
 		log.Error(err, "")
 		return
 	}
 
 	if err := api.lobbyRegistry.RegisterLobby(lobby); err != nil {
-		sendServerError(res, err, "")
+		sendServerError(res, err)
 		log.Error(err, "failed to register lobby")
 		return
 	}

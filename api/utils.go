@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -30,25 +29,32 @@ func sendJSON(res http.ResponseWriter, value any) {
 
 	if err := json.NewEncoder(res).Encode(value); err != nil {
 		err = wrap.Error(err, "failed to serialize response")
-		sendServerError(res, err, "")
+		sendServerError(res, err)
 		log.Error(err, "")
 	}
 }
 
-func sendClientError(res http.ResponseWriter, err error, message string) {
-	sendError(res, err, message, http.StatusBadRequest)
+func sendClientError(res http.ResponseWriter, err error) {
+	http.Error(res, err.Error(), http.StatusBadRequest)
 }
 
-func sendServerError(res http.ResponseWriter, err error, message string) {
-	sendError(res, err, message, http.StatusInternalServerError)
+func sendServerError(res http.ResponseWriter, err error) {
+	http.Error(res, err.Error(), http.StatusInternalServerError)
 }
 
-func sendError(res http.ResponseWriter, err error, message string, statusCode int) {
-	if err == nil {
-		err = errors.New(message)
-	} else if message != "" {
-		err = wrap.Error(err, message)
-	}
+// .NET ClientWebSockets, which we use for the Godot game client, do not provide a way to get the
+// HTTP response message from a failed WebSocket connect request. Therefore, we have to pass the
+// error message through a response header instead.
+//
+// See https://github.com/dotnet/runtime/issues/19405
+func sendClientErrorWithHeader(res http.ResponseWriter, err error) {
+	errMessage := err.Error()
+	res.Header().Set("Error", errMessage)
+	http.Error(res, errMessage, http.StatusBadRequest)
+}
 
-	http.Error(res, err.Error(), statusCode)
+func sendServerErrorWithHeader(res http.ResponseWriter, err error) {
+	errMessage := err.Error()
+	res.Header().Set("Error", errMessage)
+	http.Error(res, errMessage, http.StatusInternalServerError)
 }
