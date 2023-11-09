@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -33,6 +34,7 @@ public partial class ApiClient : Node
 
     public ApiClient()
     {
+        _websocket.Options.CollectHttpResponseDetails = true;
         _messageSender = new MessageSender(_websocket);
         _messageReceiver = new MessageReceiver(_websocket);
     }
@@ -167,15 +169,25 @@ public partial class ApiClient : Node
 
         try
         {
-            await _websocket.ConnectAsync(joinLobbyUrl.Uri, _cancellation.Token);
+            await _websocket.ConnectAsync(joinLobbyUrl.Uri, _httpClient, _cancellation.Token);
+            _websocket.HttpResponseHeaders = null; // Frees now-redundant memory
         }
         catch (Exception e)
         {
             _cancellation.Cancel();
+
+            string? errorMessage = null;
+            // Since .NET ClientWebSockets do not provide us the HTTP response message in case of
+            // failure, the server instead sends the error message through response headers
+            if (_websocket.HttpResponseHeaders?.TryGetValue("Error", out var values) == true)
+            {
+                errorMessage = values.FirstOrDefault();
+            }
             MessageDisplay.Instance.ShowError(
                 "Failed to create WebSocket connection to server",
-                e.Message
+                errorMessage ?? e.Message
             );
+
             return false;
         }
 
