@@ -64,8 +64,8 @@ func (lobby *Lobby) AddPlayer(username string, socket *websocket.Conn) (*Player,
 		return nil, err
 	}
 
+	log.Infof("player '%s' joined lobby '%s'", username, lobby.name)
 	lobby.players = append(lobby.players, player)
-
 	go player.readMessagesUntilSocketCloses(lobby)
 
 	return player, nil
@@ -111,6 +111,7 @@ func (lobby *Lobby) Close() error {
 		player.lock.Unlock()
 	}
 
+	log.Infof("lobby '%s' closed", lobby.name)
 	return nil
 }
 
@@ -142,6 +143,7 @@ func (lobby *Lobby) startGame() error {
 		return errors.New("all players must mark themselves as ready before starting the game")
 	}
 
+	log.Infof("starting game for lobby '%s'", lobby.name)
 	lobby.game.Start()
 
 	return nil
