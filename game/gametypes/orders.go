@@ -4,24 +4,24 @@ import "encoding/json"
 
 // An order submitted by a player for one of their units in a given round.
 type Order struct {
-	Type    OrderType     `json:"type"`
-	Faction PlayerFaction `json:"faction"`
+	Type    OrderType
+	Faction PlayerFaction
 
 	// Name of the region where the order is placed.
-	Origin string `json:"origin"`
+	Origin string
 
 	// For move and support orders: name of destination region.
-	Destination string `json:"destination,omitempty"`
+	Destination string
 
 	// For move orders with horse units: optional name of second destination region to move to if
 	// the first destination was reached.
-	SecondDestination string `json:"secondDestination,omitempty"`
+	SecondDestination string
 
 	// For move orders: name of DangerZone the order tries to pass through, if any.
-	ViaDangerZone string `json:"viaDangerZone,omitempty"`
+	ViaDangerZone string
 
 	// For build orders: type of unit to build.
-	Build UnitType `json:"build,omitempty"`
+	Build UnitType
 
 	// The unit the order affects.
 	// Excluded from JSON messages, as clients can deduce this from the From field.

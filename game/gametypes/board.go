@@ -4,9 +4,9 @@ import "hermannm.dev/set"
 
 type Board struct {
 	// Maps region names to regions.
-	Regions            map[string]Region `json:"region"`
-	Name               string            `json:"name"`
-	WinningCastleCount int               `json:"winningCastleCount"`
+	Regions            map[string]Region
+	Name               string
+	WinningCastleCount int
 }
 
 func (board Board) RemoveUnit(unit Unit, regionName string) {

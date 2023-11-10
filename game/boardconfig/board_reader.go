@@ -15,30 +15,30 @@ import (
 var boardConfigFiles embed.FS
 
 type JSONBoard struct {
-	Name               string                      `json:"name"`
-	WinningCastleCount int                         `json:"winningCastleCount"`
-	Nations            map[string][]JSONLandRegion `json:"nations"`
-	Seas               []JSONSeaRegion             `json:"seas"`
-	Neighbors          []JSONNeighbor              `json:"neighbors"`
+	Name               string
+	WinningCastleCount int
+	Nations            map[string][]JSONLandRegion
+	Seas               []JSONSeaRegion
+	Neighbors          []JSONNeighbor
 }
 
 type JSONLandRegion struct {
-	Name        string `json:"name"`
-	Forest      bool   `json:"forest"`
-	Castle      bool   `json:"castle"`
-	HomeFaction string `json:"homeFaction"`
+	Name        string
+	Forest      bool
+	Castle      bool
+	HomeFaction string
 }
 
 type JSONSeaRegion struct {
-	Name string `json:"name"`
+	Name string
 }
 
 type JSONNeighbor struct {
-	Region1    string `json:"region1"`
-	Region2    string `json:"region2"`
-	River      bool   `json:"river"`
-	Cliffs     bool   `json:"cliffs"`
-	DangerZone string `json:"dangerZone"`
+	Region1    string
+	Region2    string
+	River      bool
+	Cliffs     bool
+	DangerZone string
 }
 
 func ReadBoardFromConfigFile(boardID string) (gametypes.Board, error) {
@@ -119,14 +119,14 @@ func ReadBoardFromConfigFile(boardID string) (gametypes.Board, error) {
 }
 
 type PartialJSONBoard struct {
-	Name               string `json:"name"`
-	WinningCastleCount int    `json:"winningCastleCount"`
+	Name               string
+	WinningCastleCount int
 }
 
 type BoardInfo struct {
-	ID                 string `json:"id"`
-	DescriptiveName    string `json:"descriptiveName"`
-	WinningCastleCount int    `json:"winningCastleCount"`
+	ID                 string
+	DescriptiveName    string
+	WinningCastleCount int
 }
 
 func GetAvailableBoards() ([]BoardInfo, error) {

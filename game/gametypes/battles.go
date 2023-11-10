@@ -9,22 +9,22 @@ import (
 type Battle struct {
 	// If length is one, the battle was a neutral region conquest attempt or danger zone crossing.
 	// If length is more than one, the battle was between players.
-	Results []Result `json:"results"`
+	Results []Result
 
 	// If battle was from a danger zone crossing: name of the danger zone, otherwise blank.
-	DangerZone string `json:"dangerZone,omitempty"`
+	DangerZone string `json:",omitempty"`
 }
 
 // Dice and modifier result for a battle.
 type Result struct {
-	Total int        `json:"total"`
-	Parts []Modifier `json:"parts"`
+	Total int
+	Parts []Modifier
 
 	// If result of a move order to the battle: the move order in question, otherwise empty.
-	Move Order `json:"move"`
+	Move Order
 
 	// If result of a defending unit in a region: the name of the region, otherwise blank.
-	DefenderRegion string `json:"defenderRegion,omitempty"`
+	DefenderRegion string `json:",omitempty"`
 }
 
 // Numbers to beat in different types of battles.

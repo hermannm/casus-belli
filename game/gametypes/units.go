@@ -4,8 +4,8 @@ import "encoding/json"
 
 // A unit on the board, controlled by a player faction.
 type Unit struct {
-	Type    UnitType      `json:"unit"`
-	Faction PlayerFaction `json:"faction"`
+	Type    UnitType
+	Faction PlayerFaction
 }
 
 type UnitType string

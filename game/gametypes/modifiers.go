@@ -6,11 +6,11 @@ import (
 
 // Part of a player's result in a battle.
 type Modifier struct {
-	Type  ModifierType `json:"type"`
-	Value int          `json:"value"`
+	Type  ModifierType
+	Value int
 
 	// Blank, unless Type is ModifierSupport.
-	SupportingFaction PlayerFaction `json:"supportingFaction,omitempty"`
+	SupportingFaction PlayerFaction `json:",omitempty"`
 }
 
 type ModifierType string

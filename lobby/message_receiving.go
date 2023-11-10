@@ -47,8 +47,8 @@ func (player *Player) readMessage(lobby *Lobby) (socketIsClosed bool, err error)
 	}
 
 	var message struct {
-		Tag  MessageTag      `json:"tag"`
-		Data json.RawMessage `json:"data"`
+		Tag  MessageTag
+		Data json.RawMessage
 	}
 	if err := json.Unmarshal(messageBytes, &message); err != nil {
 		return false, wrap.Error(err, "failed to parse received message")

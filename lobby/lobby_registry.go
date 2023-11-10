@@ -61,8 +61,8 @@ func (registry *LobbyRegistry) RemoveLobby(lobbyName string) {
 }
 
 type LobbyInfo struct {
-	LobbyName string `json:"lobbyName"`
-	GameName  string `json:"gameName"`
+	LobbyName string
+	GameName  string
 }
 
 func (registry *LobbyRegistry) LobbyInfo() []LobbyInfo {

@@ -2,34 +2,34 @@ package gametypes
 
 // A region on the board.
 type Region struct {
-	Name      string     `json:"name"`
-	Neighbors []Neighbor `json:"neighbors"`
+	Name      string
+	Neighbors []Neighbor
 
 	// Whether the region is a sea region that can only have ship units.
-	IsSea bool `json:"isSea"`
+	IsSea bool
 
 	// For land regions: affects the difficulty of conquering the region.
-	IsForest bool `json:"isForest,omitempty"`
+	IsForest bool
 
 	// For land regions: affects the difficulty of conquering the region, and the points gained from
 	// it.
-	HasCastle bool `json:"hasCastle,omitempty"`
+	HasCastle bool
 
 	// For land regions: the collection of regions that the region belongs to (affects units gained
 	// from conquering).
-	Nation string `json:"nation,omitempty"`
+	Nation string `json:",omitempty"`
 
 	// For land regions that are a starting region for a player faction.
-	HomeFaction PlayerFaction `json:"homeFaction,omitempty"`
+	HomeFaction PlayerFaction `json:",omitempty"`
 
 	// The unit that currently occupies the region.
-	Unit Unit `json:"unit"`
+	Unit Unit
 
 	// The player faction that currently controls the region.
-	ControllingFaction PlayerFaction `json:"controllingFaction,omitempty"`
+	ControllingFaction PlayerFaction `json:",omitempty"`
 
 	// For land regions with castles: the number of times an occupying unit has besieged the castle.
-	SiegeCount int `json:"siegeCount,omitempty"`
+	SiegeCount int `json:",omitempty"`
 
 	// Order for the occupying unit in the region. Resets every round.
 	Order Order `json:"-"` // Excluded from JSON responses.
@@ -42,18 +42,18 @@ type Region struct {
 }
 
 type Neighbor struct {
-	Name string `json:"name"`
+	Name string
 
 	// Whether a river separates the neighboring regions, or this region is a sea and the neighbor
 	// is a land region.
-	IsAcrossWater bool `json:"isAcrossWater,omitempty"`
+	IsAcrossWater bool
 
 	// Whether coast between neighboring land regions have cliffs (impassable to ships).
-	HasCliffs bool `json:"hasCliffs,omitempty"`
+	HasCliffs bool
 
 	// If not "": the name of the danger zone that the neighboring region lies across (requires
 	// check to pass).
-	DangerZone string `json:"dangerZone,omitempty"`
+	DangerZone string `json:",omitempty"`
 }
 
 // Checks whether the region contains a unit.
