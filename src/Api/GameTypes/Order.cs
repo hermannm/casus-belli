@@ -5,7 +5,7 @@ namespace Immerse.BfhClient.Api.GameTypes;
 /// </summary>
 public record struct Order
 {
-    public required string Type { get; set; }
+    public required OrderType Type { get; set; }
     public required string Faction { get; set; }
 
     /// <summary>
@@ -39,31 +39,31 @@ public record struct Order
 /// <summary>
 /// Valid values for a player-submitted order's type.
 /// </summary>
-public static class OrderType
+public enum OrderType
 {
     /// <summary>
     /// An order for a unit to move from one area to another.
     /// Includes internal moves in winter.
     /// </summary>
-    public const string Move = "move";
+    Move = 1,
 
     /// <summary>
     /// An order for a unit to support battle in an adjacent area.
     /// </summary>
-    public const string Support = "support";
+    Support,
 
     /// <summary>
     /// For ship unit at sea: an order to transport a land unit across the sea.
     /// </summary>
-    public const string Transport = "transport";
+    Transport,
 
     /// <summary>
     /// For land unit in unconquered castle area: an order to besiege the castle.
     /// </summary>
-    public const string Besiege = "besiege";
+    Besiege,
 
     /// <summary>
     /// For player-controlled area in winter: an order for what type of unit to build in the area.
     /// </summary>
-    public const string Build = "build";
+    Build
 }
