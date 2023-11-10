@@ -53,6 +53,10 @@ func (lobby *Lobby) getPlayer(faction game.PlayerFaction) (player *Player, found
 }
 
 func (lobby *Lobby) AddPlayer(username string, socket *websocket.Conn) (*Player, error) {
+	if username == "" {
+		return nil, errors.New("username cannot be blank")
+	}
+
 	if lobby.isUsernameTaken(username) {
 		return nil, fmt.Errorf("username '%s' already taken", username)
 	}
@@ -60,10 +64,7 @@ func (lobby *Lobby) AddPlayer(username string, socket *websocket.Conn) (*Player,
 	lobby.lock.Lock()
 	defer lobby.lock.Unlock()
 
-	player, err := newPlayer(username, socket)
-	if err != nil {
-		return nil, err
-	}
+	player := newPlayer(Username(username), socket)
 
 	log.Infof("player '%s' joined lobby '%s'", username, lobby.name)
 	lobby.players = append(lobby.players, player)
@@ -72,7 +73,7 @@ func (lobby *Lobby) AddPlayer(username string, socket *websocket.Conn) (*Player,
 	return player, nil
 }
 
-func (lobby *Lobby) RemovePlayer(username string) {
+func (lobby *Lobby) RemovePlayer(username Username) {
 	lobby.lock.Lock()
 	defer lobby.lock.Unlock()
 
@@ -89,7 +90,7 @@ func (lobby *Lobby) isUsernameTaken(username string) bool {
 	defer lobby.lock.RUnlock()
 
 	for _, player := range lobby.players {
-		if player.username == username {
+		if player.username == Username(username) {
 			return true
 		}
 	}

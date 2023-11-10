@@ -12,7 +12,7 @@ import (
 
 // A player connected to a game lobby.
 type Player struct {
-	username            string
+	username            Username
 	gameMessageReceiver GameMessageReceiver
 	socket              *websocket.Conn    // Must hold lock to access safely.
 	gameFaction         game.PlayerFaction // Must hold lock to access safely. Blank until selected.
@@ -20,19 +20,17 @@ type Player struct {
 	lock                sync.RWMutex
 }
 
-func newPlayer(username string, socket *websocket.Conn) (*Player, error) {
-	if username == "" {
-		return nil, errors.New("player cannot have blank username")
-	}
+type Username string
 
+func newPlayer(username Username, socket *websocket.Conn) *Player {
 	return &Player{
 		username:            username,
 		gameMessageReceiver: newGameMessageReceiver(),
-		lock:                sync.RWMutex{},
 		socket:              socket,
 		gameFaction:         "",
 		readyToStartGame:    false,
-	}, nil
+		lock:                sync.RWMutex{},
+	}
 }
 
 func (player *Player) selectFaction(faction game.PlayerFaction, lobby *Lobby) error {
@@ -43,7 +41,7 @@ func (player *Player) selectFaction(faction game.PlayerFaction, lobby *Lobby) er
 		return fmt.Errorf("requested faction '%s' is invalid", faction)
 	}
 
-	var takenBy string
+	var takenBy Username
 	for _, otherPlayer := range lobby.players {
 		if otherPlayer.username == player.username {
 			continue

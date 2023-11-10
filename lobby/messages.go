@@ -17,7 +17,7 @@ type ErrorMessage struct {
 
 // Message sent from server to all clients when a player's status changes.
 type PlayerStatusMessage struct {
-	Username         string
+	Username         Username
 	SelectedFaction  *game.PlayerFaction `json:",omitempty"`
 	ReadyToStartGame bool
 }
