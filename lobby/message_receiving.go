@@ -199,31 +199,31 @@ func (lobby *Lobby) AwaitOrders(from game.PlayerFaction) ([]game.Order, error) {
 
 func (lobby *Lobby) AwaitSupport(
 	from game.PlayerFaction,
-	supportingRegion string,
-	embattledRegion string,
+	supporting game.RegionName,
+	embattled game.RegionName,
 ) (supported game.PlayerFaction, err error) {
 	player, ok := lobby.getPlayer(from)
 	if !ok {
 		return "", fmt.Errorf(
 			"failed to get support message from player '%s' in region '%s': player not found",
 			from,
-			supportingRegion,
+			supporting,
 		)
 	}
 
 	supportMessage, err := player.gameMessageReceiver.supports.AwaitMatchingItem(
 		context.Background(), // TODO: implement timeout/cancellation
 		func(candidate GiveSupportMessage) bool {
-			return candidate.SupportingRegion == supportingRegion &&
-				candidate.EmbattledRegion == embattledRegion
+			return candidate.SupportingRegion == supporting &&
+				candidate.EmbattledRegion == embattled
 		},
 	)
 	if err != nil {
 		return "", wrap.Errorf(
 			err,
 			"received no support message from region '%s' to region '%s'",
-			supportingRegion,
-			embattledRegion,
+			supporting,
+			embattled,
 		)
 	}
 

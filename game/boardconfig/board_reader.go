@@ -67,7 +67,7 @@ func ReadBoardFromConfigFile(
 	for nation, regions := range jsonBoard.Nations {
 		for _, landRegion := range regions {
 			region := game.Region{
-				Name:               landRegion.Name,
+				Name:               game.RegionName(landRegion.Name),
 				Nation:             nation,
 				ControllingFaction: game.PlayerFaction(landRegion.HomeFaction),
 				HomeFaction:        game.PlayerFaction(landRegion.HomeFaction),
@@ -80,13 +80,13 @@ func ReadBoardFromConfigFile(
 	}
 
 	for _, sea := range jsonBoard.Seas {
-		region := game.Region{Name: sea.Name, IsSea: true}
+		region := game.Region{Name: game.RegionName(sea.Name), IsSea: true}
 		board[region.Name] = region
 	}
 
 	for _, neighbor := range jsonBoard.Neighbors {
-		region1, ok1 := board[neighbor.Region1]
-		region2, ok2 := board[neighbor.Region2]
+		region1, ok1 := board[game.RegionName(neighbor.Region1)]
+		region2, ok2 := board[game.RegionName(neighbor.Region2)]
 
 		if !ok1 || !ok2 {
 			return game.Board{}, "", 0, fmt.Errorf(

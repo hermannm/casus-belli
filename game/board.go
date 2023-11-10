@@ -4,12 +4,13 @@ import (
 	"hermannm.dev/set"
 )
 
-// Maps region names to regions.
-type Board map[string]Region
+type Board map[RegionName]Region
+
+type RegionName string
 
 // A region on the board.
 type Region struct {
-	Name      string
+	Name      RegionName
 	Neighbors []Neighbor
 
 	// Whether the region is a sea region that can only have ship units.
@@ -49,7 +50,7 @@ type Region struct {
 }
 
 type Neighbor struct {
-	Name string
+	Name RegionName
 
 	// Whether a river separates the neighboring regions, or this region is a sea and the neighbor
 	// is a land region.
@@ -63,7 +64,7 @@ type Neighbor struct {
 	DangerZone string `json:",omitempty"`
 }
 
-func (board Board) removeUnit(unit Unit, regionName string) {
+func (board Board) removeUnit(unit Unit, regionName RegionName) {
 	region, ok := board[regionName]
 	if !ok {
 		return
@@ -189,7 +190,7 @@ func (region Region) isAttacked() bool {
 // Returns a region's neighbor of the given name, and whether it was found.
 // If the region has several neighbor relations to the region, returns the one matching the provided
 // 'via' string (currently the name of the neighbor relation's danger zone).
-func (region Region) getNeighbor(neighborName string, via string) (Neighbor, bool) {
+func (region Region) getNeighbor(neighborName RegionName, viaDangerZone string) (Neighbor, bool) {
 	neighbor := Neighbor{}
 	hasNeighbor := false
 
@@ -201,7 +202,7 @@ func (region Region) getNeighbor(neighborName string, via string) (Neighbor, boo
 		if !hasNeighbor {
 			neighbor = otherNeighbor
 			hasNeighbor = true
-		} else if otherNeighbor.DangerZone != "" && via == otherNeighbor.DangerZone {
+		} else if otherNeighbor.DangerZone != "" && viaDangerZone == otherNeighbor.DangerZone {
 			neighbor = otherNeighbor
 		}
 	}
@@ -210,7 +211,7 @@ func (region Region) getNeighbor(neighborName string, via string) (Neighbor, boo
 }
 
 // Returns whether the region is adjacent to a region of the given name.
-func (region Region) hasNeighbor(neighborName string) bool {
+func (region Region) hasNeighbor(neighborName RegionName) bool {
 	for _, neighbor := range region.Neighbors {
 		if neighbor.Name == neighborName {
 			return true

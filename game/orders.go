@@ -14,16 +14,14 @@ import (
 type Order struct {
 	Type    OrderType
 	Faction PlayerFaction
-
-	// Name of the region where the order is placed.
-	Origin string
+	Origin  RegionName
 
 	// For move and support orders: name of destination region.
-	Destination string
+	Destination RegionName
 
 	// For move orders with horse units: optional name of second destination region to move to if
 	// the first destination was reached.
-	SecondDestination string
+	SecondDestination RegionName
 
 	// For move orders: name of DangerZone the order tries to pass through, if any.
 	ViaDangerZone string
@@ -452,7 +450,7 @@ func validateOrderSet(orders []Order, board Board) error {
 }
 
 func validateUniqueMoveDestinations(orders []Order, board Board) error {
-	moveDestinations := set.ArraySetWithCapacity[string](len(orders))
+	moveDestinations := set.ArraySetWithCapacity[RegionName](len(orders))
 
 	for _, order := range orders {
 		if order.Type == OrderMove {
@@ -474,7 +472,7 @@ func validateUniqueMoveDestinations(orders []Order, board Board) error {
 }
 
 func validateOneOrderPerRegion(orders []Order, board Board) error {
-	orderedRegions := set.ArraySetWithCapacity[string](len(orders))
+	orderedRegions := set.ArraySetWithCapacity[RegionName](len(orders))
 
 	for _, order := range orders {
 		if orderedRegions.Contains(order.Origin) {

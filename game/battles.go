@@ -24,7 +24,7 @@ type Result struct {
 	Move Order
 
 	// If result of a defending unit in a region: the name of the region, otherwise blank.
-	DefenderRegion string `json:",omitempty"`
+	DefenderRegion RegionName `json:",omitempty"`
 }
 
 // Numbers to beat in different types of battles.
@@ -112,7 +112,7 @@ func (game *Game) resolveBattle(battle Battle) {
 	game.resolvedBattles = append(game.resolvedBattles, battle)
 
 	for _, region := range battle.regionNames() {
-		game.resolvingRegions.Remove(region)
+		game.resolving.Remove(region)
 	}
 }
 
@@ -245,8 +245,8 @@ func (battle Battle) winnersAndLosers() (winners []PlayerFaction, losers []Playe
 }
 
 // Returns regions involved in the battle - typically 1, but 2 if it was a border battle.
-func (battle Battle) regionNames() []string {
-	nameSet := set.ArraySetWithCapacity[string](2)
+func (battle Battle) regionNames() []RegionName {
+	nameSet := set.ArraySetWithCapacity[RegionName](2)
 
 	for _, result := range battle.Results {
 		if result.DefenderRegion != "" {

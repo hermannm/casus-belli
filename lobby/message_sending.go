@@ -166,16 +166,16 @@ func (lobby *Lobby) SendOrdersConfirmation(
 
 func (lobby *Lobby) SendSupportRequest(
 	to game.PlayerFaction,
-	supportingRegion string,
-	embattledRegion string,
-	supportableFactions []game.PlayerFaction,
+	supporting game.RegionName,
+	embattled game.RegionName,
+	supportable []game.PlayerFaction,
 ) error {
 	return lobby.sendMessage(to, Message{
 		Tag: MessageTagSupportRequest,
 		Data: SupportRequestMessage{
-			SupportingRegion:    supportingRegion,
-			EmbattledRegion:     embattledRegion,
-			SupportableFactions: supportableFactions,
+			SupportingRegion:    supporting,
+			EmbattledRegion:     embattled,
+			SupportableFactions: supportable,
 		},
 	})
 }

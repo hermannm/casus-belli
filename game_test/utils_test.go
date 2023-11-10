@@ -44,8 +44,8 @@ func newMockGame() *game.Game {
 
 	// Defines a utility struct for two-way neighbor declaration, to avoid repetition.
 	neighbors := []struct {
-		region1    string
-		region2    string
+		region1    game.RegionName
+		region2    game.RegionName
 		river      bool
 		hasCliffs  bool
 		dangerZone string
@@ -127,7 +127,7 @@ func newMockGame() *game.Game {
 	return game.New(board, "Test game", 5, MockMessenger{})
 }
 
-func placeUnits(units map[string]game.Unit, board game.Board) {
+func placeUnits(units map[game.RegionName]game.Unit, board game.Board) {
 	for regionName, unit := range units {
 		region := board[regionName]
 		region.Unit = unit
@@ -149,7 +149,7 @@ func placeOrders(orders []game.Order, board game.Board) {
 	}
 }
 
-type ExpectedControl map[string]struct {
+type ExpectedControl map[game.RegionName]struct {
 	ControllingFaction game.PlayerFaction
 	Unit               game.Unit
 }
@@ -200,17 +200,17 @@ func (MockMessenger) SendOrdersConfirmation(factionThatSubmittedOrders game.Play
 }
 func (MockMessenger) SendSupportRequest(
 	to game.PlayerFaction,
-	supportingRegion string,
-	embattledRegion string,
-	supportableFactions []game.PlayerFaction,
+	supporting game.RegionName,
+	embattled game.RegionName,
+	supportable []game.PlayerFaction,
 ) error {
 	return nil
 }
 
 func (MockMessenger) AwaitSupport(
 	from game.PlayerFaction,
-	supportingRegion string,
-	embattledRegion string,
+	supporting game.RegionName,
+	embattled game.RegionName,
 ) (supported game.PlayerFaction, err error) {
 	return "", nil
 }

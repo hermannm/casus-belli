@@ -2,7 +2,7 @@ package game
 
 // Recursively finds a cycle of moves starting and ending with the given firstRegionName.
 func (board Board) discoverCycle(
-	firstRegionName string,
+	firstRegionName RegionName,
 	order Order,
 ) (cycle []Order, hasOutsideAttackers bool) {
 	if order.isNone() || order.Type != OrderMove {
@@ -70,10 +70,10 @@ func (game *Game) resolveCycle(cycle []Order) {
 	for _, region := range battleRegions {
 		if len(region.IncomingMoves) == 1 {
 			go game.calculateSingleplayerBattle(region, region.IncomingMoves[0])
-			game.resolvingRegions.Add(region.Name)
+			game.resolving.Add(region.Name)
 		} else {
 			go game.calculateMultiplayerBattle(region, false)
-			game.resolvingRegions.Add(region.Name)
+			game.resolving.Add(region.Name)
 		}
 	}
 }

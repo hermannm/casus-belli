@@ -13,12 +13,12 @@ type Game struct {
 	messenger          Messenger
 
 	season             Season
-	resolvingRegions   set.ArraySet[string]
-	resolvedRegions    set.ArraySet[string]
-	resolvedTransports set.ArraySet[string]
+	resolving          set.ArraySet[RegionName]
+	resolved           set.ArraySet[RegionName]
+	resolvedTransports set.ArraySet[RegionName]
 	resolvedBattles    []Battle
 	battleReceiver     chan Battle
-	retreats           map[string]Order
+	retreats           map[RegionName]Order
 	secondHorseMoves   []Order
 }
 
@@ -33,14 +33,14 @@ type Messenger interface {
 	SendOrdersConfirmation(factionThatSubmittedOrders PlayerFaction) error
 	SendSupportRequest(
 		to PlayerFaction,
-		supportingRegion string,
-		embattledRegion string,
-		supportableFactions []PlayerFaction,
+		supporting RegionName,
+		embattled RegionName,
+		supportable []PlayerFaction,
 	) error
 	AwaitSupport(
 		from PlayerFaction,
-		supportingRegion string,
-		embattledRegion string,
+		supporting RegionName,
+		embattled RegionName,
 	) (supported PlayerFaction, err error)
 	SendBattleResults(battles []Battle) error
 	SendWinner(winner PlayerFaction) error
@@ -54,12 +54,12 @@ func New(board Board, name string, winningCastleCount int, messenger Messenger) 
 		winningCastleCount: winningCastleCount,
 		messenger:          messenger,
 		season:             SeasonWinter,
-		resolvingRegions:   set.NewArraySet[string](),
-		resolvedRegions:    set.NewArraySet[string](),
-		resolvedTransports: set.NewArraySet[string](),
+		resolving:          set.NewArraySet[RegionName](),
+		resolved:           set.NewArraySet[RegionName](),
+		resolvedTransports: set.NewArraySet[RegionName](),
 		resolvedBattles:    nil,
 		battleReceiver:     make(chan Battle),
-		retreats:           make(map[string]Order),
+		retreats:           make(map[RegionName]Order),
 		secondHorseMoves:   nil,
 	}
 }
@@ -87,8 +87,8 @@ func (game *Game) NextRound() {
 	game.season = game.season.Next()
 
 	game.Board.clearOrders()
-	game.resolvingRegions.Clear()
-	game.resolvedRegions.Clear()
+	game.resolving.Clear()
+	game.resolved.Clear()
 	game.resolvedTransports.Clear()
 	game.resolvedBattles = game.resolvedBattles[:0] // Keeps same capacity
 	for len(game.battleReceiver) > 0 {
@@ -96,7 +96,7 @@ func (game *Game) NextRound() {
 		// this function is called from the same goroutine as the one that read
 		<-game.battleReceiver
 	}
-	game.retreats = make(map[string]Order)
+	game.retreats = make(map[RegionName]Order)
 	game.secondHorseMoves = game.secondHorseMoves[:0]
 }
 
@@ -155,7 +155,7 @@ OuterLoop:
 				game.resolveRegionMoves(region)
 			}
 
-			if game.resolvingRegions.IsEmpty() && len(game.retreats) == 0 {
+			if game.resolving.IsEmpty() && len(game.retreats) == 0 {
 				break OuterLoop
 			}
 		}
@@ -169,8 +169,8 @@ func (game *Game) resolveRegionMoves(region Region) {
 	retreat, hasRetreat := game.retreats[region.Name]
 
 	// Skips the region if it has already been processed
-	if (game.resolvedRegions.Contains(region.Name) && !hasRetreat) ||
-		(game.resolvingRegions.Contains(region.Name)) {
+	if (game.resolved.Contains(region.Name) && !hasRetreat) ||
+		(game.resolving.Contains(region.Name)) {
 		return
 	}
 
@@ -194,7 +194,7 @@ func (game *Game) resolveRegionMoves(region Region) {
 			delete(game.retreats, region.Name)
 		}
 
-		game.resolvedRegions.Add(region.Name)
+		game.resolved.Add(region.Name)
 		return
 	}
 
@@ -211,7 +211,7 @@ func (game *Game) resolveRegionMoves(region Region) {
 	} else if twoWayCycle {
 		// If the moves are from different player factions, they battle in the middle
 		go game.calculateBorderBattle(region, region2)
-		game.resolvingRegions.AddMultiple(region.Name, region2.Name)
+		game.resolving.AddMultiple(region.Name, region2.Name)
 		return
 	} else if cycle, _ := game.Board.discoverCycle(region.Name, region.Order); cycle != nil {
 		// If there is a cycle longer than 2 moves, forwards the resolving to resolveCycle
@@ -229,7 +229,7 @@ func (game *Game) resolveRegionMoves(region Region) {
 		}
 
 		go game.calculateSingleplayerBattle(region, move)
-		game.resolvingRegions.Add(region.Name)
+		game.resolving.Add(region.Name)
 		return
 	}
 
@@ -240,7 +240,7 @@ func (game *Game) resolveRegionMoves(region Region) {
 
 	// If the function has not returned yet, then it must be a multiplayer battle
 	go game.calculateMultiplayerBattle(region, !region.isEmpty())
-	game.resolvingRegions.Add(region.Name)
+	game.resolving.Add(region.Name)
 }
 
 func (game *Game) resolveSieges() {
@@ -273,7 +273,7 @@ func (game *Game) succeedMove(move Order) {
 	game.Board.removeUnit(move.Unit, move.Origin)
 	game.Board.removeOrder(move)
 
-	game.resolvedRegions.Add(move.Destination)
+	game.resolved.Add(move.Destination)
 
 	if secondHorseMove, hasSecondHorseMove := move.tryGetSecondHorseMove(); hasSecondHorseMove {
 		game.secondHorseMoves = append(game.secondHorseMoves, secondHorseMove)
@@ -283,7 +283,7 @@ func (game *Game) succeedMove(move Order) {
 func (game *Game) addSecondHorseMoves() {
 	for _, secondHorseMove := range game.secondHorseMoves {
 		game.Board.addOrder(secondHorseMove)
-		game.resolvedRegions.Remove(secondHorseMove.Destination)
+		game.resolved.Remove(secondHorseMove.Destination)
 	}
 
 	game.secondHorseMoves = nil

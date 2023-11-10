@@ -8,7 +8,7 @@ import (
 
 // Tests whether units correctly move in circle without outside interference.
 func TestResolveConflictFreeMoveCycle(t *testing.T) {
-	units := map[string]game.Unit{
+	units := map[game.RegionName]game.Unit{
 		"Leil":   {Type: game.UnitFootman, Faction: "red"},
 		"Limbol": {Type: game.UnitFootman, Faction: "green"},
 		"Worp":   {Type: game.UnitFootman, Faction: "yellow"},

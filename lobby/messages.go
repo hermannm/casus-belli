@@ -45,8 +45,8 @@ type StartGameMessage struct{}
 
 // Message sent from server when asking a supporting player who to support in an embattled region.
 type SupportRequestMessage struct {
-	SupportingRegion    string
-	EmbattledRegion     string
+	SupportingRegion    game.RegionName
+	EmbattledRegion     game.RegionName
 	SupportableFactions []game.PlayerFaction
 }
 
@@ -82,8 +82,8 @@ type SubmitOrdersMessage struct {
 // Message sent from client when declaring who to support with their support order.
 // Forwarded by server to all clients to show who were given support.
 type GiveSupportMessage struct {
-	SupportingRegion string
-	EmbattledRegion  string
+	SupportingRegion game.RegionName
+	EmbattledRegion  game.RegionName
 
 	// Nil if none were supported.
 	SupportedFaction *game.PlayerFaction

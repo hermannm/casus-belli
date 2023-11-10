@@ -45,15 +45,15 @@ func (game *Game) resolveTransport(move Order) (transportMustWait bool) {
 
 // Checks if a unit can be transported via ship from the given origin to the given destination.
 func (board Board) findTransportPath(
-	originName string,
-	destinationName string,
+	originName RegionName,
+	destinationName RegionName,
 ) (canTransport bool, isTransportAttacked bool, dangerZones []string) {
 	origin := board[originName]
 	if origin.isEmpty() || origin.Unit.Type == UnitShip || origin.IsSea {
 		return false, false, nil
 	}
 
-	return board.recursivelyFindTransportPath(origin, destinationName, &set.ArraySet[string]{})
+	return board.recursivelyFindTransportPath(origin, destinationName, &set.ArraySet[RegionName]{})
 }
 
 // Stores status of a path of transport orders to destination.
@@ -64,8 +64,8 @@ type transportPath struct {
 
 func (board Board) recursivelyFindTransportPath(
 	region Region,
-	destination string,
-	regionsToExclude set.Set[string],
+	destination RegionName,
+	regionsToExclude set.Set[RegionName],
 ) (canTransport bool, isTransportAttacked bool, dangerZones []string) {
 	transportingNeighbors, newRegionsToExclude := region.getTransportingNeighbors(
 		board,
@@ -124,8 +124,8 @@ func (board Board) recursivelyFindTransportPath(
 
 func (region Region) getTransportingNeighbors(
 	board Board,
-	regionsToExclude set.Set[string],
-) (transports []Neighbor, newRegionsToExclude set.Set[string]) {
+	regionsToExclude set.Set[RegionName],
+) (transports []Neighbor, newRegionsToExclude set.Set[RegionName]) {
 	newRegionsToExclude = regionsToExclude.Copy()
 
 	if region.isEmpty() {
@@ -149,7 +149,7 @@ func (region Region) getTransportingNeighbors(
 }
 
 func (region Region) checkNeighborsForDestination(
-	destination string,
+	destination RegionName,
 ) (destinationIsAdjacent bool, throughDangerZone string) {
 	for _, neighbor := range region.Neighbors {
 		if neighbor.Name == destination {

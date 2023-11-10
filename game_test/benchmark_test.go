@@ -14,7 +14,7 @@ func BenchmarkBoardResolve(b *testing.B) {
 }
 
 func setup() (*game.Game, []game.Order) {
-	units := map[string]game.Unit{
+	units := map[game.RegionName]game.Unit{
 		"Emman": {Type: game.UnitFootman, Faction: "white"},
 
 		"Lomone": {Type: game.UnitFootman, Faction: "green"},
