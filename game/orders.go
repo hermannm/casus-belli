@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"hermannm.dev/devlog/log"
+	"hermannm.dev/enumnames"
 	"hermannm.dev/set"
 	"hermannm.dev/wrap"
 )
@@ -35,28 +36,40 @@ type Order struct {
 	Unit Unit `json:"-"`
 }
 
-type OrderType string
+type OrderType uint8
 
 const (
 	// An order for a unit to move from one region to another.
 	// Includes internal moves in winter.
-	OrderMove OrderType = "move"
+	OrderMove OrderType = iota + 1
 
 	// An order for a unit to support battles in adjacent regions.
-	OrderSupport OrderType = "support"
+	OrderSupport
 
 	// For ship unit at sea: an order to transport a land unit across the sea.
-	OrderTransport OrderType = "transport"
+	OrderTransport
 
 	// For land unit in unconquered castle region: an order to besiege the castle.
-	OrderBesiege OrderType = "besiege"
+	OrderBesiege
 
 	// For player-controlled region in winter: an order for the type of unit to build in the region.
-	OrderBuild OrderType = "build"
+	OrderBuild
 )
 
+var orderNames = enumnames.NewMap(map[OrderType]string{
+	OrderMove:      "Move",
+	OrderSupport:   "Support",
+	OrderTransport: "Transport",
+	OrderBesiege:   "Besiege",
+	OrderBuild:     "Build",
+})
+
+func (orderType OrderType) String() string {
+	return orderNames.GetNameOrFallback(orderType, "INVALID")
+}
+
 func (order Order) isNone() bool {
-	return order.Type == ""
+	return order.Type == 0
 }
 
 // Checks if the order is a move of a horse unit with a second destination.
@@ -214,7 +227,7 @@ func validateWinterMove(order Order, origin Region, board Board) error {
 		return errors.New("ship winter move destination must be coast")
 	}
 
-	if order.Build != "" {
+	if !order.Build.isNone() {
 		return errors.New("cannot build unit with move order")
 	}
 
@@ -267,7 +280,7 @@ func validateNonWinterOrders(orders []Order, board Board) error {
 }
 
 func validateNonWinterOrder(order Order, origin Region, board Board) error {
-	if order.Build != "" {
+	if !order.Build.isNone() {
 		return errors.New("build orders can only be placed in winter")
 	}
 

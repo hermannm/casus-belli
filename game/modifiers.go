@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"hermannm.dev/devlog/log"
+	"hermannm.dev/enumnames"
 )
 
 // Part of a player's result in a battle.
@@ -16,31 +17,45 @@ type Modifier struct {
 	SupportingFaction PlayerFaction `json:",omitempty"`
 }
 
-type ModifierType string
+type ModifierType uint8
 
 // Valid values for a result modifier's type.
 const (
 	// Bonus from a random dice roll.
-	ModifierDice ModifierType = "dice"
+	ModifierDice ModifierType = iota + 1
 
 	// Bonus for the type of unit.
-	ModifierUnit ModifierType = "unit"
+	ModifierUnit
 
 	// Penalty for attacking a neutral or defended forested region.
-	ModifierForest ModifierType = "forest"
+	ModifierForest
 
 	// Penalty for attacking a neutral or defended castle region.
-	ModifierCastle ModifierType = "castle"
+	ModifierCastle
 
 	// Penalty for attacking across a river, from the sea, or across a transport.
-	ModifierWater ModifierType = "water"
+	ModifierWater
 
 	// Bonus for attacking across a danger zone and surviving.
-	ModifierSurprise ModifierType = "surprise"
+	ModifierSurprise
 
 	// Bonus from supporting player in a battle.
-	ModifierSupport ModifierType = "support"
+	ModifierSupport
 )
+
+var modifierNames = enumnames.NewMap(map[ModifierType]string{
+	ModifierDice:     "Dice",
+	ModifierUnit:     "Unit",
+	ModifierForest:   "Forest",
+	ModifierCastle:   "Castle",
+	ModifierWater:    "Water",
+	ModifierSurprise: "Surprise",
+	ModifierSupport:  "Support",
+})
+
+func (modifierType ModifierType) String() string {
+	return modifierNames.GetNameOrFallback(modifierType, "INVALID")
+}
 
 func rollDice() int {
 	return rand.Intn(6) + 1

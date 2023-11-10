@@ -1,17 +1,27 @@
 package game
 
+import "hermannm.dev/enumnames"
+
 // Current season of a round. Affects the type of orders that can be played.
-type Season string
+type Season uint8
 
-// Rounds where only build and internal move orders are allowed.
-const SeasonWinter Season = "winter"
-
-// Rounds where only move, support, transport and besiege orders are allowed.
 const (
-	SeasonSpring Season = "spring"
-	SeasonSummer Season = "summer"
-	SeasonFall   Season = "fall"
+	SeasonWinter Season = iota + 1
+	SeasonSpring
+	SeasonSummer
+	SeasonFall
 )
+
+var seasonNames = enumnames.NewMap(map[Season]string{
+	SeasonWinter: "Winter",
+	SeasonSpring: "Spring",
+	SeasonSummer: "Summer",
+	SeasonFall:   "Fall",
+})
+
+func (season Season) String() string {
+	return seasonNames.GetNameOrFallback(season, "INVALID")
+}
 
 func (season Season) Next() Season {
 	switch season {
