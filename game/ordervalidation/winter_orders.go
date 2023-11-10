@@ -54,7 +54,7 @@ func validateWinterMove(
 		return fmt.Errorf("destination region with name '%s' not found", order.Destination)
 	}
 
-	if to.ControllingPlayer != order.Player {
+	if to.ControllingFaction != order.Faction {
 		return errors.New("must control destination region in winter move")
 	}
 

@@ -12,13 +12,13 @@ type Game struct {
 	board     gametypes.Board
 	options   GameOptions
 	messenger Messenger
-	PlayerIDs []string
+	Factions  []gametypes.PlayerFaction
 }
 
 type Messenger interface {
 	ordervalidation.Messenger
 	orderresolving.Messenger
-	SendWinner(winner string) error
+	SendWinner(winner gametypes.PlayerFaction) error
 }
 
 func New(boardID string, options GameOptions, messenger Messenger) (*Game, error) {
@@ -29,9 +29,9 @@ func New(boardID string, options GameOptions, messenger Messenger) (*Game, error
 
 	return &Game{
 		board:     board,
-		PlayerIDs: board.AvailablePlayerIDs(),
 		options:   options,
 		messenger: messenger,
+		Factions:  board.AvailablePlayerFactions(),
 	}, nil
 }
 
@@ -40,14 +40,11 @@ func (game *Game) Start() {
 
 	for {
 		orders := ordervalidation.GatherAndValidateOrders(
-			game.PlayerIDs, game.board, season, game.messenger,
+			game.Factions, game.board, season, game.messenger,
 		)
 
-		_, winner, hasWinner := orderresolving.ResolveOrders(
-			game.board, orders, season, game.messenger,
-		)
-
-		if hasWinner {
+		_, winner := orderresolving.ResolveOrders(game.board, orders, season, game.messenger)
+		if winner != "" {
 			game.messenger.SendWinner(winner)
 			break
 		}

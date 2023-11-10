@@ -8,13 +8,13 @@ import (
 )
 
 type supportDeclaration struct {
-	fromPlayer string
-	toPlayer   string // Blank if supporting nobody.
+	from gametypes.PlayerFaction
+	to   gametypes.PlayerFaction // Blank if nobody were supported.
 }
 
 // Calls support from support orders to the given region, and appends modifiers to the given map.
 func appendSupportModifiers(
-	results map[string]gametypes.Result,
+	results map[gametypes.PlayerFaction]gametypes.Result,
 	region gametypes.Region,
 	includeDefender bool,
 	messenger Messenger,
@@ -52,14 +52,14 @@ func appendSupportModifiers(
 	close(supportReceiver)
 
 	for support := range supportReceiver {
-		if support.toPlayer == "" {
+		if support.to == "" {
 			continue
 		}
 
-		result, isPlayer := results[support.toPlayer]
-		if isPlayer {
-			result.Parts = append(result.Parts, gametypes.SupportBonus(support.fromPlayer))
-			results[support.toPlayer] = result
+		result, isFaction := results[support.to]
+		if isFaction {
+			result.Parts = append(result.Parts, gametypes.SupportBonus(support.from))
+			results[support.to] = result
 		}
 	}
 }
@@ -75,46 +75,43 @@ func callSupport(
 ) {
 	defer waitGroup.Done()
 
-	if includeDefender && !region.IsEmpty() && region.Unit.Player == support.Player {
-		supportReceiver <- supportDeclaration{fromPlayer: support.Player, toPlayer: support.Player}
+	if includeDefender && !region.IsEmpty() && region.Unit.Faction == support.Faction {
+		supportReceiver <- supportDeclaration{from: support.Faction, to: support.Faction}
 		return
 	}
 
 	for _, move := range moves {
-		if support.Player == move.Player {
-			supportReceiver <- supportDeclaration{
-				fromPlayer: support.Player,
-				toPlayer:   support.Player,
-			}
+		if support.Faction == move.Faction {
+			supportReceiver <- supportDeclaration{from: support.Faction, to: support.Faction}
 			return
 		}
 	}
 
-	var battlers []string
+	battlers := make([]gametypes.PlayerFaction, 0, len(moves)+1)
 	for _, move := range moves {
-		battlers = append(battlers, move.Player)
+		battlers = append(battlers, move.Faction)
 	}
 	if includeDefender && !region.IsEmpty() {
-		battlers = append(battlers, region.Unit.Player)
+		battlers = append(battlers, region.Unit.Faction)
 	}
 
 	if err := messenger.SendSupportRequest(
-		support.Player,
+		support.Faction,
 		support.Origin,
 		region.Name,
 		battlers,
 	); err != nil {
 		log.Error(err, "failed to send support request")
-		supportReceiver <- supportDeclaration{fromPlayer: support.Player, toPlayer: ""}
+		supportReceiver <- supportDeclaration{from: support.Faction, to: ""}
 		return
 	}
 
-	supported, err := messenger.AwaitSupport(support.Player, support.Origin, region.Name)
+	supported, err := messenger.AwaitSupport(support.Faction, support.Origin, region.Name)
 	if err != nil {
-		log.Errorf(err, "failed to receive support declaration from player '%s'", support.Player)
-		supportReceiver <- supportDeclaration{fromPlayer: support.Player, toPlayer: ""}
+		log.Errorf(err, "failed to receive support declaration from faction '%s'", support.Faction)
+		supportReceiver <- supportDeclaration{from: support.Faction, to: ""}
 		return
 	}
 
-	supportReceiver <- supportDeclaration{fromPlayer: support.Player, toPlayer: supported}
+	supportReceiver <- supportDeclaration{from: support.Faction, to: supported}
 }

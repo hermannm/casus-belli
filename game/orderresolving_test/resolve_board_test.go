@@ -10,9 +10,9 @@ import (
 // Tests whether units correctly move in circle without outside interference.
 func TestResolveConflictFreeMoveCycle(t *testing.T) {
 	units := map[string]gametypes.Unit{
-		"Leil":   {Type: gametypes.UnitFootman, Player: "red"},
-		"Limbol": {Type: gametypes.UnitFootman, Player: "green"},
-		"Worp":   {Type: gametypes.UnitFootman, Player: "yellow"},
+		"Leil":   {Type: gametypes.UnitFootman, Faction: "red"},
+		"Limbol": {Type: gametypes.UnitFootman, Faction: "green"},
+		"Worp":   {Type: gametypes.UnitFootman, Faction: "yellow"},
 	}
 
 	orders := []gametypes.Order{
@@ -28,8 +28,8 @@ func TestResolveConflictFreeMoveCycle(t *testing.T) {
 	orderresolving.ResolveOrders(board, orders, gametypes.SeasonSpring, MockMessenger{})
 
 	ExpectedControl{
-		"Leil":   {ControllingPlayer: "yellow", Unit: units["Worp"]},
-		"Limbol": {ControllingPlayer: "red", Unit: units["Leil"]},
-		"Worp":   {ControllingPlayer: "green", Unit: units["Limbol"]},
+		"Leil":   {ControllingFaction: "yellow", Unit: units["Worp"]},
+		"Limbol": {ControllingFaction: "red", Unit: units["Leil"]},
+		"Worp":   {ControllingFaction: "green", Unit: units["Limbol"]},
 	}.check(board, t)
 }

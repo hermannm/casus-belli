@@ -57,26 +57,26 @@ func (battle Battle) IsBorderConflict() bool {
 		(battle.Results[1].Move.Destination == battle.Results[0].Move.Origin)
 }
 
-// In case of a battle against an unconquered region or a danger zone, only one player is returned
-// in one of the lists.
+// In case of a battle against an unconquered region or a danger zone, only one player faction is
+// returned in one of the lists.
 //
 // In case of a battle between players, multiple winners are returned in the case of a tie.
-func (battle Battle) WinnersAndLosers() (winners []string, losers []string) {
+func (battle Battle) WinnersAndLosers() (winners []PlayerFaction, losers []PlayerFaction) {
 	if len(battle.Results) == 1 {
 		result := battle.Results[0]
 
 		if battle.DangerZone != "" {
 			if result.Total >= RequirementDangerZone {
-				return []string{result.Move.Player}, nil
+				return []PlayerFaction{result.Move.Faction}, nil
 			} else {
-				return nil, []string{result.Move.Player}
+				return nil, []PlayerFaction{result.Move.Faction}
 			}
 		}
 
 		if result.Total >= RequirementConquer {
-			return []string{result.Move.Player}, nil
+			return []PlayerFaction{result.Move.Faction}, nil
 		} else {
-			return nil, []string{result.Move.Player}
+			return nil, []PlayerFaction{result.Move.Faction}
 		}
 	}
 
@@ -89,9 +89,9 @@ func (battle Battle) WinnersAndLosers() (winners []string, losers []string) {
 
 	for _, result := range battle.Results {
 		if result.Total >= highestResult {
-			winners = append(winners, result.Move.Player)
+			winners = append(winners, result.Move.Faction)
 		} else {
-			losers = append(losers, result.Move.Player)
+			losers = append(losers, result.Move.Faction)
 		}
 	}
 

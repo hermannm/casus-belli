@@ -40,7 +40,7 @@ func discoverCycle(
 func discoverTwoWayCycle(
 	region1 gametypes.Region,
 	board gametypes.Board,
-) (isCycle bool, region2 gametypes.Region, samePlayer bool) {
+) (isCycle bool, region2 gametypes.Region, sameFaction bool) {
 	order1 := region1.Order
 	if order1.Type != gametypes.OrderMove {
 		return false, gametypes.Region{}, false
@@ -52,5 +52,5 @@ func discoverTwoWayCycle(
 		return false, gametypes.Region{}, false
 	}
 
-	return order1.Origin == order2.Destination, region2, order1.Player == order2.Player
+	return order1.Origin == order2.Destination, region2, order1.Faction == order2.Faction
 }

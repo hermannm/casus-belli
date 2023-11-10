@@ -19,14 +19,14 @@ type Region struct {
 	// from conquering).
 	Nation string `json:"nation,omitempty"`
 
-	// For land regions that are a starting region for a player.
-	HomePlayer string `json:"homePlayer,omitempty"`
+	// For land regions that are a starting region for a player faction.
+	HomeFaction PlayerFaction `json:"homeFaction,omitempty"`
 
 	// The unit that currently occupies the region.
 	Unit Unit `json:"unit"`
 
-	// The player that currently controls the region.
-	ControllingPlayer string `json:"controllingPlayer,omitempty"`
+	// The player faction that currently controls the region.
+	ControllingFaction PlayerFaction `json:"controllingFaction,omitempty"`
 
 	// For land regions with castles: the number of times an occupying unit has besieged the castle.
 	SiegeCount int `json:"siegeCount,omitempty"`
@@ -61,9 +61,9 @@ func (region Region) IsEmpty() bool {
 	return region.Unit.IsNone()
 }
 
-// Checks whether the region is controlled by a player.
+// Checks whether the region is controlled by a player faction.
 func (region Region) IsControlled() bool {
-	return region.ControllingPlayer != ""
+	return region.ControllingFaction != ""
 }
 
 // Checks if any players have move orders against the region.

@@ -17,24 +17,24 @@ type ErrorMessage struct {
 
 // Message sent from server to all clients when a player's status changes.
 type PlayerStatusMessage struct {
-	Username         string  `json:"username"`
-	GameID           *string `json:"gameId,omitempty"`
-	ReadyToStartGame bool    `json:"ready"`
+	Username         string                   `json:"username"`
+	SelectedFaction  *gametypes.PlayerFaction `json:"selectedFaction,omitempty"`
+	ReadyToStartGame bool                     `json:"readyToStartGame"`
 }
 
 // Message sent to a player when they join a lobby, to inform them about the game and other players.
 type LobbyJoinedMessage struct {
-	SelectableGameIDs []string              `json:"selectableGameIds"`
-	PlayerStatuses    []PlayerStatusMessage `json:"playerStatuses"`
+	SelectableFactions []gametypes.PlayerFaction `json:"selectableFactions"`
+	PlayerStatuses     []PlayerStatusMessage     `json:"playerStatuses"`
 }
 
-// Message sent from client when they want to select a game ID.
-type SelectGameIDMessage struct {
-	GameID string `json:"gameId"`
+// Message sent from client when they want to select a faction to play for the game.
+type SelectFactionMessage struct {
+	Faction gametypes.PlayerFaction `json:"faction"`
 }
 
 // Message sent from client to mark themselves as ready to start the game.
-// Requires game ID being selected.
+// Requires that faction has been selected.
 type ReadyToStartGameMessage struct {
 	Ready bool `json:"ready"`
 }
@@ -45,9 +45,9 @@ type StartGameMessage struct{}
 
 // Message sent from server when asking a supporting player who to support in an embattled region.
 type SupportRequestMessage struct {
-	SupportingRegion   string   `json:"supportingRegion"`
-	EmbattledRegion    string   `json:"embattledRegion"`
-	SupportablePlayers []string `json:"supportablePlayers"`
+	SupportingRegion    string                    `json:"supportingRegion"`
+	EmbattledRegion     string                    `json:"embattledRegion"`
+	SupportableFactions []gametypes.PlayerFaction `json:"supportableFactions"`
 }
 
 // Message sent from server to client to signal that client should submit orders.
@@ -55,14 +55,13 @@ type OrderRequestMessage struct{}
 
 // Message sent from server to all clients when valid orders are received from all players.
 type OrdersReceivedMessage struct {
-	// Maps a player's ID to their submitted orders.
-	PlayerOrders map[string][]gametypes.Order `json:"playerOrders"`
+	OrdersByFaction map[gametypes.PlayerFaction][]gametypes.Order `json:"ordersByFaction"`
 }
 
 // Message sent from server to all clients when valid orders are received from a player.
 // Used to show who the server is waiting for.
 type OrdersConfirmationMessage struct {
-	PlayerWhoSubmittedOrders string `json:"playerWhoSubmittedOrders"`
+	FactionThatSubmittedOrders gametypes.PlayerFaction `json:"factionThatSubmittedOrders"`
 }
 
 // Message sent from server to all clients when a battle result is calculated.
@@ -72,7 +71,7 @@ type BattleResultsMessage struct {
 
 // Message sent from server to all clients when the game is won.
 type WinnerMessage struct {
-	Winner string `json:"winner"`
+	WinningFaction gametypes.PlayerFaction `json:"winningFaction"`
 }
 
 // Message sent from client when submitting orders.
@@ -87,16 +86,16 @@ type GiveSupportMessage struct {
 	EmbattledRegion  string `json:"embattledRegion"`
 
 	// Nil if none were supported.
-	SupportedPlayer *string `json:"supportedPlayer"`
+	SupportedFaction *gametypes.PlayerFaction `json:"supportedFaction"`
 }
 
-// Message passed from the client during winter council voting.
+// Message sent from the client during winter council voting.
 // Used for the throne expansion.
 type WinterVoteMessage struct {
-	PlayerVotedFor string `json:"playerVotedFor"`
+	FactionVotedFor gametypes.PlayerFaction `json:"factionVotedFor"`
 }
 
-// Message passed from the client with the SwordMessage to declare where they want to use it.
+// Message passed from the client with the Sword to declare where they want to use it.
 // Used for the throne expansion.
 type SwordMessage struct {
 	Region string `json:"region"`
@@ -105,11 +104,11 @@ type SwordMessage struct {
 	BattleIndex int `json:"battleIndex"`
 }
 
-// Message passed from the client with the RavenMessage when they want to spy on another player's
+// Message sent from the client with the Raven when they want to spy on another player's
 // orders.
 // Used for the throne expansion.
 type RavenMessage struct {
-	PlayerToSpyOn string `json:"playerToSpyOn"`
+	FactionToSpyOn string `json:"factionToSpyOn"`
 }
 
 type MessageTag uint8
@@ -118,7 +117,7 @@ const (
 	MessageTagError MessageTag = iota + 1
 	MessageTagPlayerStatus
 	MessageTagLobbyJoined
-	MessageTagSelectGameID
+	MessageTagSelectFaction
 	MessageTagReady
 	MessageTagStartGame
 	MessageTagSupportRequest
@@ -138,7 +137,7 @@ var messageTags = enumnames.NewMap(map[MessageTag]string{
 	MessageTagError:              "Error",
 	MessageTagPlayerStatus:       "PlayerStatus",
 	MessageTagLobbyJoined:        "LobbyJoined",
-	MessageTagSelectGameID:       "SelectGameId",
+	MessageTagSelectFaction:      "SelectFaction",
 	MessageTagReady:              "Ready",
 	MessageTagStartGame:          "StartGame",
 	MessageTagSupportRequest:     "SupportRequest",

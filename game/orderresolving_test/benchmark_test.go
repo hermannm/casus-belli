@@ -18,32 +18,32 @@ func BenchmarkBoardResolve(b *testing.B) {
 
 func setup() (gametypes.Board, []gametypes.Order) {
 	units := map[string]gametypes.Unit{
-		"Emman": {Type: gametypes.UnitFootman, Player: "white"},
+		"Emman": {Type: gametypes.UnitFootman, Faction: "white"},
 
-		"Lomone": {Type: gametypes.UnitFootman, Player: "green"},
-		"Lusía":  {Type: gametypes.UnitFootman, Player: "red"},
+		"Lomone": {Type: gametypes.UnitFootman, Faction: "green"},
+		"Lusía":  {Type: gametypes.UnitFootman, Faction: "red"},
 
-		"Gron":  {Type: gametypes.UnitFootman, Player: "white"},
-		"Gnade": {Type: gametypes.UnitFootman, Player: "black"},
+		"Gron":  {Type: gametypes.UnitFootman, Faction: "white"},
+		"Gnade": {Type: gametypes.UnitFootman, Faction: "black"},
 
-		"Firril": {Type: gametypes.UnitFootman, Player: "black"},
+		"Firril": {Type: gametypes.UnitFootman, Faction: "black"},
 
-		"Ovo":       {Type: gametypes.UnitFootman, Player: "green"},
-		"Mare Elle": {Type: gametypes.UnitShip, Player: "green"},
+		"Ovo":       {Type: gametypes.UnitFootman, Faction: "green"},
+		"Mare Elle": {Type: gametypes.UnitShip, Faction: "green"},
 
-		"Winde":      {Type: gametypes.UnitFootman, Player: "green"},
-		"Mare Gond":  {Type: gametypes.UnitShip, Player: "green"},
-		"Mare Ovond": {Type: gametypes.UnitShip, Player: "green"},
-		"Mare Unna":  {Type: gametypes.UnitShip, Player: "black"},
+		"Winde":      {Type: gametypes.UnitFootman, Faction: "green"},
+		"Mare Gond":  {Type: gametypes.UnitShip, Faction: "green"},
+		"Mare Ovond": {Type: gametypes.UnitShip, Faction: "green"},
+		"Mare Unna":  {Type: gametypes.UnitShip, Faction: "black"},
 
-		"Tusser": {Type: gametypes.UnitFootman, Player: "white"},
-		"Tige":   {Type: gametypes.UnitFootman, Player: "black"},
+		"Tusser": {Type: gametypes.UnitFootman, Faction: "white"},
+		"Tige":   {Type: gametypes.UnitFootman, Faction: "black"},
 
-		"Tond": {Type: gametypes.UnitFootman, Player: "green"},
+		"Tond": {Type: gametypes.UnitFootman, Faction: "green"},
 
-		"Leil":   {Type: gametypes.UnitFootman, Player: "red"},
-		"Limbol": {Type: gametypes.UnitFootman, Player: "green"},
-		"Worp":   {Type: gametypes.UnitFootman, Player: "yellow"},
+		"Leil":   {Type: gametypes.UnitFootman, Faction: "red"},
+		"Limbol": {Type: gametypes.UnitFootman, Faction: "green"},
+		"Worp":   {Type: gametypes.UnitFootman, Faction: "yellow"},
 	}
 
 	orders := []gametypes.Order{

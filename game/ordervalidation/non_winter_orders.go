@@ -40,7 +40,7 @@ func validateNonWinterOrder(
 		return errors.New("build orders can only be placed in winter")
 	}
 
-	if order.Player != origin.Unit.Player {
+	if order.Faction != origin.Unit.Faction {
 		return errors.New("must have unit in ordered region")
 	}
 

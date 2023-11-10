@@ -14,13 +14,13 @@
       { "name": "Leil" }
     ],
     "Wonde": [
-      { "name": "Worp", "forest": true, "homePlayer": "green" },
-      { "name": "Winde", "forest": true, "castle": true, "homePlayer": "green" }
+      { "name": "Worp", "forest": true, "homeFaction": "green" },
+      { "name": "Winde", "forest": true, "castle": true, "homeFaction": "green" }
     ],
     "Ovo": [{ "name": "Ovo", "forest": true }],
     "Monone": [
-      { "name": "Morone", "homePlayer": "red" },
-      { "name": "Monté", "castle": true, "homePlayer": "red" }
+      { "name": "Morone", "homeFaction": "red" },
+      { "name": "Monté", "castle": true, "homeFaction": "red" }
     ],
     "Brobomba": [
       { "name": "Brodo", "forest": true },
@@ -31,15 +31,15 @@
     "Arri": [{ "name": "Arra" }, { "name": "Amarí" }],
     "Caleren": [{ "name": "Calis", "forest": true, "castle": true }, { "name": "Cymere" }],
     "Pusth": [
-      { "name": "Pesth", "homePlayer": "yellow" },
-      { "name": "Purth", "castle": true, "homePlayer": "yellow" }
+      { "name": "Pesth", "homeFaction": "yellow" },
+      { "name": "Purth", "castle": true, "homeFaction": "yellow" }
     ],
     "Rimimar": [{ "name": "Rimine" }, { "name": "Rama" }],
     "Zorask": [{ "name": "Zona" }],
     "Titutto": [{ "name": "Tond" }, { "name": "Tige" }, { "name": "Tusser" }],
     "Dordal": [
-      { "name": "Dalom", "forest": true, "homePlayer": "white" },
-      { "name": "Dordel", "castle": true, "homePlayer": "white" }
+      { "name": "Dalom", "forest": true, "homeFaction": "white" },
+      { "name": "Dordel", "castle": true, "homeFaction": "white" }
     ],
     "Hyllerk": [
       { "name": "Herk", "forest": true },
@@ -53,8 +53,8 @@
       { "name": "Gewel", "forest": true, "castle": true }
     ],
     "Erreman": [
-      { "name": "Emman", "forest": true, "homePlayer": "black" },
-      { "name": "Erren", "castle": true, "homePlayer": "black" }
+      { "name": "Emman", "forest": true, "homeFaction": "black" },
+      { "name": "Erren", "castle": true, "homeFaction": "black" }
     ]
   },
   "seas": [

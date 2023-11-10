@@ -10,13 +10,13 @@ func calculateSingleplayerBattle(
 	battleReceiver chan<- gametypes.Battle,
 	messenger Messenger,
 ) {
-	playerResults := map[string]gametypes.Result{
-		move.Player: {Parts: attackModifiers(move, region, false, false, true), Move: move},
+	results := map[gametypes.PlayerFaction]gametypes.Result{
+		move.Faction: {Parts: attackModifiers(move, region, false, false, true), Move: move},
 	}
 
-	appendSupportModifiers(playerResults, region, false, messenger)
+	appendSupportModifiers(results, region, false, messenger)
 
-	battleReceiver <- gametypes.Battle{Results: calculateTotals(playerResults)}
+	battleReceiver <- gametypes.Battle{Results: calculateTotals(results)}
 }
 
 func calculateMultiplayerBattle(
@@ -25,25 +25,25 @@ func calculateMultiplayerBattle(
 	battleReceiver chan<- gametypes.Battle,
 	messenger Messenger,
 ) {
-	playerResults := make(map[string]gametypes.Result)
+	results := make(map[gametypes.PlayerFaction]gametypes.Result, len(region.IncomingMoves))
 
 	for _, move := range region.IncomingMoves {
-		playerResults[move.Player] = gametypes.Result{
+		results[move.Faction] = gametypes.Result{
 			Parts: attackModifiers(move, region, true, false, includeDefender),
 			Move:  move,
 		}
 	}
 
 	if !region.IsEmpty() && includeDefender {
-		playerResults[region.Unit.Player] = gametypes.Result{
+		results[region.Unit.Faction] = gametypes.Result{
 			Parts:          defenseModifiers(region),
 			DefenderRegion: region.Name,
 		}
 	}
 
-	appendSupportModifiers(playerResults, region, includeDefender, messenger)
+	appendSupportModifiers(results, region, includeDefender, messenger)
 
-	battleReceiver <- gametypes.Battle{Results: calculateTotals(playerResults)}
+	battleReceiver <- gametypes.Battle{Results: calculateTotals(results)}
 }
 
 // Battle where units from two regions attack each other simultaneously.
@@ -55,15 +55,15 @@ func calculateBorderBattle(
 ) {
 	move1 := region1.Order
 	move2 := region2.Order
-	playerResults := map[string]gametypes.Result{
-		move1.Player: {Parts: attackModifiers(move1, region2, true, true, false), Move: move1},
-		move2.Player: {Parts: attackModifiers(move2, region1, true, true, false), Move: move2},
+	results := map[gametypes.PlayerFaction]gametypes.Result{
+		move1.Faction: {Parts: attackModifiers(move1, region2, true, true, false), Move: move1},
+		move2.Faction: {Parts: attackModifiers(move2, region1, true, true, false), Move: move2},
 	}
 
-	appendSupportModifiers(playerResults, region2, false, messenger)
-	appendSupportModifiers(playerResults, region1, false, messenger)
+	appendSupportModifiers(results, region2, false, messenger)
+	appendSupportModifiers(results, region1, false, messenger)
 
-	battleReceiver <- gametypes.Battle{Results: calculateTotals(playerResults)}
+	battleReceiver <- gametypes.Battle{Results: calculateTotals(results)}
 }
 
 func defenseModifiers(region gametypes.Region) []gametypes.Modifier {
@@ -122,19 +122,18 @@ func attackModifiers(
 	return mods
 }
 
-func calculateTotals(playerResults map[string]gametypes.Result) []gametypes.Result {
-	results := make([]gametypes.Result, 0, len(playerResults))
+func calculateTotals(results map[gametypes.PlayerFaction]gametypes.Result) []gametypes.Result {
+	resultList := make([]gametypes.Result, 0, len(results))
 
-	for _, result := range playerResults {
+	for _, result := range results {
 		total := 0
 		for _, mod := range result.Parts {
 			total += mod.Value
 		}
-
 		result.Total = total
 
-		results = append(results, result)
+		resultList = append(resultList, result)
 	}
 
-	return results
+	return resultList
 }

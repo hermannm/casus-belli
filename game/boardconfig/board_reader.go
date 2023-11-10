@@ -23,10 +23,10 @@ type JSONBoard struct {
 }
 
 type JSONLandRegion struct {
-	Name       string `json:"name"`
-	Forest     bool   `json:"forest"`
-	Castle     bool   `json:"castle"`
-	HomePlayer string `json:"homePlayer"`
+	Name        string `json:"name"`
+	Forest      bool   `json:"forest"`
+	Castle      bool   `json:"castle"`
+	HomeFaction string `json:"homeFaction"`
 }
 
 type JSONSeaRegion struct {
@@ -65,12 +65,12 @@ func ReadBoardFromConfigFile(boardID string) (gametypes.Board, error) {
 	for nation, regions := range jsonBoard.Nations {
 		for _, landRegion := range regions {
 			region := gametypes.Region{
-				Name:              landRegion.Name,
-				Nation:            nation,
-				ControllingPlayer: landRegion.HomePlayer,
-				HomePlayer:        landRegion.HomePlayer,
-				IsForest:          landRegion.Forest,
-				HasCastle:         landRegion.Castle,
+				Name:               landRegion.Name,
+				Nation:             nation,
+				ControllingFaction: gametypes.PlayerFaction(landRegion.HomeFaction),
+				HomeFaction:        gametypes.PlayerFaction(landRegion.HomeFaction),
+				IsForest:           landRegion.Forest,
+				HasCastle:          landRegion.Castle,
 			}
 
 			board.Regions[region.Name] = region

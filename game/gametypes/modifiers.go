@@ -9,8 +9,8 @@ type Modifier struct {
 	Type  ModifierType `json:"type"`
 	Value int          `json:"value"`
 
-	// If modifier was from a support: the supporting player, otherwise blank.
-	SupportingPlayer string `json:"supportingPlayer,omitempty"`
+	// Blank, unless Type is ModifierSupport.
+	SupportingFaction PlayerFaction `json:"supportingFaction,omitempty"`
 }
 
 type ModifierType string
@@ -60,6 +60,6 @@ func SurpriseAttackBonus() Modifier {
 	return Modifier{Type: ModifierSurprise, Value: 1}
 }
 
-func SupportBonus(supportingPlayer string) Modifier {
-	return Modifier{Type: ModifierSupport, Value: 1, SupportingPlayer: supportingPlayer}
+func SupportBonus(supportingFaction PlayerFaction) Modifier {
+	return Modifier{Type: ModifierSupport, Value: 1, SupportingFaction: supportingFaction}
 }

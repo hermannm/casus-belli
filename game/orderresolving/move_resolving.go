@@ -88,17 +88,17 @@ func (resolver *MoveResolver) resolveRegionMoves(
 	}
 
 	// Finds out if the region is part of a cycle (moves in a circle)
-	twoWayCycle, region2, samePlayer := discoverTwoWayCycle(region, board)
-	if twoWayCycle && samePlayer {
-		// If both moves are by the same player, removes the units from their origin regions,
-		// as they may not be allowed to retreat if their origin region is taken
+	twoWayCycle, region2, sameFaction := discoverTwoWayCycle(region, board)
+	if twoWayCycle && sameFaction {
+		// If both moves are by the same player faction, removes the units from their origin
+		// regions, as they may not be allowed to retreat if their origin region is taken
 		for _, cycleRegion := range [2]gametypes.Region{region, region2} {
 			cycleRegion.Unit = gametypes.Unit{}
 			cycleRegion.Order = gametypes.Order{}
 			board.Regions[cycleRegion.Name] = cycleRegion
 		}
 	} else if twoWayCycle {
-		// If the moves are from different players, they battle in the middle
+		// If the moves are from different player factions, they battle in the middle
 		go calculateBorderBattle(region, region2, resolver.battleReceiver, messenger)
 		resolver.resolvingRegions.AddMultiple(region.Name, region2.Name)
 		return
@@ -217,7 +217,7 @@ func (resolver *MoveResolver) succeedMove(move gametypes.Order, board gametypes.
 	destination.Unit = move.Unit
 	destination.Order = gametypes.Order{}
 	if !destination.IsSea {
-		destination.ControllingPlayer = move.Player
+		destination.ControllingFaction = move.Faction
 	}
 
 	board.Regions[move.Destination] = destination

@@ -42,7 +42,7 @@ func (resolver *MoveResolver) resolveBorderBattle(battle gametypes.Battle, board
 		// Only the loser is affected by the results of the border battle; the winner may still have
 		// to win a battle in the destination region, which will be handled by the next cycle of the
 		// move resolver
-		if move.Player == loser {
+		if move.Faction == loser {
 			board.RemoveOrder(move)
 			board.RemoveUnit(move.Unit, move.Origin)
 		}
@@ -83,8 +83,8 @@ func (resolver *MoveResolver) resolveMultiplayerBattle(
 		move := result.Move
 
 		lost := false
-		for _, otherPlayer := range losers {
-			if otherPlayer == move.Player {
+		for _, otherFaction := range losers {
+			if otherFaction == move.Faction {
 				lost = true
 			}
 		}

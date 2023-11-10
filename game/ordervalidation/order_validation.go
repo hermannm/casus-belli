@@ -6,32 +6,35 @@ import (
 )
 
 type Messenger interface {
-	AwaitOrders(fromPlayer string) ([]gametypes.Order, error)
-	SendOrderRequest(toPlayer string) error
-	SendOrdersConfirmation(playerWhoSubmittedOrders string) error
-	SendOrdersReceived(playerOrders map[string][]gametypes.Order) error
-	SendError(toPlayer string, err error)
+	AwaitOrders(from gametypes.PlayerFaction) ([]gametypes.Order, error)
+	SendOrderRequest(to gametypes.PlayerFaction) error
+	SendOrdersConfirmation(factionThatSubmittedOrders gametypes.PlayerFaction) error
+	SendOrdersReceived(orders map[gametypes.PlayerFaction][]gametypes.Order) error
+	SendError(to gametypes.PlayerFaction, err error)
 }
 
 func GatherAndValidateOrders(
-	players []string, board gametypes.Board, season gametypes.Season, messenger Messenger,
+	factions []gametypes.PlayerFaction,
+	board gametypes.Board,
+	season gametypes.Season,
+	messenger Messenger,
 ) []gametypes.Order {
-	orderChans := make(map[string]chan []gametypes.Order)
-	for _, player := range players {
+	orderChans := make(map[gametypes.PlayerFaction]chan []gametypes.Order, len(factions))
+	for _, faction := range factions {
 		orderChan := make(chan []gametypes.Order, 1)
-		orderChans[player] = orderChan
-		go gatherAndValidateOrderSet(player, board, season, orderChan, messenger)
+		orderChans[faction] = orderChan
+		go gatherAndValidateOrderSet(faction, board, season, orderChan, messenger)
 	}
 
 	var allOrders []gametypes.Order
-	playerOrders := make(map[string][]gametypes.Order)
-	for player, orderChan := range orderChans {
+	factionOrders := make(map[gametypes.PlayerFaction][]gametypes.Order, len(orderChans))
+	for faction, orderChan := range orderChans {
 		orders := <-orderChan
 		allOrders = append(allOrders, orders...)
-		playerOrders[player] = orders
+		factionOrders[faction] = orders
 	}
 
-	if err := messenger.SendOrdersReceived(playerOrders); err != nil {
+	if err := messenger.SendOrdersReceived(factionOrders); err != nil {
 		log.Error(err, "")
 	}
 
@@ -42,20 +45,20 @@ func GatherAndValidateOrders(
 // If valid, sends the order set to the given output channel.
 // If invalid, informs the client and waits for a new order set.
 func gatherAndValidateOrderSet(
-	player string,
+	faction gametypes.PlayerFaction,
 	board gametypes.Board,
 	season gametypes.Season,
 	orderChan chan<- []gametypes.Order,
 	messenger Messenger,
 ) {
 	for {
-		if err := messenger.SendOrderRequest(player); err != nil {
+		if err := messenger.SendOrderRequest(faction); err != nil {
 			log.Error(err, "")
 			orderChan <- []gametypes.Order{}
 			return
 		}
 
-		orders, err := messenger.AwaitOrders(player)
+		orders, err := messenger.AwaitOrders(faction)
 		if err != nil {
 			log.Error(err, "")
 			orderChan <- []gametypes.Order{}
@@ -63,7 +66,7 @@ func gatherAndValidateOrderSet(
 		}
 
 		for i, order := range orders {
-			order.Player = player
+			order.Faction = faction
 
 			origin, ok := board.Regions[order.Origin]
 			if ok && !origin.IsEmpty() && order.Type != gametypes.OrderBuild {
@@ -75,11 +78,11 @@ func gatherAndValidateOrderSet(
 
 		if err := validateOrders(orders, board, season); err != nil {
 			log.Error(err, "")
-			messenger.SendError(player, err)
+			messenger.SendError(faction, err)
 			continue
 		}
 
-		if err := messenger.SendOrdersConfirmation(player); err != nil {
+		if err := messenger.SendOrdersConfirmation(faction); err != nil {
 			log.Error(err, "")
 		}
 
@@ -88,9 +91,11 @@ func gatherAndValidateOrderSet(
 }
 
 // Checks if the given set of orders are valid for the state of the board in the given season.
-// Assumes that all orders are from the same player.
+// Assumes that all orders are from the same faction.
 func validateOrders(
-	orders []gametypes.Order, board gametypes.Board, season gametypes.Season,
+	orders []gametypes.Order,
+	board gametypes.Board,
+	season gametypes.Season,
 ) error {
 	var err error
 	if season == gametypes.SeasonWinter {

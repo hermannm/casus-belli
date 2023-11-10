@@ -98,7 +98,7 @@ func (region Region) getTransportingNeighbors(
 
 		if regionsToExclude.Contains(neighbor.Name) ||
 			neighborRegion.Order.Type != OrderTransport ||
-			neighborRegion.Unit.Player != region.Unit.Player {
+			neighborRegion.Unit.Faction != region.Unit.Faction {
 			continue
 		}
 

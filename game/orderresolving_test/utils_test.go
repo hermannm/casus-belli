@@ -18,8 +18,14 @@ func newMockBoard() gametypes.Board {
 		{Name: "Lomone", IsForest: true},
 		{Name: "Limbol", IsForest: true},
 		{Name: "Leil"},
-		{Name: "Worp", IsForest: true, HomePlayer: "green", ControllingPlayer: "green"},
-		{Name: "Winde", IsForest: true, HasCastle: true, HomePlayer: "green", ControllingPlayer: "green"},
+		{Name: "Worp", IsForest: true, HomeFaction: "green", ControllingFaction: "green"},
+		{
+			Name:               "Winde",
+			IsForest:           true,
+			HasCastle:          true,
+			HomeFaction:        "green",
+			ControllingFaction: "green",
+		},
 		{Name: "Ovo", IsForest: true},
 		{Name: "Mare Gond", IsSea: true},
 		{Name: "Mare Elle", IsSea: true},
@@ -35,8 +41,8 @@ func newMockBoard() gametypes.Board {
 		{Name: "Gnade"},
 		{Name: "Gewel", IsForest: true, HasCastle: true},
 		{Name: "Mare Unna", IsSea: true},
-		{Name: "Emman", IsForest: true, HomePlayer: "black", ControllingPlayer: "black"},
-		{Name: "Erren", HasCastle: true, HomePlayer: "black", ControllingPlayer: "black"},
+		{Name: "Emman", IsForest: true, HomeFaction: "black", ControllingFaction: "black"},
+		{Name: "Erren", HasCastle: true, HomeFaction: "black", ControllingFaction: "black"},
 		{Name: "Mare Bøso", IsSea: true},
 	}
 
@@ -129,7 +135,7 @@ func placeUnits(units map[string]gametypes.Unit, board gametypes.Board) {
 	for regionName, unit := range units {
 		region := board.Regions[regionName]
 		region.Unit = unit
-		region.ControllingPlayer = unit.Player
+		region.ControllingFaction = unit.Faction
 		board.Regions[regionName] = region
 	}
 }
@@ -142,14 +148,14 @@ func placeOrders(orders []gametypes.Order, board gametypes.Board) {
 		}
 
 		order.Unit = region.Unit
-		order.Player = region.Unit.Player
+		order.Faction = region.Unit.Faction
 		orders[i] = order
 	}
 }
 
 type ExpectedControl map[string]struct {
-	ControllingPlayer string
-	Unit              gametypes.Unit
+	ControllingFaction gametypes.PlayerFaction
+	Unit               gametypes.Unit
 }
 
 func (expected ExpectedControl) check(board gametypes.Board, t *testing.T) {
@@ -159,12 +165,12 @@ func (expected ExpectedControl) check(board gametypes.Board, t *testing.T) {
 			continue
 		}
 
-		if region.ControllingPlayer != expectation.ControllingPlayer {
+		if region.ControllingFaction != expectation.ControllingFaction {
 			t.Errorf(
 				"unexpected control of %v, want %v, got %v",
 				name,
-				region.ControllingPlayer,
-				expectation.ControllingPlayer,
+				region.ControllingFaction,
+				expectation.ControllingFaction,
 			)
 		}
 		if region.Unit != expectation.Unit {
@@ -180,13 +186,18 @@ func (MockMessenger) SendBattleResults(battles []gametypes.Battle) error {
 }
 
 func (MockMessenger) SendSupportRequest(
-	toPlayer string, supportingRegion string, embattledRegion string, supportablePlayers []string,
+	to gametypes.PlayerFaction,
+	supportingRegion string,
+	embattledRegion string,
+	supportableFactions []gametypes.PlayerFaction,
 ) error {
 	return nil
 }
 
 func (MockMessenger) AwaitSupport(
-	fromPlayer string, supportingRegion string, embattledRegion string,
-) (supportedPlayer string, err error) {
+	from gametypes.PlayerFaction,
+	supportingRegion string,
+	embattledRegion string,
+) (supported gametypes.PlayerFaction, err error) {
 	return "", nil
 }

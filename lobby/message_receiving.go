@@ -61,10 +61,10 @@ func (player *Player) readMessage(lobby *Lobby) (socketIsClosed bool, err error)
 
 	if !isLobbyMessage {
 		player.lock.RLock()
-		hasGameID := player.gameID != ""
+		hasFaction := player.gameFaction != ""
 		player.lock.RUnlock()
 
-		if hasGameID {
+		if hasFaction {
 			// Launch in new goroutine, so it can send on channels while this goroutine keeps
 			// reading messages
 			go player.handleGameMessage(message.Tag, message.Data)
@@ -85,13 +85,13 @@ func (player *Player) handleLobbyMessage(
 	lobby *Lobby,
 ) (isLobbyMessage bool, err error) {
 	switch messageTag {
-	case MessageTagSelectGameID:
-		var message SelectGameIDMessage
+	case MessageTagSelectFaction:
+		var message SelectFactionMessage
 		if err := json.Unmarshal(rawMessage, &message); err != nil {
 			return true, wrap.Error(err, "failed to parse message")
 		}
 
-		if err := player.selectGameID(message.GameID, lobby); err != nil {
+		if err := player.selectFaction(message.Faction, lobby); err != nil {
 			return true, wrap.Error(err, "failed to select game ID")
 		}
 
@@ -184,12 +184,12 @@ func (player *Player) handleGameMessage(tag MessageTag, rawMessage json.RawMessa
 	}
 }
 
-func (lobby *Lobby) AwaitOrders(fromPlayer string) ([]gametypes.Order, error) {
-	player, ok := lobby.getPlayer(fromPlayer)
+func (lobby *Lobby) AwaitOrders(from gametypes.PlayerFaction) ([]gametypes.Order, error) {
+	player, ok := lobby.getPlayer(from)
 	if !ok {
 		return nil, fmt.Errorf(
 			"failed to get order message from player '%s': player not found",
-			fromPlayer,
+			from,
 		)
 	}
 
@@ -198,15 +198,15 @@ func (lobby *Lobby) AwaitOrders(fromPlayer string) ([]gametypes.Order, error) {
 }
 
 func (lobby *Lobby) AwaitSupport(
-	fromPlayer string,
+	from gametypes.PlayerFaction,
 	supportingRegion string,
 	embattledRegion string,
-) (supportedPlayer string, err error) {
-	player, ok := lobby.getPlayer(fromPlayer)
+) (supported gametypes.PlayerFaction, err error) {
+	player, ok := lobby.getPlayer(from)
 	if !ok {
 		return "", fmt.Errorf(
 			"failed to get support message from player '%s' in region '%s': player not found",
-			fromPlayer,
+			from,
 			supportingRegion,
 		)
 	}
@@ -227,9 +227,9 @@ func (lobby *Lobby) AwaitSupport(
 		)
 	}
 
-	if supportMessage.SupportedPlayer != nil {
-		supportedPlayer = *supportMessage.SupportedPlayer
+	if supportMessage.SupportedFaction != nil {
+		supported = *supportMessage.SupportedFaction
 	}
 
-	return supportedPlayer, nil
+	return supported, nil
 }

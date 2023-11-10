@@ -8,6 +8,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	"hermannm.dev/bfh-server/game"
+	"hermannm.dev/bfh-server/game/gametypes"
 	"hermannm.dev/devlog/log"
 	"hermannm.dev/wrap"
 )
@@ -28,27 +29,25 @@ func New(lobbyName string, boardID string, gameOptions game.GameOptions) (*Lobby
 		return nil, wrap.Error(err, "failed to create game")
 	}
 	lobby.game = game
-	lobby.players = make([]*Player, 0, len(game.PlayerIDs))
+	lobby.players = make([]*Player, 0, len(game.Factions))
 
 	return lobby, nil
 }
 
-func (lobby *Lobby) getPlayer(gameID string) (player *Player, foundPlayer bool) {
+func (lobby *Lobby) getPlayer(faction gametypes.PlayerFaction) (player *Player, foundPlayer bool) {
 	lobby.lock.RLock()
 	defer lobby.lock.RUnlock()
 
 	for _, p := range lobby.players {
 		p.lock.RLock()
-		if p.gameID == gameID {
-			player = p
-			foundPlayer = true
+		if p.gameFaction == faction {
 			p.lock.RUnlock()
-			break
+			return p, true
 		}
 		p.lock.RUnlock()
 	}
 
-	return player, foundPlayer
+	return nil, false
 }
 
 func (lobby *Lobby) AddPlayer(username string, socket *websocket.Conn) (*Player, error) {
@@ -120,13 +119,13 @@ func (lobby *Lobby) startGame() error {
 	lobby.lock.RLock()
 	defer lobby.lock.RUnlock()
 
-	claimedGameIDs := 0
+	claimedFactions := 0
 	readyPlayers := 0
 	for _, player := range lobby.players {
 		player.lock.RLock()
 
-		if player.gameID != "" {
-			claimedGameIDs++
+		if player.gameFaction != "" {
+			claimedFactions++
 		}
 
 		if player.readyToStartGame {
@@ -136,7 +135,7 @@ func (lobby *Lobby) startGame() error {
 		player.lock.RUnlock()
 	}
 
-	if claimedGameIDs < len(lobby.game.PlayerIDs) {
+	if claimedFactions < len(lobby.game.Factions) {
 		return errors.New("all game IDs must be claimed before starting the game")
 	}
 	if readyPlayers < len(lobby.players) {

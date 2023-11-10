@@ -4,8 +4,8 @@ import "encoding/json"
 
 // An order submitted by a player for one of their units in a given round.
 type Order struct {
-	Type   OrderType `json:"type"`
-	Player string    `json:"player"`
+	Type    OrderType     `json:"type"`
+	Faction PlayerFaction `json:"faction"`
 
 	// Name of the region where the order is placed.
 	Origin string `json:"origin"`

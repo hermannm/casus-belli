@@ -9,17 +9,17 @@ type Messenger interface {
 	SendBattleResults(battles []gametypes.Battle) error
 
 	SendSupportRequest(
-		toPlayer string,
+		to gametypes.PlayerFaction,
 		supportingRegion string,
 		embattledRegion string,
-		supportablePlayers []string,
+		supportableFactions []gametypes.PlayerFaction,
 	) error
 
 	AwaitSupport(
-		fromPlayer string,
+		from gametypes.PlayerFaction,
 		supportingRegion string,
 		embattledRegion string,
-	) (supportedPlayer string, err error)
+	) (supported gametypes.PlayerFaction, err error)
 }
 
 func ResolveOrders(
@@ -27,14 +27,14 @@ func ResolveOrders(
 	orders []gametypes.Order,
 	season gametypes.Season,
 	messenger Messenger,
-) (battles []gametypes.Battle, winner string, hasWinner bool) {
+) (battles []gametypes.Battle, winner gametypes.PlayerFaction) {
 	if season == gametypes.SeasonWinter {
 		resolveWinterOrders(board, orders)
-		return nil, "", false
+		return nil, ""
 	} else {
 		battles = resolveNonWinterOrders(board, orders, messenger)
-		winner, hasWinner = board.CheckWinner()
-		return battles, winner, hasWinner
+		winner = board.CheckWinner()
+		return battles, winner
 	}
 }
 
@@ -44,8 +44,8 @@ func resolveWinterOrders(board gametypes.Board, orders []gametypes.Order) {
 		case gametypes.OrderBuild:
 			region := board.Regions[order.Origin]
 			region.Unit = gametypes.Unit{
-				Player: order.Player,
-				Type:   order.Build,
+				Faction: order.Faction,
+				Type:    order.Build,
 			}
 			board.Regions[order.Origin] = region
 		case gametypes.OrderMove:
@@ -98,7 +98,7 @@ func resolveSieges(board gametypes.Board) {
 
 		region.SiegeCount++
 		if region.SiegeCount == 2 {
-			region.ControllingPlayer = region.Unit.Player
+			region.ControllingFaction = region.Unit.Faction
 			region.SiegeCount = 0
 		}
 

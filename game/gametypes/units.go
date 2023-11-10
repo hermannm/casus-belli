@@ -2,10 +2,10 @@ package gametypes
 
 import "encoding/json"
 
-// A player unit on the board.
+// A unit on the board, controlled by a player faction.
 type Unit struct {
-	Type   UnitType `json:"unit"`
-	Player string   `json:"player"`
+	Type    UnitType      `json:"unit"`
+	Faction PlayerFaction `json:"faction"`
 }
 
 type UnitType string

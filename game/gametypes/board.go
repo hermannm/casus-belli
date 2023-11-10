@@ -1,5 +1,7 @@
 package gametypes
 
+import "hermannm.dev/set"
+
 type Board struct {
 	// Maps region names to regions.
 	Regions            map[string]Region `json:"region"`
@@ -99,51 +101,44 @@ func (board Board) RemoveOrder(order Order) {
 	}
 }
 
-func (board Board) CheckWinner() (winner string, hasWinner bool) {
-	castleCount := make(map[string]int)
+func (board Board) CheckWinner() (winner PlayerFaction) {
+	castleCount := make(map[PlayerFaction]int)
 
 	for _, region := range board.Regions {
 		if region.HasCastle && region.IsControlled() {
-			castleCount[region.ControllingPlayer]++
+			castleCount[region.ControllingFaction]++
 		}
 	}
 
 	tie := false
 	highestCount := 0
-	var highestCountPlayer string
-	for player, count := range castleCount {
+	var highestCountFaction PlayerFaction
+	for faction, count := range castleCount {
 		if count > highestCount {
 			highestCount = count
-			highestCountPlayer = player
+			highestCountFaction = faction
 			tie = false
 		} else if count == highestCount {
 			tie = true
 		}
 	}
 
-	hasWinner = !tie && highestCount > board.WinningCastleCount
-	return highestCountPlayer, hasWinner
-}
-
-// Returns a list of the IDs that players can use on this board.
-func (board Board) AvailablePlayerIDs() []string {
-	var ids []string
-
-OuterLoop:
-	for _, region := range board.Regions {
-		potentialID := region.HomePlayer
-		if potentialID == "" {
-			continue
-		}
-
-		for _, id := range ids {
-			if potentialID == id {
-				continue OuterLoop
-			}
-		}
-
-		ids = append(ids, potentialID)
+	if tie || highestCount < board.WinningCastleCount {
+		return ""
 	}
 
-	return ids
+	return highestCountFaction
+}
+
+// Returns a list of the factions that players can use on this board.
+func (board Board) AvailablePlayerFactions() []PlayerFaction {
+	var factions set.ArraySet[PlayerFaction]
+
+	for _, region := range board.Regions {
+		if region.HomeFaction != "" {
+			factions.Add(region.HomeFaction)
+		}
+	}
+
+	return factions.ToSlice()
 }
