@@ -48,7 +48,7 @@ func newMockGame() *game.Game {
 		region2    game.RegionName
 		river      bool
 		hasCliffs  bool
-		dangerZone string
+		dangerZone game.DangerZone
 	}{
 		{region1: "Lusía", region2: "Lomone"},
 		{region1: "Lusía", region2: "Limbol"},

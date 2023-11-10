@@ -12,7 +12,7 @@ type Battle struct {
 	Results []Result
 
 	// If battle was from a danger zone crossing: name of the danger zone, otherwise blank.
-	DangerZone string `json:",omitempty"`
+	DangerZone DangerZone `json:",omitempty"`
 }
 
 // Dice and modifier result for a battle.

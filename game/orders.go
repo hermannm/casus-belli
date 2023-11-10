@@ -24,7 +24,7 @@ type Order struct {
 	SecondDestination RegionName
 
 	// For move orders: name of DangerZone the order tries to pass through, if any.
-	ViaDangerZone string
+	ViaDangerZone DangerZone
 
 	// For build orders: type of unit to build.
 	Build UnitType

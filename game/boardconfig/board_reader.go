@@ -102,7 +102,7 @@ func ReadBoardFromConfigFile(
 				Name:          region2.Name,
 				IsAcrossWater: neighbor.River || (region1.IsSea && !region2.IsSea),
 				HasCliffs:     neighbor.Cliffs,
-				DangerZone:    neighbor.DangerZone,
+				DangerZone:    game.DangerZone(neighbor.DangerZone),
 			},
 		)
 
@@ -112,7 +112,7 @@ func ReadBoardFromConfigFile(
 				Name:          region1.Name,
 				IsAcrossWater: neighbor.River || (region2.IsSea && !region1.IsSea),
 				HasCliffs:     neighbor.Cliffs,
-				DangerZone:    neighbor.DangerZone,
+				DangerZone:    game.DangerZone(neighbor.DangerZone),
 			},
 		)
 	}

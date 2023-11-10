@@ -47,7 +47,7 @@ func (game *Game) resolveTransport(move Order) (transportMustWait bool) {
 func (board Board) findTransportPath(
 	originName RegionName,
 	destinationName RegionName,
-) (canTransport bool, isTransportAttacked bool, dangerZones []string) {
+) (canTransport bool, isTransportAttacked bool, dangerZones []DangerZone) {
 	origin := board[originName]
 	if origin.isEmpty() || origin.Unit.Type == UnitShip || origin.IsSea {
 		return false, false, nil
@@ -59,14 +59,14 @@ func (board Board) findTransportPath(
 // Stores status of a path of transport orders to destination.
 type transportPath struct {
 	isAttacked  bool
-	dangerZones []string
+	dangerZones []DangerZone
 }
 
 func (board Board) recursivelyFindTransportPath(
 	region Region,
 	destination RegionName,
 	regionsToExclude set.Set[RegionName],
-) (canTransport bool, isTransportAttacked bool, dangerZones []string) {
+) (canTransport bool, isTransportAttacked bool, dangerZones []DangerZone) {
 	transportingNeighbors, newRegionsToExclude := region.getTransportingNeighbors(
 		board,
 		regionsToExclude,
@@ -95,7 +95,7 @@ func (board Board) recursivelyFindTransportPath(
 				subPaths,
 				transportPath{
 					isAttacked:  transportRegion.isAttacked(),
-					dangerZones: []string{destinationDangerZone},
+					dangerZones: []DangerZone{destinationDangerZone},
 				},
 			)
 		}
@@ -150,24 +150,24 @@ func (region Region) getTransportingNeighbors(
 
 func (region Region) checkNeighborsForDestination(
 	destination RegionName,
-) (destinationIsAdjacent bool, throughDangerZone string) {
+) (destinationIsAdjacent bool, mustGoThrough DangerZone) {
 	for _, neighbor := range region.Neighbors {
 		if neighbor.Name == destination {
 			// If destination is already found to be adjacent but only through a danger zone,
 			// checks if there is a different path to it without a danger zone.
 			if destinationIsAdjacent {
-				if throughDangerZone != "" {
-					throughDangerZone = neighbor.DangerZone
+				if mustGoThrough != "" {
+					mustGoThrough = neighbor.DangerZone
 				}
 				continue
 			}
 
 			destinationIsAdjacent = true
-			throughDangerZone = neighbor.DangerZone
+			mustGoThrough = neighbor.DangerZone
 		}
 	}
 
-	return destinationIsAdjacent, throughDangerZone
+	return destinationIsAdjacent, mustGoThrough
 }
 
 // Prioritizes paths that are not attacked first, then paths that have to cross the fewest danger

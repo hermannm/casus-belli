@@ -61,8 +61,10 @@ type Neighbor struct {
 
 	// If not "": the name of the danger zone that the neighboring region lies across (requires
 	// check to pass).
-	DangerZone string `json:",omitempty"`
+	DangerZone DangerZone `json:",omitempty"`
 }
+
+type DangerZone string
 
 func (board Board) removeUnit(unit Unit, regionName RegionName) {
 	region, ok := board[regionName]
@@ -190,7 +192,7 @@ func (region Region) isAttacked() bool {
 // Returns a region's neighbor of the given name, and whether it was found.
 // If the region has several neighbor relations to the region, returns the one matching the provided
 // 'via' string (currently the name of the neighbor relation's danger zone).
-func (region Region) getNeighbor(neighborName RegionName, viaDangerZone string) (Neighbor, bool) {
+func (region Region) getNeighbor(neighborName RegionName, via DangerZone) (Neighbor, bool) {
 	neighbor := Neighbor{}
 	hasNeighbor := false
 
@@ -202,7 +204,7 @@ func (region Region) getNeighbor(neighborName RegionName, viaDangerZone string) 
 		if !hasNeighbor {
 			neighbor = otherNeighbor
 			hasNeighbor = true
-		} else if otherNeighbor.DangerZone != "" && viaDangerZone == otherNeighbor.DangerZone {
+		} else if otherNeighbor.DangerZone != "" && via == otherNeighbor.DangerZone {
 			neighbor = otherNeighbor
 		}
 	}
