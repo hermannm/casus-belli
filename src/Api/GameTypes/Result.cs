@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Text.Json.Serialization;
 
 namespace Immerse.BfhClient.Api.GameTypes;
 
@@ -8,21 +7,16 @@ namespace Immerse.BfhClient.Api.GameTypes;
 /// </summary>
 public record struct Result
 {
-    [JsonPropertyName("total")]
     public required int Total { get; set; }
-
-    [JsonPropertyName("parts")]
     public required List<Modifier> Parts { get; set; }
 
     /// <summary>
     /// If result of a move order to the battle: the move order in question.
     /// </summary>
-    [JsonPropertyName("move")]
     public Order? Move { get; set; }
 
     /// <summary>
     /// If result of a defending unit in a region: the name of the region.
     /// </summary>
-    [JsonPropertyName("defenderRegion")]
     public string? DefenderRegion { get; set; }
 }

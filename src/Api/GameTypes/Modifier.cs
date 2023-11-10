@@ -1,5 +1,3 @@
-using System.Text.Json.Serialization;
-
 namespace Immerse.BfhClient.Api.GameTypes;
 
 /// <summary>
@@ -7,16 +5,12 @@ namespace Immerse.BfhClient.Api.GameTypes;
 /// </summary>
 public record struct Modifier
 {
-    [JsonPropertyName("type")]
     public required string Type { get; set; }
-
-    [JsonPropertyName("value")]
     public required int Value { get; set; }
 
     /// <summary>
     /// Non-null if Type is Support.
     /// </summary>
-    [JsonPropertyName("supportingPlayer")]
     public string? SupportingPlayer { get; set; }
 }
 

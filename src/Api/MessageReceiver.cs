@@ -84,12 +84,12 @@ internal class MessageReceiver
     private static Message DeserializeMessage(string messageString)
     {
         var json = JsonDocument.Parse(messageString).RootElement;
-        var messageTag = json.GetProperty("tag").Deserialize<MessageTag>();
+        var messageTag = json.GetProperty("Tag").Deserialize<MessageTag>();
 
         if (!MessageDictionary.ReceivableMessageTags.TryGetValue(messageTag, out var messageType))
             throw new Exception($"Unrecognized message type '{messageTag}' received from server");
 
-        var messageData = json.GetProperty("data").Deserialize(messageType);
+        var messageData = json.GetProperty("Data").Deserialize(messageType);
         if (messageData is null)
             throw new Exception("Failed to deserialize message");
 

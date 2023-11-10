@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Text.Json.Serialization;
 using Godot;
 using Immerse.BfhClient.Api.GameTypes;
 
@@ -10,13 +9,8 @@ namespace Immerse.BfhClient.Api.Messages;
 /// </summary>
 public partial class SupportRequestMessage : GodotObject, IReceivableMessage
 {
-    [JsonPropertyName("supportingRegion")]
     public required string SupportingRegion { get; set; }
-
-    [JsonPropertyName("embattledRegion")]
     public required string EmbattledRegion { get; set; }
-
-    [JsonPropertyName("supportableFactions")]
     public required List<string> SupportableFactions { get; set; }
 }
 
@@ -30,7 +24,6 @@ public partial class OrderRequestMessage : GodotObject, IReceivableMessage { }
 /// </summary>
 public partial class OrdersReceivedMessage : GodotObject, IReceivableMessage
 {
-    [JsonPropertyName("ordersByFaction")]
     public required Dictionary<string, List<Order>> OrdersByFaction { get; set; }
 }
 
@@ -40,7 +33,6 @@ public partial class OrdersReceivedMessage : GodotObject, IReceivableMessage
 /// </summary>
 public partial class OrdersConfirmationMessage : GodotObject, IReceivableMessage
 {
-    [JsonPropertyName("factionThatSubmittedOrders")]
     public required string FactionThatSubmittedOrders { get; set; }
 }
 
@@ -49,7 +41,6 @@ public partial class OrdersConfirmationMessage : GodotObject, IReceivableMessage
 /// </summary>
 public partial class BattleResultsMessage : GodotObject, IReceivableMessage
 {
-    [JsonPropertyName("battles")]
     public required List<Battle> Battles { get; set; }
 }
 
@@ -58,7 +49,6 @@ public partial class BattleResultsMessage : GodotObject, IReceivableMessage
 /// </summary>
 public partial class WinnerMessage : GodotObject, IReceivableMessage
 {
-    [JsonPropertyName("winningFaction")]
     public required string WinningFaction { get; set; }
 }
 
@@ -67,7 +57,6 @@ public partial class WinnerMessage : GodotObject, IReceivableMessage
 /// </summary>
 public partial class SubmitOrdersMessage : GodotObject, ISendableMessage
 {
-    [JsonPropertyName("orders")]
     public required List<Order> Orders { get; set; }
 }
 
@@ -77,16 +66,12 @@ public partial class SubmitOrdersMessage : GodotObject, ISendableMessage
 /// </summary>
 public partial class GiveSupportMessage : GodotObject, IReceivableMessage, ISendableMessage
 {
-    [JsonPropertyName("supportingRegion")]
     public required string SupportingRegion { get; set; }
-
-    [JsonPropertyName("embattledRegion")]
     public required string EmbattledRegion { get; set; }
 
     /// <summary>
     /// Null if none were supported.
     /// </summary>
-    [JsonPropertyName("supportedFaction")]
     public string? SupportedFaction { get; set; }
 }
 
@@ -96,7 +81,6 @@ public partial class GiveSupportMessage : GodotObject, IReceivableMessage, ISend
 /// </summary>
 public partial class WinterVoteMessage : GodotObject, ISendableMessage
 {
-    [JsonPropertyName("factionVotedFor")]
     public required string FactionVotedFor { get; set; }
 }
 
@@ -106,13 +90,12 @@ public partial class WinterVoteMessage : GodotObject, ISendableMessage
 /// </summary>
 public partial class SwordMessage : GodotObject, ISendableMessage
 {
-    [JsonPropertyName("region")]
     public required string Region { get; set; }
 
     /// <summary>
     /// Index of the battle in which to use the sword, in case of several battles in the region.
     /// </summary>
-    [JsonPropertyName("battleIndex")]
+
     public required int BattleIndex { get; set; }
 }
 
@@ -122,6 +105,5 @@ public partial class SwordMessage : GodotObject, ISendableMessage
 /// </summary>
 public partial class RavenMessage : GodotObject, ISendableMessage
 {
-    [JsonPropertyName("factionToSpyOn")]
     public required string FactionToSpyOn { get; set; }
 }

@@ -24,7 +24,7 @@ public static class MessageDictionary
     public static readonly Dictionary<MessageTag, Type> SendableMessageTags =
         new()
         {
-            { MessageTag.SelectGameFaction, typeof(SelectFactionMessage) },
+            { MessageTag.SelectFaction, typeof(SelectFactionMessage) },
             { MessageTag.Ready, typeof(ReadyToStartGameMessage) },
             { MessageTag.StartGame, typeof(StartGameMessage) },
             { MessageTag.SubmitOrders, typeof(SubmitOrdersMessage) },

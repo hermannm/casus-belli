@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Text.Json.Serialization;
 using Godot;
 
 namespace Immerse.BfhClient.Api.Messages;
@@ -9,7 +8,6 @@ namespace Immerse.BfhClient.Api.Messages;
 /// </summary>
 public partial class ErrorMessage : GodotObject, IReceivableMessage
 {
-    [JsonPropertyName("error")]
     public required string Error { get; set; }
 }
 
@@ -18,13 +16,8 @@ public partial class ErrorMessage : GodotObject, IReceivableMessage
 /// </summary>
 public partial class PlayerStatusMessage : GodotObject, IReceivableMessage
 {
-    [JsonPropertyName("username")]
     public required string Username { get; set; }
-
-    [JsonPropertyName("selectedFaction")]
     public string? SelectedFaction { get; set; }
-
-    [JsonPropertyName("readyToStartGame")]
     public required bool ReadyToStartGame { get; set; }
 }
 
@@ -33,10 +26,7 @@ public partial class PlayerStatusMessage : GodotObject, IReceivableMessage
 /// </summary>
 public partial class LobbyJoinedMessage : GodotObject, IReceivableMessage
 {
-    [JsonPropertyName("selectableFactions")]
     public required List<string> SelectableFactions { get; set; }
-
-    [JsonPropertyName("playerStatuses")]
     public required List<PlayerStatusMessage> PlayerStatuses { get; set; }
 }
 
@@ -45,7 +35,6 @@ public partial class LobbyJoinedMessage : GodotObject, IReceivableMessage
 /// </summary>
 public partial class SelectFactionMessage : GodotObject, ISendableMessage
 {
-    [JsonPropertyName("faction")]
     public required string Faction { get; set; }
 }
 
@@ -55,7 +44,6 @@ public partial class SelectFactionMessage : GodotObject, ISendableMessage
 /// </summary>
 public partial class ReadyToStartGameMessage : GodotObject, ISendableMessage
 {
-    [JsonPropertyName("ready")]
     public required bool Ready { get; set; }
 }
 

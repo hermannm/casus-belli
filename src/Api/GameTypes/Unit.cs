@@ -1,5 +1,3 @@
-using System.Text.Json.Serialization;
-
 namespace Immerse.BfhClient.Api.GameTypes;
 
 /// <summary>
@@ -7,10 +5,7 @@ namespace Immerse.BfhClient.Api.GameTypes;
 /// </summary>
 public record struct Unit
 {
-    [JsonPropertyName("type")]
     public required string Type { get; set; }
-
-    [JsonPropertyName("faction")]
     public required string Faction { get; set; }
 }
 
