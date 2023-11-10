@@ -1,20 +1,16 @@
-package orderresolving
-
-import (
-	"hermannm.dev/bfh-server/game/gametypes"
-)
+package game
 
 // Finds move and support orders attempting to cross danger zones to their destinations, and fails
 // them if they don't make it across.
-func resolveDangerZones(board gametypes.Board) (results []gametypes.Battle) {
-	for regionName, region := range board.Regions {
+func resolveDangerZones(board Board) (results []Battle) {
+	for regionName, region := range board {
 		order := region.Order
 
-		if order.Type != gametypes.OrderMove && order.Type != gametypes.OrderSupport {
+		if order.Type != OrderMove && order.Type != OrderSupport {
 			continue
 		}
 
-		destination, adjacent := region.GetNeighbor(order.Destination, order.ViaDangerZone)
+		destination, adjacent := region.getNeighbor(order.Destination, order.ViaDangerZone)
 		if !adjacent || destination.DangerZone == "" {
 			continue
 		}
@@ -23,12 +19,12 @@ func resolveDangerZones(board gametypes.Board) (results []gametypes.Battle) {
 		results = append(results, result)
 
 		if !survived {
-			if order.Type == gametypes.OrderMove {
-				region.Unit = gametypes.Unit{}
-				board.Regions[regionName] = region
+			if order.Type == OrderMove {
+				region.Unit = Unit{}
+				board[regionName] = region
 			}
 
-			board.RemoveOrder(order)
+			board.removeOrder(order)
 		}
 	}
 
@@ -37,27 +33,27 @@ func resolveDangerZones(board gametypes.Board) (results []gametypes.Battle) {
 
 // Rolls dice to see if order makes it across danger zone.
 func crossDangerZone(
-	order gametypes.Order,
+	order Order,
 	dangerZone string,
-) (survived bool, result gametypes.Battle) {
-	diceMod := gametypes.RollDiceBonus()
+) (survived bool, result Battle) {
+	diceModifier := Modifier{Type: ModifierDice, Value: rollDice()}
 
-	result = gametypes.Battle{
-		Results: []gametypes.Result{
-			{Total: diceMod.Value, Parts: []gametypes.Modifier{diceMod}, Move: order},
+	result = Battle{
+		Results: []Result{
+			{Total: diceModifier.Value, Parts: []Modifier{diceModifier}, Move: order},
 		},
 		DangerZone: dangerZone,
 	}
 
 	// All danger zones currently require a dice roll greater than 2.
 	// May need to be changed in the future if a more dynamic implementation is preferred.
-	return diceMod.Value > 2, result
+	return diceModifier.Value > 2, result
 }
 
 func crossDangerZones(
-	order gametypes.Order,
+	order Order,
 	dangerZones []string,
-) (survivedAll bool, results []gametypes.Battle) {
+) (survivedAll bool, results []Battle) {
 	for _, dangerZone := range dangerZones {
 		survived, result := crossDangerZone(order, dangerZone)
 		results = append(results, result)

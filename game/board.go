@@ -1,4 +1,11 @@
-package gametypes
+package game
+
+import (
+	"hermannm.dev/set"
+)
+
+// Maps region names to regions.
+type Board map[string]Region
 
 // A region on the board.
 type Region struct {
@@ -56,25 +63,133 @@ type Neighbor struct {
 	DangerZone string `json:",omitempty"`
 }
 
+func (board Board) removeUnit(unit Unit, regionName string) {
+	region, ok := board[regionName]
+	if !ok {
+		return
+	}
+
+	if unit == region.Unit {
+		region.Unit = Unit{}
+		board[regionName] = region
+	}
+}
+
+// Populates regions on the board with the given orders.
+// Does not add support orders that have moves against them, as that cancels them.
+func (board Board) addOrders(orders []Order) {
+	var supportOrders []Order
+
+	for _, order := range orders {
+		if order.Type == OrderSupport {
+			supportOrders = append(supportOrders, order)
+			continue
+		}
+
+		board.addOrder(order)
+	}
+
+	for _, supportOrder := range supportOrders {
+		if !board[supportOrder.Origin].isAttacked() {
+			board.addOrder(supportOrder)
+		}
+	}
+}
+
+func (board Board) addOrder(order Order) {
+	origin := board[order.Origin]
+	origin.Order = order
+	board[order.Origin] = origin
+
+	if order.Destination == "" {
+		return
+	}
+
+	destination := board[order.Destination]
+	switch order.Type {
+	case OrderMove:
+		destination.IncomingMoves = append(destination.IncomingMoves, order)
+	case OrderSupport:
+		destination.IncomingSupports = append(destination.IncomingSupports, order)
+	}
+	board[order.Destination] = destination
+}
+
+func (board Board) clearOrders() {
+	for regionName, region := range board {
+		region.Order = Order{}
+		region.IncomingMoves = nil
+		region.IncomingSupports = nil
+
+		board[regionName] = region
+	}
+}
+
+func (board Board) removeOrder(order Order) {
+	origin := board[order.Origin]
+	origin.Order = Order{}
+	board[order.Origin] = origin
+
+	switch order.Type {
+	case OrderMove:
+		destination := board[order.Destination]
+
+		var newMoves []Order
+		for _, incomingMove := range destination.IncomingMoves {
+			if incomingMove != order {
+				newMoves = append(newMoves, incomingMove)
+			}
+		}
+		destination.IncomingMoves = newMoves
+
+		board[order.Destination] = destination
+	case OrderSupport:
+		destination := board[order.Destination]
+
+		var newSupports []Order
+		for _, incSupport := range destination.IncomingSupports {
+			if incSupport != order {
+				newSupports = append(newSupports, incSupport)
+			}
+		}
+		destination.IncomingSupports = newSupports
+
+		board[order.Destination] = destination
+	}
+}
+
+// Returns a list of the factions that players can use on this board.
+func (board Board) playerFactions() []PlayerFaction {
+	var factions set.ArraySet[PlayerFaction]
+
+	for _, region := range board {
+		if region.HomeFaction != "" {
+			factions.Add(region.HomeFaction)
+		}
+	}
+
+	return factions.ToSlice()
+}
+
 // Checks whether the region contains a unit.
-func (region Region) IsEmpty() bool {
-	return region.Unit.IsNone()
+func (region Region) isEmpty() bool {
+	return region.Unit.isNone()
 }
 
 // Checks whether the region is controlled by a player faction.
-func (region Region) IsControlled() bool {
+func (region Region) isControlled() bool {
 	return region.ControllingFaction != ""
 }
 
 // Checks if any players have move orders against the region.
-func (region Region) IsAttacked() bool {
+func (region Region) isAttacked() bool {
 	return len(region.IncomingMoves) != 0
 }
 
 // Returns a region's neighbor of the given name, and whether it was found.
 // If the region has several neighbor relations to the region, returns the one matching the provided
 // 'via' string (currently the name of the neighbor relation's danger zone).
-func (region Region) GetNeighbor(neighborName string, via string) (Neighbor, bool) {
+func (region Region) getNeighbor(neighborName string, via string) (Neighbor, bool) {
 	neighbor := Neighbor{}
 	hasNeighbor := false
 
@@ -95,7 +210,7 @@ func (region Region) GetNeighbor(neighborName string, via string) (Neighbor, boo
 }
 
 // Returns whether the region is adjacent to a region of the given name.
-func (region Region) HasNeighbor(neighborName string) bool {
+func (region Region) hasNeighbor(neighborName string) bool {
 	for _, neighbor := range region.Neighbors {
 		if neighbor.Name == neighborName {
 			return true
@@ -107,13 +222,13 @@ func (region Region) HasNeighbor(neighborName string) bool {
 
 // Returns whether the region is a land region that borders the sea.
 // Takes the board in order to go through the region's neighbor regions.
-func (region Region) IsCoast(board Board) bool {
+func (region Region) isCoast(board Board) bool {
 	if region.IsSea {
 		return false
 	}
 
 	for _, neighbor := range region.Neighbors {
-		neighborRegion := board.Regions[neighbor.Name]
+		neighborRegion := board[neighbor.Name]
 
 		if neighborRegion.IsSea {
 			return true

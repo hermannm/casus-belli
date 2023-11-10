@@ -1,16 +1,55 @@
-package gametypes
+package game
 
 import (
+	"hermannm.dev/devlog/log"
 	"hermannm.dev/set"
 )
 
+func (game *Game) resolveTransport(move Order) (transportMustWait bool) {
+	// If the move is between two adjacent regions, then it does not need transport
+	if game.Board[move.Destination].hasNeighbor(move.Origin) {
+		return false
+	}
+
+	canTransport, transportAttacked, dangerZones := game.Board.findTransportPath(
+		move.Origin,
+		move.Destination,
+	)
+
+	if !canTransport {
+		game.Board.removeOrder(move)
+		return false
+	}
+
+	if transportAttacked {
+		return true
+	}
+
+	if len(dangerZones) > 0 {
+		survived, dangerZoneBattles := crossDangerZones(move, dangerZones)
+
+		if !survived {
+			game.Board.removeOrder(move)
+		}
+
+		game.resolvedBattles = append(game.resolvedBattles, dangerZoneBattles...)
+		if err := game.messenger.SendBattleResults(dangerZoneBattles); err != nil {
+			log.Error(err, "")
+		}
+
+		return false
+	}
+
+	return false
+}
+
 // Checks if a unit can be transported via ship from the given origin to the given destination.
-func (board Board) FindTransportPath(
+func (board Board) findTransportPath(
 	originName string,
 	destinationName string,
 ) (canTransport bool, isTransportAttacked bool, dangerZones []string) {
-	origin := board.Regions[originName]
-	if origin.IsEmpty() || origin.Unit.Type == UnitShip || origin.IsSea {
+	origin := board[originName]
+	if origin.isEmpty() || origin.Unit.Type == UnitShip || origin.IsSea {
 		return false, false, nil
 	}
 
@@ -36,7 +75,7 @@ func (board Board) recursivelyFindTransportPath(
 	var paths []transportPath
 
 	for _, transportNeighbor := range transportingNeighbors {
-		transportRegion := board.Regions[transportNeighbor.Name]
+		transportRegion := board[transportNeighbor.Name]
 
 		destinationAdjacent, destinationDangerZone := region.checkNeighborsForDestination(
 			destination,
@@ -55,7 +94,7 @@ func (board Board) recursivelyFindTransportPath(
 			subPaths = append(
 				subPaths,
 				transportPath{
-					isAttacked:  transportRegion.IsAttacked(),
+					isAttacked:  transportRegion.isAttacked(),
 					dangerZones: []string{destinationDangerZone},
 				},
 			)
@@ -64,7 +103,7 @@ func (board Board) recursivelyFindTransportPath(
 			subPaths = append(
 				subPaths,
 				transportPath{
-					isAttacked:  transportRegion.IsAttacked() || nextTransportAttacked,
+					isAttacked:  transportRegion.isAttacked() || nextTransportAttacked,
 					dangerZones: nextDangerZones,
 				},
 			)
@@ -89,12 +128,12 @@ func (region Region) getTransportingNeighbors(
 ) (transports []Neighbor, newRegionsToExclude set.Set[string]) {
 	newRegionsToExclude = regionsToExclude.Copy()
 
-	if region.IsEmpty() {
+	if region.isEmpty() {
 		return transports, newRegionsToExclude
 	}
 
 	for _, neighbor := range region.Neighbors {
-		neighborRegion := board.Regions[neighbor.Name]
+		neighborRegion := board[neighbor.Name]
 
 		if regionsToExclude.Contains(neighbor.Name) ||
 			neighborRegion.Order.Type != OrderTransport ||

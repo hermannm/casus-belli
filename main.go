@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"hermannm.dev/bfh-server/api"
-	"hermannm.dev/bfh-server/game"
 	"hermannm.dev/bfh-server/game/boardconfig"
 	"hermannm.dev/bfh-server/lobby"
 	"hermannm.dev/devlog"
@@ -103,7 +102,7 @@ func createLobby(selectedBoardID string, lobbyRegistry *lobby.LobbyRegistry) {
 		scanner.Scan()
 		lobbyName = scanner.Text()
 
-		lobby, err := lobby.New(lobbyName, selectedBoardID, game.DefaultOptions())
+		lobby, err := lobby.New(lobbyName, selectedBoardID)
 		if err != nil {
 			fmt.Printf("Got error: '%s', try again!\n", err.Error())
 			continue

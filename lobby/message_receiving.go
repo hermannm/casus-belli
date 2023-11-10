@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"github.com/gorilla/websocket"
-	"hermannm.dev/bfh-server/game/gametypes"
+	"hermannm.dev/bfh-server/game"
 	"hermannm.dev/condqueue"
 	"hermannm.dev/devlog/log"
 	"hermannm.dev/wrap"
@@ -184,7 +184,7 @@ func (player *Player) handleGameMessage(tag MessageTag, rawMessage json.RawMessa
 	}
 }
 
-func (lobby *Lobby) AwaitOrders(from gametypes.PlayerFaction) ([]gametypes.Order, error) {
+func (lobby *Lobby) AwaitOrders(from game.PlayerFaction) ([]game.Order, error) {
 	player, ok := lobby.getPlayer(from)
 	if !ok {
 		return nil, fmt.Errorf(
@@ -198,10 +198,10 @@ func (lobby *Lobby) AwaitOrders(from gametypes.PlayerFaction) ([]gametypes.Order
 }
 
 func (lobby *Lobby) AwaitSupport(
-	from gametypes.PlayerFaction,
+	from game.PlayerFaction,
 	supportingRegion string,
 	embattledRegion string,
-) (supported gametypes.PlayerFaction, err error) {
+) (supported game.PlayerFaction, err error) {
 	player, ok := lobby.getPlayer(from)
 	if !ok {
 		return "", fmt.Errorf(

@@ -3,7 +3,7 @@ package lobby
 import (
 	"errors"
 
-	"hermannm.dev/bfh-server/game/gametypes"
+	"hermannm.dev/bfh-server/game"
 	"hermannm.dev/devlog/log"
 	"hermannm.dev/wrap"
 )
@@ -24,7 +24,7 @@ func (player *Player) sendMessage(message Message) error {
 	return nil
 }
 
-func (lobby *Lobby) sendMessage(to gametypes.PlayerFaction, message Message) error {
+func (lobby *Lobby) sendMessage(to game.PlayerFaction, message Message) error {
 	player, ok := lobby.getPlayer(to)
 	if !ok {
 		return wrap.Errorf(
@@ -68,7 +68,7 @@ func (player *Player) SendLobbyJoinedMessage(lobby *Lobby) error {
 	for _, player := range lobby.players {
 		player.lock.RLock()
 
-		var faction *gametypes.PlayerFaction
+		var faction *game.PlayerFaction
 		if player.gameFaction != "" {
 			faction = &player.gameFaction
 		}
@@ -132,7 +132,7 @@ func (player *Player) SendError(err error) {
 	}
 }
 
-func (lobby *Lobby) SendError(to gametypes.PlayerFaction, err error) {
+func (lobby *Lobby) SendError(to game.PlayerFaction, err error) {
 	if err := lobby.sendMessage(to, Message{
 		Tag:  MessageTagError,
 		Data: ErrorMessage{Error: err.Error()},
@@ -141,14 +141,14 @@ func (lobby *Lobby) SendError(to gametypes.PlayerFaction, err error) {
 	}
 }
 
-func (lobby *Lobby) SendOrderRequest(to gametypes.PlayerFaction) error {
+func (lobby *Lobby) SendOrderRequest(to game.PlayerFaction) error {
 	return lobby.sendMessage(to, Message{
 		Tag:  MessageTagOrderRequest,
 		Data: OrderRequestMessage{},
 	})
 }
 
-func (lobby *Lobby) SendOrdersReceived(orders map[gametypes.PlayerFaction][]gametypes.Order) error {
+func (lobby *Lobby) SendOrdersReceived(orders map[game.PlayerFaction][]game.Order) error {
 	return lobby.sendMessageToAll(Message{
 		Tag:  MessageTagOrdersReceived,
 		Data: OrdersReceivedMessage{OrdersByFaction: orders},
@@ -156,7 +156,7 @@ func (lobby *Lobby) SendOrdersReceived(orders map[gametypes.PlayerFaction][]game
 }
 
 func (lobby *Lobby) SendOrdersConfirmation(
-	factionThatSubmittedOrders gametypes.PlayerFaction,
+	factionThatSubmittedOrders game.PlayerFaction,
 ) error {
 	return lobby.sendMessageToAll(Message{
 		Tag:  MessageTagOrdersConfirmation,
@@ -165,10 +165,10 @@ func (lobby *Lobby) SendOrdersConfirmation(
 }
 
 func (lobby *Lobby) SendSupportRequest(
-	to gametypes.PlayerFaction,
+	to game.PlayerFaction,
 	supportingRegion string,
 	embattledRegion string,
-	supportableFactions []gametypes.PlayerFaction,
+	supportableFactions []game.PlayerFaction,
 ) error {
 	return lobby.sendMessage(to, Message{
 		Tag: MessageTagSupportRequest,
@@ -180,14 +180,14 @@ func (lobby *Lobby) SendSupportRequest(
 	})
 }
 
-func (lobby *Lobby) SendBattleResults(battles []gametypes.Battle) error {
+func (lobby *Lobby) SendBattleResults(battles []game.Battle) error {
 	return lobby.sendMessageToAll(Message{
 		Tag:  MessageTagBattleResults,
 		Data: BattleResultsMessage{Battles: battles},
 	})
 }
 
-func (lobby *Lobby) SendWinner(winner gametypes.PlayerFaction) error {
+func (lobby *Lobby) SendWinner(winner game.PlayerFaction) error {
 	return lobby.sendMessageToAll(Message{
 		Tag:  MessageTagWinner,
 		Data: WinnerMessage{WinningFaction: winner}})

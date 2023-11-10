@@ -1,4 +1,4 @@
-package gametypes
+package game
 
 // Current season of a round. Affects the type of orders that can be played.
 type Season string

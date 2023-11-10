@@ -8,7 +8,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	"hermannm.dev/bfh-server/game"
-	"hermannm.dev/bfh-server/game/gametypes"
+	"hermannm.dev/bfh-server/game/boardconfig"
 	"hermannm.dev/devlog/log"
 	"hermannm.dev/wrap"
 )
@@ -21,20 +21,22 @@ type Lobby struct {
 	lock    sync.RWMutex
 }
 
-func New(lobbyName string, boardID string, gameOptions game.GameOptions) (*Lobby, error) {
+func New(lobbyName string, boardID string) (*Lobby, error) {
 	lobby := &Lobby{name: lobbyName, lock: sync.RWMutex{}}
 
-	game, err := game.New(boardID, gameOptions, lobby)
+	board, name, winningCastleCount, err := boardconfig.ReadBoardFromConfigFile(boardID)
 	if err != nil {
-		return nil, wrap.Error(err, "failed to create game")
+		return nil, wrap.Error(err, "failed to read board from config file")
 	}
+	game := game.New(board, name, winningCastleCount, lobby)
+
 	lobby.game = game
 	lobby.players = make([]*Player, 0, len(game.Factions))
 
 	return lobby, nil
 }
 
-func (lobby *Lobby) getPlayer(faction gametypes.PlayerFaction) (player *Player, foundPlayer bool) {
+func (lobby *Lobby) getPlayer(faction game.PlayerFaction) (player *Player, foundPlayer bool) {
 	lobby.lock.RLock()
 	defer lobby.lock.RUnlock()
 
@@ -143,7 +145,7 @@ func (lobby *Lobby) startGame() error {
 	}
 
 	log.Infof("starting game for lobby '%s'", lobby.name)
-	lobby.game.Start()
+	go lobby.game.Run()
 
 	return nil
 }

@@ -1,4 +1,4 @@
-package gametypes
+package game
 
 import "encoding/json"
 
@@ -25,11 +25,11 @@ const (
 	UnitCatapult UnitType = "catapult"
 )
 
-func (unit Unit) IsNone() bool {
+func (unit Unit) isNone() bool {
 	return unit.Type == ""
 }
 
-func (unit Unit) BattleModifier(isAttackOnCastle bool) (modifier Modifier, hasModifier bool) {
+func (unit Unit) battleModifier(isAttackOnCastle bool) (modifier Modifier, hasModifier bool) {
 	modifierValue := 0
 	switch unit.Type {
 	case UnitFootman:
@@ -49,7 +49,7 @@ func (unit Unit) BattleModifier(isAttackOnCastle bool) (modifier Modifier, hasMo
 
 // Custom json.Marshaler implementation, to serialize uninitialized units to null.
 func (unit Unit) MarshalJSON() ([]byte, error) {
-	if unit.IsNone() {
+	if unit.isNone() {
 		return []byte("null"), nil
 	}
 

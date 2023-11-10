@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/gorilla/websocket"
-	"hermannm.dev/bfh-server/game"
 	"hermannm.dev/bfh-server/game/boardconfig"
 	"hermannm.dev/bfh-server/lobby"
 	"hermannm.dev/devlog/log"
@@ -125,7 +124,7 @@ func (api LobbyAPI) CreateLobby(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	lobby, err := lobby.New(lobbyName, gameName, game.DefaultOptions())
+	lobby, err := lobby.New(lobbyName, gameName)
 	if err != nil {
 		sendServerError(res, err)
 		log.Error(err, "")

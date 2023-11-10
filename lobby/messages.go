@@ -1,7 +1,7 @@
 package lobby
 
 import (
-	"hermannm.dev/bfh-server/game/gametypes"
+	"hermannm.dev/bfh-server/game"
 	"hermannm.dev/enumnames"
 )
 
@@ -18,19 +18,19 @@ type ErrorMessage struct {
 // Message sent from server to all clients when a player's status changes.
 type PlayerStatusMessage struct {
 	Username         string
-	SelectedFaction  *gametypes.PlayerFaction `json:",omitempty"`
+	SelectedFaction  *game.PlayerFaction `json:",omitempty"`
 	ReadyToStartGame bool
 }
 
 // Message sent to a player when they join a lobby, to inform them about the game and other players.
 type LobbyJoinedMessage struct {
-	SelectableFactions []gametypes.PlayerFaction
+	SelectableFactions []game.PlayerFaction
 	PlayerStatuses     []PlayerStatusMessage
 }
 
 // Message sent from client when they want to select a faction to play for the game.
 type SelectFactionMessage struct {
-	Faction gametypes.PlayerFaction
+	Faction game.PlayerFaction
 }
 
 // Message sent from client to mark themselves as ready to start the game.
@@ -47,7 +47,7 @@ type StartGameMessage struct{}
 type SupportRequestMessage struct {
 	SupportingRegion    string
 	EmbattledRegion     string
-	SupportableFactions []gametypes.PlayerFaction
+	SupportableFactions []game.PlayerFaction
 }
 
 // Message sent from server to client to signal that client should submit orders.
@@ -55,28 +55,28 @@ type OrderRequestMessage struct{}
 
 // Message sent from server to all clients when valid orders are received from all players.
 type OrdersReceivedMessage struct {
-	OrdersByFaction map[gametypes.PlayerFaction][]gametypes.Order
+	OrdersByFaction map[game.PlayerFaction][]game.Order
 }
 
 // Message sent from server to all clients when valid orders are received from a player.
 // Used to show who the server is waiting for.
 type OrdersConfirmationMessage struct {
-	FactionThatSubmittedOrders gametypes.PlayerFaction
+	FactionThatSubmittedOrders game.PlayerFaction
 }
 
 // Message sent from server to all clients when a battle result is calculated.
 type BattleResultsMessage struct {
-	Battles []gametypes.Battle
+	Battles []game.Battle
 }
 
 // Message sent from server to all clients when the game is won.
 type WinnerMessage struct {
-	WinningFaction gametypes.PlayerFaction
+	WinningFaction game.PlayerFaction
 }
 
 // Message sent from client when submitting orders.
 type SubmitOrdersMessage struct {
-	Orders []gametypes.Order
+	Orders []game.Order
 }
 
 // Message sent from client when declaring who to support with their support order.
@@ -86,13 +86,13 @@ type GiveSupportMessage struct {
 	EmbattledRegion  string
 
 	// Nil if none were supported.
-	SupportedFaction *gametypes.PlayerFaction
+	SupportedFaction *game.PlayerFaction
 }
 
 // Message sent from the client during winter council voting.
 // Used for the throne expansion.
 type WinterVoteMessage struct {
-	FactionVotedFor gametypes.PlayerFaction
+	FactionVotedFor game.PlayerFaction
 }
 
 // Message passed from the client with the Sword to declare where they want to use it.

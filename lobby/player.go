@@ -7,16 +7,16 @@ import (
 	"sync"
 
 	"github.com/gorilla/websocket"
-	"hermannm.dev/bfh-server/game/gametypes"
+	"hermannm.dev/bfh-server/game"
 )
 
 // A player connected to a game lobby.
 type Player struct {
 	username            string
 	gameMessageReceiver GameMessageReceiver
-	socket              *websocket.Conn         // Must hold lock to access safely.
-	gameFaction         gametypes.PlayerFaction // Must hold lock to access safely. Blank until selected.
-	readyToStartGame    bool                    // Must hold lock to access safely.
+	socket              *websocket.Conn    // Must hold lock to access safely.
+	gameFaction         game.PlayerFaction // Must hold lock to access safely. Blank until selected.
+	readyToStartGame    bool               // Must hold lock to access safely.
 	lock                sync.RWMutex
 }
 
@@ -35,7 +35,7 @@ func newPlayer(username string, socket *websocket.Conn) (*Player, error) {
 	}, nil
 }
 
-func (player *Player) selectFaction(faction gametypes.PlayerFaction, lobby *Lobby) error {
+func (player *Player) selectFaction(faction game.PlayerFaction, lobby *Lobby) error {
 	lobby.lock.RLock()
 	defer lobby.lock.RUnlock()
 

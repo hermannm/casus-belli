@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strings"
 
-	"hermannm.dev/bfh-server/game/gametypes"
+	"hermannm.dev/bfh-server/game"
 	"hermannm.dev/wrap"
 )
 
@@ -41,53 +41,55 @@ type JSONNeighbor struct {
 	DangerZone string
 }
 
-func ReadBoardFromConfigFile(boardID string) (gametypes.Board, error) {
+func ReadBoardFromConfigFile(
+	boardID string,
+) (board game.Board, name string, winningCastleCount int, err error) {
 	content, err := boardConfigFiles.ReadFile(fmt.Sprintf("%s.json", boardID))
 	if err != nil {
-		return gametypes.Board{}, wrap.Errorf(err, "failed to read config file '%s.json'", boardID)
+		return game.Board{}, "", 0, wrap.Errorf(
+			err,
+			"failed to read config file '%s.json'",
+			boardID,
+		)
 	}
 
 	var jsonBoard JSONBoard
 	if err := json.Unmarshal(content, &jsonBoard); err != nil {
-		return gametypes.Board{}, wrap.Error(err, "failed to parse board config file")
+		return game.Board{}, "", 0, wrap.Error(err, "failed to parse board config file")
 	}
 
 	if jsonBoard.WinningCastleCount <= 0 {
-		return gametypes.Board{}, errors.New("invalid winningCastleCount in board config")
+		return game.Board{}, "", 0, errors.New("invalid winningCastleCount in board config")
 	}
 
-	board := gametypes.Board{
-		Regions:            make(map[string]gametypes.Region),
-		Name:               jsonBoard.Name,
-		WinningCastleCount: jsonBoard.WinningCastleCount,
-	}
+	board = make(game.Board)
 
 	for nation, regions := range jsonBoard.Nations {
 		for _, landRegion := range regions {
-			region := gametypes.Region{
+			region := game.Region{
 				Name:               landRegion.Name,
 				Nation:             nation,
-				ControllingFaction: gametypes.PlayerFaction(landRegion.HomeFaction),
-				HomeFaction:        gametypes.PlayerFaction(landRegion.HomeFaction),
+				ControllingFaction: game.PlayerFaction(landRegion.HomeFaction),
+				HomeFaction:        game.PlayerFaction(landRegion.HomeFaction),
 				IsForest:           landRegion.Forest,
 				HasCastle:          landRegion.Castle,
 			}
 
-			board.Regions[region.Name] = region
+			board[region.Name] = region
 		}
 	}
 
 	for _, sea := range jsonBoard.Seas {
-		region := gametypes.Region{Name: sea.Name, IsSea: true}
-		board.Regions[region.Name] = region
+		region := game.Region{Name: sea.Name, IsSea: true}
+		board[region.Name] = region
 	}
 
 	for _, neighbor := range jsonBoard.Neighbors {
-		region1, ok1 := board.Regions[neighbor.Region1]
-		region2, ok2 := board.Regions[neighbor.Region2]
+		region1, ok1 := board[neighbor.Region1]
+		region2, ok2 := board[neighbor.Region2]
 
 		if !ok1 || !ok2 {
-			return gametypes.Board{}, fmt.Errorf(
+			return game.Board{}, "", 0, fmt.Errorf(
 				"failed to find regions for neighbor relation '%s' <-> '%s' in board config",
 				neighbor.Region1,
 				neighbor.Region2,
@@ -96,7 +98,7 @@ func ReadBoardFromConfigFile(boardID string) (gametypes.Board, error) {
 
 		region1.Neighbors = append(
 			region1.Neighbors,
-			gametypes.Neighbor{
+			game.Neighbor{
 				Name:          region2.Name,
 				IsAcrossWater: neighbor.River || (region1.IsSea && !region2.IsSea),
 				HasCliffs:     neighbor.Cliffs,
@@ -106,7 +108,7 @@ func ReadBoardFromConfigFile(boardID string) (gametypes.Board, error) {
 
 		region2.Neighbors = append(
 			region2.Neighbors,
-			gametypes.Neighbor{
+			game.Neighbor{
 				Name:          region1.Name,
 				IsAcrossWater: neighbor.River || (region2.IsSea && !region1.IsSea),
 				HasCliffs:     neighbor.Cliffs,
@@ -115,7 +117,7 @@ func ReadBoardFromConfigFile(boardID string) (gametypes.Board, error) {
 		)
 	}
 
-	return board, nil
+	return board, jsonBoard.Name, jsonBoard.WinningCastleCount, nil
 }
 
 type PartialJSONBoard struct {
