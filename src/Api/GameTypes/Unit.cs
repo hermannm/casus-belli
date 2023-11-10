@@ -3,22 +3,15 @@ using System.Text.Json.Serialization;
 namespace Immerse.BfhClient.Api.GameTypes;
 
 /// <summary>
-/// A player unit on the board.
+/// A unit on the board, controlled by a player faction.
 /// </summary>
 public record struct Unit
 {
-    /// <summary>
-    /// Affects how the unit moves and its battle capabilities.
-    /// Can only be of the constants defined in <see cref="UnitType"/>.
-    /// </summary>
     [JsonPropertyName("type")]
     public required string Type { get; set; }
 
-    /// <summary>
-    /// The player owning the unit.
-    /// </summary>
-    [JsonPropertyName("player")]
-    public required string Player { get; set; }
+    [JsonPropertyName("faction")]
+    public required string Faction { get; set; }
 }
 
 /// <summary>

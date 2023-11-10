@@ -10,17 +10,14 @@ namespace Immerse.BfhClient.Api.Messages;
 /// </summary>
 public partial class SupportRequestMessage : GodotObject, IReceivableMessage
 {
-    /// <summary>
-    /// The region from which support is asked, where the asked player should have a support order.
-    /// </summary>
     [JsonPropertyName("supportingRegion")]
     public required string SupportingRegion { get; set; }
 
-    /// <summary>
-    /// List of possible players to support in the battle.
-    /// </summary>
-    [JsonPropertyName("supportablePlayers")]
-    public required List<string> SupportablePlayers { get; set; }
+    [JsonPropertyName("embattledRegion")]
+    public required string EmbattledRegion { get; set; }
+
+    [JsonPropertyName("supportableFactions")]
+    public required List<string> SupportableFactions { get; set; }
 }
 
 /// <summary>
@@ -33,11 +30,8 @@ public partial class OrderRequestMessage : GodotObject, IReceivableMessage { }
 /// </summary>
 public partial class OrdersReceivedMessage : GodotObject, IReceivableMessage
 {
-    /// <summary>
-    /// Maps a player's ID to their submitted orders.
-    /// </summary>
-    [JsonPropertyName("playerOrders")]
-    public required Dictionary<string, List<Order>> PlayerOrders { get; set; }
+    [JsonPropertyName("ordersByFaction")]
+    public required Dictionary<string, List<Order>> OrdersByFaction { get; set; }
 }
 
 /// <summary>
@@ -46,11 +40,8 @@ public partial class OrdersReceivedMessage : GodotObject, IReceivableMessage
 /// </summary>
 public partial class OrdersConfirmationMessage : GodotObject, IReceivableMessage
 {
-    /// <summary>
-    /// The player who submitted orders.
-    /// </summary>
-    [JsonPropertyName("player")]
-    public required string Player { get; set; }
+    [JsonPropertyName("factionThatSubmittedOrders")]
+    public required string FactionThatSubmittedOrders { get; set; }
 }
 
 /// <summary>
@@ -58,9 +49,6 @@ public partial class OrdersConfirmationMessage : GodotObject, IReceivableMessage
 /// </summary>
 public partial class BattleResultsMessage : GodotObject, IReceivableMessage
 {
-    /// <summary>
-    /// The relevant battle result.
-    /// </summary>
     [JsonPropertyName("battles")]
     public required List<Battle> Battles { get; set; }
 }
@@ -70,11 +58,8 @@ public partial class BattleResultsMessage : GodotObject, IReceivableMessage
 /// </summary>
 public partial class WinnerMessage : GodotObject, IReceivableMessage
 {
-    /// <summary>
-    /// Player tag of the game's winner.
-    /// </summary>
-    [JsonPropertyName("winner")]
-    public required string Winner { get; set; }
+    [JsonPropertyName("winningFaction")]
+    public required string WinningFaction { get; set; }
 }
 
 /// <summary>
@@ -82,9 +67,6 @@ public partial class WinnerMessage : GodotObject, IReceivableMessage
 /// </summary>
 public partial class SubmitOrdersMessage : GodotObject, ISendableMessage
 {
-    /// <summary>
-    /// List of submitted orders.
-    /// </summary>
     [JsonPropertyName("orders")]
     public required List<Order> Orders { get; set; }
 }
@@ -95,42 +77,35 @@ public partial class SubmitOrdersMessage : GodotObject, ISendableMessage
 /// </summary>
 public partial class GiveSupportMessage : GodotObject, IReceivableMessage, ISendableMessage
 {
-    /// <summary>
-    /// Name of the region in which the support order is placed.
-    /// </summary>
     [JsonPropertyName("supportingRegion")]
     public required string SupportingRegion { get; set; }
 
+    [JsonPropertyName("embattledRegion")]
+    public required string EmbattledRegion { get; set; }
+
     /// <summary>
-    /// ID of the player in the destination region to support.
     /// Null if none were supported.
     /// </summary>
-    [JsonPropertyName("supportedPlayer")]
-    public string? SupportedPlayer { get; set; }
+    [JsonPropertyName("supportedFaction")]
+    public string? SupportedFaction { get; set; }
 }
 
 /// <summary>
-/// Message passed from the client during winter council voting.
+/// Message passed sent from the client during winter council voting.
 /// Used for the throne expansion.
 /// </summary>
 public partial class WinterVoteMessage : GodotObject, ISendableMessage
 {
-    /// <summary>
-    /// ID of the player that the submitting player votes for.
-    /// </summary>
-    [JsonPropertyName("player")]
-    public required string Player { get; set; }
+    [JsonPropertyName("factionVotedFor")]
+    public required string FactionVotedFor { get; set; }
 }
 
 /// <summary>
-/// Message passed from the client with the swordMsg to declare where they want to use it.
+/// Message sent from the client with the sword to declare where they want to use it.
 /// Used for the throne expansion.
 /// </summary>
 public partial class SwordMessage : GodotObject, ISendableMessage
 {
-    /// <summary>
-    /// Name of the region in which the player wants to use the sword in battle.
-    /// </summary>
     [JsonPropertyName("region")]
     public required string Region { get; set; }
 
@@ -142,14 +117,11 @@ public partial class SwordMessage : GodotObject, ISendableMessage
 }
 
 /// <summary>
-/// Message passed from the client with the ravenMsg when they want to spy on another player's
+/// Message sent from the client with the ravenMsg when they want to spy on another player's
 /// orders. Used for the throne expansion.
 /// </summary>
 public partial class RavenMessage : GodotObject, ISendableMessage
 {
-    /// <summary>
-    /// ID of the player on whom to spy.
-    /// </summary>
-    [JsonPropertyName("player")]
-    public required string Player { get; set; }
+    [JsonPropertyName("factionToSpyOn")]
+    public required string FactionToSpyOn { get; set; }
 }

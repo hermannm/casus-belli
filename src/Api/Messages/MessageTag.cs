@@ -5,7 +5,7 @@ public enum MessageTag : byte
     Error = 1,
     PlayerStatus,
     LobbyJoined,
-    SelectGameId,
+    SelectGameFaction,
     Ready,
     StartGame,
     SupportRequest,

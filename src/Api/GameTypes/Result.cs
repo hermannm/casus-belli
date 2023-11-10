@@ -8,15 +8,9 @@ namespace Immerse.BfhClient.Api.GameTypes;
 /// </summary>
 public record struct Result
 {
-    /// <summary>
-    /// The sum of the dice roll and modifiers.
-    /// </summary>
     [JsonPropertyName("total")]
     public required int Total { get; set; }
 
-    /// <summary>
-    /// The modifiers comprising the result, including the dice roll.
-    /// </summary>
     [JsonPropertyName("parts")]
     public required List<Modifier> Parts { get; set; }
 

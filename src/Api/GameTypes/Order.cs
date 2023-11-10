@@ -7,18 +7,11 @@ namespace Immerse.BfhClient.Api.GameTypes;
 /// </summary>
 public record struct Order
 {
-    /// <summary>
-    /// The type of order submitted. Restricted by unit type and region.
-    /// Can only be of the constants defined in <see cref="OrderType"/>.
-    /// </summary>
     [JsonPropertyName("type")]
     public required string Type { get; set; }
 
-    /// <summary>
-    /// The player submitting the order.
-    /// </summary>
-    [JsonPropertyName("player")]
-    public required string Player { get; set; }
+    [JsonPropertyName("faction")]
+    public required string Faction { get; set; }
 
     /// <summary>
     /// Name of the region where the order is placed.
@@ -42,8 +35,8 @@ public record struct Order
     /// <summary>
     /// For move orders: name of DangerZone the order tries to pass through, if any.
     /// </summary>
-    [JsonPropertyName("via")]
-    public string? Via { get; set; }
+    [JsonPropertyName("viaDangerZone")]
+    public string? ViaDangerZone { get; set; }
 
     /// <summary>
     /// For build orders: type of unit to build.

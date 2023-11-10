@@ -7,21 +7,14 @@ namespace Immerse.BfhClient.Api.GameTypes;
 /// </summary>
 public record struct Modifier
 {
-    /// <summary>
-    /// The source of the modifier.
-    /// Can only be of the constants defined in <see cref="ModifierType"/>.
-    /// </summary>
     [JsonPropertyName("type")]
     public required string Type { get; set; }
 
-    /// <summary>
-    /// The positive or negative number that modifies the result total.
-    /// </summary>
     [JsonPropertyName("value")]
     public required int Value { get; set; }
 
     /// <summary>
-    /// If modifier was from a support: the supporting player.
+    /// Non-null if Type is Support.
     /// </summary>
     [JsonPropertyName("supportingPlayer")]
     public string? SupportingPlayer { get; set; }

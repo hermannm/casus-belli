@@ -9,9 +9,6 @@ namespace Immerse.BfhClient.Api.Messages;
 /// </summary>
 public partial class ErrorMessage : GodotObject, IReceivableMessage
 {
-    /// <summary>
-    /// The error message.
-    /// </summary>
     [JsonPropertyName("error")]
     public required string Error { get; set; }
 }
@@ -21,67 +18,43 @@ public partial class ErrorMessage : GodotObject, IReceivableMessage
 /// </summary>
 public partial class PlayerStatusMessage : GodotObject, IReceivableMessage
 {
-    /// <summary>
-    /// The user's chosen display name.
-    /// </summary>
     [JsonPropertyName("username")]
     public required string Username { get; set; }
 
-    /// <summary>
-    /// The user's selected game ID.
-    /// Null if not selected yet.
-    /// </summary>
-    [JsonPropertyName("gameId")]
-    public string? GameId { get; set; }
+    [JsonPropertyName("selectedFaction")]
+    public string? SelectedFaction { get; set; }
 
-    /// <summary>
-    /// Whether the user is ready to start the game.
-    /// </summary>
-    [JsonPropertyName("ready")]
-    public required bool Ready { get; set; }
+    [JsonPropertyName("readyToStartGame")]
+    public required bool ReadyToStartGame { get; set; }
 }
 
 /// <summary>
-/// Message sent to a player when they join a lobby, to inform them about other players.
+/// Message sent to a player when they join a lobby, to inform them about the game and other players.
 /// </summary>
 public partial class LobbyJoinedMessage : GodotObject, IReceivableMessage
 {
-    /// <summary>
-    /// IDs that the player may select from for this lobby's game.
-    /// Returns all game IDs, though some may already be taken by other players in the lobby.
-    /// </summary>
-    [JsonPropertyName("selectableGameIds")]
-    public required List<string> SelectableGameIDs { get; set; }
+    [JsonPropertyName("selectableFactions")]
+    public required List<string> SelectableFactions { get; set; }
 
-    /// <summary>
-    /// Info about each other player in the lobby.
-    /// </summary>
     [JsonPropertyName("playerStatuses")]
     public required List<PlayerStatusMessage> PlayerStatuses { get; set; }
 }
 
 /// <summary>
-/// Message sent from client when they want to select a game ID.
+/// Message sent from client when they want to select a faction to play for the game.
 /// </summary>
-public partial class SelectGameIdMessage : GodotObject, ISendableMessage
+public partial class SelectFactionMessage : GodotObject, ISendableMessage
 {
-    /// <summary>
-    /// The ID that the player wants to select for the game.
-    /// Will be rejected if already selected by another player.
-    /// </summary>
-    [JsonPropertyName("gameId")]
-    public required string GameId { get; set; }
+    [JsonPropertyName("faction")]
+    public required string Faction { get; set; }
 }
 
 /// <summary>
 /// Message sent from client to mark themselves as ready to start the game.
-/// Requires game ID being selected.
+/// Requires that faction has been selected.
 /// </summary>
-public partial class ReadyMessage : GodotObject, ISendableMessage
+public partial class ReadyToStartGameMessage : GodotObject, ISendableMessage
 {
-    /// <summary>
-    /// Whether the player is ready to start the game.
-    /// </summary>
     [JsonPropertyName("ready")]
     public required bool Ready { get; set; }
 }
