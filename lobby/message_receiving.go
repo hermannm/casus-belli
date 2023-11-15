@@ -18,7 +18,7 @@ func (player *Player) readMessagesUntilSocketCloses(lobby *Lobby) {
 		socketIsClosed, err := player.readMessage(lobby)
 
 		if socketIsClosed {
-			log.Errorf(
+			log.ErrorCausef(
 				err,
 				"socket closed for player %s, removing them from lobby",
 				player.String(),
@@ -26,7 +26,7 @@ func (player *Player) readMessagesUntilSocketCloses(lobby *Lobby) {
 			lobby.RemovePlayer(player.username)
 			return
 		} else if err != nil {
-			log.Errorf(err, "message error for player %s", player.String())
+			log.ErrorCausef(err, "message error for player %s", player.String())
 			player.SendError(err)
 		}
 	}
@@ -179,7 +179,7 @@ func (player *Player) handleGameMessage(tag MessageTag, rawMessage json.RawMessa
 
 	if err != nil {
 		err = wrap.Errorf(err, "failed to parse message of type '%s'", tag)
-		log.Errorf(err, "message error for player %s", player.String())
+		log.ErrorCausef(err, "message error for player %s", player.String())
 		player.SendError(err)
 	}
 }

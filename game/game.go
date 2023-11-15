@@ -131,7 +131,7 @@ func (game *Game) ResolveNonWinterOrders(orders []Order) []Battle {
 	dangerZoneBattles := resolveDangerZones(game.Board)
 	battles = append(battles, dangerZoneBattles...)
 	if err := game.messenger.SendBattleResults(dangerZoneBattles); err != nil {
-		log.Error(err, "")
+		log.Error(err)
 	}
 
 	game.resolveMoves()

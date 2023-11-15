@@ -107,7 +107,7 @@ func (lobby *Lobby) Close() error {
 
 		if err := player.socket.Close(); err != nil {
 			player.lock.Unlock()
-			log.Errorf(err, "failed to close socket connection to player %s", player.String())
+			log.ErrorCausef(err, "failed to close socket connection to player %s", player.String())
 		}
 
 		player.lock.Unlock()

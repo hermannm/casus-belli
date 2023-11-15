@@ -128,7 +128,7 @@ func (player *Player) SendError(err error) {
 		Tag:  MessageTagError,
 		Data: ErrorMessage{Error: err.Error()},
 	}); err != nil {
-		log.Error(err, "")
+		log.Error(err)
 	}
 }
 
@@ -137,7 +137,7 @@ func (lobby *Lobby) SendError(to game.PlayerFaction, err error) {
 		Tag:  MessageTagError,
 		Data: ErrorMessage{Error: err.Error()},
 	}); err != nil {
-		log.Error(err, "")
+		log.Error(err)
 	}
 }
 

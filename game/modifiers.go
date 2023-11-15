@@ -216,14 +216,18 @@ func callSupport(
 		region.Name,
 		battlers,
 	); err != nil {
-		log.Error(err, "failed to send support request")
+		log.ErrorCause(err, "failed to send support request")
 		supportReceiver <- supportDeclaration{from: support.Faction, to: ""}
 		return
 	}
 
 	supported, err := messenger.AwaitSupport(support.Faction, support.Origin, region.Name)
 	if err != nil {
-		log.Errorf(err, "failed to receive support declaration from faction '%s'", support.Faction)
+		log.ErrorCausef(
+			err,
+			"failed to receive support declaration from faction '%s'",
+			support.Faction,
+		)
 		supportReceiver <- supportDeclaration{from: support.Faction, to: ""}
 		return
 	}

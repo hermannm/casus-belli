@@ -30,7 +30,7 @@ func sendJSON(res http.ResponseWriter, value any) {
 	if err := json.NewEncoder(res).Encode(value); err != nil {
 		err = wrap.Error(err, "failed to serialize response")
 		sendServerError(res, err)
-		log.Error(err, "")
+		log.Error(err)
 	}
 }
 

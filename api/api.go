@@ -84,7 +84,7 @@ func (api LobbyAPI) JoinLobby(res http.ResponseWriter, req *http.Request) {
 	socket, err := upgrader.Upgrade(res, req, nil)
 	if err != nil {
 		sendServerErrorWithHeader(res, wrap.Error(err, "failed to establish socket connection"))
-		log.Errorf(
+		log.ErrorCausef(
 			err,
 			"failed to establish socket connection for player '%s' to lobby '%s'",
 			username,
@@ -95,7 +95,7 @@ func (api LobbyAPI) JoinLobby(res http.ResponseWriter, req *http.Request) {
 
 	player, err := gameLobby.AddPlayer(username, socket)
 	if err != nil {
-		log.Errorf(err, "failed to add player '%s' to lobby '%s'", username, lobbyName)
+		log.ErrorCausef(err, "failed to add player '%s' to lobby '%s'", username, lobbyName)
 		socket.WriteJSON(lobby.Message{
 			Tag:  lobby.MessageTagError,
 			Data: lobby.ErrorMessage{Error: wrap.Error(err, "failed to join game").Error()},
@@ -127,13 +127,13 @@ func (api LobbyAPI) CreateLobby(res http.ResponseWriter, req *http.Request) {
 	lobby, err := lobby.New(lobbyName, gameName)
 	if err != nil {
 		sendServerError(res, err)
-		log.Error(err, "")
+		log.Error(err)
 		return
 	}
 
 	if err := api.lobbyRegistry.RegisterLobby(lobby); err != nil {
 		sendServerError(res, err)
-		log.Error(err, "failed to register lobby")
+		log.ErrorCause(err, "failed to register lobby")
 		return
 	}
 
