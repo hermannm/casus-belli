@@ -71,10 +71,10 @@ func (registry *LobbyRegistry) ListLobbies() []LobbyInfo {
 	registry.lock.RLock()
 	defer registry.lock.RUnlock()
 
-	info := make([]LobbyInfo, 0, len(registry.lobbies))
+	lobbyList := make([]LobbyInfo, 0, len(registry.lobbies))
 	for _, lobby := range registry.lobbies {
-		info = append(info, LobbyInfo{Name: lobby.name, BoardInfo: lobby.game.BoardInfo})
+		lobbyList = append(lobbyList, LobbyInfo{Name: lobby.name, BoardInfo: lobby.game.BoardInfo})
 	}
 
-	return info
+	return lobbyList
 }
