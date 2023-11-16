@@ -14,7 +14,19 @@ public partial class LobbyListMenu : Node
 
     public override async void _Ready()
     {
-        await ApiClient.Instance.TryJoinLobby("test", "hermannm");
+        await ApiClient.Instance.TryJoinLobby(
+            new LobbyInfo
+            {
+                Name = "test",
+                BoardInfo = new BoardInfo
+                {
+                    Id = "bfh_5players",
+                    Name = "The Battle for Hermannia (5 players)",
+                    WinningCastleCount = 5
+                }
+            },
+            "hermannm"
+        );
     }
 
     private static void HandleLobbyJoinedMessage(LobbyJoinedMessage message)

@@ -25,12 +25,14 @@ public partial class ApiClient : Node
     public static ApiClient Instance { get; private set; } = null!;
 
     public Uri? ServerUrl { get; private set; }
+    public LobbyInfo? Lobby { get; private set; }
+    public bool HasJoinedLobby => Lobby != null;
+
     private readonly HttpClient _httpClient = new();
     private readonly ClientWebSocket _websocket = new();
     private readonly CancellationTokenSource _cancellation = new();
     private readonly MessageSender _messageSender;
     private readonly MessageReceiver _messageReceiver;
-    private bool _lobbyJoined = false;
 
     public ApiClient()
     {
@@ -51,7 +53,7 @@ public partial class ApiClient : Node
 
     public override void _Process(double delta)
     {
-        if (!_lobbyJoined)
+        if (!HasJoinedLobby)
             return;
 
         if (!_messageReceiver.MessageQueue.TryDequeue(out var message))
@@ -92,7 +94,7 @@ public partial class ApiClient : Node
     {
         ServerUrl = null;
         _httpClient.BaseAddress = null;
-        return _lobbyJoined ? LeaveLobby() : Task.CompletedTask;
+        return HasJoinedLobby ? LeaveLobby() : Task.CompletedTask;
     }
 
     public void SendMessage<TMessage>(TMessage message)
@@ -147,7 +149,7 @@ public partial class ApiClient : Node
     /// Connects the API client to a server at the given URI, and starts sending and receiving
     /// messages.
     /// </summary>
-    public async Task<bool> TryJoinLobby(string lobbyName, string username)
+    public async Task<bool> TryJoinLobby(LobbyInfo lobby, string username)
     {
         if (ServerUrl is null)
         {
@@ -164,7 +166,7 @@ public partial class ApiClient : Node
             Host = ServerUrl.Host,
             Port = ServerUrl.Port,
             Path = "/join",
-            Query = $"lobbyName={lobbyName}&username={username}"
+            Query = $"lobbyName={lobby.Name}&username={username}"
         };
 
         try
@@ -191,14 +193,14 @@ public partial class ApiClient : Node
             return false;
         }
 
-        _lobbyJoined = true;
+        Lobby = lobby;
         return true;
     }
 
     public Task LeaveLobby()
     {
         _cancellation.Cancel();
-        _lobbyJoined = false;
+        Lobby = null;
 
         return _websocket.CloseAsync(
             WebSocketCloseStatus.NormalClosure,
