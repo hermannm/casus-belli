@@ -136,7 +136,7 @@ func (lobby *Lobby) SendError(to game.PlayerFaction, err error) {
 		Tag:  MessageTagError,
 		Data: ErrorMessage{Error: err.Error()},
 	}); err != nil {
-		lobby.Log.Error(err)
+		lobby.log.Error(err)
 	}
 }
 

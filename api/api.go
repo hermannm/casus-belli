@@ -86,13 +86,13 @@ func (api LobbyAPI) JoinLobby(res http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		err := wrap.Error(err, "failed to establish socket connection")
 		sendServerErrorWithHeader(res, err)
-		gameLobby.Log.Error(err, slog.String("player", username))
+		gameLobby.Logger().Error(err, slog.String("player", username))
 		return
 	}
 
 	player, err := gameLobby.AddPlayer(username, socket)
 	if err != nil {
-		gameLobby.Log.ErrorCause(err, "failed to add player", slog.String("username", username))
+		gameLobby.Logger().ErrorCause(err, "failed to add player", slog.String("player", username))
 		socket.WriteJSON(lobby.Message{
 			Tag:  lobby.MessageTagError,
 			Data: lobby.ErrorMessage{Error: wrap.Error(err, "failed to join game").Error()},

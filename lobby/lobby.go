@@ -20,7 +20,7 @@ type Lobby struct {
 	game    *game.Game
 	players []*Player // Must hold lock to access safely.
 	lock    sync.RWMutex
-	Log     log.Logger
+	log     log.Logger
 }
 
 func New(lobbyName string, boardID string, onlyLobbyOnServer bool) (*Lobby, error) {
@@ -30,13 +30,13 @@ func New(lobbyName string, boardID string, onlyLobbyOnServer bool) (*Lobby, erro
 	if !onlyLobbyOnServer {
 		logger = logger.With(slog.String("lobby", lobbyName))
 	}
-	lobby.Log = logger
+	lobby.log = logger
 
 	board, boardInfo, err := boardconfig.ReadBoardFromConfigFile(boardID)
 	if err != nil {
 		return nil, wrap.Error(err, "failed to read board from config file")
 	}
-	game := game.New(board, boardInfo, lobby, lobby.Log)
+	game := game.New(board, boardInfo, lobby, lobby.log)
 
 	lobby.game = game
 	lobby.players = make([]*Player, 0, len(game.Factions))
@@ -72,9 +72,9 @@ func (lobby *Lobby) AddPlayer(username string, socket *websocket.Conn) (*Player,
 	lobby.lock.Lock()
 	defer lobby.lock.Unlock()
 
-	player := newPlayer(Username(username), socket, lobby.Log)
+	player := newPlayer(Username(username), socket, lobby.log)
 
-	lobby.Log.Infof("player '%s' joined", username)
+	lobby.log.Infof("player '%s' joined", username)
 	lobby.players = append(lobby.players, player)
 	go player.readMessagesUntilSocketCloses(lobby)
 
@@ -121,7 +121,7 @@ func (lobby *Lobby) Close() error {
 		player.lock.Unlock()
 	}
 
-	lobby.Log.Info("lobby closed")
+	lobby.log.Info("lobby closed")
 	return nil
 }
 
@@ -153,8 +153,12 @@ func (lobby *Lobby) startGame() error {
 		return errors.New("all players must mark themselves as ready before starting the game")
 	}
 
-	lobby.Log.Info("starting game")
+	lobby.log.Info("starting game")
 	go lobby.game.Run()
 
 	return nil
+}
+
+func (lobby *Lobby) Logger() log.Logger {
+	return lobby.log
 }
