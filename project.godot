@@ -17,7 +17,7 @@ config/icon="res://assets/icon.svg"
 
 [autoload]
 
-MessageDisplay="*res://scenes/components/message_display.tscn"
+MessageDisplay="*res://scenes/components/message-display.tscn"
 ApiClient="*res://src/Api/ApiClient.cs"
 SceneManager="*res://src/SceneManager.cs"
 
@@ -30,3 +30,7 @@ window/size/mode=3
 [dotnet]
 
 project/assembly_name="bfh-client"
+
+[gui]
+
+theme/custom_font="res://assets/fonts/quantico/quantico-regular.ttf"
