@@ -3,6 +3,7 @@ package lobby
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"slices"
 	"sync"
 
@@ -19,16 +20,21 @@ type Lobby struct {
 	game    *game.Game
 	players []*Player // Must hold lock to access safely.
 	lock    sync.RWMutex
+	Log     log.Logger
 }
 
 func New(lobbyName string, boardID string) (*Lobby, error) {
-	lobby := &Lobby{name: lobbyName, lock: sync.RWMutex{}}
+	lobby := &Lobby{
+		name: lobbyName,
+		lock: sync.RWMutex{},
+		Log:  log.Default().With(slog.String("lobby", lobbyName)),
+	}
 
 	board, name, winningCastleCount, err := boardconfig.ReadBoardFromConfigFile(boardID)
 	if err != nil {
 		return nil, wrap.Error(err, "failed to read board from config file")
 	}
-	game := game.New(board, name, winningCastleCount, lobby)
+	game := game.New(board, name, winningCastleCount, lobby, lobby.Log)
 
 	lobby.game = game
 	lobby.players = make([]*Player, 0, len(game.Factions))
@@ -64,9 +70,9 @@ func (lobby *Lobby) AddPlayer(username string, socket *websocket.Conn) (*Player,
 	lobby.lock.Lock()
 	defer lobby.lock.Unlock()
 
-	player := newPlayer(Username(username), socket)
+	player := newPlayer(Username(username), socket, lobby.Log)
 
-	log.Infof("player '%s' joined lobby '%s'", username, lobby.name)
+	lobby.Log.Infof("player '%s' joined lobby '%s'", username, lobby.name)
 	lobby.players = append(lobby.players, player)
 	go player.readMessagesUntilSocketCloses(lobby)
 
@@ -107,13 +113,13 @@ func (lobby *Lobby) Close() error {
 
 		if err := player.socket.Close(); err != nil {
 			player.lock.Unlock()
-			log.ErrorCausef(err, "failed to close socket connection to player %s", player.String())
+			player.log.ErrorCause(err, "failed to close socket connection")
 		}
 
 		player.lock.Unlock()
 	}
 
-	log.Infof("lobby '%s' closed", lobby.name)
+	lobby.Log.Info("lobby closed")
 	return nil
 }
 
@@ -145,7 +151,7 @@ func (lobby *Lobby) startGame() error {
 		return errors.New("all players must mark themselves as ready before starting the game")
 	}
 
-	log.Infof("starting game for lobby '%s'", lobby.name)
+	lobby.Log.Info("starting game")
 	go lobby.game.Run()
 
 	return nil

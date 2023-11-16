@@ -4,7 +4,6 @@ import (
 	"math/rand"
 	"sync"
 
-	"hermannm.dev/devlog/log"
 	"hermannm.dev/enumnames"
 )
 
@@ -125,11 +124,10 @@ type supportDeclaration struct {
 }
 
 // Calls support from support orders to the given region, and appends modifiers to the given map.
-func appendSupportModifiers(
+func (game *Game) appendSupportModifiers(
 	results map[PlayerFaction]Result,
 	region Region,
 	includeDefender bool,
-	messenger Messenger,
 ) {
 	supports := region.IncomingSupports
 	supportCount := len(supports)
@@ -149,14 +147,13 @@ func appendSupportModifiers(
 	}
 
 	for _, support := range supports {
-		go callSupport(
+		go game.callSupport(
 			support,
 			region,
 			incomingMoves,
 			includeDefender,
 			supportReceiver,
 			&waitGroup,
-			messenger,
 		)
 	}
 
@@ -179,14 +176,13 @@ func appendSupportModifiers(
 	}
 }
 
-func callSupport(
+func (game *Game) callSupport(
 	support Order,
 	region Region,
 	moves []Order,
 	includeDefender bool,
 	supportReceiver chan<- supportDeclaration,
 	waitGroup *sync.WaitGroup,
-	messenger Messenger,
 ) {
 	defer waitGroup.Done()
 
@@ -210,20 +206,20 @@ func callSupport(
 		battlers = append(battlers, region.Unit.Faction)
 	}
 
-	if err := messenger.SendSupportRequest(
+	if err := game.messenger.SendSupportRequest(
 		support.Faction,
 		support.Origin,
 		region.Name,
 		battlers,
 	); err != nil {
-		log.ErrorCause(err, "failed to send support request")
+		game.log.ErrorCause(err, "failed to send support request")
 		supportReceiver <- supportDeclaration{from: support.Faction, to: ""}
 		return
 	}
 
-	supported, err := messenger.AwaitSupport(support.Faction, support.Origin, region.Name)
+	supported, err := game.messenger.AwaitSupport(support.Faction, support.Origin, region.Name)
 	if err != nil {
-		log.ErrorCausef(
+		game.log.ErrorCausef(
 			err,
 			"failed to receive support declaration from faction '%s'",
 			support.Faction,

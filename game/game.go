@@ -11,6 +11,7 @@ type Game struct {
 	Factions           []PlayerFaction
 	winningCastleCount int
 	messenger          Messenger
+	log                log.Logger
 
 	season             Season
 	resolving          set.ArraySet[RegionName]
@@ -46,13 +47,20 @@ type Messenger interface {
 	SendWinner(winner PlayerFaction) error
 }
 
-func New(board Board, name string, winningCastleCount int, messenger Messenger) *Game {
+func New(
+	board Board,
+	name string,
+	winningCastleCount int,
+	messenger Messenger,
+	logger log.Logger,
+) *Game {
 	return &Game{
 		Name:               name,
 		Board:              board,
 		Factions:           board.playerFactions(),
 		winningCastleCount: winningCastleCount,
 		messenger:          messenger,
+		log:                logger,
 		season:             SeasonWinter,
 		resolving:          set.NewArraySet[RegionName](),
 		resolved:           set.NewArraySet[RegionName](),
@@ -131,7 +139,7 @@ func (game *Game) ResolveNonWinterOrders(orders []Order) []Battle {
 	dangerZoneBattles := resolveDangerZones(game.Board)
 	battles = append(battles, dangerZoneBattles...)
 	if err := game.messenger.SendBattleResults(dangerZoneBattles); err != nil {
-		log.Error(err)
+		game.log.Error(err)
 	}
 
 	game.resolveMoves()

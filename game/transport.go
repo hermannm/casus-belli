@@ -1,7 +1,6 @@
 package game
 
 import (
-	"hermannm.dev/devlog/log"
 	"hermannm.dev/set"
 )
 
@@ -34,7 +33,7 @@ func (game *Game) resolveTransport(move Order) (transportMustWait bool) {
 
 		game.resolvedBattles = append(game.resolvedBattles, dangerZoneBattles...)
 		if err := game.messenger.SendBattleResults(dangerZoneBattles); err != nil {
-			log.Error(err)
+			game.log.Error(err)
 		}
 
 		return false

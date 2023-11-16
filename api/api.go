@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 
 	"github.com/gorilla/websocket"
@@ -83,19 +84,15 @@ func (api LobbyAPI) JoinLobby(res http.ResponseWriter, req *http.Request) {
 
 	socket, err := upgrader.Upgrade(res, req, nil)
 	if err != nil {
-		sendServerErrorWithHeader(res, wrap.Error(err, "failed to establish socket connection"))
-		log.ErrorCausef(
-			err,
-			"failed to establish socket connection for player '%s' to lobby '%s'",
-			username,
-			lobbyName,
-		)
+		err := wrap.Error(err, "failed to establish socket connection")
+		sendServerErrorWithHeader(res, err)
+		gameLobby.Log.Error(err, slog.String("username", username))
 		return
 	}
 
 	player, err := gameLobby.AddPlayer(username, socket)
 	if err != nil {
-		log.ErrorCausef(err, "failed to add player '%s' to lobby '%s'", username, lobbyName)
+		gameLobby.Log.ErrorCause(err, "failed to add player", slog.String("username", username))
 		socket.WriteJSON(lobby.Message{
 			Tag:  lobby.MessageTagError,
 			Data: lobby.ErrorMessage{Error: wrap.Error(err, "failed to join game").Error()},
@@ -127,7 +124,7 @@ func (api LobbyAPI) CreateLobby(res http.ResponseWriter, req *http.Request) {
 	lobby, err := lobby.New(lobbyName, gameName)
 	if err != nil {
 		sendServerError(res, err)
-		log.Error(err)
+		log.ErrorCause(err, "failed to create lobby", slog.String("lobby", lobbyName))
 		return
 	}
 

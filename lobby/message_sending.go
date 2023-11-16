@@ -4,7 +4,6 @@ import (
 	"errors"
 
 	"hermannm.dev/bfh-server/game"
-	"hermannm.dev/devlog/log"
 	"hermannm.dev/wrap"
 )
 
@@ -128,7 +127,7 @@ func (player *Player) SendError(err error) {
 		Tag:  MessageTagError,
 		Data: ErrorMessage{Error: err.Error()},
 	}); err != nil {
-		log.Error(err)
+		player.log.Error(err)
 	}
 }
 
@@ -137,7 +136,7 @@ func (lobby *Lobby) SendError(to game.PlayerFaction, err error) {
 		Tag:  MessageTagError,
 		Data: ErrorMessage{Error: err.Error()},
 	}); err != nil {
-		log.Error(err)
+		lobby.Log.Error(err)
 	}
 }
 

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"hermannm.dev/bfh-server/game"
+	"hermannm.dev/devlog/log"
 )
 
 func newMockGame() *game.Game {
@@ -124,7 +125,7 @@ func newMockGame() *game.Game {
 		board[neighbor.region2] = region2
 	}
 
-	return game.New(board, "Test game", 5, MockMessenger{})
+	return game.New(board, "Test game", 5, MockMessenger{}, log.Default())
 }
 
 func placeUnits(units map[game.RegionName]game.Unit, board game.Board) {

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 
-	"hermannm.dev/devlog/log"
 	"hermannm.dev/enumnames"
 	"hermannm.dev/set"
 	"hermannm.dev/wrap"
@@ -116,7 +115,7 @@ func (game *Game) GatherAndValidateOrders() []Order {
 	}
 
 	if err := game.messenger.SendOrdersReceived(factionOrders); err != nil {
-		log.Error(err)
+		game.log.Error(err)
 	}
 
 	return allOrders
@@ -128,14 +127,14 @@ func (game *Game) GatherAndValidateOrders() []Order {
 func (game *Game) gatherAndValidateOrderSet(faction PlayerFaction, orderChan chan<- []Order) {
 	for {
 		if err := game.messenger.SendOrderRequest(faction); err != nil {
-			log.Error(err)
+			game.log.Error(err)
 			orderChan <- []Order{}
 			return
 		}
 
 		orders, err := game.messenger.AwaitOrders(faction)
 		if err != nil {
-			log.Error(err)
+			game.log.Error(err)
 			orderChan <- []Order{}
 			return
 		}
@@ -152,13 +151,13 @@ func (game *Game) gatherAndValidateOrderSet(faction PlayerFaction, orderChan cha
 		}
 
 		if err := validateOrders(orders, game.Board, game.season); err != nil {
-			log.Error(err)
+			game.log.Error(err)
 			game.messenger.SendError(faction, err)
 			continue
 		}
 
 		if err := game.messenger.SendOrdersConfirmation(faction); err != nil {
-			log.Error(err)
+			game.log.Error(err)
 		}
 
 		orderChan <- orders

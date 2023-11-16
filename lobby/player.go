@@ -3,11 +3,13 @@ package lobby
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"slices"
 	"sync"
 
 	"github.com/gorilla/websocket"
 	"hermannm.dev/bfh-server/game"
+	"hermannm.dev/devlog/log"
 )
 
 // A player connected to a game lobby.
@@ -18,11 +20,12 @@ type Player struct {
 	gameFaction         game.PlayerFaction // Must hold lock to access safely. Blank until selected.
 	readyToStartGame    bool               // Must hold lock to access safely.
 	lock                sync.RWMutex
+	log                 log.Logger
 }
 
 type Username string
 
-func newPlayer(username Username, socket *websocket.Conn) *Player {
+func newPlayer(username Username, socket *websocket.Conn, lobbyLogger log.Logger) *Player {
 	return &Player{
 		username:            username,
 		gameMessageReceiver: newGameMessageReceiver(),
@@ -30,6 +33,7 @@ func newPlayer(username Username, socket *websocket.Conn) *Player {
 		gameFaction:         "",
 		readyToStartGame:    false,
 		lock:                sync.RWMutex{},
+		log:                 lobbyLogger.With(slog.Any("player", username)),
 	}
 }
 

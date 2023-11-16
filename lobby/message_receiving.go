@@ -9,7 +9,6 @@ import (
 	"github.com/gorilla/websocket"
 	"hermannm.dev/bfh-server/game"
 	"hermannm.dev/condqueue"
-	"hermannm.dev/devlog/log"
 	"hermannm.dev/wrap"
 )
 
@@ -18,15 +17,11 @@ func (player *Player) readMessagesUntilSocketCloses(lobby *Lobby) {
 		socketIsClosed, err := player.readMessage(lobby)
 
 		if socketIsClosed {
-			log.ErrorCausef(
-				err,
-				"socket closed for player %s, removing them from lobby",
-				player.String(),
-			)
+			player.log.ErrorCause(err, "socket closed, removing from lobby")
 			lobby.RemovePlayer(player.username)
 			return
 		} else if err != nil {
-			log.ErrorCausef(err, "message error for player %s", player.String())
+			player.log.Error(err)
 			player.SendError(err)
 		}
 	}
@@ -179,7 +174,7 @@ func (player *Player) handleGameMessage(tag MessageTag, rawMessage json.RawMessa
 
 	if err != nil {
 		err = wrap.Errorf(err, "failed to parse message of type '%s'", tag)
-		log.ErrorCausef(err, "message error for player %s", player.String())
+		player.log.Error(err)
 		player.SendError(err)
 	}
 }

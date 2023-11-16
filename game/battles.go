@@ -41,7 +41,7 @@ func (game *Game) calculateSingleplayerBattle(region Region, move Order) {
 		move.Faction: {Parts: attackModifiers(move, region, false, false, true), Move: move},
 	}
 
-	appendSupportModifiers(results, region, false, game.messenger)
+	game.appendSupportModifiers(results, region, false)
 
 	game.battleReceiver <- Battle{Results: calculateTotals(results)}
 }
@@ -63,7 +63,7 @@ func (game *Game) calculateMultiplayerBattle(region Region, includeDefender bool
 		}
 	}
 
-	appendSupportModifiers(results, region, includeDefender, game.messenger)
+	game.appendSupportModifiers(results, region, includeDefender)
 
 	game.battleReceiver <- Battle{Results: calculateTotals(results)}
 }
@@ -78,8 +78,8 @@ func (game *Game) calculateBorderBattle(region1 Region, region2 Region) {
 	}
 
 	// TODO: make these two calls run concurrently
-	appendSupportModifiers(results, region2, false, game.messenger)
-	appendSupportModifiers(results, region1, false, game.messenger)
+	game.appendSupportModifiers(results, region2, false)
+	game.appendSupportModifiers(results, region1, false)
 
 	game.battleReceiver <- Battle{Results: calculateTotals(results)}
 }
