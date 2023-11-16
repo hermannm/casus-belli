@@ -72,7 +72,7 @@ func (lobby *Lobby) AddPlayer(username string, socket *websocket.Conn) (*Player,
 
 	player := newPlayer(Username(username), socket, lobby.Log)
 
-	lobby.Log.Infof("player '%s' joined lobby '%s'", username, lobby.name)
+	lobby.Log.Infof("player '%s' joined", username)
 	lobby.players = append(lobby.players, player)
 	go player.readMessagesUntilSocketCloses(lobby)
 
