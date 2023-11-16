@@ -65,6 +65,10 @@ func getCommandLineFlags() (local bool, port string) {
 }
 
 func selectBoard(availableBoards []boardconfig.BoardInfo) string {
+	if len(availableBoards) == 1 {
+		return availableBoards[0].ID
+	}
+
 	fmt.Println("Available boards:")
 
 	for index, board := range availableBoards {
@@ -122,26 +126,25 @@ func createLobby(selectedBoardID string, lobbyRegistry *lobby.LobbyRegistry) {
 func printIPs(port string) {
 	fmt.Println("Game clients should now see lobby at:")
 
-	ctx, cancelCtx := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancelCtx()
-
-	publicIP, publicErr := ipfinder.FindPublicIP(ctx)
-	localIPs, localErr := ipfinder.FindLocalIPs()
-
 	writer := tabwriter.NewWriter(os.Stdout, 1, 1, 1, ' ', 0)
 
-	if publicErr == nil {
-		fmt.Fprintf(writer, "%s:%s\t(if port forwarding)\n", publicIP, port)
-	} else {
-		fmt.Printf("[Error finding public IP] %s\n", publicErr.Error())
-	}
-
-	if localErr == nil {
+	localIPs, err := ipfinder.FindLocalIPs()
+	if err == nil {
 		for _, ip := range localIPs {
 			fmt.Fprintf(writer, "%s:%s\t(if on the same network)\n", ip.Address.String(), port)
 		}
 	} else {
-		fmt.Printf("[Error finding local IPs] %s\n", localErr.Error())
+		fmt.Printf("[Error finding local IPs] %s\n", err.Error())
+	}
+
+	ctx, cancelCtx := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelCtx()
+
+	publicIP, err := ipfinder.FindPublicIP(ctx)
+	if err == nil {
+		fmt.Fprintf(writer, "%s:%s\t(if port forwarding)\n", publicIP, port)
+	} else {
+		fmt.Printf("[Error finding public IP] %s\n", err.Error())
 	}
 
 	writer.Flush()
