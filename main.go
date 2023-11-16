@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"hermannm.dev/bfh-server/api"
+	"hermannm.dev/bfh-server/game"
 	"hermannm.dev/bfh-server/game/boardconfig"
 	"hermannm.dev/bfh-server/lobby"
 	"hermannm.dev/devlog"
@@ -64,7 +65,7 @@ func getCommandLineFlags() (local bool, port string) {
 	return local, port
 }
 
-func selectBoard(availableBoards []boardconfig.BoardInfo) string {
+func selectBoard(availableBoards []game.BoardInfo) string {
 	if len(availableBoards) == 1 {
 		return availableBoards[0].ID
 	}
@@ -72,7 +73,7 @@ func selectBoard(availableBoards []boardconfig.BoardInfo) string {
 	fmt.Println("Available boards:")
 
 	for index, board := range availableBoards {
-		fmt.Printf("[%d] %s\n", index, board.DescriptiveName)
+		fmt.Printf("[%d] %s\n", index, board.Name)
 	}
 	fmt.Println()
 
@@ -91,7 +92,7 @@ func selectBoard(availableBoards []boardconfig.BoardInfo) string {
 
 		selection := availableBoards[index]
 		selectedBoardID = selection.ID
-		fmt.Printf("Selected %s!\n\n", selection.DescriptiveName)
+		fmt.Printf("Selected %s!\n\n", selection.Name)
 		break
 	}
 

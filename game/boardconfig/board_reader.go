@@ -41,12 +41,10 @@ type JSONNeighbor struct {
 	DangerZone string
 }
 
-func ReadBoardFromConfigFile(
-	boardID string,
-) (board game.Board, name string, winningCastleCount int, err error) {
+func ReadBoardFromConfigFile(boardID string) (game.Board, game.BoardInfo, error) {
 	content, err := boardConfigFiles.ReadFile(fmt.Sprintf("%s.json", boardID))
 	if err != nil {
-		return game.Board{}, "", 0, wrap.Errorf(
+		return game.Board{}, game.BoardInfo{}, wrap.Errorf(
 			err,
 			"failed to read config file '%s.json'",
 			boardID,
@@ -55,14 +53,16 @@ func ReadBoardFromConfigFile(
 
 	var jsonBoard JSONBoard
 	if err := json.Unmarshal(content, &jsonBoard); err != nil {
-		return game.Board{}, "", 0, wrap.Error(err, "failed to parse board config file")
+		return game.Board{}, game.BoardInfo{}, wrap.Error(err, "failed to parse board config file")
 	}
 
 	if jsonBoard.WinningCastleCount <= 0 {
-		return game.Board{}, "", 0, errors.New("invalid winningCastleCount in board config")
+		return game.Board{}, game.BoardInfo{}, errors.New(
+			"invalid winningCastleCount in board config",
+		)
 	}
 
-	board = make(game.Board)
+	board := make(game.Board)
 
 	for nation, regions := range jsonBoard.Nations {
 		for _, landRegion := range regions {
@@ -89,7 +89,7 @@ func ReadBoardFromConfigFile(
 		region2, ok2 := board[game.RegionName(neighbor.Region2)]
 
 		if !ok1 || !ok2 {
-			return game.Board{}, "", 0, fmt.Errorf(
+			return game.Board{}, game.BoardInfo{}, fmt.Errorf(
 				"failed to find regions for neighbor relation '%s' <-> '%s' in board config",
 				neighbor.Region1,
 				neighbor.Region2,
@@ -117,7 +117,13 @@ func ReadBoardFromConfigFile(
 		)
 	}
 
-	return board, jsonBoard.Name, jsonBoard.WinningCastleCount, nil
+	boardInfo := game.BoardInfo{
+		ID:                 boardID,
+		Name:               jsonBoard.Name,
+		WinningCastleCount: jsonBoard.WinningCastleCount,
+	}
+
+	return board, boardInfo, nil
 }
 
 type PartialJSONBoard struct {
@@ -125,19 +131,13 @@ type PartialJSONBoard struct {
 	WinningCastleCount int
 }
 
-type BoardInfo struct {
-	ID                 string
-	DescriptiveName    string
-	WinningCastleCount int
-}
-
-func GetAvailableBoards() ([]BoardInfo, error) {
+func GetAvailableBoards() ([]game.BoardInfo, error) {
 	directory, err := boardConfigFiles.ReadDir(".")
 	if err != nil {
 		return nil, wrap.Error(err, "failed to read config file directory")
 	}
 
-	availableBoards := make([]BoardInfo, 0, len(directory))
+	availableBoards := make([]game.BoardInfo, 0, len(directory))
 
 	for _, directoryEntry := range directory {
 		fullName := directoryEntry.Name()
@@ -156,9 +156,9 @@ func GetAvailableBoards() ([]BoardInfo, error) {
 			return nil, wrap.Error(err, "failed to parse board config file")
 		}
 
-		boardInfo := BoardInfo{
+		boardInfo := game.BoardInfo{
 			ID:                 baseName,
-			DescriptiveName:    board.Name,
+			Name:               board.Name,
 			WinningCastleCount: board.WinningCastleCount,
 		}
 

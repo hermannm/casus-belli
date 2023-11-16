@@ -30,11 +30,11 @@ func New(lobbyName string, boardID string) (*Lobby, error) {
 		Log:  log.Default().With(slog.String("lobby", lobbyName)),
 	}
 
-	board, name, winningCastleCount, err := boardconfig.ReadBoardFromConfigFile(boardID)
+	board, boardInfo, err := boardconfig.ReadBoardFromConfigFile(boardID)
 	if err != nil {
 		return nil, wrap.Error(err, "failed to read board from config file")
 	}
-	game := game.New(board, name, winningCastleCount, lobby, lobby.Log)
+	game := game.New(board, boardInfo, lobby, lobby.Log)
 
 	lobby.game = game
 	lobby.players = make([]*Player, 0, len(game.Factions))

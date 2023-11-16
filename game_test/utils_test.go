@@ -125,7 +125,8 @@ func newMockGame() *game.Game {
 		board[neighbor.region2] = region2
 	}
 
-	return game.New(board, "Test game", 5, MockMessenger{}, log.Default())
+	boardInfo := game.BoardInfo{ID: "test", Name: "Test game", WinningCastleCount: 5}
+	return game.New(board, boardInfo, MockMessenger{}, log.Default())
 }
 
 func placeUnits(units map[game.RegionName]game.Unit, board game.Board) {

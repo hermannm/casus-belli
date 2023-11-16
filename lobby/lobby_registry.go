@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+
+	"hermannm.dev/bfh-server/game"
 )
 
 type LobbyRegistry struct {
@@ -62,16 +64,16 @@ func (registry *LobbyRegistry) RemoveLobby(lobbyName string) {
 
 type LobbyInfo struct {
 	LobbyName string
-	GameName  string
+	BoardInfo game.BoardInfo
 }
 
-func (registry *LobbyRegistry) LobbyInfo() []LobbyInfo {
+func (registry *LobbyRegistry) ListLobbies() []LobbyInfo {
 	registry.lock.RLock()
 	defer registry.lock.RUnlock()
 
 	info := make([]LobbyInfo, 0, len(registry.lobbies))
 	for _, lobby := range registry.lobbies {
-		info = append(info, LobbyInfo{LobbyName: lobby.name, GameName: lobby.game.Name})
+		info = append(info, LobbyInfo{LobbyName: lobby.name, BoardInfo: lobby.game.BoardInfo})
 	}
 
 	return info

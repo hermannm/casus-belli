@@ -6,12 +6,11 @@ import (
 )
 
 type Game struct {
-	Name               string
-	Board              Board
-	Factions           []PlayerFaction
-	winningCastleCount int
-	messenger          Messenger
-	log                log.Logger
+	Board     Board
+	BoardInfo BoardInfo
+	Factions  []PlayerFaction
+	messenger Messenger
+	log       log.Logger
 
 	season             Season
 	resolving          set.ArraySet[RegionName]
@@ -21,6 +20,12 @@ type Game struct {
 	battleReceiver     chan Battle
 	retreats           map[RegionName]Order
 	secondHorseMoves   []Order
+}
+
+type BoardInfo struct {
+	ID                 string
+	Name               string
+	WinningCastleCount int
 }
 
 // A faction on the board (e.g. green/red/yellow units) controlled by a player.
@@ -49,16 +54,14 @@ type Messenger interface {
 
 func New(
 	board Board,
-	name string,
-	winningCastleCount int,
+	boardInfo BoardInfo,
 	messenger Messenger,
 	logger log.Logger,
 ) *Game {
 	return &Game{
-		Name:               name,
 		Board:              board,
+		BoardInfo:          boardInfo,
 		Factions:           board.playerFactions(),
-		winningCastleCount: winningCastleCount,
 		messenger:          messenger,
 		log:                logger,
 		season:             SeasonWinter,
@@ -319,7 +322,7 @@ func (game *Game) CheckWinner() (winner PlayerFaction) {
 		}
 	}
 
-	if tie || highestCount < game.winningCastleCount {
+	if tie || highestCount < game.BoardInfo.WinningCastleCount {
 		return ""
 	}
 

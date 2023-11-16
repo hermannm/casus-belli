@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/websocket"
-	"hermannm.dev/bfh-server/game/boardconfig"
+	"hermannm.dev/bfh-server/game"
 	"hermannm.dev/bfh-server/lobby"
 	"hermannm.dev/devlog/log"
 	"hermannm.dev/wrap"
@@ -15,13 +15,13 @@ import (
 type LobbyAPI struct {
 	router          *http.ServeMux
 	lobbyRegistry   *lobby.LobbyRegistry
-	availableBoards []boardconfig.BoardInfo
+	availableBoards []game.BoardInfo
 }
 
 func NewLobbyAPI(
 	router *http.ServeMux,
 	lobbyRegistry *lobby.LobbyRegistry,
-	availableBoards []boardconfig.BoardInfo,
+	availableBoards []game.BoardInfo,
 ) LobbyAPI {
 	if router == nil {
 		router = http.DefaultServeMux
@@ -49,7 +49,7 @@ func (api LobbyAPI) ListenAndServe(address string) error {
 
 // Endpoint to list available game lobbies.
 func (api LobbyAPI) ListLobbies(res http.ResponseWriter, req *http.Request) {
-	sendJSON(res, api.lobbyRegistry.LobbyInfo())
+	sendJSON(res, api.lobbyRegistry.ListLobbies())
 }
 
 // Endpoint for a player to join a lobby.
