@@ -63,7 +63,7 @@ func (registry *LobbyRegistry) RemoveLobby(lobbyName string) {
 }
 
 type LobbyInfo struct {
-	LobbyName string
+	Name      string
 	BoardInfo game.BoardInfo
 }
 
@@ -73,7 +73,7 @@ func (registry *LobbyRegistry) ListLobbies() []LobbyInfo {
 
 	info := make([]LobbyInfo, 0, len(registry.lobbies))
 	for _, lobby := range registry.lobbies {
-		info = append(info, LobbyInfo{LobbyName: lobby.name, BoardInfo: lobby.game.BoardInfo})
+		info = append(info, LobbyInfo{Name: lobby.name, BoardInfo: lobby.game.BoardInfo})
 	}
 
 	return info
