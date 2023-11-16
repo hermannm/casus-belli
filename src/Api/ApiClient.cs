@@ -33,12 +33,17 @@ public partial class ApiClient : Node
     private readonly CancellationTokenSource _cancellation = new();
     private readonly MessageSender _messageSender;
     private readonly MessageReceiver _messageReceiver;
+    private readonly Dictionary<MessageTag, StringName> _messageSignalNames;
 
     public ApiClient()
     {
         _websocket.Options.CollectHttpResponseDetails = true;
         _messageSender = new MessageSender(_websocket);
         _messageReceiver = new MessageReceiver(_websocket);
+        _messageSignalNames = MessageDictionary.ReceivableMessageTags.Keys.ToDictionary(
+            tag => tag,
+            tag => new StringName(tag + "MessageReceived")
+        );
     }
 
     public override void _EnterTree()
@@ -59,7 +64,12 @@ public partial class ApiClient : Node
         if (!_messageReceiver.MessageQueue.TryDequeue(out var message))
             return;
 
-        var signal = GetMessageReceivedSignalName(message.Tag);
+        if (!_messageSignalNames.TryGetValue(message.Tag, out var signal))
+        {
+            GD.PushError($"Received message tag '{message.Tag}' was not registered as signal");
+            return;
+        }
+
         var err = EmitSignal(signal, message.Data);
         if (err != Error.Ok)
             GD.PushError($"Failed to emit signal '{signal}': {err}");
@@ -113,11 +123,11 @@ public partial class ApiClient : Node
             )
         )
         {
-            GD.PushError($"Invalid message type {typeof(TMessage)} for for server message handler");
+            GD.PushError($"Invalid message type {typeof(TMessage)} for server message handler");
             return;
         }
 
-        var signal = GetMessageReceivedSignalName(messageTag);
+        var signal = _messageSignalNames[messageTag];
         var err = Connect(signal, Callable.From(handler));
         if (err != Error.Ok)
             GD.PushError($"Failed to connect to signal '{signal}': {err}");
@@ -209,17 +219,12 @@ public partial class ApiClient : Node
         );
     }
 
-    private static string GetMessageReceivedSignalName(MessageTag tag)
-    {
-        return tag + "MessageReceived";
-    }
-
     private void AddMessageReceivedSignals()
     {
-        foreach (var tag in MessageDictionary.ReceivableMessageTags.Keys)
+        foreach (var signal in _messageSignalNames.Values)
         {
             AddUserSignal(
-                GetMessageReceivedSignalName(tag),
+                signal,
                 new GodotArray
                 {
                     new GodotDictionary
