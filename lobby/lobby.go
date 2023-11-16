@@ -23,12 +23,14 @@ type Lobby struct {
 	Log     log.Logger
 }
 
-func New(lobbyName string, boardID string) (*Lobby, error) {
-	lobby := &Lobby{
-		name: lobbyName,
-		lock: sync.RWMutex{},
-		Log:  log.Default().With(slog.String("lobby", lobbyName)),
+func New(lobbyName string, boardID string, onlyLobbyOnServer bool) (*Lobby, error) {
+	lobby := &Lobby{name: lobbyName, lock: sync.RWMutex{}}
+
+	logger := log.Default()
+	if !onlyLobbyOnServer {
+		logger = logger.With(slog.String("lobby", lobbyName))
 	}
+	lobby.Log = logger
 
 	board, boardInfo, err := boardconfig.ReadBoardFromConfigFile(boardID)
 	if err != nil {
