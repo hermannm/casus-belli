@@ -1,6 +1,7 @@
 using System;
 using System.Text;
 using Godot;
+using Immerse.BfhClient.Utils;
 
 namespace Immerse.BfhClient.UI;
 
@@ -41,11 +42,11 @@ public partial class MessageDisplay : Node
         }
 
         label.Text = stringBuilder.ToString();
-        _messageContainer.CallDeferred("add_child", errorMessageNode);
+        _messageContainer.CallDeferred(Strings.AddChild, errorMessageNode);
 
         button.Pressed += () =>
         {
-            _messageContainer.CallDeferred("remove_child", errorMessageNode);
+            _messageContainer.CallDeferred(Strings.RemoveChild, errorMessageNode);
         };
     }
 }
