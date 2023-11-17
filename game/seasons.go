@@ -23,7 +23,7 @@ func (season Season) String() string {
 	return seasonNames.GetNameOrFallback(season, "INVALID")
 }
 
-func (season Season) Next() Season {
+func (season Season) next() Season {
 	switch season {
 	case SeasonWinter:
 		return SeasonSpring

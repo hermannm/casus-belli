@@ -98,7 +98,7 @@ func (order Order) MarshalJSON() ([]byte, error) {
 	return json.Marshal(orderAlias(order))
 }
 
-func (game *Game) GatherAndValidateOrders() []Order {
+func (game *Game) gatherAndValidateOrders() []Order {
 	orderChans := make(map[PlayerFaction]chan []Order, len(game.Factions))
 	for _, faction := range game.Factions {
 		orderChan := make(chan []Order, 1)

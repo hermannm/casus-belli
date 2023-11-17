@@ -101,7 +101,7 @@ func (lobby *Lobby) Close() {
 		player.lock.Unlock()
 	}
 
-	lobby.registry.RemoveLobby(lobby.name)
+	lobby.registry.removeLobby(lobby.name)
 
 	lobby.log.Info("lobby closed")
 }

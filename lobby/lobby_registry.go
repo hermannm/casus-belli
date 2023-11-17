@@ -74,7 +74,7 @@ func (registry *LobbyRegistry) CreateLobby(
 	return nil
 }
 
-func (registry *LobbyRegistry) RemoveLobby(lobbyName string) {
+func (registry *LobbyRegistry) removeLobby(lobbyName string) {
 	registry.lock.Lock()
 	defer registry.lock.Unlock()
 

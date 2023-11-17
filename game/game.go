@@ -78,25 +78,25 @@ func New(
 
 func (game *Game) Run() {
 	for {
-		orders := game.GatherAndValidateOrders()
+		orders := game.gatherAndValidateOrders()
 
 		if game.season == SeasonWinter {
 			game.ResolveWinterOrders(orders)
 		} else {
 			game.ResolveNonWinterOrders(orders)
 
-			if winner := game.CheckWinner(); winner != "" {
+			if winner := game.checkWinner(); winner != "" {
 				game.messenger.SendWinner(winner)
 				break
 			}
 		}
 
-		game.NextRound()
+		game.nextRound()
 	}
 }
 
-func (game *Game) NextRound() {
-	game.season = game.season.Next()
+func (game *Game) nextRound() {
+	game.season = game.season.next()
 
 	game.messenger.ClearMessages()
 	game.Board.clearOrders()
@@ -302,7 +302,7 @@ func (game *Game) addSecondHorseMoves() {
 	game.secondHorseMoves = nil
 }
 
-func (game *Game) CheckWinner() (winner PlayerFaction) {
+func (game *Game) checkWinner() (winner PlayerFaction) {
 	castleCount := make(map[PlayerFaction]int)
 
 	for _, region := range game.Board {
