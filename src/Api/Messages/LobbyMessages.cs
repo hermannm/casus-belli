@@ -31,20 +31,11 @@ public partial class LobbyJoinedMessage : GodotObject, IReceivableMessage
 }
 
 /// <summary>
-/// Message sent from client when they want to select a faction to play for the game.
+/// Message sent from client to select a faction to play for the game.
 /// </summary>
 public partial class SelectFactionMessage : GodotObject, ISendableMessage
 {
     public required string Faction { get; set; }
-}
-
-/// <summary>
-/// Message sent from client to mark themselves as ready to start the game.
-/// Requires that faction has been selected.
-/// </summary>
-public partial class ReadyToStartGameMessage : GodotObject, ISendableMessage
-{
-    public required bool Ready { get; set; }
 }
 
 /// <summary>

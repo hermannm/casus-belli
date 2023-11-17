@@ -25,7 +25,6 @@ public static class MessageDictionary
         new()
         {
             { MessageTag.SelectFaction, typeof(SelectFactionMessage) },
-            { MessageTag.Ready, typeof(ReadyToStartGameMessage) },
             { MessageTag.StartGame, typeof(StartGameMessage) },
             { MessageTag.SubmitOrders, typeof(SubmitOrdersMessage) },
             { MessageTag.GiveSupport, typeof(GiveSupportMessage) }
