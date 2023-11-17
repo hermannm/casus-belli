@@ -66,10 +66,15 @@ vertical_alignment = 1
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="LobbyList" type="VBoxContainer" parent="MarginContainer/VBoxContainer/ScrollContainer"]
-unique_name_in_owner = true
+[node name="CenterContainer" type="CenterContainer" parent="MarginContainer/VBoxContainer/ScrollContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
+
+[node name="LobbyList" type="VBoxContainer" parent="MarginContainer/VBoxContainer/ScrollContainer/CenterContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(1000, 0)
+layout_mode = 2
+size_flags_horizontal = 4
 size_flags_vertical = 3
 script = ExtResource("1_qds6h")
 
@@ -112,12 +117,11 @@ script = ExtResource("5_hxvuf")
 
 [node name="UsernameInputPopup" type="Popup" parent="."]
 unique_name_in_owner = true
-size = Vector2i(862, 212)
+size = Vector2i(345, 276)
 
 [node name="PanelContainer" type="PanelContainer" parent="UsernameInputPopup"]
-offset_left = 312.5
-offset_right = 557.5
-offset_bottom = 100.0
+offset_right = 345.0
+offset_bottom = 276.0
 grow_horizontal = 2
 grow_vertical = 2
 
