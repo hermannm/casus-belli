@@ -89,28 +89,6 @@ type GiveSupportMessage struct {
 	SupportedFaction *game.PlayerFaction
 }
 
-// Message sent from the client during winter council voting.
-// Used for the throne expansion.
-type WinterVoteMessage struct {
-	FactionVotedFor game.PlayerFaction
-}
-
-// Message passed from the client with the Sword to declare where they want to use it.
-// Used for the throne expansion.
-type SwordMessage struct {
-	Region string
-
-	// Index of the battle in which to use the sword, in case of several battles in the region.
-	BattleIndex int
-}
-
-// Message sent from the client with the Raven when they want to spy on another player's
-// orders.
-// Used for the throne expansion.
-type RavenMessage struct {
-	FactionToSpyOn string
-}
-
 type MessageTag uint8
 
 const (
@@ -128,9 +106,6 @@ const (
 	MessageTagWinner
 	MessageTagSubmitOrders
 	MessageTagGiveSupport
-	MessageTagWinterVote
-	MessageTagSword
-	MessageTagRaven
 )
 
 var messageTags = enumnames.NewMap(map[MessageTag]string{
@@ -148,9 +123,6 @@ var messageTags = enumnames.NewMap(map[MessageTag]string{
 	MessageTagWinner:             "Winner",
 	MessageTagSubmitOrders:       "SubmitOrders",
 	MessageTagGiveSupport:        "GiveSupport",
-	MessageTagWinterVote:         "WinterVote",
-	MessageTagSword:              "Sword",
-	MessageTagRaven:              "Raven",
 })
 
 func (tag MessageTag) String() string {

@@ -122,20 +122,14 @@ func (player *Player) handleLobbyMessage(
 }
 
 type GameMessageReceiver struct {
-	orders     chan SubmitOrdersMessage
-	winterVote chan WinterVoteMessage
-	sword      chan SwordMessage
-	raven      chan RavenMessage
-	supports   *condqueue.CondQueue[GiveSupportMessage]
+	orders   chan SubmitOrdersMessage
+	supports *condqueue.CondQueue[GiveSupportMessage]
 }
 
 func newGameMessageReceiver() GameMessageReceiver {
 	return GameMessageReceiver{
-		orders:     make(chan SubmitOrdersMessage),
-		winterVote: make(chan WinterVoteMessage),
-		sword:      make(chan SwordMessage),
-		raven:      make(chan RavenMessage),
-		supports:   condqueue.New[GiveSupportMessage](),
+		orders:   make(chan SubmitOrdersMessage),
+		supports: condqueue.New[GiveSupportMessage](),
 	}
 }
 
@@ -152,21 +146,6 @@ func (player *Player) handleGameMessage(tag MessageTag, rawMessage json.RawMessa
 		var message GiveSupportMessage
 		if err = json.Unmarshal(rawMessage, &message); err == nil {
 			player.gameMessageReceiver.supports.Add(message)
-		}
-	case MessageTagWinterVote:
-		var message WinterVoteMessage
-		if err = json.Unmarshal(rawMessage, &message); err == nil {
-			player.gameMessageReceiver.winterVote <- message
-		}
-	case MessageTagSword:
-		var message SwordMessage
-		if err = json.Unmarshal(rawMessage, &message); err == nil {
-			player.gameMessageReceiver.sword <- message
-		}
-	case MessageTagRaven:
-		var message RavenMessage
-		if err = json.Unmarshal(rawMessage, &message); err == nil {
-			player.gameMessageReceiver.raven <- message
 		}
 	default:
 		err = errors.New("unrecognized message type")
