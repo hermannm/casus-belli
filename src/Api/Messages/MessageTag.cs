@@ -15,8 +15,5 @@ public enum MessageTag
     BattleResults,
     Winner,
     SubmitOrders,
-    GiveSupport,
-    WinterVote,
-    Sword,
-    Raven
+    GiveSupport
 }

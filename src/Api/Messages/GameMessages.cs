@@ -74,36 +74,3 @@ public partial class GiveSupportMessage : GodotObject, IReceivableMessage, ISend
     /// </summary>
     public string? SupportedFaction { get; set; }
 }
-
-/// <summary>
-/// Message passed sent from the client during winter council voting.
-/// Used for the throne expansion.
-/// </summary>
-public partial class WinterVoteMessage : GodotObject, ISendableMessage
-{
-    public required string FactionVotedFor { get; set; }
-}
-
-/// <summary>
-/// Message sent from the client with the sword to declare where they want to use it.
-/// Used for the throne expansion.
-/// </summary>
-public partial class SwordMessage : GodotObject, ISendableMessage
-{
-    public required string Region { get; set; }
-
-    /// <summary>
-    /// Index of the battle in which to use the sword, in case of several battles in the region.
-    /// </summary>
-
-    public required int BattleIndex { get; set; }
-}
-
-/// <summary>
-/// Message sent from the client with the ravenMsg when they want to spy on another player's
-/// orders. Used for the throne expansion.
-/// </summary>
-public partial class RavenMessage : GodotObject, ISendableMessage
-{
-    public required string FactionToSpyOn { get; set; }
-}

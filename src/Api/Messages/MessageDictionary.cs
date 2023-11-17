@@ -28,10 +28,7 @@ public static class MessageDictionary
             { MessageTag.Ready, typeof(ReadyToStartGameMessage) },
             { MessageTag.StartGame, typeof(StartGameMessage) },
             { MessageTag.SubmitOrders, typeof(SubmitOrdersMessage) },
-            { MessageTag.GiveSupport, typeof(GiveSupportMessage) },
-            { MessageTag.WinterVote, typeof(WinterVoteMessage) },
-            { MessageTag.Sword, typeof(SwordMessage) },
-            { MessageTag.Raven, typeof(RavenMessage) },
+            { MessageTag.GiveSupport, typeof(GiveSupportMessage) }
         };
 
     public static readonly Dictionary<Type, MessageTag> ReceivableMessageTypes =
