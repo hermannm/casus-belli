@@ -18,9 +18,10 @@ import (
 // A collection of players for a game.
 type Lobby struct {
 	name             string
+	players          []*Player // Must hold lock to access safely.
 	game             *game.Game
-	players          []*Player // Must hold lock to access safely
-	receivedMessages *condqueue.CondQueue[ReceivedMessage]
+	gameStarted      bool // Must hold lock to access safely.
+	gameMessageQueue *condqueue.CondQueue[ReceivedMessage]
 	lock             sync.RWMutex
 	log              log.Logger
 }
@@ -156,6 +157,7 @@ func (lobby *Lobby) startGame() error {
 	}
 
 	lobby.log.Info("starting game")
+	lobby.gameStarted = true
 	go lobby.game.Run()
 
 	return nil

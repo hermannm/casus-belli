@@ -47,14 +47,23 @@ func (player *Player) readMessage(lobby *Lobby) (socketClosed bool, err error) {
 		return false, wrap.Error(err, "failed to parse received message")
 	}
 
-	if err := player.handleMessage(message.Tag, message.Data, lobby); err != nil {
+	lobby.lock.RLock()
+	gameStarted := lobby.gameStarted
+	lobby.lock.RUnlock()
+
+	if gameStarted {
+		err = player.handleGameMessage(message.Tag, message.Data, lobby)
+	} else {
+		err = player.handleLobbyMessage(message.Tag, message.Data, lobby)
+	}
+	if err != nil {
 		return false, wrap.Errorf(err, "failed to handle message of type '%s'", message.Tag)
 	}
 
 	return false, nil
 }
 
-func (player *Player) handleMessage(
+func (player *Player) handleLobbyMessage(
 	messageTag MessageTag,
 	rawMessage json.RawMessage,
 	lobby *Lobby,
@@ -90,10 +99,8 @@ func (player *Player) handleMessage(
 		if err := lobby.startGame(); err != nil {
 			return wrap.Error(err, "failed to start game")
 		}
-	default: // The message should now be a game message
-		if err := player.handleGameMessage(messageTag, rawMessage, lobby); err != nil {
-			return err
-		}
+	default:
+		return fmt.Errorf("invalid lobby message tag '%s'", messageTag)
 	}
 
 	return nil
@@ -104,14 +111,6 @@ func (player *Player) handleGameMessage(
 	rawMessage json.RawMessage,
 	lobby *Lobby,
 ) error {
-	player.lock.RLock()
-	playerFaction := player.gameFaction
-	player.lock.RUnlock()
-
-	if playerFaction == "" {
-		return errors.New("received game message before player selected faction")
-	}
-
 	var messageData any
 	switch messageTag {
 	case MessageTagSubmitOrders:
@@ -127,17 +126,19 @@ func (player *Player) handleGameMessage(
 		}
 		messageData = message
 	default:
-		return fmt.Errorf("unrecognized message tag '%d'", messageTag)
+		return fmt.Errorf("invalid game message tag '%s'", messageTag)
 	}
 
-	lobby.receivedMessages.Add(
-		ReceivedMessage{Tag: messageTag, Data: messageData, ReceivedFrom: playerFaction},
-	)
+	lobby.gameMessageQueue.Add(ReceivedMessage{
+		Tag:          messageTag,
+		Data:         messageData,
+		ReceivedFrom: player.gameFaction,
+	})
 	return nil
 }
 
 func (lobby *Lobby) AwaitOrders(from game.PlayerFaction) ([]game.Order, error) {
-	message, err := lobby.receivedMessages.AwaitMatchingItem(
+	message, err := lobby.gameMessageQueue.AwaitMatchingItem(
 		context.Background(),
 		func(message ReceivedMessage) bool {
 			return message.ReceivedFrom == from && message.Tag == MessageTagSubmitOrders
@@ -149,7 +150,7 @@ func (lobby *Lobby) AwaitOrders(from game.PlayerFaction) ([]game.Order, error) {
 
 	messageData, ok := message.Data.(SubmitOrdersMessage)
 	if !ok {
-		return nil, errors.New("failed to cast message to SubmitOrdersMessage")
+		return nil, errors.New("failed to cast received message to SubmitOrdersMessage")
 	}
 
 	return messageData.Orders, nil
@@ -162,7 +163,7 @@ func (lobby *Lobby) AwaitSupport(
 ) (supported game.PlayerFaction, err error) {
 	ctx, cancel := context.WithCancelCause(context.Background())
 
-	message, err := lobby.receivedMessages.AwaitMatchingItem(
+	message, err := lobby.gameMessageQueue.AwaitMatchingItem(
 		ctx,
 		func(message ReceivedMessage) bool {
 			if message.ReceivedFrom != from || message.Tag != MessageTagGiveSupport {
@@ -171,7 +172,7 @@ func (lobby *Lobby) AwaitSupport(
 
 			messageData, ok := message.Data.(GiveSupportMessage)
 			if !ok {
-				cancel(errors.New("failed to cast message to GiveSupportMessage"))
+				cancel(errors.New("failed to cast received message to GiveSupportMessage"))
 				return false
 			}
 

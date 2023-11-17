@@ -14,10 +14,13 @@ import (
 
 // A player connected to a game lobby.
 type Player struct {
-	username         Username
-	socket           *websocket.Conn    // Must hold lock to access safely.
-	gameFaction      game.PlayerFaction // Must hold lock to access safely. Blank until selected.
-	readyToStartGame bool               // Must hold lock to access safely.
+	username Username
+	// Must hold lock to access safely.
+	socket *websocket.Conn
+	// Blank until selected. Must hold lock to access safely before the game has started.
+	gameFaction game.PlayerFaction
+	// Must hold lock to access safely.
+	readyToStartGame bool
 	lock             sync.RWMutex
 	log              log.Logger
 }
