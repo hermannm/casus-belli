@@ -3,9 +3,14 @@ package lobby
 import (
 	"errors"
 	"fmt"
+	"log/slog"
+	"slices"
 	"sync"
 
 	"hermannm.dev/bfh-server/game"
+	"hermannm.dev/bfh-server/game/boardconfig"
+	"hermannm.dev/devlog/log"
+	"hermannm.dev/wrap"
 )
 
 type LobbyRegistry struct {
@@ -30,10 +35,31 @@ func (registry *LobbyRegistry) GetLobby(name string) (lobby *Lobby, lobbyFound b
 	return nil, false
 }
 
-func (registry *LobbyRegistry) RegisterLobby(lobby *Lobby) error {
-	if lobby.name == "" {
+func (registry *LobbyRegistry) CreateLobby(
+	lobbyName string,
+	boardID string,
+	onlyLobbyOnServer bool,
+) error {
+	if lobbyName == "" {
 		return errors.New("lobby name cannot be blank")
 	}
+
+	lobby := &Lobby{name: lobbyName, registry: registry, lock: sync.RWMutex{}}
+
+	logger := log.Default()
+	if !onlyLobbyOnServer {
+		logger = logger.With(slog.String("lobby", lobbyName))
+	}
+	lobby.log = logger
+
+	board, boardInfo, err := boardconfig.ReadBoardFromConfigFile(boardID)
+	if err != nil {
+		return wrap.Error(err, "failed to read board from config file")
+	}
+
+	game := game.New(board, boardInfo, lobby, lobby.log)
+	lobby.game = game
+	lobby.players = make([]*Player, 0, len(game.Factions))
 
 	registry.lock.Lock()
 	defer registry.lock.Unlock()
@@ -52,14 +78,12 @@ func (registry *LobbyRegistry) RemoveLobby(lobbyName string) {
 	registry.lock.Lock()
 	defer registry.lock.Unlock()
 
-	remainingLobbies := make([]*Lobby, 0, cap(registry.lobbies))
-	for _, lobby := range registry.lobbies {
-		if lobby.name != lobbyName {
-			remainingLobbies = append(remainingLobbies, lobby)
+	for i, lobby := range registry.lobbies {
+		if lobby.name == lobbyName {
+			registry.lobbies = slices.Delete(registry.lobbies, i, i+1)
+			return
 		}
 	}
-
-	registry.lobbies = remainingLobbies
 }
 
 type LobbyInfo struct {

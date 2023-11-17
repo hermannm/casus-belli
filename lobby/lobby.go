@@ -3,16 +3,13 @@ package lobby
 import (
 	"errors"
 	"fmt"
-	"log/slog"
 	"slices"
 	"sync"
 
 	"github.com/gorilla/websocket"
 	"hermannm.dev/bfh-server/game"
-	"hermannm.dev/bfh-server/game/boardconfig"
 	"hermannm.dev/condqueue"
 	"hermannm.dev/devlog/log"
-	"hermannm.dev/wrap"
 )
 
 // A collection of players for a game.
@@ -22,29 +19,9 @@ type Lobby struct {
 	game             *game.Game
 	gameStarted      bool // Must hold lock to access safely.
 	gameMessageQueue *condqueue.CondQueue[ReceivedMessage]
+	registry         *LobbyRegistry
 	lock             sync.RWMutex
 	log              log.Logger
-}
-
-func New(lobbyName string, boardID string, onlyLobbyOnServer bool) (*Lobby, error) {
-	lobby := &Lobby{name: lobbyName, lock: sync.RWMutex{}}
-
-	logger := log.Default()
-	if !onlyLobbyOnServer {
-		logger = logger.With(slog.String("lobby", lobbyName))
-	}
-	lobby.log = logger
-
-	board, boardInfo, err := boardconfig.ReadBoardFromConfigFile(boardID)
-	if err != nil {
-		return nil, wrap.Error(err, "failed to read board from config file")
-	}
-	game := game.New(board, boardInfo, lobby, lobby.log)
-
-	lobby.game = game
-	lobby.players = make([]*Player, 0, len(game.Factions))
-
-	return lobby, nil
 }
 
 func (lobby *Lobby) getPlayer(faction game.PlayerFaction) (player *Player, foundPlayer bool) {
@@ -109,7 +86,7 @@ func (lobby *Lobby) isUsernameTaken(username string) bool {
 	return false
 }
 
-func (lobby *Lobby) Close() error {
+func (lobby *Lobby) Close() {
 	lobby.lock.Lock()
 	defer lobby.lock.Unlock()
 
@@ -124,8 +101,9 @@ func (lobby *Lobby) Close() error {
 		player.lock.Unlock()
 	}
 
+	lobby.registry.RemoveLobby(lobby.name)
+
 	lobby.log.Info("lobby closed")
-	return nil
 }
 
 func (lobby *Lobby) ClearMessages() {
@@ -151,7 +129,11 @@ func (lobby *Lobby) startGame() error {
 
 	lobby.log.Info("starting game")
 	lobby.gameStarted = true
-	go lobby.game.Run()
+
+	go func() {
+		lobby.game.Run() // Runs until game is finished
+		lobby.Close()
+	}()
 
 	return nil
 }

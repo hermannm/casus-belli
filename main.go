@@ -107,13 +107,7 @@ func createLobby(selectedBoardID string, lobbyRegistry *lobby.LobbyRegistry) {
 		scanner.Scan()
 		lobbyName = scanner.Text()
 
-		lobby, err := lobby.New(lobbyName, selectedBoardID, true)
-		if err != nil {
-			fmt.Printf("Got error: '%s', try again!\n", err.Error())
-			continue
-		}
-
-		if err := lobbyRegistry.RegisterLobby(lobby); err != nil {
+		if err := lobbyRegistry.CreateLobby(lobbyName, selectedBoardID, true); err != nil {
 			fmt.Printf("Got error: '%s', try again!\n", err.Error())
 			continue
 		}
