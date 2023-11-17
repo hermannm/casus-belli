@@ -179,8 +179,7 @@ func (expected ExpectedControl) check(board game.Board, t *testing.T) {
 
 type MockMessenger struct{}
 
-func (MockMessenger) SendError(to game.PlayerFaction, err error) {
-}
+func (MockMessenger) SendError(to game.PlayerFaction, err error) {}
 
 func (MockMessenger) SendOrderRequest(to game.PlayerFaction) error {
 	return nil
@@ -224,3 +223,5 @@ func (MockMessenger) SendBattleResults(battles []game.Battle) error {
 func (MockMessenger) SendWinner(winner game.PlayerFaction) error {
 	return nil
 }
+
+func (MockMessenger) ClearMessages() {}

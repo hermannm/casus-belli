@@ -128,6 +128,10 @@ func (lobby *Lobby) Close() error {
 	return nil
 }
 
+func (lobby *Lobby) ClearMessages() {
+	lobby.gameMessageQueue.Clear()
+}
+
 // Errors if not all player factions are selected.
 func (lobby *Lobby) startGame() error {
 	lobby.lock.Lock()

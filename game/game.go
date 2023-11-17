@@ -50,6 +50,7 @@ type Messenger interface {
 	) (supported PlayerFaction, err error)
 	SendBattleResults(battles []Battle) error
 	SendWinner(winner PlayerFaction) error
+	ClearMessages()
 }
 
 func New(
@@ -97,6 +98,7 @@ func (game *Game) Run() {
 func (game *Game) NextRound() {
 	game.season = game.season.Next()
 
+	game.messenger.ClearMessages()
 	game.Board.clearOrders()
 	game.resolving.Clear()
 	game.resolved.Clear()
