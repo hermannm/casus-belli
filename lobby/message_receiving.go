@@ -82,19 +82,6 @@ func (player *Player) handleLobbyMessage(
 		if err := lobby.SendPlayerStatusMessage(player); err != nil {
 			return wrap.Error(err, "failed to update other players about faction selection")
 		}
-	case MessageTagReady:
-		var message ReadyToStartGameMessage
-		if err := json.Unmarshal(rawMessage, &message); err != nil {
-			return wrap.Error(err, "failed to parse message")
-		}
-
-		if err := player.setReadyToStartGame(message.Ready); err != nil {
-			return wrap.Error(err, "failed to set ready status")
-		}
-
-		if err := lobby.SendPlayerStatusMessage(player); err != nil {
-			return wrap.Error(err, "failed to update other players about ready status")
-		}
 	case MessageTagStartGame:
 		if err := lobby.startGame(); err != nil {
 			return wrap.Error(err, "failed to start game")

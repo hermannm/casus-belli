@@ -23,9 +23,8 @@ type ErrorMessage struct {
 
 // Message sent from server to all clients when a player's status changes.
 type PlayerStatusMessage struct {
-	Username         Username
-	SelectedFaction  *game.PlayerFaction `json:",omitempty"`
-	ReadyToStartGame bool
+	Username        Username
+	SelectedFaction *game.PlayerFaction `json:",omitempty"`
 }
 
 // Message sent to a player when they join a lobby, to inform them about the game and other players.
@@ -39,14 +38,8 @@ type SelectFactionMessage struct {
 	Faction game.PlayerFaction
 }
 
-// Message sent from client to mark themselves as ready to start the game.
-// Requires that faction has been selected.
-type ReadyToStartGameMessage struct {
-	Ready bool
-}
-
 // Message sent from a player when the lobby wants to start the game.
-// Requires that all players are ready.
+// Requires that all players have selected a faction.
 type StartGameMessage struct{}
 
 // Message sent from server when asking a supporting player who to support in an embattled region.
@@ -102,7 +95,6 @@ const (
 	MessageTagPlayerStatus
 	MessageTagLobbyJoined
 	MessageTagSelectFaction
-	MessageTagReady
 	MessageTagStartGame
 	MessageTagSupportRequest
 	MessageTagOrderRequest
@@ -119,7 +111,6 @@ var messageTags = enumnames.NewMap(map[MessageTag]string{
 	MessageTagPlayerStatus:       "PlayerStatus",
 	MessageTagLobbyJoined:        "LobbyJoined",
 	MessageTagSelectFaction:      "SelectFaction",
-	MessageTagReady:              "Ready",
 	MessageTagStartGame:          "StartGame",
 	MessageTagSupportRequest:     "SupportRequest",
 	MessageTagOrderRequest:       "OrderRequest",

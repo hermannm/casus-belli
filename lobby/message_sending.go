@@ -75,9 +75,8 @@ func (player *Player) SendLobbyJoinedMessage(lobby *Lobby) error {
 		statuses = append(
 			statuses,
 			PlayerStatusMessage{
-				Username:         player.username,
-				SelectedFaction:  faction,
-				ReadyToStartGame: player.readyToStartGame,
+				Username:        player.username,
+				SelectedFaction: faction,
 			},
 		)
 
@@ -101,9 +100,8 @@ func (lobby *Lobby) SendPlayerStatusMessage(player *Player) error {
 	player.lock.RLock()
 
 	statusMsg := PlayerStatusMessage{
-		Username:         player.username,
-		SelectedFaction:  nil,
-		ReadyToStartGame: player.readyToStartGame,
+		Username:        player.username,
+		SelectedFaction: nil,
 	}
 	if player.gameFaction != "" {
 		faction := player.gameFaction

@@ -1,7 +1,6 @@
 package lobby
 
 import (
-	"errors"
 	"fmt"
 	"log/slog"
 	"slices"
@@ -19,22 +18,19 @@ type Player struct {
 	socket *websocket.Conn
 	// Blank until selected. Must hold lock to access safely before the game has started.
 	gameFaction game.PlayerFaction
-	// Must hold lock to access safely.
-	readyToStartGame bool
-	lock             sync.RWMutex
-	log              log.Logger
+	lock        sync.RWMutex
+	log         log.Logger
 }
 
 type Username string
 
 func newPlayer(username Username, socket *websocket.Conn, lobbyLogger log.Logger) *Player {
 	return &Player{
-		username:         username,
-		socket:           socket,
-		gameFaction:      "",
-		readyToStartGame: false,
-		lock:             sync.RWMutex{},
-		log:              lobbyLogger.With(slog.Any("player", username)),
+		username:    username,
+		socket:      socket,
+		gameFaction: "",
+		lock:        sync.RWMutex{},
+		log:         lobbyLogger.With(slog.Any("player", username)),
 	}
 }
 
@@ -70,17 +66,5 @@ func (player *Player) selectFaction(faction game.PlayerFaction, lobby *Lobby) er
 	defer player.lock.Unlock()
 
 	player.gameFaction = faction
-	return nil
-}
-
-func (player *Player) setReadyToStartGame(ready bool) error {
-	player.lock.Lock()
-	defer player.lock.Unlock()
-
-	if ready && player.gameFaction == "" {
-		return errors.New("must select game faction before setting ready status")
-	}
-
-	player.readyToStartGame = ready
 	return nil
 }
