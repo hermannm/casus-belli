@@ -75,21 +75,9 @@ func (player *Player) setReadyToStartGame(ready bool) error {
 	defer player.lock.Unlock()
 
 	if ready && player.gameFaction == "" {
-		return errors.New("must select game ID before setting ready status")
+		return errors.New("must select game faction before setting ready status")
 	}
 
 	player.readyToStartGame = ready
 	return nil
-}
-
-// Returns the player's username, along with the player's game ID if it is set.
-func (player *Player) String() string {
-	player.lock.RLock()
-	defer player.lock.RUnlock()
-
-	if player.gameFaction == "" {
-		return fmt.Sprintf("'%s'", player.username)
-	} else {
-		return fmt.Sprintf("'%s' (%s)", player.username, player.gameFaction)
-	}
 }

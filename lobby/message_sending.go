@@ -14,9 +14,9 @@ func (player *Player) sendMessage(message Message) error {
 	if err := player.socket.WriteJSON(message); err != nil {
 		return wrap.Errorf(
 			err,
-			"failed to send message of type '%s' to player %s",
+			"failed to send message of type '%s' to player '%s'",
 			message.Tag,
-			player.String(),
+			player.username,
 		)
 	}
 
@@ -91,7 +91,7 @@ func (player *Player) SendLobbyJoinedMessage(lobby *Lobby) error {
 			PlayerStatuses:     statuses,
 		},
 	}); err != nil {
-		return wrap.Errorf(err, "failed to send lobby joined message to player %s", player.String())
+		return err
 	}
 
 	return nil

@@ -127,10 +127,10 @@ func (lobby *Lobby) Close() error {
 	return nil
 }
 
-// Errors if not all game IDs are selected, or if not all players are ready yet.
+// Errors if not all player factions are selected, or if not all players are ready yet.
 func (lobby *Lobby) startGame() error {
-	lobby.lock.RLock()
-	defer lobby.lock.RUnlock()
+	lobby.lock.Lock()
+	defer lobby.lock.Unlock()
 
 	claimedFactions := 0
 	readyPlayers := 0
@@ -149,7 +149,7 @@ func (lobby *Lobby) startGame() error {
 	}
 
 	if claimedFactions < len(lobby.game.Factions) {
-		return errors.New("all game IDs must be claimed before starting the game")
+		return errors.New("all player factions must be claimed before starting the game")
 	}
 	if readyPlayers < len(lobby.players) {
 		return errors.New("all players must mark themselves as ready before starting the game")
