@@ -14,26 +14,24 @@ import (
 
 // A player connected to a game lobby.
 type Player struct {
-	username            Username
-	gameMessageReceiver GameMessageReceiver
-	socket              *websocket.Conn    // Must hold lock to access safely.
-	gameFaction         game.PlayerFaction // Must hold lock to access safely. Blank until selected.
-	readyToStartGame    bool               // Must hold lock to access safely.
-	lock                sync.RWMutex
-	log                 log.Logger
+	username         Username
+	socket           *websocket.Conn    // Must hold lock to access safely.
+	gameFaction      game.PlayerFaction // Must hold lock to access safely. Blank until selected.
+	readyToStartGame bool               // Must hold lock to access safely.
+	lock             sync.RWMutex
+	log              log.Logger
 }
 
 type Username string
 
 func newPlayer(username Username, socket *websocket.Conn, lobbyLogger log.Logger) *Player {
 	return &Player{
-		username:            username,
-		gameMessageReceiver: newGameMessageReceiver(),
-		socket:              socket,
-		gameFaction:         "",
-		readyToStartGame:    false,
-		lock:                sync.RWMutex{},
-		log:                 lobbyLogger.With(slog.Any("player", username)),
+		username:         username,
+		socket:           socket,
+		gameFaction:      "",
+		readyToStartGame: false,
+		lock:             sync.RWMutex{},
+		log:              lobbyLogger.With(slog.Any("player", username)),
 	}
 }
 

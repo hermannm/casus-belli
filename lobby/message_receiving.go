@@ -8,15 +8,13 @@ import (
 
 	"github.com/gorilla/websocket"
 	"hermannm.dev/bfh-server/game"
-	"hermannm.dev/condqueue"
 	"hermannm.dev/wrap"
 )
 
 func (player *Player) readMessagesUntilSocketCloses(lobby *Lobby) {
 	for {
-		socketIsClosed, err := player.readMessage(lobby)
-
-		if socketIsClosed {
+		socketClosed, err := player.readMessage(lobby)
+		if socketClosed {
 			player.log.ErrorCause(err, "socket closed, removing from lobby")
 			lobby.RemovePlayer(player.username)
 			return
@@ -27,7 +25,7 @@ func (player *Player) readMessagesUntilSocketCloses(lobby *Lobby) {
 	}
 }
 
-func (player *Player) readMessage(lobby *Lobby) (socketIsClosed bool, err error) {
+func (player *Player) readMessage(lobby *Lobby) (socketClosed bool, err error) {
 	// Reads from socket without holding lock, as this should be the only goroutine calling this.
 	// Websocket supports 1 concurrent reader and 1 concurrent writer, so this should be safe.
 	// See https://pkg.go.dev/github.com/gorilla/websocket#hdr-Concurrency
@@ -49,126 +47,112 @@ func (player *Player) readMessage(lobby *Lobby) (socketIsClosed bool, err error)
 		return false, wrap.Error(err, "failed to parse received message")
 	}
 
-	isLobbyMessage, err := player.handleLobbyMessage(message.Tag, message.Data, lobby)
-	if err != nil {
+	if err := player.handleMessage(message.Tag, message.Data, lobby); err != nil {
 		return false, wrap.Errorf(err, "failed to handle message of type '%s'", message.Tag)
-	}
-
-	if !isLobbyMessage {
-		player.lock.RLock()
-		hasFaction := player.gameFaction != ""
-		player.lock.RUnlock()
-
-		if hasFaction {
-			// Launch in new goroutine, so it can send on channels while this goroutine keeps
-			// reading messages
-			go player.handleGameMessage(message.Tag, message.Data)
-		} else {
-			return false, fmt.Errorf(
-				"received game message of type '%s' before player's game ID was set",
-				message.Tag,
-			)
-		}
 	}
 
 	return false, nil
 }
 
-func (player *Player) handleLobbyMessage(
+func (player *Player) handleMessage(
 	messageTag MessageTag,
 	rawMessage json.RawMessage,
 	lobby *Lobby,
-) (isLobbyMessage bool, err error) {
+) error {
 	switch messageTag {
 	case MessageTagSelectFaction:
 		var message SelectFactionMessage
 		if err := json.Unmarshal(rawMessage, &message); err != nil {
-			return true, wrap.Error(err, "failed to parse message")
+			return wrap.Error(err, "failed to parse message")
 		}
 
 		if err := player.selectFaction(message.Faction, lobby); err != nil {
-			return true, wrap.Error(err, "failed to select game ID")
+			return wrap.Error(err, "failed to select faction")
 		}
 
 		if err := lobby.SendPlayerStatusMessage(player); err != nil {
-			return true, wrap.Error(err, "failed to update other players about game ID selection")
+			return wrap.Error(err, "failed to update other players about faction selection")
 		}
-
-		return true, nil
 	case MessageTagReady:
 		var message ReadyToStartGameMessage
 		if err := json.Unmarshal(rawMessage, &message); err != nil {
-			return true, wrap.Error(err, "failed to parse message")
+			return wrap.Error(err, "failed to parse message")
 		}
 
 		if err := player.setReadyToStartGame(message.Ready); err != nil {
-			return true, wrap.Error(err, "failed to set ready status")
+			return wrap.Error(err, "failed to set ready status")
 		}
 
 		if err := lobby.SendPlayerStatusMessage(player); err != nil {
-			return true, wrap.Error(err, "failed to update other players about ready status")
+			return wrap.Error(err, "failed to update other players about ready status")
 		}
-
-		return true, nil
 	case MessageTagStartGame:
 		if err := lobby.startGame(); err != nil {
-			return true, wrap.Error(err, "failed to start game")
+			return wrap.Error(err, "failed to start game")
 		}
-
-		return true, nil
-	default:
-		return false, nil
+	default: // The message should now be a game message
+		if err := player.handleGameMessage(messageTag, rawMessage, lobby); err != nil {
+			return err
+		}
 	}
+
+	return nil
 }
 
-type GameMessageReceiver struct {
-	orders   chan SubmitOrdersMessage
-	supports *condqueue.CondQueue[GiveSupportMessage]
-}
+func (player *Player) handleGameMessage(
+	messageTag MessageTag,
+	rawMessage json.RawMessage,
+	lobby *Lobby,
+) error {
+	player.lock.RLock()
+	playerFaction := player.gameFaction
+	player.lock.RUnlock()
 
-func newGameMessageReceiver() GameMessageReceiver {
-	return GameMessageReceiver{
-		orders:   make(chan SubmitOrdersMessage),
-		supports: condqueue.New[GiveSupportMessage](),
+	if playerFaction == "" {
+		return errors.New("received game message before player selected faction")
 	}
-}
 
-func (player *Player) handleGameMessage(tag MessageTag, rawMessage json.RawMessage) {
-	var err error // Error declared here in order to handle it after the switch
-
-	switch tag {
+	var messageData any
+	switch messageTag {
 	case MessageTagSubmitOrders:
 		var message SubmitOrdersMessage
-		if err = json.Unmarshal(rawMessage, &message); err == nil {
-			player.gameMessageReceiver.orders <- message
+		if err := json.Unmarshal(rawMessage, &message); err != nil {
+			return wrap.Error(err, "failed to parse message")
 		}
+		messageData = message
 	case MessageTagGiveSupport:
 		var message GiveSupportMessage
-		if err = json.Unmarshal(rawMessage, &message); err == nil {
-			player.gameMessageReceiver.supports.Add(message)
+		if err := json.Unmarshal(rawMessage, &message); err != nil {
+			return wrap.Error(err, "failed to parse message")
 		}
+		messageData = message
 	default:
-		err = errors.New("unrecognized message type")
+		return fmt.Errorf("unrecognized message tag '%d'", messageTag)
 	}
 
-	if err != nil {
-		err = wrap.Errorf(err, "failed to parse message of type '%s'", tag)
-		player.log.Error(err)
-		player.SendError(err)
-	}
+	lobby.receivedMessages.Add(
+		ReceivedMessage{Tag: messageTag, Data: messageData, ReceivedFrom: playerFaction},
+	)
+	return nil
 }
 
 func (lobby *Lobby) AwaitOrders(from game.PlayerFaction) ([]game.Order, error) {
-	player, ok := lobby.getPlayer(from)
-	if !ok {
-		return nil, fmt.Errorf(
-			"failed to get order message from player '%s': player not found",
-			from,
-		)
+	message, err := lobby.receivedMessages.AwaitMatchingItem(
+		context.Background(),
+		func(message ReceivedMessage) bool {
+			return message.ReceivedFrom == from && message.Tag == MessageTagSubmitOrders
+		},
+	)
+	if err != nil {
+		return nil, err
 	}
 
-	orders := <-player.gameMessageReceiver.orders
-	return orders.Orders, nil
+	messageData, ok := message.Data.(SubmitOrdersMessage)
+	if !ok {
+		return nil, errors.New("failed to cast message to SubmitOrdersMessage")
+	}
+
+	return messageData.Orders, nil
 }
 
 func (lobby *Lobby) AwaitSupport(
@@ -176,20 +160,23 @@ func (lobby *Lobby) AwaitSupport(
 	supporting game.RegionName,
 	embattled game.RegionName,
 ) (supported game.PlayerFaction, err error) {
-	player, ok := lobby.getPlayer(from)
-	if !ok {
-		return "", fmt.Errorf(
-			"failed to get support message from player '%s' in region '%s': player not found",
-			from,
-			supporting,
-		)
-	}
+	ctx, cancel := context.WithCancelCause(context.Background())
 
-	supportMessage, err := player.gameMessageReceiver.supports.AwaitMatchingItem(
-		context.Background(), // TODO: implement timeout/cancellation
-		func(candidate GiveSupportMessage) bool {
-			return candidate.SupportingRegion == supporting &&
-				candidate.EmbattledRegion == embattled
+	message, err := lobby.receivedMessages.AwaitMatchingItem(
+		ctx,
+		func(message ReceivedMessage) bool {
+			if message.ReceivedFrom != from || message.Tag != MessageTagGiveSupport {
+				return false
+			}
+
+			messageData, ok := message.Data.(GiveSupportMessage)
+			if !ok {
+				cancel(errors.New("failed to cast message to GiveSupportMessage"))
+				return false
+			}
+
+			return messageData.SupportingRegion == supporting &&
+				messageData.EmbattledRegion == embattled
 		},
 	)
 	if err != nil {
@@ -201,8 +188,9 @@ func (lobby *Lobby) AwaitSupport(
 		)
 	}
 
-	if supportMessage.SupportedFaction != nil {
-		supported = *supportMessage.SupportedFaction
+	messageData := message.Data.(GiveSupportMessage) // Already checked inside AwaitMatchingItem
+	if messageData.SupportedFaction != nil {
+		supported = *messageData.SupportedFaction
 	}
 
 	return supported, nil

@@ -10,6 +10,12 @@ type Message struct {
 	Data any
 }
 
+type ReceivedMessage struct {
+	Tag          MessageTag
+	Data         any
+	ReceivedFrom game.PlayerFaction
+}
+
 // Message sent from server when an error occurs.
 type ErrorMessage struct {
 	Error string

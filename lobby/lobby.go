@@ -10,17 +10,19 @@ import (
 	"github.com/gorilla/websocket"
 	"hermannm.dev/bfh-server/game"
 	"hermannm.dev/bfh-server/game/boardconfig"
+	"hermannm.dev/condqueue"
 	"hermannm.dev/devlog/log"
 	"hermannm.dev/wrap"
 )
 
 // A collection of players for a game.
 type Lobby struct {
-	name    string
-	game    *game.Game
-	players []*Player // Must hold lock to access safely.
-	lock    sync.RWMutex
-	log     log.Logger
+	name             string
+	game             *game.Game
+	players          []*Player // Must hold lock to access safely
+	receivedMessages *condqueue.CondQueue[ReceivedMessage]
+	lock             sync.RWMutex
+	log              log.Logger
 }
 
 func New(lobbyName string, boardID string, onlyLobbyOnServer bool) (*Lobby, error) {
