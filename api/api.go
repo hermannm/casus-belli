@@ -105,7 +105,7 @@ func (api LobbyAPI) JoinLobby(res http.ResponseWriter, req *http.Request) {
 }
 
 // Endpoint for creating lobbies (for servers with public lobby creation enabled).
-// Expects query parameters "lobbyName" and "gameName".
+// Expects query parameters "lobbyName" and "boardID".
 func (api LobbyAPI) CreateLobby(res http.ResponseWriter, req *http.Request) {
 	query := req.URL.Query()
 
@@ -115,13 +115,13 @@ func (api LobbyAPI) CreateLobby(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	gameName, err := getQueryParam(query, "gameName")
+	boardID, err := getQueryParam(query, "boardID")
 	if err != nil {
 		sendClientError(res, err)
 		return
 	}
 
-	if err := api.lobbyRegistry.CreateLobby(lobbyName, gameName, false); err != nil {
+	if err := api.lobbyRegistry.CreateLobby(lobbyName, boardID, false); err != nil {
 		err = wrap.Error(err, "failed to create lobby")
 		sendServerError(res, err)
 		log.Error(err)
