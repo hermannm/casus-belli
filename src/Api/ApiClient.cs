@@ -28,7 +28,7 @@ public partial class ApiClient : Node
     public LobbyInfo? Lobby { get; private set; }
     public bool HasJoinedLobby => Lobby != null;
 
-    private readonly HttpClient _httpClient = new();
+    private HttpClient? _httpClient = null;
     private readonly ClientWebSocket _websocket = new();
     private readonly CancellationTokenSource _cancellation = new();
     private readonly MessageSender _messageSender;
@@ -93,6 +93,7 @@ public partial class ApiClient : Node
         }
 
         ServerUrl = parsedUrl;
+        _httpClient = new HttpClient();
         _httpClient.BaseAddress = ServerUrl;
         return true;
     }
@@ -103,7 +104,7 @@ public partial class ApiClient : Node
     public Task Disconnect()
     {
         ServerUrl = null;
-        _httpClient.BaseAddress = null;
+        _httpClient = null;
         return HasJoinedLobby ? LeaveLobby() : Task.CompletedTask;
     }
 
@@ -138,7 +139,7 @@ public partial class ApiClient : Node
         List<LobbyInfo>? lobbies;
         try
         {
-            lobbies = await _httpClient.GetFromJsonAsync<List<LobbyInfo>>("/lobbies");
+            lobbies = await _httpClient!.GetFromJsonAsync<List<LobbyInfo>>("/lobbies");
         }
         catch (Exception e)
         {
