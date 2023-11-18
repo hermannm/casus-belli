@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strings"
 
+	"golang.org/x/sync/errgroup"
 	"hermannm.dev/bfh-server/game"
 	"hermannm.dev/set"
 	"hermannm.dev/wrap"
@@ -144,6 +145,9 @@ func ReadBoardFromConfigFile(boardID string) (game.Board, game.BoardInfo, error)
 type PartialJSONBoard struct {
 	Name               string
 	WinningCastleCount int
+	Nations            map[string][]struct {
+		HomeFaction string
+	}
 }
 
 func GetAvailableBoards() ([]game.BoardInfo, error) {
@@ -152,33 +156,55 @@ func GetAvailableBoards() ([]game.BoardInfo, error) {
 		return nil, wrap.Error(err, "failed to read config file directory")
 	}
 
-	availableBoards := make([]game.BoardInfo, 0, len(directory))
+	availableBoards := make([]game.BoardInfo, len(directory))
+	var goroutines errgroup.Group
 
-	for _, directoryEntry := range directory {
-		fullName := directoryEntry.Name()
-		baseName, isJson := strings.CutSuffix(fullName, ".json")
-		if !isJson {
-			continue
-		}
+	for i, directoryEntry := range directory {
+		i, directoryEntry := i, directoryEntry // Avoids mutating loop variables
 
-		content, err := boardConfigFiles.ReadFile(fullName)
-		if err != nil {
-			return nil, wrap.Errorf(err, "failed to read config file '%s'", fullName)
-		}
+		goroutines.Go(func() error {
+			fullName := directoryEntry.Name()
+			baseName, isJson := strings.CutSuffix(fullName, ".json")
+			if !isJson {
+				return errors.New("non-JSON board config file found")
+			}
 
-		var board PartialJSONBoard
-		if err := json.Unmarshal(content, &board); err != nil {
-			return nil, wrap.Error(err, "failed to parse board config file")
-		}
+			file, err := boardConfigFiles.Open(fullName)
+			if err != nil {
+				return wrap.Errorf(err, "failed to read config file '%s'", fullName)
+			}
 
-		boardInfo := game.BoardInfo{
-			ID:                 baseName,
-			Name:               board.Name,
-			WinningCastleCount: board.WinningCastleCount,
-			PlayerFactions:     make([]game.PlayerFaction, 0),
-		}
+			var board PartialJSONBoard
+			if err := json.NewDecoder(file).Decode(&board); err != nil {
+				return wrap.Errorf(err, "failed to parse board config file '%s'", fullName)
+			}
 
-		availableBoards = append(availableBoards, boardInfo)
+			var factions set.ArraySet[game.PlayerFaction]
+			for _, regions := range board.Nations {
+				for _, region := range regions {
+					if region.HomeFaction != "" {
+						factions.Add(game.PlayerFaction(region.HomeFaction))
+					}
+				}
+			}
+			if factions.Size() == 0 {
+				return fmt.Errorf("found no playable factions in board config file '%s'", fullName)
+			}
+
+			boardInfo := game.BoardInfo{
+				ID:                 baseName,
+				Name:               board.Name,
+				WinningCastleCount: board.WinningCastleCount,
+				PlayerFactions:     factions.ToSlice(),
+			}
+
+			availableBoards[i] = boardInfo
+			return nil
+		})
+	}
+
+	if err := goroutines.Wait(); err != nil {
+		return nil, err
 	}
 
 	return availableBoards, nil

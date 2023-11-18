@@ -33,6 +33,8 @@ github.com/stretchr/testify v1.7.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/
 github.com/stretchr/testify v1.8.0/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO+kdMU+MU=
 github.com/stretchr/testify v1.8.4 h1:CcVxjf3Q8PM0mHUKJCdn+eZZtm5yQwehR5yeSVQQcUk=
 github.com/stretchr/testify v1.8.4/go.mod h1:sz/lmYIOXD/1dqDmKjjqLyZ2RngseejIcXlSw2iwfAo=
+golang.org/x/sync v0.5.0 h1:60k92dhOjHxJkrqnwsfl8KuaHbn/5dl0lUPUklKo3qE=
+golang.org/x/sync v0.5.0/go.mod h1:Czt+wKu1gCyEFDUtn0jG5QVvpJ6rzVqr5aXyt9drQfk=
 golang.org/x/sys v0.0.0-20190222072716-a9d3bda3a223/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/sys v0.0.0-20191026070338-33540a1f6037/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20211110154304-99a53858aa08/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
@@ -46,14 +48,8 @@ gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8
 gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
 gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
 gopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
-hermannm.dev/condqueue v0.2.0 h1:mA0jduUbh9AvfLD8Qrwcxg03BQ3C2YuMQsByXOS7Dh0=
-hermannm.dev/condqueue v0.2.0/go.mod h1:Y6kOU4U4l260cnsl8azxvj35D7kx7223HZY1ZJ3qsOA=
 hermannm.dev/condqueue v0.2.1 h1:m6BqZ7mgrZQvKstR14udZ4V4yDRQlDdlHtAFRLTN2hc=
 hermannm.dev/condqueue v0.2.1/go.mod h1:Y6kOU4U4l260cnsl8azxvj35D7kx7223HZY1ZJ3qsOA=
-hermannm.dev/devlog v0.3.0 h1:KODlr3TjKEM60Kb9bxTa++MPE9Hxlu5/nYZc9DpSnx8=
-hermannm.dev/devlog v0.3.0/go.mod h1:GZOMC2V1GutRWWlre21AScHju48/KompKih1Bs21gRg=
-hermannm.dev/devlog v0.3.1 h1:FQ+v+U2ppxocHUN3C/nhRe18Ocm/WCg88Dlhm9fns3o=
-hermannm.dev/devlog v0.3.1/go.mod h1:GZOMC2V1GutRWWlre21AScHju48/KompKih1Bs21gRg=
 hermannm.dev/devlog v0.3.2 h1:XGj8UwWPP8VGG7feOUkq1xeDIXrPzTc+lPGMrFNtkFE=
 hermannm.dev/devlog v0.3.2/go.mod h1:GZOMC2V1GutRWWlre21AScHju48/KompKih1Bs21gRg=
 hermannm.dev/enumnames v0.1.0 h1:ee68fLY7VCsO3Oj4pt4rXL+yQDMGOoEigqN4Gti2baY=
