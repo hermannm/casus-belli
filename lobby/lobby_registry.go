@@ -87,8 +87,9 @@ func (registry *LobbyRegistry) removeLobby(lobbyName string) {
 }
 
 type LobbyInfo struct {
-	Name      string
-	BoardInfo game.BoardInfo
+	Name        string
+	PlayerCount int
+	BoardInfo   game.BoardInfo
 }
 
 func (registry *LobbyRegistry) ListLobbies() []LobbyInfo {
@@ -97,7 +98,14 @@ func (registry *LobbyRegistry) ListLobbies() []LobbyInfo {
 
 	lobbyList := make([]LobbyInfo, 0, len(registry.lobbies))
 	for _, lobby := range registry.lobbies {
-		lobbyList = append(lobbyList, LobbyInfo{Name: lobby.name, BoardInfo: lobby.game.BoardInfo})
+		lobby.lock.RLock()
+		playerCount := len(lobby.players)
+		lobby.lock.RUnlock()
+
+		lobbyList = append(
+			lobbyList,
+			LobbyInfo{Name: lobby.name, PlayerCount: playerCount, BoardInfo: lobby.game.BoardInfo},
+		)
 	}
 
 	return lobbyList
