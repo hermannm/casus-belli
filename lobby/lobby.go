@@ -123,7 +123,7 @@ func (lobby *Lobby) startGame() error {
 		}
 		player.lock.RUnlock()
 	}
-	if claimedFactions < len(lobby.game.Factions) {
+	if claimedFactions < len(lobby.game.PlayerFactions) {
 		return errors.New("all player factions must be claimed before starting the game")
 	}
 

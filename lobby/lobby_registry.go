@@ -59,7 +59,7 @@ func (registry *LobbyRegistry) CreateLobby(
 
 	game := game.New(board, boardInfo, lobby, lobby.log)
 	lobby.game = game
-	lobby.players = make([]*Player, 0, len(game.Factions))
+	lobby.players = make([]*Player, 0, len(game.PlayerFactions))
 
 	registry.lock.Lock()
 	defer registry.lock.Unlock()

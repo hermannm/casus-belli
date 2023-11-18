@@ -38,7 +38,7 @@ func (player *Player) selectFaction(faction game.PlayerFaction, lobby *Lobby) er
 	lobby.lock.RLock()
 	defer lobby.lock.RUnlock()
 
-	if !slices.Contains(lobby.game.Factions, faction) {
+	if !slices.Contains(lobby.game.PlayerFactions, faction) {
 		return fmt.Errorf("requested faction '%s' is invalid", faction)
 	}
 

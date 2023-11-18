@@ -1,9 +1,5 @@
 package game
 
-import (
-	"hermannm.dev/set"
-)
-
 type Board map[RegionName]Region
 
 type RegionName string
@@ -159,19 +155,6 @@ func (board Board) removeOrder(order Order) {
 
 		board[order.Destination] = destination
 	}
-}
-
-// Returns a list of the factions that players can use on this board.
-func (board Board) playerFactions() []PlayerFaction {
-	var factions set.ArraySet[PlayerFaction]
-
-	for _, region := range board {
-		if region.HomeFaction != "" {
-			factions.Add(region.HomeFaction)
-		}
-	}
-
-	return factions.ToSlice()
 }
 
 // Checks whether the region contains a unit.

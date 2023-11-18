@@ -86,7 +86,7 @@ func (player *Player) SendLobbyJoinedMessage(lobby *Lobby) error {
 	if err := player.sendMessage(Message{
 		Tag: MessageTagLobbyJoined,
 		Data: LobbyJoinedMessage{
-			SelectableFactions: lobby.game.Factions,
+			SelectableFactions: lobby.game.PlayerFactions,
 			PlayerStatuses:     statuses,
 		},
 	}); err != nil {

@@ -6,9 +6,8 @@ import (
 )
 
 type Game struct {
+	BoardInfo
 	Board     Board
-	BoardInfo BoardInfo
-	Factions  []PlayerFaction
 	messenger Messenger
 	log       log.Logger
 
@@ -26,6 +25,7 @@ type BoardInfo struct {
 	ID                 string
 	Name               string
 	WinningCastleCount int
+	PlayerFactions     []PlayerFaction
 }
 
 // A faction on the board (e.g. green/red/yellow units) controlled by a player.
@@ -62,7 +62,6 @@ func New(
 	return &Game{
 		Board:              board,
 		BoardInfo:          boardInfo,
-		Factions:           board.playerFactions(),
 		messenger:          messenger,
 		log:                logger,
 		season:             SeasonWinter,
@@ -324,7 +323,7 @@ func (game *Game) checkWinner() (winner PlayerFaction) {
 		}
 	}
 
-	if tie || highestCount < game.BoardInfo.WinningCastleCount {
+	if tie || highestCount < game.WinningCastleCount {
 		return ""
 	}
 

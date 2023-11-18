@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"hermannm.dev/bfh-server/game"
+	"hermannm.dev/set"
 	"hermannm.dev/wrap"
 )
 
@@ -63,19 +64,26 @@ func ReadBoardFromConfigFile(boardID string) (game.Board, game.BoardInfo, error)
 	}
 
 	board := make(game.Board)
+	var factions set.ArraySet[game.PlayerFaction]
 
 	for nation, regions := range jsonBoard.Nations {
 		for _, landRegion := range regions {
+			homeFaction := game.PlayerFaction(landRegion.HomeFaction)
+
 			region := game.Region{
 				Name:               game.RegionName(landRegion.Name),
 				Nation:             nation,
-				ControllingFaction: game.PlayerFaction(landRegion.HomeFaction),
-				HomeFaction:        game.PlayerFaction(landRegion.HomeFaction),
+				ControllingFaction: homeFaction,
+				HomeFaction:        homeFaction,
 				IsForest:           landRegion.Forest,
 				HasCastle:          landRegion.Castle,
 			}
 
 			board[region.Name] = region
+
+			if homeFaction != "" {
+				factions.Add(homeFaction)
+			}
 		}
 	}
 
@@ -117,10 +125,17 @@ func ReadBoardFromConfigFile(boardID string) (game.Board, game.BoardInfo, error)
 		)
 	}
 
+	if factions.Size() == 0 {
+		return game.Board{}, game.BoardInfo{}, errors.New(
+			"found no playable factions in board config",
+		)
+	}
+
 	boardInfo := game.BoardInfo{
 		ID:                 boardID,
 		Name:               jsonBoard.Name,
 		WinningCastleCount: jsonBoard.WinningCastleCount,
+		PlayerFactions:     factions.ToSlice(),
 	}
 
 	return board, boardInfo, nil
@@ -160,6 +175,7 @@ func GetAvailableBoards() ([]game.BoardInfo, error) {
 			ID:                 baseName,
 			Name:               board.Name,
 			WinningCastleCount: board.WinningCastleCount,
+			PlayerFactions:     make([]game.PlayerFaction, 0),
 		}
 
 		availableBoards = append(availableBoards, boardInfo)
