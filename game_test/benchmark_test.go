@@ -15,32 +15,32 @@ func BenchmarkBoardResolve(b *testing.B) {
 
 func setup() (*game.Game, []game.Order) {
 	units := map[game.RegionName]game.Unit{
-		"Emman": {Type: game.UnitFootman, Faction: "white"},
+		"Emman": {Type: game.UnitFootman, Faction: "White"},
 
-		"Lomone": {Type: game.UnitFootman, Faction: "green"},
-		"Lusía":  {Type: game.UnitFootman, Faction: "red"},
+		"Lomone": {Type: game.UnitFootman, Faction: "Green"},
+		"Lusía":  {Type: game.UnitFootman, Faction: "Red"},
 
-		"Gron":  {Type: game.UnitFootman, Faction: "white"},
-		"Gnade": {Type: game.UnitFootman, Faction: "black"},
+		"Gron":  {Type: game.UnitFootman, Faction: "White"},
+		"Gnade": {Type: game.UnitFootman, Faction: "Black"},
 
-		"Firril": {Type: game.UnitFootman, Faction: "black"},
+		"Firril": {Type: game.UnitFootman, Faction: "Black"},
 
-		"Ovo":       {Type: game.UnitFootman, Faction: "green"},
-		"Mare Elle": {Type: game.UnitShip, Faction: "green"},
+		"Ovo":       {Type: game.UnitFootman, Faction: "Green"},
+		"Mare Elle": {Type: game.UnitShip, Faction: "Green"},
 
-		"Winde":      {Type: game.UnitFootman, Faction: "green"},
-		"Mare Gond":  {Type: game.UnitShip, Faction: "green"},
-		"Mare Ovond": {Type: game.UnitShip, Faction: "green"},
-		"Mare Unna":  {Type: game.UnitShip, Faction: "black"},
+		"Winde":      {Type: game.UnitFootman, Faction: "Green"},
+		"Mare Gond":  {Type: game.UnitShip, Faction: "Green"},
+		"Mare Ovond": {Type: game.UnitShip, Faction: "Green"},
+		"Mare Unna":  {Type: game.UnitShip, Faction: "Black"},
 
-		"Tusser": {Type: game.UnitFootman, Faction: "white"},
-		"Tige":   {Type: game.UnitFootman, Faction: "black"},
+		"Tusser": {Type: game.UnitFootman, Faction: "White"},
+		"Tige":   {Type: game.UnitFootman, Faction: "Black"},
 
-		"Tond": {Type: game.UnitFootman, Faction: "green"},
+		"Tond": {Type: game.UnitFootman, Faction: "Green"},
 
-		"Leil":   {Type: game.UnitFootman, Faction: "red"},
-		"Limbol": {Type: game.UnitFootman, Faction: "green"},
-		"Worp":   {Type: game.UnitFootman, Faction: "yellow"},
+		"Leil":   {Type: game.UnitFootman, Faction: "Red"},
+		"Limbol": {Type: game.UnitFootman, Faction: "Green"},
+		"Worp":   {Type: game.UnitFootman, Faction: "Yellow"},
 	}
 
 	orders := []game.Order{

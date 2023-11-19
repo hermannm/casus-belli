@@ -15,13 +15,13 @@ func newMockGame() *game.Game {
 		{Name: "Lomone", IsForest: true},
 		{Name: "Limbol", IsForest: true},
 		{Name: "Leil"},
-		{Name: "Worp", IsForest: true, HomeFaction: "green", ControllingFaction: "green"},
+		{Name: "Worp", IsForest: true, HomeFaction: "Green", ControllingFaction: "Green"},
 		{
 			Name:               "Winde",
 			IsForest:           true,
 			HasCastle:          true,
-			HomeFaction:        "green",
-			ControllingFaction: "green",
+			HomeFaction:        "Green",
+			ControllingFaction: "Green",
 		},
 		{Name: "Ovo", IsForest: true},
 		{Name: "Mare Gond", IsSea: true},
@@ -38,8 +38,8 @@ func newMockGame() *game.Game {
 		{Name: "Gnade"},
 		{Name: "Gewel", IsForest: true, HasCastle: true},
 		{Name: "Mare Unna", IsSea: true},
-		{Name: "Emman", IsForest: true, HomeFaction: "black", ControllingFaction: "black"},
-		{Name: "Erren", HasCastle: true, HomeFaction: "black", ControllingFaction: "black"},
+		{Name: "Emman", IsForest: true, HomeFaction: "Black", ControllingFaction: "Black"},
+		{Name: "Erren", HasCastle: true, HomeFaction: "Black", ControllingFaction: "Black"},
 		{Name: "Mare Bøso", IsSea: true},
 	}
 
