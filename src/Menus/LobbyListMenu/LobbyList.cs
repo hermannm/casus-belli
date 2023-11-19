@@ -37,12 +37,22 @@ public partial class LobbyList : Node
             var lobbyListItem = _lobbyListItemScene.Instantiate();
 
             lobbyListItem.GetNode<Label>("%LobbyName").Text = lobby.Name;
-            lobbyListItem.GetNode<Label>("%GameName").Text = lobby.BoardInfo.Name;
-            lobbyListItem.GetNode<Button>("%JoinButton").Pressed += () =>
+            lobbyListItem.GetNode<Label>("%PlayerCount").Text =
+                $"{lobby.PlayerCount}/{lobby.BoardInfo.PlayerFactions.Count} players";
+
+            var joinButton = lobbyListItem.GetNode<Button>("%JoinButton");
+            if (lobby.PlayerCount < lobby.BoardInfo.PlayerFactions.Count)
             {
-                _lobbyToJoin = lobby;
-                _usernameInputPopup.PopupCentered();
-            };
+                joinButton.Pressed += () =>
+                {
+                    _lobbyToJoin = lobby;
+                    _usernameInputPopup.PopupCentered();
+                };
+            }
+            else
+            {
+                joinButton.Disabled = true;
+            }
 
             AddChild(lobbyListItem);
         }
