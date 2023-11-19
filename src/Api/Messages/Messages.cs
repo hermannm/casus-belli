@@ -46,7 +46,6 @@ public partial class PlayerStatusMessage : GodotObject, IReceivableMessage
 {
     public required string Username { get; set; }
     public string? SelectedFaction { get; set; }
-    public required bool ReadyToStartGame { get; set; }
 }
 
 /// <summary>
@@ -68,7 +67,7 @@ public partial class SelectFactionMessage : GodotObject, ISendableMessage
 
 /// <summary>
 /// Message sent from a player when the lobby wants to start the game.
-/// Requires that all players are ready.
+/// Requires that all players have selected a faction.
 /// </summary>
 public partial class StartGameMessage : GodotObject, ISendableMessage { }
 
