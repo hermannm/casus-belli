@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace Immerse.BfhClient.Api.Messages;
@@ -5,6 +6,7 @@ namespace Immerse.BfhClient.Api.Messages;
 public record struct LobbyInfo
 {
     public required string Name { get; set; }
+    public required int PlayerCount { get; set; }
     public required BoardInfo BoardInfo { get; set; }
 }
 
@@ -14,4 +16,5 @@ public record struct BoardInfo
     public required string Id { get; set; }
     public required string Name { get; set; }
     public required int WinningCastleCount { get; set; }
+    public required List<string> PlayerFactions { get; set; }
 }
