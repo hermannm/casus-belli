@@ -13,6 +13,7 @@ public partial class MessageDisplay : Node
 
     private ScrollContainer _scrollContainer = null!; // Set in _Ready
     private VBoxContainer _messageContainer = null!; // Set in _Ready
+    private const int MaxScrollContainerHeight = 1040; // 1080 - 2x20 margins
 
     public override void _EnterTree()
     {
@@ -43,10 +44,9 @@ public partial class MessageDisplay : Node
             stringBuilder.Append(' ');
             stringBuilder.Append(error);
         }
-
         label.Text = stringBuilder.ToString();
-        _messageContainer.CallDeferred(Strings.AddChild, errorMessageNode);
 
+        _messageContainer.CallDeferred(Strings.AddChild, errorMessageNode);
         button.Pressed += () =>
         {
             _messageContainer.CallDeferred(Strings.RemoveChild, errorMessageNode);
@@ -56,9 +56,9 @@ public partial class MessageDisplay : Node
     private void ResizeScrollContainer()
     {
         var newHeight = _messageContainer.Size.Y;
-        if (newHeight > 1040)
+        if (newHeight > MaxScrollContainerHeight)
         {
-            newHeight = 1040;
+            newHeight = MaxScrollContainerHeight;
         }
         _scrollContainer.Size = new Vector2(_scrollContainer.Size.X, newHeight);
     }
