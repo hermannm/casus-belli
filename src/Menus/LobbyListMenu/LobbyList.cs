@@ -79,6 +79,6 @@ public partial class LobbyList : Node
 
     private static void HandleLobbyJoinedMessage(LobbyJoinedMessage message)
     {
-        MessageDisplay.Instance.ShowError("Received lobby joined message!");
+        MessageDisplay.Instance.ShowInfo("Received lobby joined message!");
     }
 }

@@ -29,25 +29,41 @@ public partial class MessageDisplay : Node
 
     public void ShowError(string errorMessage, params string[] subErrors)
     {
-        var errorMessageNode = ResourceLoader.Load<PackedScene>(Scenes.ErrorMessage).Instantiate();
-        var label = errorMessageNode.GetNode<Label>("%ErrorMessageLabel");
-        var button = errorMessageNode.GetNode<TextureButton>("%CloseErrorButton");
+        ShowMessage(Scenes.ErrorMessage, "Error: ", errorMessage, subErrors);
+    }
+
+    public void ShowInfo(string infoMessage, params string[] subMessages)
+    {
+        ShowMessage(Scenes.InfoMessage, null, infoMessage, subMessages);
+    }
+
+    private void ShowMessage(string scene, string? prefix, string message, string[] subMessages)
+    {
+        var errorMessageNode = ResourceLoader.Load<PackedScene>(scene).Instantiate();
+        var label = errorMessageNode.GetNode<Label>("%MessageLabel");
+        var closeButton = errorMessageNode.GetNode<TextureButton>("%CloseButton");
 
         var stringBuilder = new StringBuilder();
-        stringBuilder.Append("Error: ");
-        stringBuilder.Append(char.ToUpper(errorMessage[0]));
-        stringBuilder.Append(errorMessage.AsSpan(1));
-        foreach (var error in subErrors)
+        if (prefix is not null)
+        {
+            stringBuilder.Append(prefix);
+        }
+        if (message.Length >= 2)
+        {
+            stringBuilder.Append(char.ToUpper(message[0]));
+            stringBuilder.Append(message.AsSpan(1));
+        }
+        foreach (var subMessage in subMessages)
         {
             stringBuilder.Append('\n');
             stringBuilder.Append('-');
             stringBuilder.Append(' ');
-            stringBuilder.Append(error);
+            stringBuilder.Append(subMessage);
         }
         label.Text = stringBuilder.ToString();
 
         _messageContainer.CallDeferred(Strings.AddChild, errorMessageNode);
-        button.Pressed += () =>
+        closeButton.Pressed += () =>
         {
             _messageContainer.CallDeferred(Strings.RemoveChild, errorMessageNode);
         };
