@@ -35,31 +35,33 @@ func newPlayer(username Username, socket *websocket.Conn, lobbyLogger log.Logger
 }
 
 func (player *Player) selectFaction(faction game.PlayerFaction, lobby *Lobby) error {
-	lobby.lock.RLock()
-	defer lobby.lock.RUnlock()
-
-	if !slices.Contains(lobby.game.PlayerFactions, faction) {
-		return fmt.Errorf("requested faction '%s' is invalid", faction)
-	}
-
-	var takenBy Username
-	for _, otherPlayer := range lobby.players {
-		if otherPlayer.username == player.username {
-			continue
+	if faction != "" {
+		if !slices.Contains(lobby.game.PlayerFactions, faction) {
+			return fmt.Errorf("requested faction '%s' is invalid", faction)
 		}
 
-		otherPlayer.lock.RLock()
-		if otherPlayer.gameFaction == faction {
-			takenBy = otherPlayer.username
+		lobby.lock.RLock()
+		defer lobby.lock.RUnlock()
+
+		var takenBy Username
+		for _, otherPlayer := range lobby.players {
+			if otherPlayer.username == player.username {
+				continue
+			}
+
+			otherPlayer.lock.RLock()
+			if otherPlayer.gameFaction == faction {
+				takenBy = otherPlayer.username
+			}
+			otherPlayer.lock.RUnlock()
 		}
-		otherPlayer.lock.RUnlock()
-	}
-	if takenBy != "" {
-		return fmt.Errorf(
-			"requested faction '%s' already taken by user '%s'",
-			faction,
-			takenBy,
-		)
+		if takenBy != "" {
+			return fmt.Errorf(
+				"requested faction '%s' already taken by user '%s'",
+				faction,
+				takenBy,
+			)
+		}
 	}
 
 	player.lock.Lock()
