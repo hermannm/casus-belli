@@ -7,13 +7,8 @@
 [node name="ErrorMessage" type="MarginContainer"]
 anchors_preset = 10
 anchor_right = 1.0
-offset_bottom = 83.0
+offset_bottom = 60.0
 grow_horizontal = 2
-size_flags_horizontal = 3
-theme_override_constants/margin_left = 12
-theme_override_constants/margin_top = 12
-theme_override_constants/margin_right = 12
-theme_override_constants/margin_bottom = 12
 
 [node name="NinePatchRect" type="NinePatchRect" parent="."]
 layout_mode = 2

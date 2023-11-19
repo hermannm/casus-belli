@@ -11,6 +11,7 @@ public partial class MessageDisplay : Node
     /// Should never be null, since it is configured to autoload in Godot, and set in _EnterTree.
     public static MessageDisplay Instance { get; private set; } = null!;
 
+    private ScrollContainer _scrollContainer = null!; // Set in _Ready
     private VBoxContainer _messageContainer = null!; // Set in _Ready
 
     public override void _EnterTree()
@@ -20,7 +21,9 @@ public partial class MessageDisplay : Node
 
     public override void _Ready()
     {
+        _scrollContainer = GetNode<ScrollContainer>("%ScrollContainer");
         _messageContainer = GetNode<VBoxContainer>("%MessageContainer");
+        _messageContainer.Resized += ResizeScrollContainer;
     }
 
     public void ShowError(string errorMessage, params string[] subErrors)
@@ -48,5 +51,15 @@ public partial class MessageDisplay : Node
         {
             _messageContainer.CallDeferred(Strings.RemoveChild, errorMessageNode);
         };
+    }
+
+    private void ResizeScrollContainer()
+    {
+        var newHeight = _messageContainer.Size.Y;
+        if (newHeight > 1040)
+        {
+            newHeight = 1040;
+        }
+        _scrollContainer.Size = new Vector2(_scrollContainer.Size.X, newHeight);
     }
 }

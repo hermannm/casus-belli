@@ -2,22 +2,29 @@
 
 [ext_resource type="Script" path="res://src/UI/MessageDisplay.cs" id="1_gk0yb"]
 
-[node name="CanvasLayer" type="CanvasLayer"]
+[node name="MessageDisplay" type="CanvasLayer"]
 layer = 10
 script = ExtResource("1_gk0yb")
 
-[node name="MessageDisplay" type="ScrollContainer" parent="."]
+[node name="ScrollContainer" type="ScrollContainer" parent="."]
+unique_name_in_owner = true
 top_level = true
 custom_minimum_size = Vector2(624, 0)
 anchors_preset = 11
 anchor_left = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = -644.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -1060.0
 grow_horizontal = 0
 grow_vertical = 2
+size_flags_horizontal = 8
 
-[node name="MessageContainer" type="VBoxContainer" parent="MessageDisplay"]
+[node name="MessageContainer" type="VBoxContainer" parent="ScrollContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 0
+theme_override_constants/separation = 20
