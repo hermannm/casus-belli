@@ -24,7 +24,7 @@ public partial class ApiClient : Node
     /// Should never be null, since it is configured to autoload in Godot, and set in _EnterTree.
     public static ApiClient Instance { get; private set; } = null!;
 
-    public Uri? ServerUrl { get; private set; }
+    public Uri? ServerUrl => _httpClient?.BaseAddress;
     public LobbyInfo? Lobby { get; private set; }
     public bool HasJoinedLobby => Lobby != null;
 
@@ -92,9 +92,8 @@ public partial class ApiClient : Node
             return false;
         }
 
-        ServerUrl = parsedUrl;
         _httpClient = new HttpClient();
-        _httpClient.BaseAddress = ServerUrl;
+        _httpClient.BaseAddress = parsedUrl;
         return true;
     }
 
@@ -103,7 +102,6 @@ public partial class ApiClient : Node
     /// </summary>
     public Task Disconnect()
     {
-        ServerUrl = null;
         _httpClient = null;
         return HasJoinedLobby ? LeaveLobby() : Task.CompletedTask;
     }
