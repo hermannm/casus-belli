@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Immerse.BfhClient.Api.Messages;
 using Godot;
 using System.Net.Http.Json;
-using System.Text;
 using Immerse.BfhClient.UI;
 using Immerse.BfhClient.Utils;
 using HttpClient = System.Net.Http.HttpClient;
@@ -54,17 +53,21 @@ public partial class ApiClient : Node
         AddMessageHandler<ErrorMessage>(DisplayServerError);
 
         if (OS.IsDebugBuild())
+        {
             TryConnect("localhost:8000");
+        }
     }
 
     public override void _Process(double delta)
     {
         if (!_hasJoinedLobby)
+        {
             return;
-
+        }
         if (!_messageReceiver.MessageQueue.TryDequeue(out var message))
+        {
             return;
-
+        }
         if (!_messageSignalNames.TryGetValue(message.Tag, out var signal))
         {
             GD.PushError($"Received message tag '{message.Tag}' was not registered as signal");
@@ -73,7 +76,9 @@ public partial class ApiClient : Node
 
         var err = EmitSignal(signal, message.Data);
         if (err != Error.Ok)
+        {
             GD.PushError($"Failed to emit signal '{signal}': {err}");
+        }
     }
 
     public bool TryConnect(string serverUrl)

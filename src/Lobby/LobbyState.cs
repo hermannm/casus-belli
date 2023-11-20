@@ -84,7 +84,6 @@ public partial class LobbyState : Node
 
     private void HandlePlayerStatusMessage(PlayerStatusMessage message)
     {
-        GD.Print($"{message.Username}: {message.SelectedFaction}");
         if (GetPlayerByUsername(message.Username) is { } player)
         {
             player.Faction = message.SelectedFaction;

@@ -25,7 +25,9 @@ public partial class LobbyList : Node
     {
         var lobbies = await ApiClient.Instance.ListLobbies();
         if (lobbies is null)
+        {
             return;
+        }
 
         foreach (var lobby in lobbies)
         {
