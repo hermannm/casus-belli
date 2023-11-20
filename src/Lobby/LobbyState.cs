@@ -3,24 +3,24 @@ using System.Threading.Tasks;
 using Godot;
 using Immerse.BfhClient.Api;
 using Immerse.BfhClient.Api.Messages;
+using Immerse.BfhClient.Utils;
 
 namespace Immerse.BfhClient.Lobby;
 
 public partial class LobbyState : Node
 {
     public static LobbyState Instance { get; private set; } = null!;
-    public static readonly StringName LobbyChangeSignal = new("LobbyChange");
 
     public Player Player { get; private set; } = new();
     public List<Player> OtherPlayers { get; private set; } = new();
     public List<string> SelectableFactions { get; private set; } = new();
+    public CustomSignal LobbyChanged { get; } = new("LobbyChanged");
 
     private LobbyInfo? _joinedLobby = null;
 
     public override void _EnterTree()
     {
         Instance = this;
-        AddUserSignal(LobbyChangeSignal);
         ApiClient.Instance.AddMessageHandler<LobbyJoinedMessage>(HandleLobbyJoinedMessage);
         ApiClient.Instance.AddMessageHandler<PlayerStatusMessage>(HandlePlayerStatusMessage);
     }
@@ -71,11 +71,6 @@ public partial class LobbyState : Node
         SelectableFactions = message.SelectableFactions;
         foreach (var playerStatus in message.PlayerStatuses)
         {
-            if (playerStatus.Username == Player.Username)
-            {
-                continue;
-            }
-
             OtherPlayers.Add(
                 new Player
                 {
@@ -84,7 +79,8 @@ public partial class LobbyState : Node
                 }
             );
         }
-        EmitSignal(LobbyChangeSignal);
+
+        LobbyChanged.Emit();
     }
 
     private void HandlePlayerStatusMessage(PlayerStatusMessage message)
@@ -99,7 +95,8 @@ public partial class LobbyState : Node
                 new Player { Username = message.Username, Faction = message.SelectedFaction }
             );
         }
-        EmitSignal(LobbyChangeSignal);
+
+        LobbyChanged.Emit();
     }
 
     private Player? GetPlayerByUsername(string username)

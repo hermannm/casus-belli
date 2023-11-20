@@ -133,7 +133,7 @@ public partial class ApiClient : Node
         }
 
         var signal = _messageSignalNames[messageTag];
-        this.ConnectSignal(signal, handler);
+        this.ConnectCustomSignal(signal, handler);
     }
 
     public async Task<List<LobbyInfo>?> ListLobbies()
@@ -233,17 +233,7 @@ public partial class ApiClient : Node
     {
         foreach (var signal in _messageSignalNames.Values)
         {
-            AddUserSignal(
-                signal,
-                new GodotArray
-                {
-                    new GodotDictionary
-                    {
-                        { "name", "message" },
-                        { "type", (int)Variant.Type.Object }
-                    }
-                }
-            );
+            this.RegisterCustomSignal(signal, typeof(object));
         }
     }
 

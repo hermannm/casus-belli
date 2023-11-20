@@ -1,6 +1,5 @@
 using Godot;
 using Immerse.BfhClient.Lobby;
-using Immerse.BfhClient.Utils;
 
 namespace Immerse.BfhClient.UI.LobbyMenu;
 
@@ -9,7 +8,7 @@ public partial class StartGameButton : Button
     public override void _Ready()
     {
         UpdateButtonState();
-        LobbyState.Instance.ConnectSignal(LobbyState.LobbyChangeSignal, UpdateButtonState);
+        LobbyState.Instance.LobbyChanged.AddListener(UpdateButtonState);
     }
 
     private void UpdateButtonState()

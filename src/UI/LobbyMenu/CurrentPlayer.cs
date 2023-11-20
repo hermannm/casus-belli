@@ -1,7 +1,6 @@
 using System.Linq;
 using Godot;
 using Immerse.BfhClient.Lobby;
-using Immerse.BfhClient.Utils;
 
 namespace Immerse.BfhClient.UI.LobbyMenu;
 
@@ -19,7 +18,7 @@ public partial class CurrentPlayer : Node
         _factionSelect.ItemSelected += SelectFaction;
         GetNode("%FactionContainer").AddChild(_factionSelect);
 
-        LobbyState.Instance.ConnectSignal(LobbyState.LobbyChangeSignal, UpdateSelectedFaction);
+        LobbyState.Instance.LobbyChanged.AddListener(UpdateSelectedFaction);
     }
 
     private static void SelectFaction(long selectedFactionIndex)
