@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using Godot;
-using Immerse.BfhClient.Api.GameTypes;
+using Immerse.BfhClient.Game;
 
 namespace Immerse.BfhClient.Api.Messages;
 

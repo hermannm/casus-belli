@@ -1,4 +1,4 @@
-namespace Immerse.BfhClient.Api.GameTypes;
+namespace Immerse.BfhClient.Game;
 
 /// <summary>
 /// A typed number that adds to a player's result in a battle.

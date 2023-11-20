@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Immerse.BfhClient.Api.GameTypes;
+namespace Immerse.BfhClient.Game;
 
 /// <summary>
 /// Dice and modifier result for a battle.

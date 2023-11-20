@@ -1,4 +1,4 @@
-namespace Immerse.BfhClient.Api.GameTypes;
+namespace Immerse.BfhClient.Game;
 
 /// <summary>
 /// An order submitted by a player for one of their units in a given round.

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Immerse.BfhClient.Api.GameTypes;
+namespace Immerse.BfhClient.Game;
 
 /// <summary>
 /// Results of a battle between players, an attempt to conquer a neutral region, or an attempt to
