@@ -28,6 +28,8 @@ public partial class OtherPlayersList : Node
             var faction = new Label();
             faction.Text = player.Faction ?? "None selected";
             listItem.GetNode("%FactionContainer").AddChild(faction);
+
+            AddChild(listItem);
         }
     }
 }

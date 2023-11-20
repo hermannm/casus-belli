@@ -71,6 +71,11 @@ public partial class LobbyState : Node
         SelectableFactions = message.SelectableFactions;
         foreach (var playerStatus in message.PlayerStatuses)
         {
+            if (playerStatus.Username == Player.Username)
+            {
+                continue;
+            }
+
             OtherPlayers.Add(
                 new Player
                 {
