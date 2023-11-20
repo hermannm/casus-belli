@@ -60,3 +60,5 @@ hermannm.dev/set v0.2.1 h1:8mydXV8RRkgd+M4uYe4rHGzlSsQNvUg9/26uWFl135E=
 hermannm.dev/set v0.2.1/go.mod h1:8/X35bKB/zTbDzD0rInCaSQu/Cn9qktAjcWM5Oj3bPQ=
 hermannm.dev/wrap v0.3.0 h1:n82G6Ln5hGhSGng2Y11gX0/o+/UwAc2dEdqk8290DxI=
 hermannm.dev/wrap v0.3.0/go.mod h1:W2PoHmpfK1VpZF01eZfAZ2lj02BL+3PAAQT/tP1aEt0=
+hermannm.dev/wrap v0.3.1 h1:wQcLygCmso7mkOX26j167yhrJnUb15npPgqUSY7oIHc=
+hermannm.dev/wrap v0.3.1/go.mod h1:W2PoHmpfK1VpZF01eZfAZ2lj02BL+3PAAQT/tP1aEt0=
