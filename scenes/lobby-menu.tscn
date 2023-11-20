@@ -2,11 +2,11 @@
 
 [ext_resource type="Texture2D" uid="uid://dua6cf3bykx6" path="res://assets/immerse-logo-transparent-background-with-text-under.svg" id="1_y78ai"]
 [ext_resource type="FontFile" uid="uid://bjjxiy03d51n0" path="res://assets/fonts/quantico/quantico-bold.ttf" id="2_mbcsh"]
+[ext_resource type="Script" path="res://src/UI/LobbyMenu/CurrentPlayer.cs" id="4_drd26"]
 [ext_resource type="PackedScene" uid="uid://b3ae215bqtb36" path="res://scenes/components/player-list-item.tscn" id="4_tvwoe"]
-[ext_resource type="Script" path="res://src/Menus/LobbyMenu/CurrentPlayer.cs" id="5_fgfss"]
-[ext_resource type="Script" path="res://src/Menus/LobbyMenu/OtherPlayersList.cs" id="6_b77o0"]
-[ext_resource type="Script" path="res://src/Menus/LobbyMenu/StartGameButton.cs" id="7_jvg82"]
-[ext_resource type="Script" path="res://src/Menus/LobbyMenu/LeaveLobbyButton.cs" id="8_btdm3"]
+[ext_resource type="Script" path="res://src/UI/LobbyMenu/OtherPlayersList.cs" id="5_d6sh1"]
+[ext_resource type="Script" path="res://src/UI/LobbyMenu/StartGameButton.cs" id="6_r5a3c"]
+[ext_resource type="Script" path="res://src/UI/LobbyMenu/LeaveLobbyButton.cs" id="7_dfs7i"]
 
 [node name="Control" type="Control"]
 layout_mode = 3
@@ -81,13 +81,13 @@ theme_override_constants/separation = 20
 [node name="CurrentPlayer" parent="MarginContainer/VBoxContainer/ScrollContainer/CenterContainer/PlayerList" instance=ExtResource("4_tvwoe")]
 unique_name_in_owner = true
 layout_mode = 2
-script = ExtResource("5_fgfss")
+script = ExtResource("4_drd26")
 
 [node name="OtherPlayersList" type="VBoxContainer" parent="MarginContainer/VBoxContainer/ScrollContainer/CenterContainer/PlayerList"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 20
-script = ExtResource("6_b77o0")
+script = ExtResource("5_d6sh1")
 
 [node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
@@ -102,7 +102,7 @@ size_flags_horizontal = 4
 theme_override_fonts/font = ExtResource("2_mbcsh")
 theme_override_font_sizes/font_size = 30
 text = "Start Game"
-script = ExtResource("7_jvg82")
+script = ExtResource("6_r5a3c")
 
 [node name="LeaveLobbyButton" type="Button" parent="MarginContainer/VBoxContainer/HBoxContainer"]
 unique_name_in_owner = true
@@ -112,4 +112,4 @@ size_flags_horizontal = 4
 theme_override_fonts/font = ExtResource("2_mbcsh")
 theme_override_font_sizes/font_size = 30
 text = "Leave Lobby"
-script = ExtResource("8_btdm3")
+script = ExtResource("7_dfs7i")

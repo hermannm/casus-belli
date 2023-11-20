@@ -1,7 +1,7 @@
 using Godot;
 using Immerse.BfhClient.Api;
 
-namespace Immerse.BfhClient.Menus.ServerAddressMenu;
+namespace Immerse.BfhClient.UI.ServerAddressMenu;
 
 public partial class ConnectButton : Button
 {

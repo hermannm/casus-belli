@@ -4,7 +4,7 @@ using Immerse.BfhClient.Api;
 using Immerse.BfhClient.Api.Messages;
 using Immerse.BfhClient.Lobby;
 
-namespace Immerse.BfhClient.Menus.LobbyListMenu;
+namespace Immerse.BfhClient.UI.LobbyListMenu;
 
 public partial class LobbyList : Node
 {

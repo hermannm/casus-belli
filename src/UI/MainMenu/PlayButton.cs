@@ -1,7 +1,7 @@
 using Godot;
 using Immerse.BfhClient.Api;
 
-namespace Immerse.BfhClient.Menus.MainMenu;
+namespace Immerse.BfhClient.UI.MainMenu;
 
 public partial class PlayButton : Button
 {

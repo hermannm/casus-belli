@@ -2,7 +2,7 @@ using Godot;
 using Immerse.BfhClient.Lobby;
 using Immerse.BfhClient.Utils;
 
-namespace Immerse.BfhClient.Menus.LobbyMenu;
+namespace Immerse.BfhClient.UI.LobbyMenu;
 
 public partial class OtherPlayersList : Node
 {

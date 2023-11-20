@@ -1,8 +1,7 @@
 using Godot;
 using Immerse.BfhClient.Api;
-using Immerse.BfhClient.UI;
 
-namespace Immerse.BfhClient.Menus.LobbyListMenu;
+namespace Immerse.BfhClient.UI.LobbyListMenu;
 
 public partial class ServerAddressField : Label
 {

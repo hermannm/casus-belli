@@ -1,7 +1,7 @@
 using Godot;
 using Immerse.BfhClient.Lobby;
 
-namespace Immerse.BfhClient.Menus.LobbyMenu;
+namespace Immerse.BfhClient.UI.LobbyMenu;
 
 public partial class LeaveLobbyButton : Button
 {
