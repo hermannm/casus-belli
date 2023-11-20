@@ -8,6 +8,7 @@ using Immerse.BfhClient.Api.Messages;
 using Godot;
 using System.Net.Http.Json;
 using Immerse.BfhClient.UI;
+using Immerse.BfhClient.Utils;
 using HttpClient = System.Net.Http.HttpClient;
 using GodotArray = Godot.Collections.Array;
 using GodotDictionary = Godot.Collections.Dictionary;
@@ -25,8 +26,6 @@ public partial class ApiClient : Node
     public static ApiClient Instance { get; private set; } = null!;
 
     public Uri? ServerUrl => _httpClient?.BaseAddress;
-    public LobbyInfo? Lobby { get; private set; }
-    public bool HasJoinedLobby => Lobby != null;
 
     private HttpClient? _httpClient = null;
     private readonly ClientWebSocket _websocket = new();
@@ -34,6 +33,7 @@ public partial class ApiClient : Node
     private readonly MessageSender _messageSender;
     private readonly MessageReceiver _messageReceiver;
     private readonly Dictionary<MessageTag, StringName> _messageSignalNames;
+    private bool _hasJoinedLobby = false;
 
     public ApiClient()
     {
@@ -58,7 +58,7 @@ public partial class ApiClient : Node
 
     public override void _Process(double delta)
     {
-        if (!HasJoinedLobby)
+        if (!_hasJoinedLobby)
             return;
 
         if (!_messageReceiver.MessageQueue.TryDequeue(out var message))
@@ -103,7 +103,7 @@ public partial class ApiClient : Node
     public Task Disconnect()
     {
         _httpClient = null;
-        return HasJoinedLobby ? LeaveLobby() : Task.CompletedTask;
+        return _hasJoinedLobby ? LeaveLobby() : Task.CompletedTask;
     }
 
     public void SendMessage<TMessage>(TMessage message)
@@ -127,9 +127,7 @@ public partial class ApiClient : Node
         }
 
         var signal = _messageSignalNames[messageTag];
-        var err = Connect(signal, Callable.From(handler));
-        if (err != Error.Ok)
-            GD.PushError($"Failed to connect to signal '{signal}': {err}");
+        this.ConnectSignal(signal, handler);
     }
 
     public async Task<List<LobbyInfo>?> ListLobbies()
@@ -158,7 +156,7 @@ public partial class ApiClient : Node
     /// Connects the API client to a server at the given URI, and starts sending and receiving
     /// messages.
     /// </summary>
-    public async Task<bool> TryJoinLobby(LobbyInfo lobby, string username)
+    public async Task<bool> TryJoinLobby(string lobbyName, string username)
     {
         if (ServerUrl is null)
         {
@@ -175,7 +173,7 @@ public partial class ApiClient : Node
             Host = ServerUrl.Host,
             Port = ServerUrl.Port,
             Path = "/join",
-            Query = $"lobbyName={lobby.Name}&username={username}"
+            Query = $"lobbyName={lobbyName}&username={username}"
         };
 
         try
@@ -202,20 +200,27 @@ public partial class ApiClient : Node
             return false;
         }
 
-        Lobby = lobby;
+        _hasJoinedLobby = true;
         return true;
     }
 
-    public Task LeaveLobby()
+    public async Task LeaveLobby()
     {
         _cancellation.Cancel();
-        Lobby = null;
+        _hasJoinedLobby = false;
 
-        return _websocket.CloseAsync(
-            WebSocketCloseStatus.NormalClosure,
-            "Client initiated disconnect from game server",
-            _cancellation.Token
-        );
+        try
+        {
+            await _websocket.CloseAsync(
+                WebSocketCloseStatus.NormalClosure,
+                "Client initiated disconnect from game server",
+                _cancellation.Token
+            );
+        }
+        catch (Exception e)
+        {
+            GD.PushError($"Closing WebSocket connection: {e}");
+        }
     }
 
     private void AddMessageReceivedSignals()

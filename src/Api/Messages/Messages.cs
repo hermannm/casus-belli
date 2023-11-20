@@ -17,8 +17,8 @@ namespace Immerse.BfhClient.Api.Messages;
 /// </summary>
 public record struct Message
 {
-    public required MessageTag Tag;
-    public required GodotObject Data;
+    public required MessageTag Tag { get; set; }
+    public required GodotObject Data { get; set; }
 }
 
 /// <summary>
@@ -62,7 +62,7 @@ public partial class LobbyJoinedMessage : GodotObject, IReceivableMessage
 /// </summary>
 public partial class SelectFactionMessage : GodotObject, ISendableMessage
 {
-    public required string Faction { get; set; }
+    public required string? Faction { get; set; }
 }
 
 /// <summary>
