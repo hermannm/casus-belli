@@ -12,24 +12,24 @@ public class Board : Dictionary<string, Region> { }
 /// </summary>
 public record Region
 {
-    public string Name { get; set; }
-    public List<Neighbor> Neighbors { get; set; }
+    public required string Name { get; set; }
+    public required List<Neighbor> Neighbors { get; set; }
 
     /// <summary>
     /// Whether the region is a sea region that can only have ship units.
     /// </summary>
-    public bool IsSea { get; set; }
+    public required bool IsSea { get; set; }
 
     /// <summary>
     /// For land regions: affects the difficulty of conquering the region.
     /// </summary>
-    public bool IsForest { get; set; }
+    public required bool IsForest { get; set; }
 
     /// <summary>
     /// For land regions: affects the difficulty of conquering the region, and the points gained
     /// from it.
     /// </summary>
-    public bool HasCastle { get; set; }
+    public required bool HasCastle { get; set; }
 
     /// <summary>
     /// For land regions: the collection of regions that the region belongs to (affects units gained
@@ -61,18 +61,18 @@ public record Region
 
 public record Neighbor
 {
-    public string Name { get; set; }
+    public required string Name { get; set; }
 
     /// <summary>
     /// Whether a river separates the neighboring regions, or this region is a sea and the neighbor
     /// is a land region.
     /// </summary>
-    public bool IsAcrossWater { get; set; }
+    public required bool IsAcrossWater { get; set; }
 
     /// <summary>
     /// Whether coast between neighboring land regions have cliffs (impassable to ships).
     /// </summary>
-    public bool HasCliffs { get; set; }
+    public required bool HasCliffs { get; set; }
 
     /// <summary>
     /// If not null: the name of the danger zone that the neighboring region lies across (requires
