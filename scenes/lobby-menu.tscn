@@ -1,10 +1,9 @@
-[gd_scene load_steps=6 format=3 uid="uid://dgmm1euyqoi81"]
+[gd_scene load_steps=5 format=3 uid="uid://dgmm1euyqoi81"]
 
 [ext_resource type="Texture2D" uid="uid://dua6cf3bykx6" path="res://assets/immerse-logo-transparent-background-with-text-under.svg" id="1_y78ai"]
 [ext_resource type="Script" path="res://src/Menus/LobbyMenu/LobbyMenu.cs" id="1_yju4j"]
 [ext_resource type="FontFile" uid="uid://bjjxiy03d51n0" path="res://assets/fonts/quantico/quantico-bold.ttf" id="2_mbcsh"]
 [ext_resource type="PackedScene" uid="uid://b3ae215bqtb36" path="res://scenes/components/player-list-item.tscn" id="4_tvwoe"]
-[ext_resource type="Script" path="res://src/Menus/LobbyListMenu/MainMenuButton.cs" id="5_bhm1g"]
 
 [node name="Control" type="Control"]
 layout_mode = 3
@@ -99,7 +98,6 @@ size_flags_horizontal = 4
 theme_override_fonts/font = ExtResource("2_mbcsh")
 theme_override_font_sizes/font_size = 30
 text = "Start Game"
-script = ExtResource("5_bhm1g")
 
 [node name="LeaveLobbyButton" type="Button" parent="MarginContainer/VBoxContainer/HBoxContainer"]
 unique_name_in_owner = true
@@ -109,4 +107,3 @@ size_flags_horizontal = 4
 theme_override_fonts/font = ExtResource("2_mbcsh")
 theme_override_font_sizes/font_size = 30
 text = "Leave Lobby"
-script = ExtResource("5_bhm1g")
