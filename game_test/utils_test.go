@@ -181,6 +181,10 @@ type MockMessenger struct{}
 
 func (MockMessenger) SendError(to game.PlayerFaction, err error) {}
 
+func (MockMessenger) SendGameStarted(board game.Board) error {
+	return nil
+}
+
 func (MockMessenger) SendOrderRequest(to game.PlayerFaction) error {
 	return nil
 }

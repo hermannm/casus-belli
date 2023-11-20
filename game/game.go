@@ -33,6 +33,7 @@ type PlayerFaction string
 
 type Messenger interface {
 	SendError(to PlayerFaction, err error)
+	SendGameStarted(board Board) error
 	SendOrderRequest(to PlayerFaction) error
 	AwaitOrders(from PlayerFaction) ([]Order, error)
 	SendOrdersReceived(orders map[PlayerFaction][]Order) error
@@ -76,6 +77,10 @@ func New(
 }
 
 func (game *Game) Run() {
+	if err := game.messenger.SendGameStarted(game.Board); err != nil {
+		game.log.Error(err)
+	}
+
 	for {
 		orders := game.gatherAndValidateOrders()
 

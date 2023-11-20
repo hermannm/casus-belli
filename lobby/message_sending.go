@@ -138,6 +138,13 @@ func (lobby *Lobby) SendError(to game.PlayerFaction, err error) {
 	}
 }
 
+func (lobby *Lobby) SendGameStarted(board game.Board) error {
+	return lobby.sendMessageToAll(Message{
+		Tag:  MessageTagGameStarted,
+		Data: GameStartedMessage{Board: board},
+	})
+}
+
 func (lobby *Lobby) SendOrderRequest(to game.PlayerFaction) error {
 	return lobby.sendMessage(to, Message{
 		Tag:  MessageTagOrderRequest,

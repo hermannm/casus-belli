@@ -42,6 +42,11 @@ type SelectFactionMessage struct {
 // Requires that all players have selected a faction.
 type StartGameMessage struct{}
 
+// Message sent from server when the game starts.
+type GameStartedMessage struct {
+	Board game.Board
+}
+
 // Message sent from server when asking a supporting player who to support in an embattled region.
 type SupportRequestMessage struct {
 	SupportingRegion    game.RegionName
@@ -96,6 +101,7 @@ const (
 	MessageTagLobbyJoined
 	MessageTagSelectFaction
 	MessageTagStartGame
+	MessageTagGameStarted
 	MessageTagSupportRequest
 	MessageTagOrderRequest
 	MessageTagOrdersReceived
@@ -112,6 +118,7 @@ var messageTags = enumnames.NewMap(map[MessageTag]string{
 	MessageTagLobbyJoined:        "LobbyJoined",
 	MessageTagSelectFaction:      "SelectFaction",
 	MessageTagStartGame:          "StartGame",
+	MessageTagGameStarted:        "GameStarted",
 	MessageTagSupportRequest:     "SupportRequest",
 	MessageTagOrderRequest:       "OrderRequest",
 	MessageTagOrdersReceived:     "OrdersReceived",
