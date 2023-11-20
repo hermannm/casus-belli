@@ -92,7 +92,10 @@ public partial class SupportRequestMessage : GodotObject, IReceivableMessage
 /// <summary>
 /// Message sent from server to client to signal that client should submit orders.
 /// </summary>
-public partial class OrderRequestMessage : GodotObject, IReceivableMessage { }
+public partial class OrderRequestMessage : GodotObject, IReceivableMessage
+{
+    public required Season Season { get; set; }
+}
 
 /// <summary>
 /// Message sent from server to all clients when valid orders are received from all players.
