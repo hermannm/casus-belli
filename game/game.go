@@ -34,7 +34,7 @@ type PlayerFaction string
 type Messenger interface {
 	SendError(to PlayerFaction, err error)
 	SendGameStarted(board Board) error
-	SendOrderRequest(to PlayerFaction) error
+	SendOrderRequest(to PlayerFaction, season Season) error
 	AwaitOrders(from PlayerFaction) ([]Order, error)
 	SendOrdersReceived(orders map[PlayerFaction][]Order) error
 	SendOrdersConfirmation(factionThatSubmittedOrders PlayerFaction) error

@@ -145,10 +145,10 @@ func (lobby *Lobby) SendGameStarted(board game.Board) error {
 	})
 }
 
-func (lobby *Lobby) SendOrderRequest(to game.PlayerFaction) error {
+func (lobby *Lobby) SendOrderRequest(to game.PlayerFaction, season game.Season) error {
 	return lobby.sendMessage(to, Message{
 		Tag:  MessageTagOrderRequest,
-		Data: OrderRequestMessage{},
+		Data: OrderRequestMessage{Season: season},
 	})
 }
 

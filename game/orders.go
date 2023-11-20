@@ -126,7 +126,7 @@ func (game *Game) gatherAndValidateOrders() []Order {
 // If invalid, informs the client and waits for a new order set.
 func (game *Game) gatherAndValidateOrderSet(faction PlayerFaction, orderChan chan<- []Order) {
 	for {
-		if err := game.messenger.SendOrderRequest(faction); err != nil {
+		if err := game.messenger.SendOrderRequest(faction, game.season); err != nil {
 			game.log.Error(err)
 			orderChan <- []Order{}
 			return

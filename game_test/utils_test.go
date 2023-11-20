@@ -185,7 +185,7 @@ func (MockMessenger) SendGameStarted(board game.Board) error {
 	return nil
 }
 
-func (MockMessenger) SendOrderRequest(to game.PlayerFaction) error {
+func (MockMessenger) SendOrderRequest(to game.PlayerFaction, season game.Season) error {
 	return nil
 }
 

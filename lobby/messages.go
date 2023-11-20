@@ -55,7 +55,9 @@ type SupportRequestMessage struct {
 }
 
 // Message sent from server to client to signal that client should submit orders.
-type OrderRequestMessage struct{}
+type OrderRequestMessage struct {
+	Season game.Season
+}
 
 // Message sent from server to all clients when valid orders are received from all players.
 type OrdersReceivedMessage struct {
