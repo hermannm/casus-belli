@@ -2,7 +2,7 @@ using System.Threading.Tasks;
 using Godot;
 using Immerse.BfhClient.Api;
 using Immerse.BfhClient.Api.Messages;
-using Immerse.BfhClient.UI;
+using Immerse.BfhClient.Lobby;
 
 namespace Immerse.BfhClient.Menus.LobbyListMenu;
 
@@ -13,11 +13,6 @@ public partial class LobbyList : Node
     );
     private Popup _usernameInputPopup = null!;
     private LobbyInfo? _lobbyToJoin = null;
-
-    public override void _EnterTree()
-    {
-        ApiClient.Instance.AddMessageHandler<LobbyJoinedMessage>(HandleLobbyJoinedMessage);
-    }
 
     public override async void _Ready()
     {
@@ -61,24 +56,23 @@ public partial class LobbyList : Node
     private void PrepareUsernameInputPopup()
     {
         var usernameInput = _usernameInputPopup.GetNode<LineEdit>("%UsernameInput");
-        var joinLobbyButton = _usernameInputPopup.GetNode<Button>("%JoinLobbyButton");
+        usernameInput.Text = LobbyState.Instance.Player.Username;
 
+        var joinLobbyButton = _usernameInputPopup.GetNode<Button>("%JoinLobbyButton");
         joinLobbyButton.Pressed += async () =>
         {
             if (_lobbyToJoin is { } lobby)
             {
-                var username = usernameInput.Text;
-                await ApiClient.Instance.TryJoinLobby(lobby, username);
+                var success = await LobbyState.Instance.TryJoinLobby(lobby, usernameInput.Text);
+                if (success)
+                {
+                    SceneManager.Instance.LoadScene(Scenes.LobbyMenu);
+                }
             }
             else
             {
                 GD.PushError("Lobby to join is not set");
             }
         };
-    }
-
-    private static void HandleLobbyJoinedMessage(LobbyJoinedMessage message)
-    {
-        MessageDisplay.Instance.ShowInfo("Received lobby joined message!");
     }
 }

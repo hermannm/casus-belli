@@ -76,6 +76,7 @@ custom_minimum_size = Vector2(1000, 0)
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 3
+theme_override_constants/separation = 20
 script = ExtResource("1_qds6h")
 
 [node name="ServerAddressField" type="Label" parent="MarginContainer/VBoxContainer"]
