@@ -220,7 +220,7 @@ func (MockMessenger) AwaitSupport(
 	return "", nil
 }
 
-func (MockMessenger) SendBattleResults(battles []game.Battle) error {
+func (MockMessenger) SendBattleResults(battles ...game.Battle) error {
 	return nil
 }
 

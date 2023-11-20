@@ -188,7 +188,7 @@ func (lobby *Lobby) SendSupportRequest(
 	})
 }
 
-func (lobby *Lobby) SendBattleResults(battles []game.Battle) error {
+func (lobby *Lobby) SendBattleResults(battles ...game.Battle) error {
 	return lobby.sendMessageToAll(Message{
 		Tag:  MessageTagBattleResults,
 		Data: BattleResultsMessage{Battles: battles},

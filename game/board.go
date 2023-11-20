@@ -172,6 +172,11 @@ func (region Region) isAttacked() bool {
 	return len(region.IncomingMoves) != 0
 }
 
+// Checks if any players have support orders against the region.
+func (region Region) isSupported() bool {
+	return len(region.IncomingSupports) != 0
+}
+
 // Returns a region's neighbor of the given name, and whether it was found.
 // If the region has several neighbor relations to the region, returns the one matching the provided
 // 'via' string (currently the name of the neighbor relation's danger zone).

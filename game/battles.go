@@ -43,9 +43,16 @@ func (game *Game) calculateSingleplayerBattle(region Region, move Order) {
 		move.Faction: {Parts: attackModifiers(move, region, false, false, true), Move: move},
 	}
 
-	game.callSupportForRegion(region, results, false)
+	if !region.isSupported() {
+		game.resolveSingleplayerBattle(Battle{Results: calculateTotals(results)})
+		return
+	}
 
-	game.battleReceiver <- Battle{Results: calculateTotals(results)}
+	game.resolving.Add(region.Name)
+	go func() {
+		game.callSupportForRegion(region, results, false)
+		game.battleReceiver <- Battle{Results: calculateTotals(results)}
+	}()
 }
 
 func (game *Game) calculateMultiplayerBattle(region Region, includeDefender bool) {
@@ -65,9 +72,16 @@ func (game *Game) calculateMultiplayerBattle(region Region, includeDefender bool
 		}
 	}
 
-	game.callSupportForRegion(region, results, includeDefender)
+	if !region.isSupported() {
+		game.resolveMultiplayerBattle(Battle{Results: calculateTotals(results)})
+		return
+	}
 
-	game.battleReceiver <- Battle{Results: calculateTotals(results)}
+	game.resolving.Add(region.Name)
+	go func() {
+		game.callSupportForRegion(region, results, includeDefender)
+		game.battleReceiver <- Battle{Results: calculateTotals(results)}
+	}()
 }
 
 // Battle where units from two regions attack each other simultaneously.
@@ -79,11 +93,19 @@ func (game *Game) calculateBorderBattle(region1 Region, region2 Region) {
 		move2.Faction: {Parts: attackModifiers(move2, region1, true, true, false), Move: move2},
 	}
 
-	// TODO: make these two calls run concurrently
-	game.callSupportForRegion(region1, results, false)
-	game.callSupportForRegion(region2, results, false)
+	if !region1.isSupported() && !region2.isSupported() {
+		game.resolveBorderBattle(Battle{Results: calculateTotals(results)})
+		return
+	}
 
-	game.battleReceiver <- Battle{Results: calculateTotals(results)}
+	game.resolving.AddMultiple(region1.Name, region2.Name)
+	go func() {
+		// TODO: make these two calls run concurrently
+		game.callSupportForRegion(region1, results, false)
+		game.callSupportForRegion(region2, results, false)
+
+		game.battleReceiver <- Battle{Results: calculateTotals(results)}
+	}()
 }
 
 type supportDeclaration struct {
@@ -98,11 +120,10 @@ func (game *Game) callSupportForRegion(
 	includeDefender bool,
 ) {
 	supports := region.IncomingSupports
-	supportCount := len(supports)
-	supportReceiver := make(chan supportDeclaration, supportCount)
+	supportReceiver := make(chan supportDeclaration, len(supports))
 
 	var waitGroup sync.WaitGroup
-	waitGroup.Add(supportCount)
+	waitGroup.Add(len(supports))
 
 	incomingMoves := []Order{}
 	for _, result := range results {
@@ -224,8 +245,6 @@ func (game *Game) resolveBattle(battle Battle) {
 		game.resolveMultiplayerBattle(battle)
 	}
 
-	game.resolvedBattles = append(game.resolvedBattles, battle)
-
 	for _, region := range battle.regionNames() {
 		game.resolving.Remove(region)
 	}
@@ -258,6 +277,9 @@ func (game *Game) resolveBorderBattle(battle Battle) {
 			game.Board.removeUnit(move.Unit, move.Origin)
 		}
 	}
+
+	game.resolvedBattles = append(game.resolvedBattles, battle)
+	game.messenger.SendBattleResults(battle)
 }
 
 func (game *Game) resolveSingleplayerBattle(battle Battle) {
@@ -271,6 +293,8 @@ func (game *Game) resolveSingleplayerBattle(battle Battle) {
 	}
 
 	game.succeedMove(move)
+	game.resolvedBattles = append(game.resolvedBattles, battle)
+	game.messenger.SendBattleResults(battle)
 }
 
 func (game *Game) resolveMultiplayerBattle(battle Battle) {
@@ -310,6 +334,9 @@ func (game *Game) resolveMultiplayerBattle(battle Battle) {
 			game.succeedMove(move)
 		}
 	}
+
+	game.resolvedBattles = append(game.resolvedBattles, battle)
+	game.messenger.SendBattleResults(battle)
 }
 
 func (battle Battle) isBorderConflict() bool {

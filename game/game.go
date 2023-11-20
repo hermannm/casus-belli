@@ -49,7 +49,7 @@ type Messenger interface {
 		supporting RegionName,
 		embattled RegionName,
 	) (supported PlayerFaction, err error)
-	SendBattleResults(battles []Battle) error
+	SendBattleResults(battles ...Battle) error
 	SendWinner(winner PlayerFaction) error
 	ClearMessages()
 }
@@ -147,7 +147,7 @@ func (game *Game) ResolveNonWinterOrders(orders []Order) []Battle {
 
 	dangerZoneBattles := resolveDangerZones(game.Board)
 	battles = append(battles, dangerZoneBattles...)
-	if err := game.messenger.SendBattleResults(dangerZoneBattles); err != nil {
+	if err := game.messenger.SendBattleResults(dangerZoneBattles...); err != nil {
 		game.log.Error(err)
 	}
 
@@ -161,34 +161,52 @@ func (game *Game) ResolveNonWinterOrders(orders []Order) []Battle {
 }
 
 func (game *Game) resolveMoves() {
-OuterLoop:
+	loopsSinceLastResolve := 0
+
 	for {
+		// If there are 2 loops since we last resolved a region, there are no regions currently
+		// resolving, and there are no unresolved retreats, then we are done!
+		if loopsSinceLastResolve >= 2 && game.resolving.IsEmpty() && len(game.retreats) == 0 {
+			break
+		}
+
+		// If there are 2 loops since we last resolved a region, then there is nothing more to
+		// resolve there until we receive on the battle receiver - so we do just that here, to avoid
+		// busy spinning
+		if !game.resolving.IsEmpty() && loopsSinceLastResolve >= 2 {
+			battle := <-game.battleReceiver
+			game.resolveBattle(battle)
+			loopsSinceLastResolve = 0
+		}
+
 		select {
 		case battle := <-game.battleReceiver:
 			game.resolveBattle(battle)
-			game.messenger.SendBattleResults([]Battle{battle})
+			loopsSinceLastResolve = 0
 		default:
+			anyResolved := false
 			for _, region := range game.Board {
-				game.resolveRegionMoves(region)
+				if resolved := game.resolveRegionMoves(region); resolved {
+					anyResolved = true
+				}
 			}
 
-			if game.resolving.IsEmpty() && len(game.retreats) == 0 {
-				break OuterLoop
+			if anyResolved {
+				loopsSinceLastResolve = 0
+			} else {
+				loopsSinceLastResolve++
 			}
 		}
 	}
 }
 
-// Immediately resolves region if it does not require battle. If it does require battle, forwards it
-// to appropriate battle calculation functions, which send results to game.battleReceiver.
-// Skips region if it depends on other moves to resolve first.
-func (game *Game) resolveRegionMoves(region Region) {
+func (game *Game) resolveRegionMoves(region Region) (resolved bool) {
 	retreat, hasRetreat := game.retreats[region.Name]
 
 	// Skips the region if it has already been processed
 	if (game.resolved.Contains(region.Name) && !hasRetreat) ||
 		(game.resolving.Contains(region.Name)) {
-		return
+		return false
 	}
 
 	// Resolves incoming moves that require transport
@@ -198,7 +216,7 @@ func (game *Game) resolveRegionMoves(region Region) {
 		for _, move := range region.IncomingMoves {
 			transportMustWait := game.resolveTransport(move)
 			if transportMustWait {
-				return
+				return false
 			}
 		}
 	}
@@ -212,7 +230,7 @@ func (game *Game) resolveRegionMoves(region Region) {
 		}
 
 		game.resolved.Add(region.Name)
-		return
+		return true
 	}
 
 	// Finds out if the region is part of a cycle (moves in a circle)
@@ -227,13 +245,12 @@ func (game *Game) resolveRegionMoves(region Region) {
 		}
 	} else if twoWayCycle {
 		// If the moves are from different player factions, they battle in the middle
-		go game.calculateBorderBattle(region, region2)
-		game.resolving.AddMultiple(region.Name, region2.Name)
-		return
+		game.calculateBorderBattle(region, region2)
+		return true
 	} else if cycle, _ := game.Board.discoverCycle(region.Name, region.Order); cycle != nil {
 		// If there is a cycle longer than 2 moves, forwards the resolving to resolveCycle
 		game.resolveCycle(cycle)
-		return
+		return true
 	}
 
 	// A single move to an empty region is either an autosuccess, or a singleplayer battle
@@ -242,22 +259,21 @@ func (game *Game) resolveRegionMoves(region Region) {
 
 		if region.isControlled() || region.IsSea {
 			game.succeedMove(move)
-			return
+			return true
 		}
 
-		go game.calculateSingleplayerBattle(region, move)
-		game.resolving.Add(region.Name)
-		return
+		game.calculateSingleplayerBattle(region, move)
+		return true
 	}
 
 	// If the destination region has an outgoing move order, that must be resolved first
 	if region.Order.Type == OrderMove {
-		return
+		return false
 	}
 
 	// If the function has not returned yet, then it must be a multiplayer battle
-	go game.calculateMultiplayerBattle(region, !region.isEmpty())
-	game.resolving.Add(region.Name)
+	game.calculateMultiplayerBattle(region, !region.isEmpty())
+	return true
 }
 
 func (game *Game) resolveSieges() {

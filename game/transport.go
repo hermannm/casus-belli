@@ -32,7 +32,7 @@ func (game *Game) resolveTransport(move Order) (transportMustWait bool) {
 		}
 
 		game.resolvedBattles = append(game.resolvedBattles, dangerZoneBattles...)
-		if err := game.messenger.SendBattleResults(dangerZoneBattles); err != nil {
+		if err := game.messenger.SendBattleResults(dangerZoneBattles...); err != nil {
 			game.log.Error(err)
 		}
 

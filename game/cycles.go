@@ -69,11 +69,9 @@ func (game *Game) resolveCycle(cycle []Order) {
 	// Then resolves cycle moves that require battle
 	for _, region := range battleRegions {
 		if len(region.IncomingMoves) == 1 {
-			go game.calculateSingleplayerBattle(region, region.IncomingMoves[0])
-			game.resolving.Add(region.Name)
+			game.calculateSingleplayerBattle(region, region.IncomingMoves[0])
 		} else {
-			go game.calculateMultiplayerBattle(region, false)
-			game.resolving.Add(region.Name)
+			game.calculateMultiplayerBattle(region, false)
 		}
 	}
 }
