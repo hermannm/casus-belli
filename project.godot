@@ -20,6 +20,7 @@ config/icon="res://assets/icon.svg"
 MessageDisplay="*res://scenes/components/message-display.tscn"
 ApiClient="*res://src/Api/ApiClient.cs"
 SceneManager="*res://src/SceneManager.cs"
+LobbyState="*res://src/Lobby/LobbyState.cs"
 
 [display]
 

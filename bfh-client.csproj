@@ -5,4 +5,7 @@
     <RootNamespace>Immerse.BfhClient</RootNamespace>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="src\Game\" />
+  </ItemGroup>
 </Project>
