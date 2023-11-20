@@ -62,25 +62,29 @@ func (player *Player) SendLobbyJoinedMessage(lobby *Lobby) error {
 	lobby.lock.RLock()
 	defer lobby.lock.RUnlock()
 
-	statuses := make([]PlayerStatusMessage, 0, len(lobby.players))
+	statuses := make([]PlayerStatusMessage, 0, len(lobby.players)-1)
 
-	for _, player := range lobby.players {
-		player.lock.RLock()
+	for _, otherPlayer := range lobby.players {
+		if otherPlayer.username == player.username {
+			continue
+		}
+
+		otherPlayer.lock.RLock()
 
 		var faction *game.PlayerFaction
-		if player.gameFaction != "" {
-			faction = &player.gameFaction
+		if otherPlayer.gameFaction != "" {
+			faction = &otherPlayer.gameFaction
 		}
 
 		statuses = append(
 			statuses,
 			PlayerStatusMessage{
-				Username:        player.username,
+				Username:        otherPlayer.username,
 				SelectedFaction: faction,
 			},
 		)
 
-		player.lock.RUnlock()
+		otherPlayer.lock.RUnlock()
 	}
 
 	if err := player.sendMessage(Message{
