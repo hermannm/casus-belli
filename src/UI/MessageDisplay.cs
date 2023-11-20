@@ -65,7 +65,7 @@ public partial class MessageDisplay : Node
         _messageContainer.CallDeferred(Strings.AddChild, errorMessageNode);
         closeButton.Pressed += () =>
         {
-            _messageContainer.CallDeferred(Strings.RemoveChild, errorMessageNode);
+            errorMessageNode.QueueFree();
         };
     }
 

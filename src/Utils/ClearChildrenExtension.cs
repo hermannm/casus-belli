@@ -8,7 +8,7 @@ public static class ClearChildrenExtension
     {
         foreach (var child in node.GetChildren())
         {
-            node.RemoveChild(child);
+            child.QueueFree();
         }
     }
 }
