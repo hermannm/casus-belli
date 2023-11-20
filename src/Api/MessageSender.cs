@@ -26,7 +26,9 @@ internal class MessageSender
         while (!SendQueue.IsCompleted)
         {
             if (cancellationToken.IsCancellationRequested)
+            {
                 return;
+            }
 
             try
             {
@@ -43,7 +45,7 @@ internal class MessageSender
                         serializedMessage,
                         WebSocketMessageType.Text,
                         true,
-                        cancellationToken
+                        new CancellationToken()
                     )
                     .GetAwaiter()
                     .GetResult();
@@ -52,7 +54,9 @@ internal class MessageSender
             {
                 // If we were canceled, we don't want to show an error
                 if (cancellationToken.IsCancellationRequested)
+                {
                     return;
+                }
 
                 MessageDisplay.Instance.ShowError("Failed to send message to server", e.Message);
             }
@@ -67,7 +71,9 @@ internal class MessageSender
                 out var messageTag
             )
         )
+        {
             throw new Exception($"Unrecognized type of message object: '{message.GetType()}'");
+        }
 
         var options = new JsonSerializerOptions();
         options.Converters.Add(new MessageDataSerializer());

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Immerse.BfhClient.Api.Messages;
 using Godot;
 using System.Net.Http.Json;
+using System.Text;
 using Immerse.BfhClient.UI;
 using Immerse.BfhClient.Utils;
 using HttpClient = System.Net.Http.HttpClient;
@@ -213,8 +214,8 @@ public partial class ApiClient : Node
         {
             await _websocket.CloseAsync(
                 WebSocketCloseStatus.NormalClosure,
-                "Client initiated disconnect from game server",
-                _cancellation.Token
+                "client initiated disconnect from game server",
+                new CancellationToken()
             );
         }
         catch (Exception e)

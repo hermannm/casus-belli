@@ -27,7 +27,9 @@ internal class MessageReceiver
         while (true)
         {
             if (cancellationToken.IsCancellationRequested)
+            {
                 return;
+            }
 
             try
             {
@@ -37,7 +39,7 @@ internal class MessageReceiver
                     continue;
                 }
 
-                var messageString = ReadMessageFromSocket(cancellationToken);
+                var messageString = ReadMessageFromSocket();
                 var message = DeserializeMessage(messageString);
                 MessageQueue.Enqueue(message);
             }
@@ -45,14 +47,16 @@ internal class MessageReceiver
             {
                 // If we were canceled, we don't want to show an error
                 if (cancellationToken.IsCancellationRequested)
+                {
                     return;
+                }
 
                 MessageDisplay.Instance.ShowError("Failed to read message from server", e.Message);
             }
         }
     }
 
-    private string ReadMessageFromSocket(CancellationToken cancellationToken)
+    private string ReadMessageFromSocket()
     {
         var memoryStream = new MemoryStream();
 
@@ -61,11 +65,13 @@ internal class MessageReceiver
             var buffer = new ArraySegment<byte>(new byte[4 * 1024]);
 
             var chunkResult = _websocket
-                .ReceiveAsync(buffer, cancellationToken)
+                .ReceiveAsync(buffer, new CancellationToken())
                 .GetAwaiter()
                 .GetResult();
             if (chunkResult.MessageType != WebSocketMessageType.Text)
+            {
                 throw new Exception("Received non-text message");
+            }
 
             memoryStream.Write(buffer.Array!, buffer.Offset, chunkResult.Count);
 
@@ -87,11 +93,15 @@ internal class MessageReceiver
         var messageTag = json.GetProperty("Tag").Deserialize<MessageTag>();
 
         if (!MessageDictionary.ReceivableMessageTags.TryGetValue(messageTag, out var messageType))
+        {
             throw new Exception($"Unrecognized message type '{messageTag}' received from server");
+        }
 
         var messageData = json.GetProperty("Data").Deserialize(messageType);
         if (messageData is null)
+        {
             throw new Exception("Failed to deserialize message");
+        }
 
         return new Message { Tag = messageTag, Data = (GodotObject)messageData };
     }
