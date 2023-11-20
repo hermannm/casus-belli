@@ -26,4 +26,5 @@ theme_override_constants/separation = 10
 
 [node name="Label" type="Label" parent="MarginContainer/HBoxContainer/FactionContainer"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 20
 text = "Faction:"

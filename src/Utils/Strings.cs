@@ -11,4 +11,5 @@ public static class Strings
 {
     public static readonly StringName AddChild = new("add_child");
     public static readonly StringName RemoveChild = new("remove_child");
+    public static readonly StringName FontSize = new("font_size");
 }
