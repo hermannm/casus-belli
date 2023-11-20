@@ -3,7 +3,7 @@ namespace Immerse.BfhClient.Game;
 /// <summary>
 /// An order submitted by a player for one of their units in a given round.
 /// </summary>
-public record struct Order
+public record Order
 {
     public required OrderType Type { get; set; }
     public required string Faction { get; set; }

@@ -3,7 +3,7 @@ namespace Immerse.BfhClient.Game;
 /// <summary>
 /// A unit on the board, controlled by a player faction.
 /// </summary>
-public record struct Unit
+public record Unit
 {
     public required UnitType Type { get; set; }
     public required string Faction { get; set; }

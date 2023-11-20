@@ -3,7 +3,7 @@ namespace Immerse.BfhClient.Game;
 /// <summary>
 /// A typed number that adds to a player's result in a battle.
 /// </summary>
-public record struct Modifier
+public record Modifier
 {
     public required ModifierType Type { get; set; }
     public required int Value { get; set; }

@@ -10,6 +10,7 @@ public static class MessageDictionary
         new()
         {
             { MessageTag.Error, typeof(ErrorMessage) },
+            { MessageTag.GameStarted, typeof(GameStartedMessage) },
             { MessageTag.PlayerStatus, typeof(PlayerStatusMessage) },
             { MessageTag.LobbyJoined, typeof(LobbyJoinedMessage) },
             { MessageTag.SupportRequest, typeof(SupportRequestMessage) },

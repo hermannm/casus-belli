@@ -7,6 +7,7 @@ public enum MessageTag
     LobbyJoined,
     SelectFaction,
     StartGame,
+    GameStarted,
     SupportRequest,
     OrderRequest,
     OrdersReceived,

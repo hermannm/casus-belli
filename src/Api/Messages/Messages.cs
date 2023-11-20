@@ -72,6 +72,14 @@ public partial class SelectFactionMessage : GodotObject, ISendableMessage
 public partial class StartGameMessage : GodotObject, ISendableMessage { }
 
 /// <summary>
+/// Message sent from server when the game starts.
+/// </summary>
+public partial class GameStartedMessage : GodotObject, IReceivableMessage
+{
+    public required Board Board { get; set; }
+}
+
+/// <summary>
 /// Message sent from server when asking a supporting player who to support in an embattled region.
 /// </summary>
 public partial class SupportRequestMessage : GodotObject, IReceivableMessage
