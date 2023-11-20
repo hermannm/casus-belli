@@ -14,7 +14,7 @@ public partial class LobbyState : Node
     public Player Player { get; private set; } = new();
     public List<Player> OtherPlayers { get; private set; } = new();
     public List<string> SelectableFactions { get; private set; } = new();
-    public CustomSignal LobbyChanged { get; } = new("LobbyChanged");
+    public CustomSignal LobbyChangedSignal { get; } = new("LobbyChanged");
 
     private LobbyInfo? _joinedLobby = null;
 
@@ -80,7 +80,7 @@ public partial class LobbyState : Node
             );
         }
 
-        LobbyChanged.Emit();
+        LobbyChangedSignal.Emit();
     }
 
     private void HandlePlayerStatusMessage(PlayerStatusMessage message)
@@ -96,7 +96,7 @@ public partial class LobbyState : Node
             );
         }
 
-        LobbyChanged.Emit();
+        LobbyChangedSignal.Emit();
     }
 
     private Player? GetPlayerByUsername(string username)

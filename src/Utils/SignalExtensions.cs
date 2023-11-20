@@ -7,30 +7,19 @@ namespace Immerse.BfhClient.Utils;
 
 public static class SignalExtensions
 {
-    public static void ConnectCustomSignal(this Node node, StringName signal, Action listener)
+    public static void ConnectCustomSignal(this Node node, StringName signal, Action callback)
     {
-        ConnectCustomSignalInner(node, signal, Callable.From(listener));
+        var error = node.Connect(signal, Callable.From(callback));
+        if (error != Error.Ok)
+        {
+            GD.PushError($"Failed to connect signal '{signal}': {error}");
+        }
     }
 
     // Overload for Action with one parameter, since Action and Action<T> are not interchangeable.
-    public static void ConnectCustomSignal<T>(this Node node, StringName signal, Action<T> listener)
+    public static void ConnectCustomSignal<T>(this Node node, StringName signal, Action<T> callback)
     {
-        ConnectCustomSignalInner(node, signal, Callable.From(listener));
-    }
-
-    // Overload for Action with two parameters.
-    public static void ConnectCustomSignal<T1, T2>(
-        this Node node,
-        StringName signal,
-        Action<T1, T2> listener
-    )
-    {
-        ConnectCustomSignalInner(node, signal, Callable.From(listener));
-    }
-
-    private static void ConnectCustomSignalInner(Node node, StringName signal, Callable handler)
-    {
-        var error = node.Connect(signal, handler);
+        var error = node.Connect(signal, Callable.From(callback));
         if (error != Error.Ok)
         {
             GD.PushError($"Failed to connect signal '{signal}': {error}");
@@ -39,27 +28,16 @@ public static class SignalExtensions
 
     public static void EmitCustomSignal(this Node node, StringName signal)
     {
-        EmitCustomSignalInner(node, signal);
+        var error = node.EmitSignal(signal);
+        if (error != Error.Ok)
+        {
+            GD.PushError($"Failed to emit signal '{signal}': {error}");
+        }
     }
 
     public static void EmitCustomSignal<T>(this Node node, StringName signal, T param)
     {
-        EmitCustomSignalInner(node, signal, Variant.From(param));
-    }
-
-    public static void EmitCustomSignal<T1, T2>(
-        this Node node,
-        StringName signal,
-        T1 param1,
-        T2 param2
-    )
-    {
-        EmitCustomSignalInner(node, signal, Variant.From(param1), Variant.From(param2));
-    }
-
-    private static void EmitCustomSignalInner(Node node, StringName signal, params Variant[] args)
-    {
-        var error = node.EmitSignal(signal, args);
+        var error = node.EmitSignal(signal, Variant.From(param));
         if (error != Error.Ok)
         {
             GD.PushError($"Failed to emit signal '{signal}': {error}");

@@ -18,10 +18,9 @@ public partial class CurrentPlayer : Node
         _factionSelect.Select(0);
         _factionSelect.ItemSelected += SelectFaction;
         _factionSelect.AddThemeFontSizeOverride(Strings.FontSize, 20);
-        _factionSelect.
         GetNode("%FactionContainer").AddChild(_factionSelect);
 
-        LobbyState.Instance.LobbyChanged.AddListener(UpdateSelectedFaction);
+        LobbyState.Instance.LobbyChangedSignal.Connect(UpdateSelectedFaction);
     }
 
     private static void SelectFaction(long selectedFactionIndex)

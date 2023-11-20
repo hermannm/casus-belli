@@ -16,9 +16,15 @@ public readonly struct CustomSignal
         _node.RegisterCustomSignal(_signal);
     }
 
-    public void Emit() => _node.EmitCustomSignal(_signal);
+    public void Emit()
+    {
+        _node.EmitCustomSignal(_signal);
+    }
 
-    public void AddListener(Action listener) => _node.ConnectCustomSignal(_signal, listener);
+    public void Connect(Action callback)
+    {
+        _node.ConnectCustomSignal(_signal, callback);
+    }
 }
 
 public readonly struct CustomSignal<T>
@@ -32,24 +38,13 @@ public readonly struct CustomSignal<T>
         _node.RegisterCustomSignal(_signal);
     }
 
-    public void Emit(T param) => _node.EmitCustomSignal(_signal, param);
-
-    public void AddListener(Action<T> listener) => _node.ConnectCustomSignal(_signal, listener);
-}
-
-public readonly struct CustomSignal<T1, T2>
-{
-    private readonly StringName _signal;
-    private readonly Node _node = new();
-
-    public CustomSignal(StringName name)
+    public void Emit(T param)
     {
-        _signal = name;
-        _node.RegisterCustomSignal(_signal);
+        _node.EmitCustomSignal(_signal, param);
     }
 
-    public void Emit(T1 param1, T2 param2) => _node.EmitCustomSignal(_signal, param1, param2);
-
-    public void AddListener(Action<T1, T2> listener) =>
-        _node.ConnectCustomSignal(_signal, listener);
+    public void Connect(Action<T> callback)
+    {
+        _node.ConnectCustomSignal(_signal, callback);
+    }
 }
