@@ -161,40 +161,33 @@ func (game *Game) ResolveNonWinterOrders(orders []Order) []Battle {
 }
 
 func (game *Game) resolveMoves() {
-	loopsSinceLastResolve := 0
+	anyResolvedInLastLoop := true
 
 	for {
-		// If there are 2 loops since we last resolved a region, there are no regions currently
-		// resolving, and there are no unresolved retreats, then we are done!
-		if loopsSinceLastResolve >= 2 && game.resolving.IsEmpty() && len(game.retreats) == 0 {
+		// If nothing resolved in last loop, there are no regions currently resolving, and there are
+		// no unresolved retreats, then we are done!
+		if !anyResolvedInLastLoop && game.resolving.IsEmpty() && len(game.retreats) == 0 {
 			break
 		}
 
-		// If there are 2 loops since we last resolved a region, then there is nothing more to
-		// resolve there until we receive on the battle receiver - so we do just that here, to avoid
-		// busy spinning
-		if !game.resolving.IsEmpty() && loopsSinceLastResolve >= 2 {
+		// If nothing resolved in the last loop, then there is nothing more to resolve until we
+		// receive on the battle receiver - so we do just that here, to avoid busy spinning
+		if !anyResolvedInLastLoop && !game.resolving.IsEmpty() {
 			battle := <-game.battleReceiver
 			game.resolveBattle(battle)
-			loopsSinceLastResolve = 0
+			anyResolvedInLastLoop = true
 		}
 
 		select {
 		case battle := <-game.battleReceiver:
 			game.resolveBattle(battle)
-			loopsSinceLastResolve = 0
+			anyResolvedInLastLoop = true
 		default:
-			anyResolved := false
+			anyResolvedInLastLoop = false
 			for _, region := range game.Board {
 				if resolved := game.resolveRegionMoves(region); resolved {
-					anyResolved = true
+					anyResolvedInLastLoop = true
 				}
-			}
-
-			if anyResolved {
-				loopsSinceLastResolve = 0
-			} else {
-				loopsSinceLastResolve++
 			}
 		}
 	}
