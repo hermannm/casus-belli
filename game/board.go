@@ -35,6 +35,12 @@ type Region struct {
 	// For land regions with castles: the number of times an occupying unit has besieged the castle.
 	SiegeCount int `json:",omitempty"`
 
+	regionResolvingState
+}
+
+// Internal resolving state for a region. Resets to its zero value every round.
+// Since all fields are private, they're not included in JSON messages.
+type regionResolvingState struct {
 	order              Order
 	incomingMoves      []Order
 	incomingSupports   []Order
@@ -132,13 +138,7 @@ func (board Board) hasResolvingRegions() bool {
 
 func (board Board) resetResolvingState() {
 	for _, region := range board {
-		region.order = Order{}
-		region.incomingMoves = nil
-		region.incomingSupports = nil
-		region.resolving = false
-		region.resolved = false
-		region.transportsResolved = false
-		region.retreat = Order{}
+		region.regionResolvingState = regionResolvingState{}
 	}
 }
 
