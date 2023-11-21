@@ -8,8 +8,6 @@ import (
 )
 
 func newMockGame() *game.Game {
-	board := make(game.Board)
-
 	regions := []*game.Region{
 		{Name: "Lusía", HasCastle: true},
 		{Name: "Lomone", IsForest: true},
@@ -100,6 +98,7 @@ func newMockGame() *game.Game {
 		{region1: "Mare Unna", region2: "Mare Bøso"},
 	}
 
+	board := make(game.Board)
 	for _, region := range regions {
 		board[region.Name] = region
 	}
@@ -114,7 +113,6 @@ func newMockGame() *game.Game {
 			HasCliffs:     neighbor.hasCliffs,
 			DangerZone:    neighbor.dangerZone,
 		})
-		board[neighbor.region1] = region1
 
 		region2.Neighbors = append(region2.Neighbors, game.Neighbor{
 			Name:          neighbor.region1,
@@ -122,7 +120,6 @@ func newMockGame() *game.Game {
 			HasCliffs:     neighbor.hasCliffs,
 			DangerZone:    neighbor.dangerZone,
 		})
-		board[neighbor.region2] = region2
 	}
 
 	boardInfo := game.BoardInfo{ID: "test", Name: "Test game", WinningCastleCount: 5}
@@ -134,7 +131,6 @@ func placeUnits(units map[game.RegionName]game.Unit, board game.Board) {
 		region := board[regionName]
 		region.Unit = unit
 		region.ControllingFaction = unit.Faction
-		board[regionName] = region
 	}
 }
 
