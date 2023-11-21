@@ -29,7 +29,8 @@ public partial class MessageDisplay : Node
 
     public void ShowError(string errorMessage, params string[] subErrors)
     {
-        ShowMessage(Scenes.ErrorMessage, "Error: ", errorMessage, subErrors);
+        var message = ShowMessage(Scenes.ErrorMessage, "Error: ", errorMessage, subErrors);
+        GD.Print(message);
     }
 
     public void ShowInfo(string infoMessage, params string[] subMessages)
@@ -37,7 +38,7 @@ public partial class MessageDisplay : Node
         ShowMessage(Scenes.InfoMessage, null, infoMessage, subMessages);
     }
 
-    private void ShowMessage(string scene, string? prefix, string message, string[] subMessages)
+    private string ShowMessage(string scene, string? prefix, string message, string[] subMessages)
     {
         var errorMessageNode = ResourceLoader.Load<PackedScene>(scene).Instantiate();
         var label = errorMessageNode.GetNode<Label>("%MessageLabel");
@@ -60,13 +61,17 @@ public partial class MessageDisplay : Node
             stringBuilder.Append(' ');
             stringBuilder.Append(subMessage);
         }
-        label.Text = stringBuilder.ToString();
+
+        message = stringBuilder.ToString();
+        label.Text = message;
 
         _messageContainer.CallDeferred(Strings.AddChild, errorMessageNode);
         closeButton.Pressed += () =>
         {
             errorMessageNode.QueueFree();
         };
+
+        return message;
     }
 
     private void ResizeScrollContainer()
