@@ -38,7 +38,7 @@ const (
 	RequirementDangerZone int = 3
 )
 
-func (game *Game) calculateSingleplayerBattle(region Region, move Order) {
+func (game *Game) calculateSingleplayerBattle(region *Region, move Order) {
 	results := map[PlayerFaction]Result{
 		move.Faction: {Parts: attackModifiers(move, region, false, false, true), Move: move},
 	}
@@ -55,7 +55,7 @@ func (game *Game) calculateSingleplayerBattle(region Region, move Order) {
 	}()
 }
 
-func (game *Game) calculateMultiplayerBattle(region Region, includeDefender bool) {
+func (game *Game) calculateMultiplayerBattle(region *Region, includeDefender bool) {
 	results := make(map[PlayerFaction]Result, len(region.incomingMoves))
 
 	for _, move := range region.incomingMoves {
@@ -85,7 +85,7 @@ func (game *Game) calculateMultiplayerBattle(region Region, includeDefender bool
 }
 
 // Battle where units from two regions attack each other simultaneously.
-func (game *Game) calculateBorderBattle(region1 Region, region2 Region) {
+func (game *Game) calculateBorderBattle(region1 *Region, region2 *Region) {
 	move1 := region1.order
 	move2 := region2.order
 	results := map[PlayerFaction]Result{
@@ -115,7 +115,7 @@ type supportDeclaration struct {
 
 // Calls support from support orders to the given region, and adds modifiers to the result map.
 func (game *Game) callSupportForRegion(
-	region Region,
+	region *Region,
 	results map[PlayerFaction]Result,
 	includeDefender bool,
 ) {
@@ -167,7 +167,7 @@ func (game *Game) callSupportForRegion(
 
 func (game *Game) callSupportFromPlayer(
 	support Order,
-	region Region,
+	region *Region,
 	moves []Order,
 	includeDefender bool,
 	supportReceiver chan<- supportDeclaration,
@@ -414,5 +414,4 @@ func (game *Game) attemptRetreat(move Order) {
 	}
 
 	origin.Unit = move.Unit
-	game.Board[move.Origin] = origin
 }

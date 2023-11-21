@@ -59,7 +59,7 @@ func rollDice() int {
 	return rand.Intn(6) + 1
 }
 
-func defenseModifiers(region Region) []Modifier {
+func defenseModifiers(region *Region) []Modifier {
 	modifiers := []Modifier{
 		{Type: ModifierDice, Value: rollDice()},
 	}
@@ -73,7 +73,7 @@ func defenseModifiers(region Region) []Modifier {
 
 func attackModifiers(
 	move Order,
-	region Region,
+	region *Region,
 	hasOtherAttackers bool,
 	isBorderBattle bool,
 	includeDefender bool,

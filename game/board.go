@@ -1,6 +1,6 @@
 package game
 
-type Board map[RegionName]Region
+type Board map[RegionName]*Region
 
 type RegionName string
 
@@ -65,7 +65,6 @@ func (board Board) removeUnit(unit Unit, regionName RegionName) {
 
 	if unit == region.Unit {
 		region.Unit = Unit{}
-		board[regionName] = region
 	}
 }
 
@@ -93,7 +92,6 @@ func (board Board) addOrders(orders []Order) {
 func (board Board) addOrder(order Order) {
 	origin := board[order.Origin]
 	origin.order = order
-	board[order.Origin] = origin
 
 	if order.Destination == "" {
 		return
@@ -106,23 +104,19 @@ func (board Board) addOrder(order Order) {
 	case OrderSupport:
 		destination.incomingSupports = append(destination.incomingSupports, order)
 	}
-	board[order.Destination] = destination
 }
 
 func (board Board) clearOrders() {
-	for regionName, region := range board {
+	for _, region := range board {
 		region.order = Order{}
 		region.incomingMoves = nil
 		region.incomingSupports = nil
-
-		board[regionName] = region
 	}
 }
 
 func (board Board) removeOrder(order Order) {
 	origin := board[order.Origin]
 	origin.order = Order{}
-	board[order.Origin] = origin
 
 	switch order.Type {
 	case OrderMove:
@@ -135,8 +129,6 @@ func (board Board) removeOrder(order Order) {
 			}
 		}
 		destination.incomingMoves = newMoves
-
-		board[order.Destination] = destination
 	case OrderSupport:
 		destination := board[order.Destination]
 
@@ -147,35 +139,33 @@ func (board Board) removeOrder(order Order) {
 			}
 		}
 		destination.incomingSupports = newSupports
-
-		board[order.Destination] = destination
 	}
 }
 
 // Checks whether the region contains a unit.
-func (region Region) isEmpty() bool {
+func (region *Region) isEmpty() bool {
 	return region.Unit.isNone()
 }
 
 // Checks whether the region is controlled by a player faction.
-func (region Region) isControlled() bool {
+func (region *Region) isControlled() bool {
 	return region.ControllingFaction != ""
 }
 
 // Checks if any players have move orders against the region.
-func (region Region) isAttacked() bool {
+func (region *Region) isAttacked() bool {
 	return len(region.incomingMoves) != 0
 }
 
 // Checks if any players have support orders against the region.
-func (region Region) isSupported() bool {
+func (region *Region) isSupported() bool {
 	return len(region.incomingSupports) != 0
 }
 
 // Returns a region's neighbor of the given name, and whether it was found.
 // If the region has several neighbor relations to the region, returns the one matching the provided
 // 'via' string (currently the name of the neighbor relation's danger zone).
-func (region Region) getNeighbor(neighborName RegionName, via DangerZone) (Neighbor, bool) {
+func (region *Region) getNeighbor(neighborName RegionName, via DangerZone) (Neighbor, bool) {
 	neighbor := Neighbor{}
 	hasNeighbor := false
 
@@ -196,7 +186,7 @@ func (region Region) getNeighbor(neighborName RegionName, via DangerZone) (Neigh
 }
 
 // Returns whether the region is adjacent to a region of the given name.
-func (region Region) hasNeighbor(neighborName RegionName) bool {
+func (region *Region) hasNeighbor(neighborName RegionName) bool {
 	for _, neighbor := range region.Neighbors {
 		if neighbor.Name == neighborName {
 			return true
@@ -208,7 +198,7 @@ func (region Region) hasNeighbor(neighborName RegionName) bool {
 
 // Returns whether the region is a land region that borders the sea.
 // Takes the board in order to go through the region's neighbor regions.
-func (region Region) isCoast(board Board) bool {
+func (region *Region) isCoast(board Board) bool {
 	if region.IsSea {
 		return false
 	}

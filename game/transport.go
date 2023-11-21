@@ -62,7 +62,7 @@ type transportPath struct {
 }
 
 func (board Board) recursivelyFindTransportPath(
-	region Region,
+	region *Region,
 	destination RegionName,
 	regionsToExclude set.Set[RegionName],
 ) (canTransport bool, isTransportAttacked bool, dangerZones []DangerZone) {
@@ -121,7 +121,7 @@ func (board Board) recursivelyFindTransportPath(
 	return canTransport, bestPath.isAttacked, bestPath.dangerZones
 }
 
-func (region Region) getTransportingNeighbors(
+func (region *Region) getTransportingNeighbors(
 	board Board,
 	regionsToExclude set.Set[RegionName],
 ) (transports []Neighbor, newRegionsToExclude set.Set[RegionName]) {
@@ -147,7 +147,7 @@ func (region Region) getTransportingNeighbors(
 	return transports, newRegionsToExclude
 }
 
-func (region Region) checkNeighborsForDestination(
+func (region *Region) checkNeighborsForDestination(
 	destination RegionName,
 ) (destinationIsAdjacent bool, mustGoThrough DangerZone) {
 	for _, neighbor := range region.Neighbors {

@@ -10,7 +10,7 @@ import (
 func newMockGame() *game.Game {
 	board := make(game.Board)
 
-	regions := []game.Region{
+	regions := []*game.Region{
 		{Name: "Lusía", HasCastle: true},
 		{Name: "Lomone", IsForest: true},
 		{Name: "Limbol", IsForest: true},

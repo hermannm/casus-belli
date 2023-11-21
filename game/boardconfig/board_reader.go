@@ -80,7 +80,7 @@ func ReadBoardFromConfigFile(boardID string) (game.Board, game.BoardInfo, error)
 				HasCastle:          landRegion.Castle,
 			}
 
-			board[region.Name] = region
+			board[region.Name] = &region
 
 			if homeFaction != "" {
 				factions.Add(homeFaction)
@@ -90,7 +90,7 @@ func ReadBoardFromConfigFile(boardID string) (game.Board, game.BoardInfo, error)
 
 	for _, sea := range jsonBoard.Seas {
 		region := game.Region{Name: game.RegionName(sea.Name), IsSea: true}
-		board[region.Name] = region
+		board[region.Name] = &region
 	}
 
 	for _, neighbor := range jsonBoard.Neighbors {

@@ -34,24 +34,24 @@ func (board Board) discoverCycle(
 
 // Checks if the given region is part of a two-way move cycle (moves moving against each other).
 func (board Board) discoverTwoWayCycle(
-	region1 Region,
-) (isCycle bool, region2 Region, sameFaction bool) {
+	region1 *Region,
+) (isCycle bool, region2 *Region, sameFaction bool) {
 	order1 := region1.order
 	if order1.Type != OrderMove {
-		return false, Region{}, false
+		return false, nil, false
 	}
 
 	region2 = board[region1.order.Destination]
 	order2 := region2.order
 	if order2.Type != OrderMove {
-		return false, Region{}, false
+		return false, nil, false
 	}
 
 	return order1.Origin == order2.Destination, region2, order1.Faction == order2.Faction
 }
 
 func (game *Game) resolveCycle(cycle []Order) {
-	var battleRegions []Region
+	var battleRegions []*Region
 
 	// First resolves non-conflicting cycle moves
 	for _, move := range cycle {

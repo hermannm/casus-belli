@@ -126,16 +126,12 @@ func (game *Game) ResolveWinterOrders(orders []Order) {
 				Faction: order.Faction,
 				Type:    order.Build,
 			}
-			game.Board[order.Origin] = region
 		case OrderMove:
 			origin := game.Board[order.Origin]
 			destination := game.Board[order.Destination]
 
 			destination.Unit = origin.Unit
 			origin.Unit = Unit{}
-
-			game.Board[order.Origin] = origin
-			game.Board[order.Destination] = destination
 		}
 	}
 }
@@ -192,7 +188,7 @@ func (game *Game) resolveMoves() {
 	}
 }
 
-func (game *Game) resolveRegionMoves(region Region) (resolved bool) {
+func (game *Game) resolveRegionMoves(region *Region) (resolved bool) {
 	retreat, hasRetreat := game.retreats[region.Name]
 
 	// Skips the region if it has already been processed
@@ -217,7 +213,6 @@ func (game *Game) resolveRegionMoves(region Region) (resolved bool) {
 	if !region.isAttacked() {
 		if hasRetreat && region.isEmpty() {
 			region.Unit = retreat.Unit
-			game.Board[region.Name] = region
 			delete(game.retreats, region.Name)
 		}
 
@@ -230,10 +225,9 @@ func (game *Game) resolveRegionMoves(region Region) (resolved bool) {
 	if twoWayCycle && sameFaction {
 		// If both moves are by the same player faction, removes the units from their origin
 		// regions, as they may not be allowed to retreat if their origin region is taken
-		for _, cycleRegion := range [2]Region{region, region2} {
+		for _, cycleRegion := range [2]*Region{region, region2} {
 			cycleRegion.Unit = Unit{}
 			cycleRegion.order = Order{}
-			game.Board[cycleRegion.Name] = cycleRegion
 		}
 	} else if twoWayCycle {
 		// If the moves are from different player factions, they battle in the middle
@@ -269,7 +263,7 @@ func (game *Game) resolveRegionMoves(region Region) (resolved bool) {
 }
 
 func (game *Game) resolveSieges() {
-	for regionName, region := range game.Board {
+	for _, region := range game.Board {
 		if region.order.isNone() || region.order.Type != OrderBesiege {
 			continue
 		}
@@ -279,8 +273,6 @@ func (game *Game) resolveSieges() {
 			region.ControllingFaction = region.Unit.Faction
 			region.SiegeCount = 0
 		}
-
-		game.Board[regionName] = region
 	}
 }
 
@@ -292,8 +284,6 @@ func (game *Game) succeedMove(move Order) {
 	if !destination.IsSea {
 		destination.ControllingFaction = move.Faction
 	}
-
-	game.Board[move.Destination] = destination
 
 	game.Board.removeUnit(move.Unit, move.Origin)
 	game.Board.removeOrder(move)

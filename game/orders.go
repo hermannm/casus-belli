@@ -197,7 +197,7 @@ func validateWinterOrders(orders []Order, board Board) error {
 	return nil
 }
 
-func validateWinterOrder(order Order, origin Region, board Board) error {
+func validateWinterOrder(order Order, origin *Region, board Board) error {
 	switch order.Type {
 	case OrderMove:
 		return validateWinterMove(order, origin, board)
@@ -208,7 +208,7 @@ func validateWinterOrder(order Order, origin Region, board Board) error {
 	}
 }
 
-func validateWinterMove(order Order, origin Region, board Board) error {
+func validateWinterMove(order Order, origin *Region, board Board) error {
 	if order.Destination == "" {
 		return errors.New("winter move orders must have destination")
 	}
@@ -233,7 +233,7 @@ func validateWinterMove(order Order, origin Region, board Board) error {
 	return nil
 }
 
-func validateBuild(order Order, origin Region, board Board) error {
+func validateBuild(order Order, origin *Region, board Board) error {
 	if !origin.isEmpty() {
 		return errors.New("cannot build in region already occupied")
 	}
@@ -278,7 +278,7 @@ func validateNonWinterOrders(orders []Order, board Board) error {
 	return nil
 }
 
-func validateNonWinterOrder(order Order, origin Region, board Board) error {
+func validateNonWinterOrder(order Order, origin *Region, board Board) error {
 	if !order.Build.isNone() {
 		return errors.New("build orders can only be placed in winter")
 	}
@@ -301,7 +301,7 @@ func validateNonWinterOrder(order Order, origin Region, board Board) error {
 	}
 }
 
-func validateMoveOrSupport(order Order, origin Region, board Board) error {
+func validateMoveOrSupport(order Order, origin *Region, board Board) error {
 	if order.Destination == "" {
 		return errors.New("moves and supports must have destination")
 	}
@@ -331,7 +331,7 @@ func validateMoveOrSupport(order Order, origin Region, board Board) error {
 	return errors.New("invalid order type")
 }
 
-func validateMove(order Order, origin Region, board Board) error {
+func validateMove(order Order, origin *Region, board Board) error {
 	if order.SecondDestination != "" {
 		if origin.Unit.Type != UnitHorse {
 			return errors.New(
@@ -349,7 +349,7 @@ func validateMove(order Order, origin Region, board Board) error {
 	return nil
 }
 
-func validateSupport(order Order, origin Region, destination Region) error {
+func validateSupport(order Order, origin *Region, destination *Region) error {
 	if !origin.hasNeighbor(order.Destination) {
 		return errors.New("support order must be adjacent to destination")
 	}
@@ -357,7 +357,7 @@ func validateSupport(order Order, origin Region, destination Region) error {
 	return nil
 }
 
-func validateBesiegeOrTransport(order Order, origin Region) error {
+func validateBesiegeOrTransport(order Order, origin *Region) error {
 	if order.Destination != "" {
 		return errors.New("besiege or transport orders cannot have destination")
 	}
@@ -372,7 +372,7 @@ func validateBesiegeOrTransport(order Order, origin Region) error {
 	}
 }
 
-func validateBesiege(order Order, origin Region) error {
+func validateBesiege(order Order, origin *Region) error {
 	if !origin.HasCastle {
 		return errors.New("besieged region must have castle")
 	}
@@ -388,7 +388,7 @@ func validateBesiege(order Order, origin Region) error {
 	return nil
 }
 
-func validateTransport(order Order, origin Region) error {
+func validateTransport(order Order, origin *Region) error {
 	if origin.Unit.Type != UnitShip {
 		return errors.New("only ships can transport")
 	}

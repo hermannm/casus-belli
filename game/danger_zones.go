@@ -3,7 +3,7 @@ package game
 // Finds move and support orders attempting to cross danger zones to their destinations, and fails
 // them if they don't make it across.
 func resolveDangerZones(board Board) (results []Battle) {
-	for regionName, region := range board {
+	for _, region := range board {
 		order := region.order
 
 		if order.Type != OrderMove && order.Type != OrderSupport {
@@ -21,7 +21,6 @@ func resolveDangerZones(board Board) (results []Battle) {
 		if !survived {
 			if order.Type == OrderMove {
 				region.Unit = Unit{}
-				board[regionName] = region
 			}
 
 			board.removeOrder(order)
