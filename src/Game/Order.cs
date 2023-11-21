@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Immerse.BfhClient.Game;
 
 /// <summary>
@@ -34,6 +36,26 @@ public record Order
     /// Can only be of the constants defined in <see cref="UnitType"/>.
     /// </summary>
     public string? Build { get; set; }
+
+    [JsonIgnore]
+    public Unit Unit = null!; // Initialized when orders are received.
+
+    public Order? TryGetSecondHorseMove()
+    {
+        if (Type != OrderType.Move || SecondDestination is null || Unit.Type != UnitType.Horse)
+        {
+            return null;
+        }
+
+        return new Order
+        {
+            Type = Type,
+            Faction = Faction,
+            Origin = Destination!,
+            Destination = SecondDestination,
+            ViaDangerZone = ViaDangerZone
+        };
+    }
 }
 
 /// <summary>

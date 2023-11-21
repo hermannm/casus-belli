@@ -1,11 +1,30 @@
 using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json.Serialization;
 
 namespace Immerse.BfhClient.Game;
 
 /// <summary>
 /// Maps region names to regions.
 /// </summary>
-public class Board : Dictionary<string, Region> { }
+public class Board : Dictionary<string, Region>
+{
+    public void RemoveOrder(Order order)
+    {
+        var origin = this[order.Origin];
+        origin.Order = null;
+
+        if (order.Type == OrderType.Move)
+        {
+            this[order.Destination!].IncomingMoves.Remove(order);
+        }
+    }
+
+    public bool AllResolved()
+    {
+        return Values.All(region => region.Resolved);
+    }
+}
 
 /// <summary>
 /// A region on the board.
@@ -57,6 +76,56 @@ public record Region
     /// castle.
     /// </summary>
     public int? SiegeCount { get; set; }
+
+    [JsonIgnore]
+    public Order? Order { get; set; }
+
+    [JsonIgnore]
+    public List<Order> IncomingMoves { get; set; } = new();
+
+    [JsonIgnore]
+    public bool Resolved { get; set; } = false;
+
+    public bool IsAttacked()
+    {
+        return IncomingMoves.Count > 0;
+    }
+
+    public bool IsEmpty()
+    {
+        return Unit == null;
+    }
+
+    public bool IsControlled()
+    {
+        return ControllingFaction != null;
+    }
+
+    public bool IsAdjacentTo(string regionName)
+    {
+        foreach (var neighbor in Neighbors)
+        {
+            if (neighbor.Name == regionName)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void MoveUnitTo(Region destination)
+    {
+        destination.Unit = Unit;
+        Unit = null;
+    }
+
+    public void RemoveUnit(Unit unit)
+    {
+        if (unit == Unit)
+        {
+            Unit = null;
+        }
+    }
 }
 
 public record Neighbor
