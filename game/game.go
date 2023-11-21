@@ -164,15 +164,14 @@ func (game *Game) resolveMoves() {
 	anyResolvedInLastLoop := true
 
 	for {
-		// If nothing resolved in last loop, there are no regions currently resolving, and there are
-		// no unresolved retreats, then we are done!
-		if !anyResolvedInLastLoop && game.resolving.IsEmpty() && len(game.retreats) == 0 {
-			break
-		}
+		// If nothing resolved in the last loop and there are no retreats to resolve, then we are
+		// either done resolving or waiting for concurrently resolving regions
+		if !anyResolvedInLastLoop && len(game.retreats) == 0 {
+			if game.resolving.IsEmpty() {
+				break
+			}
 
-		// If nothing resolved in the last loop, then there is nothing more to resolve until we
-		// receive on the battle receiver - so we do just that here, to avoid busy spinning
-		if !anyResolvedInLastLoop && !game.resolving.IsEmpty() {
+			// Wait here instead of in select{}, to avoid busy spinning on default case
 			battle := <-game.battleReceiver
 			game.resolveBattle(battle)
 			anyResolvedInLastLoop = true
