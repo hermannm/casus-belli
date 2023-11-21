@@ -2,7 +2,6 @@ package game
 
 import (
 	"hermannm.dev/devlog/log"
-	"hermannm.dev/set"
 )
 
 type Game struct {
@@ -11,14 +10,10 @@ type Game struct {
 	messenger Messenger
 	log       log.Logger
 
-	season             Season
-	resolving          set.ArraySet[RegionName]
-	resolved           set.ArraySet[RegionName]
-	resolvedTransports set.ArraySet[RegionName]
-	resolvedBattles    []Battle
-	battleReceiver     chan Battle
-	retreats           map[RegionName]Order
-	secondHorseMoves   []Order
+	season           Season
+	resolvedBattles  []Battle
+	battleReceiver   chan Battle
+	secondHorseMoves []Order
 }
 
 type BoardInfo struct {
@@ -61,18 +56,14 @@ func New(
 	logger log.Logger,
 ) *Game {
 	return &Game{
-		Board:              board,
-		BoardInfo:          boardInfo,
-		messenger:          messenger,
-		log:                logger,
-		season:             SeasonWinter,
-		resolving:          set.NewArraySet[RegionName](),
-		resolved:           set.NewArraySet[RegionName](),
-		resolvedTransports: set.NewArraySet[RegionName](),
-		resolvedBattles:    nil,
-		battleReceiver:     make(chan Battle),
-		retreats:           make(map[RegionName]Order),
-		secondHorseMoves:   nil,
+		Board:            board,
+		BoardInfo:        boardInfo,
+		messenger:        messenger,
+		log:              logger,
+		season:           SeasonWinter,
+		resolvedBattles:  nil,
+		battleReceiver:   make(chan Battle),
+		secondHorseMoves: nil,
 	}
 }
 
@@ -103,17 +94,13 @@ func (game *Game) nextRound() {
 	game.season = game.season.next()
 
 	game.messenger.ClearMessages()
-	game.Board.clearOrders()
-	game.resolving.Clear()
-	game.resolved.Clear()
-	game.resolvedTransports.Clear()
+	game.Board.resetResolvingState()
 	game.resolvedBattles = game.resolvedBattles[:0] // Keeps same capacity
 	for len(game.battleReceiver) > 0 {
 		// Drains the channel - won't block, since there are no other concurrent channel readers, as
 		// this function is called from the same goroutine as the one that read
 		<-game.battleReceiver
 	}
-	game.retreats = make(map[RegionName]Order)
 	game.secondHorseMoves = game.secondHorseMoves[:0]
 }
 
@@ -160,10 +147,10 @@ func (game *Game) resolveMoves() {
 	anyResolvedInLastLoop := true
 
 	for {
-		// If nothing resolved in the last loop and there are no retreats to resolve, then we are
+		// If nothing resolved in the last loop and there are no unresolved retreats, then we are
 		// either done resolving or waiting for concurrently resolving regions
-		if !anyResolvedInLastLoop && len(game.retreats) == 0 {
-			if game.resolving.IsEmpty() {
+		if !anyResolvedInLastLoop && !game.Board.hasUnresolvedRetreats() {
+			if !game.Board.hasResolvingRegions() {
 				break
 			}
 
@@ -189,17 +176,14 @@ func (game *Game) resolveMoves() {
 }
 
 func (game *Game) resolveRegionMoves(region *Region) (resolved bool) {
-	retreat, hasRetreat := game.retreats[region.Name]
-
 	// Skips the region if it has already been processed
-	if (game.resolved.Contains(region.Name) && !hasRetreat) ||
-		(game.resolving.Contains(region.Name)) {
+	if region.resolving || (region.resolved && !region.hasRetreat()) {
 		return false
 	}
 
 	// Resolves incoming moves that require transport
-	if !game.resolvedTransports.Contains(region.Name) {
-		game.resolvedTransports.Add(region.Name)
+	if !region.transportsResolved {
+		region.transportsResolved = true
 
 		for _, move := range region.incomingMoves {
 			transportMustWait := game.resolveTransport(move)
@@ -211,12 +195,12 @@ func (game *Game) resolveRegionMoves(region *Region) (resolved bool) {
 
 	// Resolves retreats if region has no attackers
 	if !region.isAttacked() {
-		if hasRetreat && region.isEmpty() {
-			region.Unit = retreat.Unit
-			delete(game.retreats, region.Name)
+		if region.hasRetreat() {
+			region.Unit = region.retreat.Unit
+			region.retreat = Order{}
 		}
 
-		game.resolved.Add(region.Name)
+		region.resolved = true
 		return true
 	}
 
@@ -288,7 +272,7 @@ func (game *Game) succeedMove(move Order) {
 	game.Board.removeUnit(move.Unit, move.Origin)
 	game.Board.removeOrder(move)
 
-	game.resolved.Add(move.Destination)
+	destination.resolved = true
 
 	if secondHorseMove, hasSecondHorseMove := move.tryGetSecondHorseMove(); hasSecondHorseMove {
 		game.secondHorseMoves = append(game.secondHorseMoves, secondHorseMove)
@@ -298,7 +282,7 @@ func (game *Game) succeedMove(move Order) {
 func (game *Game) addSecondHorseMoves() {
 	for _, secondHorseMove := range game.secondHorseMoves {
 		game.Board.addOrder(secondHorseMove)
-		game.resolved.Remove(secondHorseMove.Destination)
+		game.Board[secondHorseMove.Destination].resolved = false
 	}
 
 	game.secondHorseMoves = nil

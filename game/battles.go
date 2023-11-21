@@ -48,7 +48,7 @@ func (game *Game) calculateSingleplayerBattle(region *Region, move Order) {
 		return
 	}
 
-	game.resolving.Add(region.Name)
+	region.resolving = true
 	go func() {
 		game.callSupportForRegion(region, results, false)
 		game.battleReceiver <- Battle{Results: calculateTotals(results)}
@@ -77,7 +77,7 @@ func (game *Game) calculateMultiplayerBattle(region *Region, includeDefender boo
 		return
 	}
 
-	game.resolving.Add(region.Name)
+	region.resolving = true
 	go func() {
 		game.callSupportForRegion(region, results, includeDefender)
 		game.battleReceiver <- Battle{Results: calculateTotals(results)}
@@ -98,7 +98,8 @@ func (game *Game) calculateBorderBattle(region1 *Region, region2 *Region) {
 		return
 	}
 
-	game.resolving.AddMultiple(region1.Name, region2.Name)
+	region1.resolving = true
+	region2.resolving = true
 	go func() {
 		// TODO: make these two calls run concurrently
 		game.callSupportForRegion(region1, results, false)
@@ -246,7 +247,7 @@ func (game *Game) resolveBattle(battle Battle) {
 	}
 
 	for _, region := range battle.regionNames() {
-		game.resolving.Remove(region)
+		game.Board[region].resolving = false
 	}
 }
 
@@ -409,7 +410,7 @@ func (game *Game) attemptRetreat(move Order) {
 	}
 
 	if origin.isAttacked() {
-		game.retreats[move.Origin] = move
+		origin.retreat = move
 		return
 	}
 

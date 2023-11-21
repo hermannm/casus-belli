@@ -35,9 +35,13 @@ type Region struct {
 	// For land regions with castles: the number of times an occupying unit has besieged the castle.
 	SiegeCount int `json:",omitempty"`
 
-	order            Order
-	incomingMoves    []Order
-	incomingSupports []Order
+	order              Order
+	incomingMoves      []Order
+	incomingSupports   []Order
+	resolving          bool
+	resolved           bool
+	transportsResolved bool
+	retreat            Order
 }
 
 type Neighbor struct {
@@ -106,11 +110,35 @@ func (board Board) addOrder(order Order) {
 	}
 }
 
-func (board Board) clearOrders() {
+func (board Board) hasUnresolvedRetreats() bool {
+	for _, region := range board {
+		if region.hasRetreat() {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (board Board) hasResolvingRegions() bool {
+	for _, region := range board {
+		if region.resolving {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (board Board) resetResolvingState() {
 	for _, region := range board {
 		region.order = Order{}
 		region.incomingMoves = nil
 		region.incomingSupports = nil
+		region.resolving = false
+		region.resolved = false
+		region.transportsResolved = false
+		region.retreat = Order{}
 	}
 }
 
@@ -160,6 +188,10 @@ func (region *Region) isAttacked() bool {
 // Checks if any players have support orders against the region.
 func (region *Region) isSupported() bool {
 	return len(region.incomingSupports) != 0
+}
+
+func (region *Region) hasRetreat() bool {
+	return !region.retreat.isNone()
 }
 
 // Returns a region's neighbor of the given name, and whether it was found.
