@@ -27,7 +27,7 @@ public readonly struct CustomSignal
     }
 }
 
-public readonly struct CustomSignal<T>
+public readonly struct CustomSignal<[MustBeVariant] T>
 {
     private readonly StringName _signal;
     private readonly Node _node = new();

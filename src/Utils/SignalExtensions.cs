@@ -56,14 +56,27 @@ public static class SignalExtensions
         var argNumber = 1;
         foreach (var arg in args)
         {
-            var godotType = Type.GetTypeCode(arg) switch
+            Variant.Type godotType;
+            if (arg == typeof(string))
             {
-                TypeCode.String => Variant.Type.String,
-                TypeCode.Boolean => Variant.Type.Bool,
-                TypeCode.Int32 => Variant.Type.Int,
-                TypeCode.Object => Variant.Type.Object,
-                _ => throw new ArgumentException($"Invalid signal argument type '{arg}'")
-            };
+                godotType = Variant.Type.String;
+            }
+            else if (arg == typeof(bool))
+            {
+                godotType = Variant.Type.Bool;
+            }
+            else if (arg == typeof(int) || arg.IsEnum)
+            {
+                godotType = Variant.Type.Int;
+            }
+            else if (arg == typeof(GodotObject))
+            {
+                godotType = Variant.Type.Object;
+            }
+            else
+            {
+                throw new ArgumentException($"Invalid signal argument type '{arg}'");
+            }
 
             godotArgs.Add(
                 new GodotDictionary { { "name", $"arg{argNumber}" }, { "type", (int)godotType } }

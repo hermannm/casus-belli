@@ -233,7 +233,7 @@ public partial class ApiClient : Node
     {
         foreach (var signal in _messageSignalNames.Values)
         {
-            this.RegisterCustomSignal(signal, typeof(object));
+            this.RegisterCustomSignal(signal, typeof(GodotObject));
         }
     }
 
