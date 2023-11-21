@@ -403,7 +403,8 @@ func validateTransport(order Order, origin *Region) error {
 func validateReachableMoveDestinations(orders []Order, board Board) error {
 	boardCopy := make(Board, len(board))
 	for regionName, region := range board {
-		boardCopy[regionName] = region
+		regionCopy := *region
+		boardCopy[regionName] = &regionCopy
 	}
 
 	boardCopy.addOrders(orders)
