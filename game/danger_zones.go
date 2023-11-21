@@ -4,7 +4,7 @@ package game
 // them if they don't make it across.
 func resolveDangerZones(board Board) (results []Battle) {
 	for regionName, region := range board {
-		order := region.Order
+		order := region.order
 
 		if order.Type != OrderMove && order.Type != OrderSupport {
 			continue

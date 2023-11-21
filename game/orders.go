@@ -30,7 +30,7 @@ type Order struct {
 	Build UnitType
 
 	// The unit the order affects.
-	// Excluded from JSON messages, as clients can deduce this from the From field.
+	// Excluded from JSON messages, as clients can deduce this from the Origin field.
 	// Server includes this field on the order to keep track of units between battles.
 	Unit Unit `json:"-"`
 }

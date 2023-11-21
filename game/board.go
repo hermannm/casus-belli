@@ -35,14 +35,9 @@ type Region struct {
 	// For land regions with castles: the number of times an occupying unit has besieged the castle.
 	SiegeCount int `json:",omitempty"`
 
-	// Order for the occupying unit in the region. Resets every round.
-	Order Order `json:"-"` // Excluded from JSON responses.
-
-	// Incoming move orders to the region. Resets every round.
-	IncomingMoves []Order `json:"-"` // Excluded from JSON responses.
-
-	// Incoming support orders to the region. Resets every round.
-	IncomingSupports []Order `json:"-"` // Excluded from JSON responses.
+	order            Order
+	incomingMoves    []Order
+	incomingSupports []Order
 }
 
 type Neighbor struct {
@@ -97,7 +92,7 @@ func (board Board) addOrders(orders []Order) {
 
 func (board Board) addOrder(order Order) {
 	origin := board[order.Origin]
-	origin.Order = order
+	origin.order = order
 	board[order.Origin] = origin
 
 	if order.Destination == "" {
@@ -107,18 +102,18 @@ func (board Board) addOrder(order Order) {
 	destination := board[order.Destination]
 	switch order.Type {
 	case OrderMove:
-		destination.IncomingMoves = append(destination.IncomingMoves, order)
+		destination.incomingMoves = append(destination.incomingMoves, order)
 	case OrderSupport:
-		destination.IncomingSupports = append(destination.IncomingSupports, order)
+		destination.incomingSupports = append(destination.incomingSupports, order)
 	}
 	board[order.Destination] = destination
 }
 
 func (board Board) clearOrders() {
 	for regionName, region := range board {
-		region.Order = Order{}
-		region.IncomingMoves = nil
-		region.IncomingSupports = nil
+		region.order = Order{}
+		region.incomingMoves = nil
+		region.incomingSupports = nil
 
 		board[regionName] = region
 	}
@@ -126,7 +121,7 @@ func (board Board) clearOrders() {
 
 func (board Board) removeOrder(order Order) {
 	origin := board[order.Origin]
-	origin.Order = Order{}
+	origin.order = Order{}
 	board[order.Origin] = origin
 
 	switch order.Type {
@@ -134,24 +129,24 @@ func (board Board) removeOrder(order Order) {
 		destination := board[order.Destination]
 
 		var newMoves []Order
-		for _, incomingMove := range destination.IncomingMoves {
+		for _, incomingMove := range destination.incomingMoves {
 			if incomingMove != order {
 				newMoves = append(newMoves, incomingMove)
 			}
 		}
-		destination.IncomingMoves = newMoves
+		destination.incomingMoves = newMoves
 
 		board[order.Destination] = destination
 	case OrderSupport:
 		destination := board[order.Destination]
 
 		var newSupports []Order
-		for _, incSupport := range destination.IncomingSupports {
+		for _, incSupport := range destination.incomingSupports {
 			if incSupport != order {
 				newSupports = append(newSupports, incSupport)
 			}
 		}
-		destination.IncomingSupports = newSupports
+		destination.incomingSupports = newSupports
 
 		board[order.Destination] = destination
 	}
@@ -169,12 +164,12 @@ func (region Region) isControlled() bool {
 
 // Checks if any players have move orders against the region.
 func (region Region) isAttacked() bool {
-	return len(region.IncomingMoves) != 0
+	return len(region.incomingMoves) != 0
 }
 
 // Checks if any players have support orders against the region.
 func (region Region) isSupported() bool {
-	return len(region.IncomingSupports) != 0
+	return len(region.incomingSupports) != 0
 }
 
 // Returns a region's neighbor of the given name, and whether it was found.

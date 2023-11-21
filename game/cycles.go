@@ -13,7 +13,7 @@ func (board Board) discoverCycle(
 
 	// The cycle has outside attackers if more than just this order in the cycle is attacking the
 	// destination.
-	hasOutsideAttackers = len(destination.IncomingMoves) > 1
+	hasOutsideAttackers = len(destination.incomingMoves) > 1
 
 	// The base case: the destination is the beginning of the cycle.
 	if destination.Name == firstRegionName {
@@ -23,7 +23,7 @@ func (board Board) discoverCycle(
 	// If the base case is not yet reached, passes cycle discovery to the next order in the chain.
 	continuedCycle, continuedOutsideAttackers := board.discoverCycle(
 		firstRegionName,
-		destination.Order,
+		destination.order,
 	)
 	if continuedCycle == nil {
 		return nil, false
@@ -36,13 +36,13 @@ func (board Board) discoverCycle(
 func (board Board) discoverTwoWayCycle(
 	region1 Region,
 ) (isCycle bool, region2 Region, sameFaction bool) {
-	order1 := region1.Order
+	order1 := region1.order
 	if order1.Type != OrderMove {
 		return false, Region{}, false
 	}
 
-	region2 = board[region1.Order.Destination]
-	order2 := region2.Order
+	region2 = board[region1.order.Destination]
+	order2 := region2.order
 	if order2.Type != OrderMove {
 		return false, Region{}, false
 	}
@@ -58,7 +58,7 @@ func (game *Game) resolveCycle(cycle []Order) {
 		destination := game.Board[move.Destination]
 
 		if (destination.isControlled() || destination.IsSea) &&
-			len(destination.IncomingMoves) == 1 {
+			len(destination.incomingMoves) == 1 {
 			game.succeedMove(move)
 			continue
 		}
@@ -68,8 +68,8 @@ func (game *Game) resolveCycle(cycle []Order) {
 
 	// Then resolves cycle moves that require battle
 	for _, region := range battleRegions {
-		if len(region.IncomingMoves) == 1 {
-			game.calculateSingleplayerBattle(region, region.IncomingMoves[0])
+		if len(region.incomingMoves) == 1 {
+			game.calculateSingleplayerBattle(region, region.incomingMoves[0])
 		} else {
 			game.calculateMultiplayerBattle(region, false)
 		}

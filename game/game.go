@@ -213,7 +213,7 @@ func (game *Game) resolveRegionMoves(region Region) (resolved bool) {
 	if !game.resolvedTransports.Contains(region.Name) {
 		game.resolvedTransports.Add(region.Name)
 
-		for _, move := range region.IncomingMoves {
+		for _, move := range region.incomingMoves {
 			transportMustWait := game.resolveTransport(move)
 			if transportMustWait {
 				return false
@@ -240,22 +240,22 @@ func (game *Game) resolveRegionMoves(region Region) (resolved bool) {
 		// regions, as they may not be allowed to retreat if their origin region is taken
 		for _, cycleRegion := range [2]Region{region, region2} {
 			cycleRegion.Unit = Unit{}
-			cycleRegion.Order = Order{}
+			cycleRegion.order = Order{}
 			game.Board[cycleRegion.Name] = cycleRegion
 		}
 	} else if twoWayCycle {
 		// If the moves are from different player factions, they battle in the middle
 		game.calculateBorderBattle(region, region2)
 		return true
-	} else if cycle, _ := game.Board.discoverCycle(region.Name, region.Order); cycle != nil {
+	} else if cycle, _ := game.Board.discoverCycle(region.Name, region.order); cycle != nil {
 		// If there is a cycle longer than 2 moves, forwards the resolving to resolveCycle
 		game.resolveCycle(cycle)
 		return true
 	}
 
 	// A single move to an empty region is either an autosuccess, or a singleplayer battle
-	if len(region.IncomingMoves) == 1 && region.isEmpty() {
-		move := region.IncomingMoves[0]
+	if len(region.incomingMoves) == 1 && region.isEmpty() {
+		move := region.incomingMoves[0]
 
 		if region.isControlled() || region.IsSea {
 			game.succeedMove(move)
@@ -267,7 +267,7 @@ func (game *Game) resolveRegionMoves(region Region) (resolved bool) {
 	}
 
 	// If the destination region has an outgoing move order, that must be resolved first
-	if region.Order.Type == OrderMove {
+	if region.order.Type == OrderMove {
 		return false
 	}
 
@@ -278,7 +278,7 @@ func (game *Game) resolveRegionMoves(region Region) (resolved bool) {
 
 func (game *Game) resolveSieges() {
 	for regionName, region := range game.Board {
-		if region.Order.isNone() || region.Order.Type != OrderBesiege {
+		if region.order.isNone() || region.order.Type != OrderBesiege {
 			continue
 		}
 
@@ -296,7 +296,7 @@ func (game *Game) succeedMove(move Order) {
 	destination := game.Board[move.Destination]
 
 	destination.Unit = move.Unit
-	destination.Order = Order{}
+	destination.order = Order{}
 	if !destination.IsSea {
 		destination.ControllingFaction = move.Faction
 	}

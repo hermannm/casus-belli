@@ -56,9 +56,9 @@ func (game *Game) calculateSingleplayerBattle(region Region, move Order) {
 }
 
 func (game *Game) calculateMultiplayerBattle(region Region, includeDefender bool) {
-	results := make(map[PlayerFaction]Result, len(region.IncomingMoves))
+	results := make(map[PlayerFaction]Result, len(region.incomingMoves))
 
-	for _, move := range region.IncomingMoves {
+	for _, move := range region.incomingMoves {
 		results[move.Faction] = Result{
 			Parts: attackModifiers(move, region, true, false, includeDefender),
 			Move:  move,
@@ -86,8 +86,8 @@ func (game *Game) calculateMultiplayerBattle(region Region, includeDefender bool
 
 // Battle where units from two regions attack each other simultaneously.
 func (game *Game) calculateBorderBattle(region1 Region, region2 Region) {
-	move1 := region1.Order
-	move2 := region2.Order
+	move1 := region1.order
+	move2 := region2.order
 	results := map[PlayerFaction]Result{
 		move1.Faction: {Parts: attackModifiers(move1, region2, true, true, false), Move: move1},
 		move2.Faction: {Parts: attackModifiers(move2, region1, true, true, false), Move: move2},
@@ -119,7 +119,7 @@ func (game *Game) callSupportForRegion(
 	results map[PlayerFaction]Result,
 	includeDefender bool,
 ) {
-	supports := region.IncomingSupports
+	supports := region.incomingSupports
 	supportReceiver := make(chan supportDeclaration, len(supports))
 
 	var waitGroup sync.WaitGroup
