@@ -39,49 +39,72 @@ const (
 	RequirementDangerZone int = 3
 )
 
+type ResultMap map[PlayerFaction]*Result
+
+func (resultMap ResultMap) moves(destination RegionName) []Order {
+	var moves []Order
+	for _, result := range resultMap {
+		if result.DefenderRegion == "" && result.Move.Destination == destination {
+			moves = append(moves, result.Move)
+		}
+	}
+	return moves
+}
+
+func (resultMap ResultMap) toBattle() Battle {
+	battle := Battle{Results: make([]Result, 0, len(resultMap))}
+	for _, result := range resultMap {
+		for _, mod := range result.Parts {
+			result.Total += mod.Value
+		}
+		battle.Results = append(battle.Results, *result)
+	}
+	return battle
+}
+
 func (game *Game) calculateSingleplayerBattle(region *Region, move Order) {
-	results := map[PlayerFaction]Result{
+	resultMap := ResultMap{
 		move.Faction: {Parts: attackModifiers(move, region, false, false), Move: move},
 	}
 
 	if !region.isSupported() {
-		game.resolveSingleplayerBattle(Battle{Results: calculateTotals(results)})
+		game.resolveSingleplayerBattle(resultMap.toBattle())
 		return
 	}
 
 	region.resolving = true
 	go func() {
-		game.callSupportForRegion(region, results, false)
-		game.battleReceiver <- Battle{Results: calculateTotals(results)}
+		game.callSupportForRegion(region, resultMap, false)
+		game.battleReceiver <- resultMap.toBattle()
 	}()
 }
 
 func (game *Game) calculateMultiplayerBattle(region *Region) {
-	results := make(map[PlayerFaction]Result, len(region.incomingMoves))
+	resultMap := make(ResultMap, len(region.incomingMoves))
 
 	for _, move := range region.incomingMoves {
-		results[move.Faction] = Result{
+		resultMap[move.Faction] = &Result{
 			Parts: attackModifiers(move, region, true, false),
 			Move:  move,
 		}
 	}
 
 	if !region.isEmpty() {
-		results[region.Unit.Faction] = Result{
+		resultMap[region.Unit.Faction] = &Result{
 			Parts:          defenseModifiers(region),
 			DefenderRegion: region.Name,
 		}
 	}
 
 	if !region.isSupported() {
-		game.resolveMultiplayerBattle(Battle{Results: calculateTotals(results)})
+		game.resolveMultiplayerBattle(resultMap.toBattle())
 		return
 	}
 
 	region.resolving = true
 	go func() {
-		game.callSupportForRegion(region, results, false)
-		game.battleReceiver <- Battle{Results: calculateTotals(results)}
+		game.callSupportForRegion(region, resultMap, false)
+		game.battleReceiver <- resultMap.toBattle()
 	}()
 }
 
@@ -89,13 +112,13 @@ func (game *Game) calculateMultiplayerBattle(region *Region) {
 func (game *Game) calculateBorderBattle(region1 *Region, region2 *Region) {
 	move1 := region1.order
 	move2 := region2.order
-	results := map[PlayerFaction]Result{
+	resultMap := ResultMap{
 		move1.Faction: {Parts: attackModifiers(move1, region2, true, true), Move: move1},
 		move2.Faction: {Parts: attackModifiers(move2, region1, true, true), Move: move2},
 	}
 
 	if !region1.isSupported() && !region2.isSupported() {
-		game.resolveBorderBattle(Battle{Results: calculateTotals(results)})
+		game.resolveBorderBattle(resultMap.toBattle())
 		return
 	}
 
@@ -103,10 +126,10 @@ func (game *Game) calculateBorderBattle(region1 *Region, region2 *Region) {
 	region2.resolving = true
 	go func() {
 		// TODO: make these two calls run concurrently (possibly race condition on results)
-		game.callSupportForRegion(region1, results, true)
-		game.callSupportForRegion(region2, results, true)
+		game.callSupportForRegion(region1, resultMap, true)
+		game.callSupportForRegion(region2, resultMap, true)
 
-		game.battleReceiver <- Battle{Results: calculateTotals(results)}
+		game.battleReceiver <- resultMap.toBattle()
 	}()
 }
 
@@ -118,7 +141,7 @@ type supportDeclaration struct {
 // Calls support from support orders to the given region, and adds modifiers to the result map.
 func (game *Game) callSupportForRegion(
 	region *Region,
-	results map[PlayerFaction]Result,
+	resultMap ResultMap,
 	isBorderBattle bool,
 ) {
 	supports := region.incomingSupports
@@ -128,7 +151,7 @@ func (game *Game) callSupportForRegion(
 	waitGroup.Add(len(supports))
 
 	incomingMoves := []Order{}
-	for _, result := range results {
+	for _, result := range resultMap {
 		if result.DefenderRegion != "" {
 			continue
 		}
@@ -156,13 +179,13 @@ func (game *Game) callSupportForRegion(
 			continue
 		}
 
-		result, isFaction := results[support.to]
+		result, isFaction := resultMap[support.to]
 		if isFaction {
 			result.Parts = append(
 				result.Parts,
 				Modifier{Type: ModifierSupport, Value: 1, SupportingFaction: support.from},
 			)
-			results[support.to] = result
+			resultMap[support.to] = result
 		}
 	}
 }
@@ -221,22 +244,6 @@ func (game *Game) callSupportFromPlayer(
 	}
 
 	supportReceiver <- supportDeclaration{from: support.Faction, to: supported}
-}
-
-func calculateTotals(results map[PlayerFaction]Result) []Result {
-	resultList := make([]Result, 0, len(results))
-
-	for _, result := range results {
-		total := 0
-		for _, mod := range result.Parts {
-			total += mod.Value
-		}
-		result.Total = total
-
-		resultList = append(resultList, result)
-	}
-
-	return resultList
 }
 
 func (game *Game) resolveBattle(battle Battle) {
