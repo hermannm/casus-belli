@@ -275,8 +275,8 @@ func (game *Game) succeedMove(move Order) {
 
 	destination.resolved = true
 
-	if secondHorseMove, hasSecondHorseMove := move.tryGetSecondHorseMove(); hasSecondHorseMove {
-		game.secondHorseMoves = append(game.secondHorseMoves, secondHorseMove)
+	if move.hasSecondHorseMove() {
+		game.secondHorseMoves = append(game.secondHorseMoves, move.secondHorseMove())
 	}
 }
 

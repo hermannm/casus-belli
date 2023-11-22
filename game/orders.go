@@ -73,18 +73,17 @@ func (order Order) isNone() bool {
 }
 
 // Checks if the order is a move of a horse unit with a second destination.
-// If it is, returns the order with the original destination set as the origin, and the destination
-// set as the original second destination.
-func (order Order) tryGetSecondHorseMove() (secondHorseMove Order, hasSecondHorseMove bool) {
-	if order.Type != OrderMove || order.SecondDestination == "" || order.Unit.Type != UnitHorse {
-		return Order{}, false
-	}
+func (order Order) hasSecondHorseMove() bool {
+	return order.Type == OrderMove && order.SecondDestination != "" && order.Unit.Type == UnitHorse
+}
 
+// Returns the order with the original destination set as the origin, and the destination set as the
+// original second destination. Assumes hasSecondHorseMove has already been called.
+func (order Order) secondHorseMove() Order {
 	order.Origin = order.Destination
 	order.Destination = order.SecondDestination
 	order.SecondDestination = ""
-
-	return order, true
+	return order
 }
 
 // Custom json.Marshaler implementation, to serialize uninitialized orders to null.
@@ -433,9 +432,11 @@ func validateReachableMoveDestinations(orders []Order, board Board) error {
 			)
 		}
 
-		secondHorseMove, hasSecondHorseMove := order.tryGetSecondHorseMove()
-		if hasSecondHorseMove {
-			if err := validateReachableMoveDestination(secondHorseMove, boardCopy); err != nil {
+		if order.hasSecondHorseMove() {
+			if err := validateReachableMoveDestination(
+				order.secondHorseMove(),
+				boardCopy,
+			); err != nil {
 				return wrap.Errorf(
 					err,
 					"invalid second destination for horse move from '%s' to '%s'",
