@@ -105,7 +105,6 @@ func (board Board) addOrder(order Order) {
 	switch order.Type {
 	case OrderMove:
 		destination.incomingMoves = append(destination.incomingMoves, order)
-
 		if order.hasSecondHorseMove() {
 			destination.expectedSecondHorseMoves++
 		}
@@ -205,10 +204,13 @@ func (board Board) retreatMove(move Order) {
 		origin.Unit = move.Unit
 	} else if origin.partOfCycle {
 		origin.unresolvedRetreat = move
-	} else {
-		origin.removeUnit()
+	} else if !move.retreat {
+		move.retreat = true
 		move.Origin, move.Destination = move.Destination, move.Origin
+		move.SecondDestination = ""
 		origin.incomingMoves = append(origin.incomingMoves, move)
+		origin.order = Order{}
+		origin.removeUnit()
 	}
 
 	if move.hasSecondHorseMove() {

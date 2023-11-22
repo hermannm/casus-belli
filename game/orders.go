@@ -34,6 +34,8 @@ type Order struct {
 	// Excluded from JSON messages, as clients can deduce this from the Origin field.
 	// Server includes this field on the order to keep track of units between battles.
 	Unit Unit `json:"-"`
+
+	retreat bool
 }
 
 type OrderType uint8
