@@ -127,11 +127,11 @@ func (game *Game) calculateBorderBattle(region1 *Region, region2 *Region) {
 		},
 	}
 
-	remainingSupportsRegion1 := resultMap.addAutomaticSupports(region1, movesToRegion1, true)
-	region1Done := len(remainingSupportsRegion1) == 0
+	remainingSupports1 := resultMap.addAutomaticSupports(region1, movesToRegion1, true)
+	region1Done := len(remainingSupports1) == 0
 
-	remainingSupportsRegion2 := resultMap.addAutomaticSupports(region2, movesToRegion2, true)
-	region2Done := len(remainingSupportsRegion2) == 0
+	remainingSupports2 := resultMap.addAutomaticSupports(region2, movesToRegion2, true)
+	region2Done := len(remainingSupports2) == 0
 
 	if region1Done && region2Done {
 		game.resolveBorderBattle(resultMap.toBattle())
@@ -141,36 +141,29 @@ func (game *Game) calculateBorderBattle(region1 *Region, region2 *Region) {
 	region1.resolving = true
 	region2.resolving = true
 	go func() {
+		callSupportRegion1 := func() {
+			game.callSupportForRegion(region1, remainingSupports1, movesToRegion1, resultMap, true)
+		}
+		callSupportRegion2 := func() {
+			game.callSupportForRegion(region2, remainingSupports2, movesToRegion2, resultMap, true)
+		}
+
 		if !region1Done && !region2Done {
 			var waitGroup sync.WaitGroup
 			waitGroup.Add(2)
-
 			go func() {
-				game.callSupportForRegion(
-					region1,
-					remainingSupportsRegion1,
-					movesToRegion1,
-					resultMap,
-					true,
-				)
+				callSupportRegion1()
 				waitGroup.Done()
 			}()
-
 			go func() {
-				game.callSupportForRegion(
-					region2,
-					remainingSupportsRegion2,
-					movesToRegion2,
-					resultMap,
-					true,
-				)
+				callSupportRegion2()
+				waitGroup.Done()
 			}()
-
 			waitGroup.Wait()
 		} else if !region1Done {
-			game.callSupportForRegion(region1, remainingSupportsRegion1, movesToRegion1, resultMap, true)
+			callSupportRegion1()
 		} else if !region2Done {
-			game.callSupportForRegion(region2, remainingSupportsRegion2, movesToRegion2, resultMap, true)
+			callSupportRegion2()
 		}
 
 		game.battleReceiver <- resultMap.toBattle()
@@ -205,11 +198,6 @@ SupportLoop:
 	return remainingSupports
 }
 
-type supportDeclaration struct {
-	from PlayerFaction
-	to   PlayerFaction // Blank if nobody were supported.
-}
-
 // Calls support from support orders to the given region, and adds modifiers to the result map.
 func (game *Game) callSupportForRegion(
 	region *Region,
@@ -218,32 +206,34 @@ func (game *Game) callSupportForRegion(
 	resultMap ResultMap,
 	isBorderBattle bool,
 ) {
-	supportReceiver := make(chan supportDeclaration, len(supports))
+	if len(supports) == 1 {
+		support := supports[0]
+		supported := game.callSupportFromPlayer(support, region, incomingMoves, isBorderBattle)
+		if supported != "" {
+			resultMap.addSupport(support.Faction, supported)
+		}
+		return
+	}
 
+	var resultsLock sync.Mutex
 	var waitGroup sync.WaitGroup
 	waitGroup.Add(len(supports))
 
 	for _, support := range supports {
-		go game.callSupportFromPlayer(
-			support,
-			region,
-			incomingMoves,
-			isBorderBattle,
-			supportReceiver,
-			&waitGroup,
-		)
+		support := support // Avoids mutating loop variable
+
+		go func() {
+			supported := game.callSupportFromPlayer(support, region, incomingMoves, isBorderBattle)
+			if supported != "" {
+				resultsLock.Lock()
+				resultMap.addSupport(support.Faction, supported)
+				resultsLock.Unlock()
+			}
+			waitGroup.Done()
+		}()
 	}
 
 	waitGroup.Wait()
-	close(supportReceiver)
-
-	for support := range supportReceiver {
-		if support.to == "" {
-			continue
-		}
-
-		resultMap.addSupport(support.from, support.to)
-	}
 }
 
 func (game *Game) callSupportFromPlayer(
@@ -251,11 +241,7 @@ func (game *Game) callSupportFromPlayer(
 	region *Region,
 	incomingMoves []Order,
 	isBorderBattle bool,
-	supportReceiver chan<- supportDeclaration,
-	waitGroup *sync.WaitGroup,
-) {
-	defer waitGroup.Done()
-
+) (supported PlayerFaction) {
 	supportableFactions := make([]PlayerFaction, 0, len(incomingMoves)+1)
 	for _, move := range incomingMoves {
 		supportableFactions = append(supportableFactions, move.Faction)
@@ -271,26 +257,23 @@ func (game *Game) callSupportFromPlayer(
 		supportableFactions,
 	); err != nil {
 		game.log.ErrorCause(err, "failed to send request for support", support.logAttribute())
-		supportReceiver <- supportDeclaration{from: support.Faction, to: ""}
-		return
+		return ""
 	}
 
 	supported, err := game.messenger.AwaitSupport(support.Faction, support.Origin, region.Name)
 	if err != nil {
 		game.log.ErrorCause(err, "failed to receive support declaration", support.logAttribute())
-		supportReceiver <- supportDeclaration{from: support.Faction, to: ""}
-		return
+		return ""
 	}
 
 	if supported != "" && !slices.Contains(supportableFactions, supported) {
 		err := fmt.Errorf("received invalid supported faction '%s'", supported)
 		game.log.Error(err, support.logAttribute())
 		game.messenger.SendError(support.Faction, err)
-		supportReceiver <- supportDeclaration{from: support.Faction, to: ""}
-		return
+		return ""
 	}
 
-	supportReceiver <- supportDeclaration{from: support.Faction, to: supported}
+	return supported
 }
 
 func (game *Game) resolveBattle(battle Battle) {
