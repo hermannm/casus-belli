@@ -140,8 +140,9 @@ func (board Board) resetResolvingState() {
 }
 
 func (board Board) removeOrder(order Order) {
-	origin := board[order.Origin]
-	origin.order = Order{}
+	if !order.Retreat {
+		board[order.Origin].order = Order{}
+	}
 
 	switch order.Type {
 	case OrderMove:
@@ -189,10 +190,12 @@ func (board Board) succeedMove(move Order) {
 
 func (board Board) killMove(move Order) {
 	board.removeOrder(move)
-	board[move.Origin].removeUnit()
+	if !move.Retreat {
+		board[move.Origin].removeUnit()
 
-	if move.hasSecondHorseMove() {
-		board[move.SecondDestination].expectedSecondHorseMoves--
+		if move.hasSecondHorseMove() {
+			board[move.SecondDestination].expectedSecondHorseMoves--
+		}
 	}
 }
 
@@ -204,8 +207,8 @@ func (board Board) retreatMove(move Order) {
 		origin.Unit = move.unit
 	} else if origin.partOfCycle {
 		origin.unresolvedRetreat = move
-	} else if !move.retreat {
-		move.retreat = true
+	} else if !move.Retreat {
+		move.Retreat = true
 		move.Origin, move.Destination = move.Destination, move.Origin
 		move.SecondDestination = ""
 		origin.incomingMoves = append(origin.incomingMoves, move)

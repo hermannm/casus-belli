@@ -30,7 +30,9 @@ type Order struct {
 	// For build orders: type of unit to build.
 	Build UnitType
 
-	retreat bool
+	// For move orders that lost a singleplayer battle or tied a multiplayer battle, and have to
+	// fight their way back to their origin region. Can only be set by the server.
+	Retreat bool
 
 	// The unit the order affects.
 	// Excluded from JSON messages, as clients can deduce this from the Origin field.
@@ -297,18 +299,18 @@ func validateNonWinterOrder(order Order, origin *Region, board Board) error {
 		return errors.New("build orders can only be placed in winter")
 	}
 
+	if order.Retreat {
+		return errors.New("retreat orders can only be created by the server")
+	}
+
 	if order.Faction != origin.Unit.Faction {
 		return errors.New("must have unit in ordered region")
 	}
 
 	switch order.Type {
-	case OrderMove:
-		fallthrough
-	case OrderSupport:
+	case OrderMove, OrderSupport:
 		return validateMoveOrSupport(order, origin, board)
-	case OrderBesiege:
-		fallthrough
-	case OrderTransport:
+	case OrderBesiege, OrderTransport:
 		return validateBesiegeOrTransport(order, origin)
 	default:
 		return fmt.Errorf("invalid order type '%s'", order.Type)
