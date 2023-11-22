@@ -158,7 +158,7 @@ func (game *Game) gatherAndValidateOrderSet(faction PlayerFaction, orderChan cha
 		for i, order := range orders {
 			order.Faction = faction
 
-			origin, ok := game.Board[order.Origin]
+			origin, ok := game.board[order.Origin]
 			if ok && !origin.empty() && order.Type != OrderBuild {
 				order.unit = origin.Unit
 			}
@@ -166,7 +166,7 @@ func (game *Game) gatherAndValidateOrderSet(faction PlayerFaction, orderChan cha
 			orders[i] = order
 		}
 
-		if err := validateOrders(orders, game.Board, game.season); err != nil {
+		if err := validateOrders(orders, game.board, game.season); err != nil {
 			game.log.Error(err)
 			game.messenger.SendError(faction, err)
 			continue

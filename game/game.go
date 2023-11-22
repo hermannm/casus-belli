@@ -6,7 +6,7 @@ import (
 
 type Game struct {
 	BoardInfo
-	Board     Board
+	board     Board
 	messenger Messenger
 	log       log.Logger
 
@@ -55,7 +55,7 @@ func New(
 	logger log.Logger,
 ) *Game {
 	return &Game{
-		Board:           board,
+		board:           board,
 		BoardInfo:       boardInfo,
 		messenger:       messenger,
 		log:             logger,
@@ -66,7 +66,7 @@ func New(
 }
 
 func (game *Game) Run() {
-	if err := game.messenger.SendGameStarted(game.Board); err != nil {
+	if err := game.messenger.SendGameStarted(game.board); err != nil {
 		game.log.Error(err)
 	}
 
@@ -74,9 +74,9 @@ func (game *Game) Run() {
 		orders := game.gatherAndValidateOrders()
 
 		if game.season == SeasonWinter {
-			game.ResolveWinterOrders(orders)
+			game.resolveWinterOrders(orders)
 		} else {
-			game.ResolveNonWinterOrders(orders)
+			game.resolveNonWinterOrders(orders)
 
 			if winner := game.checkWinner(); winner != "" {
 				game.messenger.SendWinner(winner)
@@ -92,7 +92,7 @@ func (game *Game) nextRound() {
 	game.season = game.season.next()
 
 	game.messenger.ClearMessages()
-	game.Board.resetResolvingState()
+	game.board.resetResolvingState()
 	game.resolvedBattles = game.resolvedBattles[:0] // Keeps same capacity
 	for len(game.battleReceiver) > 0 {
 		// Drains the channel - won't block, since there are no other concurrent channel readers, as
@@ -101,18 +101,18 @@ func (game *Game) nextRound() {
 	}
 }
 
-func (game *Game) ResolveWinterOrders(orders []Order) {
+func (game *Game) resolveWinterOrders(orders []Order) {
 	for _, order := range orders {
 		switch order.Type {
 		case OrderBuild:
-			region := game.Board[order.Origin]
+			region := game.board[order.Origin]
 			region.Unit = Unit{
 				Faction: order.Faction,
 				Type:    order.Build,
 			}
 		case OrderMove:
-			origin := game.Board[order.Origin]
-			destination := game.Board[order.Destination]
+			origin := game.board[order.Origin]
+			destination := game.board[order.Destination]
 
 			destination.Unit = origin.Unit
 			origin.Unit = Unit{}
@@ -120,12 +120,12 @@ func (game *Game) ResolveWinterOrders(orders []Order) {
 	}
 }
 
-func (game *Game) ResolveNonWinterOrders(orders []Order) []Battle {
+func (game *Game) resolveNonWinterOrders(orders []Order) []Battle {
 	var battles []Battle
 
-	game.Board.addOrders(orders)
+	game.board.addOrders(orders)
 
-	dangerZoneBattles := resolveDangerZones(game.Board)
+	dangerZoneBattles := resolveDangerZones(game.board)
 	battles = append(battles, dangerZoneBattles...)
 	if err := game.messenger.SendBattleResults(dangerZoneBattles...); err != nil {
 		game.log.Error(err)
@@ -144,8 +144,8 @@ func (game *Game) resolveMoves() {
 	for {
 		// If nothing resolved in the last loop and there are no unresolved retreats, then we are
 		// either done resolving or waiting for concurrently resolving regions
-		if !anyResolvedInLastLoop && !game.Board.hasUnresolvedRetreats() {
-			if !game.Board.hasResolvingRegions() {
+		if !anyResolvedInLastLoop && !game.board.hasUnresolvedRetreats() {
+			if !game.board.hasResolvingRegions() {
 				break
 			}
 
@@ -161,7 +161,7 @@ func (game *Game) resolveMoves() {
 			anyResolvedInLastLoop = true
 		default:
 			anyResolvedInLastLoop = false
-			for _, region := range game.Board {
+			for _, region := range game.board {
 				if resolved := game.resolveRegionMoves(region); resolved {
 					anyResolvedInLastLoop = true
 				}
@@ -202,7 +202,7 @@ func (game *Game) resolveRegionMoves(region *Region) (resolved bool) {
 	}
 
 	// Finds out if the region is part of a cycle (moves in a circle)
-	twoWayCycle, region2, sameFaction := game.Board.discoverTwoWayCycle(region)
+	twoWayCycle, region2, sameFaction := game.board.discoverTwoWayCycle(region)
 	if twoWayCycle && sameFaction {
 		// If both moves are by the same player faction, removes the units from their origin
 		// regions, as they may not be allowed to retreat if their origin region is taken
@@ -215,7 +215,7 @@ func (game *Game) resolveRegionMoves(region *Region) (resolved bool) {
 		// If the moves are from different player factions, they battle in the middle
 		game.calculateBorderBattle(region, region2)
 		return true
-	} else if cycle, _ := game.Board.discoverCycle(region.Name, region.order); cycle != nil {
+	} else if cycle, _ := game.board.discoverCycle(region.Name, region.order); cycle != nil {
 		// If there is a cycle longer than 2 moves, forwards the resolving to resolveCycle
 		game.resolveCycle(cycle)
 		return true
@@ -224,7 +224,7 @@ func (game *Game) resolveRegionMoves(region *Region) (resolved bool) {
 	// A single move to an empty region is either an autosuccess, or a singleplayer battle
 	if len(region.incomingMoves) == 1 && region.empty() {
 		if region.controlled() || region.Sea {
-			game.Board.succeedMove(region.incomingMoves[0])
+			game.board.succeedMove(region.incomingMoves[0])
 			return true
 		}
 
@@ -243,7 +243,7 @@ func (game *Game) resolveRegionMoves(region *Region) (resolved bool) {
 }
 
 func (game *Game) resolveSieges() {
-	for _, region := range game.Board {
+	for _, region := range game.board {
 		if region.order.isNone() || region.order.Type != OrderBesiege {
 			continue
 		}
@@ -259,7 +259,7 @@ func (game *Game) resolveSieges() {
 func (game *Game) checkWinner() (winner PlayerFaction) {
 	castleCount := make(map[PlayerFaction]int)
 
-	for _, region := range game.Board {
+	for _, region := range game.board {
 		if region.Castle && region.controlled() {
 			castleCount[region.ControllingFaction]++
 		}

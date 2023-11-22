@@ -54,7 +54,7 @@ func (game *Game) resolveCycle(cycle []Order) {
 	regions := make([]*Region, len(cycle))
 
 	for i, move := range cycle {
-		destination := game.Board[move.Destination]
+		destination := game.board[move.Destination]
 		destination.removeUnit()
 		destination.order = Order{}
 		destination.partOfCycle = true
@@ -64,7 +64,7 @@ func (game *Game) resolveCycle(cycle []Order) {
 	for _, region := range regions {
 		if len(region.incomingMoves) == 1 {
 			if region.controlled() || region.Sea {
-				game.Board.succeedMove(region.incomingMoves[0])
+				game.board.succeedMove(region.incomingMoves[0])
 			} else {
 				game.calculateSingleplayerBattle(region)
 			}

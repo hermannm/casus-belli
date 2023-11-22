@@ -21,16 +21,16 @@ func TestResolveConflictFreeMoveCycle(t *testing.T) {
 	}
 
 	game := newMockGame()
-	placeUnits(units, game.Board)
-	placeOrders(orders, game.Board)
+	placeUnits(units, game.board)
+	placeOrders(orders, game.board)
 
-	game.ResolveNonWinterOrders(orders)
+	game.resolveNonWinterOrders(orders)
 
 	ExpectedControl{
 		"Leil":   {ControllingFaction: "Yellow", Unit: units["Worp"]},
 		"Limbol": {ControllingFaction: "Red", Unit: units["Leil"]},
 		"Worp":   {ControllingFaction: "Green", Unit: units["Limbol"]},
-	}.check(game.Board, t)
+	}.check(game.board, t)
 }
 
 func BenchmarkBoardResolve(b *testing.B) {
@@ -38,7 +38,7 @@ func BenchmarkBoardResolve(b *testing.B) {
 		b.StopTimer()
 		game, orders := benchmarkSetup()
 		b.StartTimer()
-		game.ResolveNonWinterOrders(orders)
+		game.resolveNonWinterOrders(orders)
 	}
 }
 
@@ -287,8 +287,8 @@ func benchmarkSetup() (*Game, []Order) {
 	}
 
 	game := newMockGame()
-	placeUnits(units, game.Board)
-	placeOrders(orders, game.Board)
+	placeUnits(units, game.board)
+	placeOrders(orders, game.board)
 
 	return game, orders
 }

@@ -286,7 +286,7 @@ func (game *Game) resolveBattle(battle Battle) {
 	}
 
 	for _, region := range battle.regionNames() {
-		game.Board[region].resolving = false
+		game.board[region].resolving = false
 	}
 }
 
@@ -295,11 +295,11 @@ func (game *Game) resolveSingleplayerBattle(battle Battle) {
 	move := battle.Results[0].Move
 
 	if len(winners) != 1 {
-		game.Board.retreatMove(move)
+		game.board.retreatMove(move)
 		return
 	}
 
-	game.Board.succeedMove(move)
+	game.board.succeedMove(move)
 	game.resolvedBattles = append(game.resolvedBattles, battle)
 	game.messenger.SendBattleResults(battle)
 }
@@ -315,7 +315,7 @@ func (game *Game) resolveMultiplayerBattle(battle Battle) {
 			// removed as part of succeedMove for the winner.
 			// If the defender was on the losing end of a tie in a battle with multiple combatants,
 			// or the defender lost but did not control the region, we have to remove the unit here.
-			region := game.Board[result.DefenderRegion]
+			region := game.board[result.DefenderRegion]
 			if slices.Contains(losers, region.Unit.Faction) {
 				if tie {
 					region.removeUnit()
@@ -328,19 +328,19 @@ func (game *Game) resolveMultiplayerBattle(battle Battle) {
 
 		move := result.Move
 		if slices.Contains(losers, move.Faction) {
-			game.Board.killMove(move)
+			game.board.killMove(move)
 			continue
 		}
 
 		if tie {
-			game.Board.retreatMove(move)
+			game.board.retreatMove(move)
 			continue
 		}
 
 		// If the destination is not controlled, then the winner will have to battle there before we
 		// can succeed the move
-		if game.Board[move.Destination].controlled() {
-			game.Board.succeedMove(move)
+		if game.board[move.Destination].controlled() {
+			game.board.succeedMove(move)
 		}
 	}
 
@@ -356,11 +356,11 @@ func (game *Game) resolveBorderBattle(battle Battle) {
 	// If battle was a tie, both moves retreat
 	if len(winners) > 1 {
 		// Remove both orders before retreating, so they don't think their origins are attacked
-		game.Board.removeOrder(move1)
-		game.Board.removeOrder(move2)
+		game.board.removeOrder(move1)
+		game.board.removeOrder(move2)
 
-		game.Board.retreatMove(move1)
-		game.Board.retreatMove(move2)
+		game.board.retreatMove(move1)
+		game.board.retreatMove(move2)
 		return
 	}
 
@@ -370,7 +370,7 @@ func (game *Game) resolveBorderBattle(battle Battle) {
 		// to win a battle in the destination region, which will be handled by the next cycle of the
 		// move resolver
 		if move.Faction == loser {
-			game.Board.killMove(move)
+			game.board.killMove(move)
 			break
 		}
 	}

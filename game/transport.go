@@ -6,17 +6,17 @@ import (
 
 func (game *Game) resolveTransport(move Order) (transportMustWait bool) {
 	// If the move is between two adjacent regions, then it does not need transport
-	if game.Board[move.Destination].hasNeighbor(move.Origin) {
+	if game.board[move.Destination].hasNeighbor(move.Origin) {
 		return false
 	}
 
-	canTransport, transportAttacked, dangerZones := game.Board.findTransportPath(
+	canTransport, transportAttacked, dangerZones := game.board.findTransportPath(
 		move.Origin,
 		move.Destination,
 	)
 
 	if !canTransport {
-		game.Board.retreatMove(move)
+		game.board.retreatMove(move)
 		return false
 	}
 
@@ -27,7 +27,7 @@ func (game *Game) resolveTransport(move Order) (transportMustWait bool) {
 	if len(dangerZones) > 0 {
 		survived, dangerZoneBattles := crossDangerZones(move, dangerZones)
 		if !survived {
-			game.Board.killMove(move)
+			game.board.killMove(move)
 		}
 
 		game.resolvedBattles = append(game.resolvedBattles, dangerZoneBattles...)
