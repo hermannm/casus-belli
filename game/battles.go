@@ -355,6 +355,10 @@ func (game *Game) resolveBorderBattle(battle Battle) {
 
 	// If battle was a tie, both moves retreat
 	if len(winners) > 1 {
+		// Remove both orders before retreating, so they don't think their origins are attacked
+		game.Board.removeOrder(move1)
+		game.Board.removeOrder(move2)
+
 		game.Board.retreatMove(move1)
 		game.Board.retreatMove(move2)
 		return
