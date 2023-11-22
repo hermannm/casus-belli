@@ -19,6 +19,7 @@ func setup() (*game.Game, []game.Order) {
 
 		"Lomone": {Type: game.UnitFootman, Faction: "Green"},
 		"Lusía":  {Type: game.UnitFootman, Faction: "Red"},
+		"Brodo":  {Type: game.UnitFootman, Faction: "Red"},
 
 		"Gron":  {Type: game.UnitFootman, Faction: "White"},
 		"Gnade": {Type: game.UnitFootman, Faction: "Black"},
@@ -47,8 +48,9 @@ func setup() (*game.Game, []game.Order) {
 		// Auto-success
 		{Type: game.OrderMove, Origin: "Emman", Destination: "Erren"},
 
-		// PvP battle with defender
+		// PvP battle with supported defender
 		{Type: game.OrderMove, Origin: "Lomone", Destination: "Lusía"},
+		{Type: game.OrderSupport, Origin: "Brodo", Destination: "Lusía"},
 
 		// PvP battle, no defender
 		{Type: game.OrderMove, Origin: "Gron", Destination: "Gewel"},

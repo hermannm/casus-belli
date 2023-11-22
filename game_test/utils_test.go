@@ -9,6 +9,9 @@ import (
 
 func newMockGame() *game.Game {
 	regions := []*game.Region{
+		{Name: "Bom"},
+		{Name: "Brodo", IsForest: true},
+		{Name: "Bassas", IsForest: true, HasCastle: true},
 		{Name: "Lusía", HasCastle: true},
 		{Name: "Lomone", IsForest: true},
 		{Name: "Limbol", IsForest: true},
@@ -41,7 +44,6 @@ func newMockGame() *game.Game {
 		{Name: "Mare Bøso", IsSea: true},
 	}
 
-	// Defines a utility struct for two-way neighbor declaration, to avoid repetition.
 	neighbors := []struct {
 		region1    game.RegionName
 		region2    game.RegionName
@@ -49,6 +51,13 @@ func newMockGame() *game.Game {
 		hasCliffs  bool
 		dangerZone game.DangerZone
 	}{
+		{region1: "Bom", region2: "Brodo"},
+		{region1: "Bom", region2: "Bassas"},
+		{region1: "Brodo", region2: "Bassas"},
+		{region1: "Brodo", region2: "Lusía"},
+		{region1: "Brodo", region2: "Leil"},
+		{region1: "Bassas", region2: "Leil"},
+		{region1: "Bassas", region2: "Ovo"},
 		{region1: "Lusía", region2: "Lomone"},
 		{region1: "Lusía", region2: "Limbol"},
 		{region1: "Lusía", region2: "Leil"},
