@@ -166,7 +166,7 @@ func (board Board) removeOrder(order Order) {
 func (board Board) succeedMove(move Order) {
 	destination := board[move.Destination]
 
-	destination.replaceUnit(move.Unit)
+	destination.replaceUnit(move.unit)
 	destination.order = Order{}
 	if !destination.Sea {
 		destination.ControllingFaction = move.Faction
@@ -201,7 +201,7 @@ func (board Board) retreatMove(move Order) {
 
 	origin := board[move.Origin]
 	if !origin.attacked() {
-		origin.Unit = move.Unit
+		origin.Unit = move.unit
 	} else if origin.partOfCycle {
 		origin.unresolvedRetreat = move
 	} else if !move.retreat {

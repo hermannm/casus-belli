@@ -30,12 +30,12 @@ type Order struct {
 	// For build orders: type of unit to build.
 	Build UnitType
 
+	retreat bool
+
 	// The unit the order affects.
 	// Excluded from JSON messages, as clients can deduce this from the Origin field.
 	// Server includes this field on the order to keep track of units between battles.
-	Unit Unit `json:"-"`
-
-	retreat bool
+	unit Unit
 }
 
 type OrderType uint8
@@ -76,7 +76,7 @@ func (order Order) isNone() bool {
 
 // Checks if the order is a move of a horse unit with a second destination.
 func (order Order) hasSecondHorseMove() bool {
-	return order.Type == OrderMove && order.SecondDestination != "" && order.Unit.Type == UnitHorse
+	return order.Type == OrderMove && order.SecondDestination != "" && order.unit.Type == UnitHorse
 }
 
 // Returns the order with the original destination set as the origin, and the destination set as the
@@ -158,7 +158,7 @@ func (game *Game) gatherAndValidateOrderSet(faction PlayerFaction, orderChan cha
 
 			origin, ok := game.Board[order.Origin]
 			if ok && !origin.empty() && order.Type != OrderBuild {
-				order.Unit = origin.Unit
+				order.unit = origin.Unit
 			}
 
 			orders[i] = order
