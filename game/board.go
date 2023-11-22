@@ -209,6 +209,7 @@ func (board Board) retreatMove(move Order) {
 		origin.unresolvedRetreat = move
 	} else {
 		origin.removeUnit()
+		move.Origin, move.Destination = move.Destination, move.Origin
 		origin.incomingMoves = append(origin.incomingMoves, move)
 	}
 
