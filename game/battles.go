@@ -214,7 +214,7 @@ type supportDeclaration struct {
 func (game *Game) callSupportForRegion(
 	region *Region,
 	supports []Order,
-	moves []Order,
+	incomingMoves []Order,
 	resultMap ResultMap,
 	isBorderBattle bool,
 ) {
@@ -227,7 +227,7 @@ func (game *Game) callSupportForRegion(
 		go game.callSupportFromPlayer(
 			support,
 			region,
-			moves,
+			incomingMoves,
 			isBorderBattle,
 			supportReceiver,
 			&waitGroup,
@@ -249,15 +249,15 @@ func (game *Game) callSupportForRegion(
 func (game *Game) callSupportFromPlayer(
 	support Order,
 	region *Region,
-	moves []Order,
+	incomingMoves []Order,
 	isBorderBattle bool,
 	supportReceiver chan<- supportDeclaration,
 	waitGroup *sync.WaitGroup,
 ) {
 	defer waitGroup.Done()
 
-	supportableFactions := make([]PlayerFaction, 0, len(moves)+1)
-	for _, move := range moves {
+	supportableFactions := make([]PlayerFaction, 0, len(incomingMoves)+1)
+	for _, move := range incomingMoves {
 		supportableFactions = append(supportableFactions, move.Faction)
 	}
 	if !region.isEmpty() && !isBorderBattle {
