@@ -16,7 +16,7 @@ func (game *Game) resolveTransport(move Order) (transportMustWait bool) {
 	)
 
 	if !canTransport {
-		game.Board.removeOrder(move)
+		game.Board.failMove(move)
 		return false
 	}
 
@@ -26,9 +26,8 @@ func (game *Game) resolveTransport(move Order) (transportMustWait bool) {
 
 	if len(dangerZones) > 0 {
 		survived, dangerZoneBattles := crossDangerZones(move, dangerZones)
-
 		if !survived {
-			game.Board.removeOrder(move)
+			game.Board.killMove(move)
 		}
 
 		game.resolvedBattles = append(game.resolvedBattles, dangerZoneBattles...)

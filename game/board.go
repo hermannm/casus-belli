@@ -41,14 +41,16 @@ type Region struct {
 // Internal resolving state for a region. Resets to its zero value every round.
 // Since all fields are private, they're not included in JSON messages.
 type regionResolvingState struct {
-	order              Order
-	incomingMoves      []Order
-	incomingSupports   []Order
-	resolving          bool
-	resolved           bool
-	transportsResolved bool
-	retreat            Order
-	partOfCycle        bool // Whether the region is part of a cycle of move orders.
+	order                    Order
+	incomingMoves            []Order
+	incomingSupports         []Order
+	expectedSecondHorseMoves int
+	incomingSecondHorseMoves []Order
+	resolving                bool
+	resolved                 bool
+	transportsResolved       bool
+	retreat                  Order
+	partOfCycle              bool // Whether the region is part of a cycle of move orders.
 }
 
 type Neighbor struct {
@@ -101,6 +103,10 @@ func (board Board) addOrder(order Order) {
 	switch order.Type {
 	case OrderMove:
 		destination.incomingMoves = append(destination.incomingMoves, order)
+
+		if order.hasSecondHorseMove() {
+			destination.expectedSecondHorseMoves++
+		}
 	case OrderSupport:
 		destination.incomingSupports = append(destination.incomingSupports, order)
 	}
@@ -157,6 +163,54 @@ func (board Board) removeOrder(order Order) {
 			}
 		}
 		destination.incomingSupports = newSupports
+	}
+}
+
+func (board Board) succeedMove(move Order) {
+	destination := board[move.Destination]
+
+	destination.replaceUnit(move.Unit)
+	destination.order = Order{}
+	if !destination.Sea {
+		destination.ControllingFaction = move.Faction
+	}
+
+	board[move.Origin].removeUnit()
+	board.removeOrder(move)
+
+	destination.resolved = true
+
+	if move.hasSecondHorseMove() {
+		secondHorseMove := move.secondHorseMove()
+		destination := board[secondHorseMove.Destination]
+		destination.incomingSecondHorseMoves = append(
+			destination.incomingSecondHorseMoves,
+			secondHorseMove,
+		)
+	}
+}
+
+func (board Board) failMove(move Order) {
+	board.removeOrder(move)
+
+	if move.hasSecondHorseMove() {
+		board[move.SecondDestination].expectedSecondHorseMoves--
+	}
+}
+
+func (board Board) killMove(move Order) {
+	board.failMove(move)
+	board[move.Origin].removeUnit()
+}
+
+func (board Board) retreatMove(move Order) {
+	board.failMove(move)
+
+	origin := board[move.Origin]
+	if origin.attacked() {
+		origin.retreat = move
+	} else if origin.empty() {
+		origin.Unit = move.Unit
 	}
 }
 

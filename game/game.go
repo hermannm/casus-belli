@@ -10,10 +10,9 @@ type Game struct {
 	messenger Messenger
 	log       log.Logger
 
-	season           Season
-	resolvedBattles  []Battle
-	battleReceiver   chan Battle
-	secondHorseMoves []Order
+	season          Season
+	resolvedBattles []Battle
+	battleReceiver  chan Battle
 }
 
 type BoardInfo struct {
@@ -56,14 +55,13 @@ func New(
 	logger log.Logger,
 ) *Game {
 	return &Game{
-		Board:            board,
-		BoardInfo:        boardInfo,
-		messenger:        messenger,
-		log:              logger,
-		season:           SeasonWinter,
-		resolvedBattles:  nil,
-		battleReceiver:   make(chan Battle),
-		secondHorseMoves: nil,
+		Board:           board,
+		BoardInfo:       boardInfo,
+		messenger:       messenger,
+		log:             logger,
+		season:          SeasonWinter,
+		resolvedBattles: nil,
+		battleReceiver:  make(chan Battle),
 	}
 }
 
@@ -101,7 +99,6 @@ func (game *Game) nextRound() {
 		// this function is called from the same goroutine as the one that read
 		<-game.battleReceiver
 	}
-	game.secondHorseMoves = game.secondHorseMoves[:0]
 }
 
 func (game *Game) ResolveWinterOrders(orders []Order) {
@@ -134,8 +131,6 @@ func (game *Game) ResolveNonWinterOrders(orders []Order) []Battle {
 		game.log.Error(err)
 	}
 
-	game.resolveMoves()
-	game.addSecondHorseMoves()
 	game.resolveMoves()
 	game.resolveSieges()
 
@@ -229,7 +224,7 @@ func (game *Game) resolveRegionMoves(region *Region) (resolved bool) {
 	// A single move to an empty region is either an autosuccess, or a singleplayer battle
 	if len(region.incomingMoves) == 1 && region.empty() {
 		if region.controlled() || region.Sea {
-			game.succeedMove(region.incomingMoves[0])
+			game.Board.succeedMove(region.incomingMoves[0])
 			return true
 		}
 
@@ -259,37 +254,6 @@ func (game *Game) resolveSieges() {
 			region.SiegeCount = 0
 		}
 	}
-}
-
-func (game *Game) succeedMove(move Order) {
-	destination := game.Board[move.Destination]
-
-	destination.replaceUnit(move.Unit)
-	destination.order = Order{}
-	if !destination.Sea {
-		destination.ControllingFaction = move.Faction
-	}
-
-	game.Board[move.Origin].removeUnit()
-	game.Board.removeOrder(move)
-
-	destination.resolved = true
-
-	if move.hasSecondHorseMove() {
-		game.secondHorseMoves = append(game.secondHorseMoves, move.secondHorseMove())
-	}
-}
-
-func (game *Game) addSecondHorseMoves() {
-	for _, secondHorseMove := range game.secondHorseMoves {
-		game.Board.addOrder(secondHorseMove)
-		destination := game.Board[secondHorseMove.Destination]
-		destination.resolved = false
-		destination.partOfCycle = false
-		destination.transportsResolved = false
-	}
-
-	game.secondHorseMoves = nil
 }
 
 func (game *Game) checkWinner() (winner PlayerFaction) {

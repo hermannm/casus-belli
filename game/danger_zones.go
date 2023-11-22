@@ -20,10 +20,10 @@ func resolveDangerZones(board Board) (results []Battle) {
 
 		if !survived {
 			if order.Type == OrderMove {
-				region.Unit = Unit{}
+				board.killMove(order)
+			} else {
+				board.removeOrder(order)
 			}
-
-			board.removeOrder(order)
 		}
 	}
 

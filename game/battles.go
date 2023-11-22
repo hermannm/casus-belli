@@ -295,12 +295,11 @@ func (game *Game) resolveSingleplayerBattle(battle Battle) {
 	move := battle.Results[0].Move
 
 	if len(winners) != 1 {
-		game.Board.removeOrder(move)
-		game.attemptRetreat(move)
+		game.Board.retreatMove(move)
 		return
 	}
 
-	game.succeedMove(move)
+	game.Board.succeedMove(move)
 	game.resolvedBattles = append(game.resolvedBattles, battle)
 	game.messenger.SendBattleResults(battle)
 }
@@ -329,21 +328,19 @@ func (game *Game) resolveMultiplayerBattle(battle Battle) {
 
 		move := result.Move
 		if slices.Contains(losers, move.Faction) {
-			game.Board.removeOrder(move)
-			game.Board[move.Origin].removeUnit()
+			game.Board.killMove(move)
 			continue
 		}
 
 		if tie {
-			game.Board.removeOrder(move)
-			game.attemptRetreat(move)
+			game.Board.retreatMove(move)
 			continue
 		}
 
 		// If the destination is not controlled, then the winner will have to battle there before we
 		// can succeed the move
 		if game.Board[move.Destination].controlled() {
-			game.succeedMove(move)
+			game.Board.succeedMove(move)
 		}
 	}
 
@@ -358,24 +355,19 @@ func (game *Game) resolveBorderBattle(battle Battle) {
 
 	// If battle was a tie, both moves retreat
 	if len(winners) > 1 {
-		game.Board.removeOrder(move1)
-		game.Board.removeOrder(move2)
-
-		game.attemptRetreat(move1)
-		game.attemptRetreat(move2)
-
+		game.Board.retreatMove(move1)
+		game.Board.retreatMove(move2)
 		return
 	}
 
 	loser := losers[0]
-
 	for _, move := range []Order{move1, move2} {
 		// Only the loser is affected by the results of the border battle; the winner may still have
 		// to win a battle in the destination region, which will be handled by the next cycle of the
 		// move resolver
 		if move.Faction == loser {
-			game.Board.removeOrder(move)
-			game.Board[move.Origin].removeUnit()
+			game.Board.killMove(move)
+			break
 		}
 	}
 
@@ -443,22 +435,4 @@ func (battle Battle) regionNames() []RegionName {
 	}
 
 	return nameSet.ToSlice()
-}
-
-func (game *Game) attemptRetreat(move Order) {
-	origin := game.Board[move.Origin]
-
-	if origin.Unit == move.Unit {
-		return
-	}
-
-	if origin.attacked() {
-		origin.retreat = move
-		return
-	}
-
-	if origin.empty() {
-		origin.Unit = move.Unit
-	}
-	origin.resolved = true
 }
