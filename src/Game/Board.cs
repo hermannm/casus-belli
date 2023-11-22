@@ -37,18 +37,18 @@ public record Region
     /// <summary>
     /// Whether the region is a sea region that can only have ship units.
     /// </summary>
-    public required bool IsSea { get; set; }
+    public required bool Sea { get; set; }
 
     /// <summary>
     /// For land regions: affects the difficulty of conquering the region.
     /// </summary>
-    public required bool IsForest { get; set; }
+    public required bool Forest { get; set; }
 
     /// <summary>
     /// For land regions: affects the difficulty of conquering the region, and the points gained
     /// from it.
     /// </summary>
-    public required bool HasCastle { get; set; }
+    public required bool Castle { get; set; }
 
     /// <summary>
     /// For land regions: the collection of regions that the region belongs to (affects units gained
@@ -86,22 +86,22 @@ public record Region
     [JsonIgnore]
     public bool Resolved { get; set; } = false;
 
-    public bool IsAttacked()
+    public bool Attacked()
     {
         return IncomingMoves.Count > 0;
     }
 
-    public bool IsEmpty()
+    public bool Empty()
     {
         return Unit == null;
     }
 
-    public bool IsControlled()
+    public bool Controlled()
     {
         return ControllingFaction != null;
     }
 
-    public bool IsAdjacentTo(string regionName)
+    public bool AdjacentTo(string regionName)
     {
         foreach (var neighbor in Neighbors)
         {
@@ -136,12 +136,12 @@ public record Neighbor
     /// Whether a river separates the neighboring regions, or this region is a sea and the neighbor
     /// is a land region.
     /// </summary>
-    public required bool IsAcrossWater { get; set; }
+    public required bool AcrossWater { get; set; }
 
     /// <summary>
     /// Whether coast between neighboring land regions have cliffs (impassable to ships).
     /// </summary>
-    public required bool HasCliffs { get; set; }
+    public required bool Cliffs { get; set; }
 
     /// <summary>
     /// If not null: the name of the danger zone that the neighboring region lies across (requires

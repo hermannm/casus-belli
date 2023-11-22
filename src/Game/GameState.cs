@@ -136,7 +136,7 @@ public partial class GameState : Node
 
         foreach (var (_, region) in _board!)
         {
-            if (region.Order?.Type == OrderType.Support && region.IsAttacked())
+            if (region.Order?.Type == OrderType.Support && region.Attacked())
             {
                 region.Order = null;
                 SupportCutSignal.Emit(new SupportCut { RegionName = region.Name });
@@ -153,7 +153,7 @@ public partial class GameState : Node
 
             foreach (var (_, region) in _board!)
             {
-                if (region.IsEmpty() && region.IsControlled() && region.IncomingMoves.Count == 1)
+                if (region.Empty() && region.Controlled() && region.IncomingMoves.Count == 1)
                 {
                     var move = region.IncomingMoves[0];
                     _board[move.Origin].MoveUnitTo(region);
@@ -174,7 +174,7 @@ public partial class GameState : Node
 
         destination.Unit = move.Unit;
         destination.Order = null;
-        if (!destination.IsSea)
+        if (!destination.Sea)
         {
             destination.ControllingFaction = move.Faction;
         }
