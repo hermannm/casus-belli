@@ -1,6 +1,7 @@
 package game
 
 import (
+	"slices"
 	"sync"
 
 	"hermannm.dev/set"
@@ -238,7 +239,7 @@ func calculateTotals(results map[PlayerFaction]Result) []Result {
 }
 
 func (game *Game) resolveBattle(battle Battle) {
-	if battle.isBorderConflict() {
+	if battle.isBorderBattle() {
 		game.resolveBorderBattle(battle)
 	} else if len(battle.Results) == 1 {
 		game.resolveSingleplayerBattle(battle)
@@ -249,6 +250,67 @@ func (game *Game) resolveBattle(battle Battle) {
 	for _, region := range battle.regionNames() {
 		game.Board[region].resolving = false
 	}
+}
+
+func (game *Game) resolveSingleplayerBattle(battle Battle) {
+	winners, _ := battle.winnersAndLosers()
+	move := battle.Results[0].Move
+
+	if len(winners) != 1 {
+		game.Board.removeOrder(move)
+		game.attemptRetreat(move)
+		return
+	}
+
+	game.succeedMove(move)
+	game.resolvedBattles = append(game.resolvedBattles, battle)
+	game.messenger.SendBattleResults(battle)
+}
+
+func (game *Game) resolveMultiplayerBattle(battle Battle) {
+	winners, losers := battle.winnersAndLosers()
+	tie := len(winners) > 1
+
+	for _, result := range battle.Results {
+		if result.DefenderRegion != "" {
+			// If the defender won or or was part of a tie, nothing changes for them.
+			// If an attacker won alone and the defender controlled the region, the defender will be
+			// removed as part of succeedMove for the winner.
+			// If the defender was on the losing end of a tie in a battle with multiple combatants,
+			// or the defender lost but did not control the region, we have to remove the unit here.
+			region := game.Board[result.DefenderRegion]
+			if slices.Contains(losers, region.Unit.Faction) {
+				if tie {
+					region.removeUnit()
+				} else if !region.isControlled() {
+					region.removeUnit()
+				}
+			}
+			continue
+		}
+
+		move := result.Move
+		if slices.Contains(losers, move.Faction) {
+			game.Board.removeOrder(move)
+			game.Board[move.Origin].removeUnit()
+			continue
+		}
+
+		if tie {
+			game.Board.removeOrder(move)
+			game.attemptRetreat(move)
+			continue
+		}
+
+		// If the destination is not controlled, then the winner will have to battle there
+		// before we can succeed the move
+		if game.Board[move.Destination].isControlled() {
+			game.succeedMove(move)
+		}
+	}
+
+	game.resolvedBattles = append(game.resolvedBattles, battle)
+	game.messenger.SendBattleResults(battle)
 }
 
 func (game *Game) resolveBorderBattle(battle Battle) {
@@ -275,7 +337,7 @@ func (game *Game) resolveBorderBattle(battle Battle) {
 		// move resolver
 		if move.Faction == loser {
 			game.Board.removeOrder(move)
-			game.Board.removeUnit(move.Unit, move.Origin)
+			game.Board[move.Origin].removeUnit()
 		}
 	}
 
@@ -283,64 +345,7 @@ func (game *Game) resolveBorderBattle(battle Battle) {
 	game.messenger.SendBattleResults(battle)
 }
 
-func (game *Game) resolveSingleplayerBattle(battle Battle) {
-	winners, _ := battle.winnersAndLosers()
-	move := battle.Results[0].Move
-
-	if len(winners) != 1 {
-		game.Board.removeOrder(move)
-		game.attemptRetreat(move)
-		return
-	}
-
-	game.succeedMove(move)
-	game.resolvedBattles = append(game.resolvedBattles, battle)
-	game.messenger.SendBattleResults(battle)
-}
-
-func (game *Game) resolveMultiplayerBattle(battle Battle) {
-	winners, losers := battle.winnersAndLosers()
-	tie := len(winners) != 1
-
-	for _, result := range battle.Results {
-		// If the result has a DefenderRegion, it is the result of the region's defender.
-		// If the defender won or tied, nothing changes for them.
-		// If an attacker won, changes to the defender will be handled by calling succeedMove.
-		if result.DefenderRegion != "" {
-			continue
-		}
-
-		move := result.Move
-
-		lost := false
-		for _, otherFaction := range losers {
-			if otherFaction == move.Faction {
-				lost = true
-			}
-		}
-
-		if lost {
-			game.Board.removeOrder(move)
-			game.Board.removeUnit(move.Unit, move.Origin)
-			continue
-		}
-
-		if tie {
-			game.Board.removeOrder(move)
-			game.attemptRetreat(move)
-			continue
-		}
-
-		if game.Board[move.Destination].isControlled() {
-			game.succeedMove(move)
-		}
-	}
-
-	game.resolvedBattles = append(game.resolvedBattles, battle)
-	game.messenger.SendBattleResults(battle)
-}
-
-func (battle Battle) isBorderConflict() bool {
+func (battle Battle) isBorderBattle() bool {
 	return len(battle.Results) == 2 &&
 		(battle.Results[0].Move.Destination == battle.Results[1].Move.Origin) &&
 		(battle.Results[1].Move.Destination == battle.Results[0].Move.Origin)
@@ -414,5 +419,8 @@ func (game *Game) attemptRetreat(move Order) {
 		return
 	}
 
-	origin.Unit = move.Unit
+	if origin.isEmpty() {
+		origin.Unit = move.Unit
+	}
+	origin.resolved = true
 }
