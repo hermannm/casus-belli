@@ -233,7 +233,7 @@ func (game *Game) resolveRegionMoves(region *Region) (resolved bool) {
 	}
 
 	// If the destination region has an outgoing move order, that must be resolved first
-	if region.order.Type == OrderMove {
+	if region.order != nil && region.order.Type == OrderMove {
 		return false
 	}
 

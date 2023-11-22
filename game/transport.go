@@ -134,6 +134,7 @@ func (region *Region) getTransportingNeighbors(
 		neighborRegion := board[neighbor.Name]
 
 		if regionsToExclude.Contains(neighbor.Name) ||
+			neighborRegion.order == nil ||
 			neighborRegion.order.Type != OrderTransport ||
 			neighborRegion.Unit.Faction != region.Unit.Faction {
 			continue

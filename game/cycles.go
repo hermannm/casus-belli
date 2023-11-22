@@ -37,13 +37,13 @@ func (board Board) discoverTwoWayCycle(
 	region1 *Region,
 ) (isCycle bool, region2 *Region, sameFaction bool) {
 	order1 := region1.order
-	if order1.Type != OrderMove {
+	if order1 == nil || order1.Type != OrderMove {
 		return false, nil, false
 	}
 
 	region2 = board[region1.order.Destination]
 	order2 := region2.order
-	if order2.Type != OrderMove {
+	if order2 == nil || order2.Type != OrderMove {
 		return false, nil, false
 	}
 

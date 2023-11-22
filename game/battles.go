@@ -27,8 +27,8 @@ type Result struct {
 	// If result of a move order to the battle: the move order in question, otherwise nil.
 	Move *Order
 
-	// If result of a defending unit in a region: the name of the region, otherwise blank.
-	DefenderRegion RegionName `json:",omitempty"`
+	// If result of a defending unit in a region: the faction of the defender, otherwise blank.
+	DefenderFaction PlayerFaction `json:",omitempty"`
 }
 
 // Numbers to beat in different types of battles.
@@ -93,8 +93,8 @@ func (game *Game) calculateMultiplayerBattle(region *Region) {
 
 	if !region.empty() {
 		resultMap[region.Unit.Faction] = &Result{
-			Parts:          defenseModifiers(region),
-			DefenderRegion: region.Name,
+			Parts:           defenseModifiers(region),
+			DefenderFaction: region.Unit.Faction,
 		}
 	}
 
@@ -307,15 +307,16 @@ func (game *Game) resolveSingleplayerBattle(battle Battle) {
 func (game *Game) resolveMultiplayerBattle(battle Battle) {
 	winners, losers := battle.winnersAndLosers()
 	tie := len(winners) > 1
+	regionName := battle.regionNames()[0] // Has 1 element, since this is not a border battle
 
 	for _, result := range battle.Results {
-		if result.DefenderRegion != "" {
+		if result.DefenderFaction != "" {
 			// If the defender won or or was part of a tie, nothing changes for them.
 			// If an attacker won alone and the defender controlled the region, the defender will be
 			// removed as part of succeedMove for the winner.
 			// If the defender was on the losing end of a tie in a battle with multiple combatants,
 			// or the defender lost but did not control the region, we have to remove the unit here.
-			region := game.board[result.DefenderRegion]
+			region := game.board[regionName]
 			if slices.Contains(losers, region.Unit.Faction) {
 				if tie {
 					region.removeUnit()
@@ -415,10 +416,17 @@ func (battle Battle) winnersAndLosers() (winners []PlayerFaction, losers []Playe
 	}
 
 	for _, result := range battle.Results {
-		if result.Total >= highestResult {
-			winners = append(winners, result.Move.Faction)
+		var faction PlayerFaction
+		if result.DefenderFaction != "" {
+			faction = result.DefenderFaction
 		} else {
-			losers = append(losers, result.Move.Faction)
+			faction = result.Move.Faction
+		}
+
+		if result.Total >= highestResult {
+			winners = append(winners, faction)
+		} else {
+			losers = append(losers, faction)
 		}
 	}
 
@@ -430,9 +438,7 @@ func (battle Battle) regionNames() []RegionName {
 	nameSet := set.ArraySetWithCapacity[RegionName](2)
 
 	for _, result := range battle.Results {
-		if result.DefenderRegion != "" {
-			nameSet.Add(result.DefenderRegion)
-		} else if result.Move.Destination != "" {
+		if result.Move != nil {
 			nameSet.Add(result.Move.Destination)
 		}
 	}
