@@ -283,7 +283,10 @@ func (game *Game) succeedMove(move Order) {
 func (game *Game) addSecondHorseMoves() {
 	for _, secondHorseMove := range game.secondHorseMoves {
 		game.Board.addOrder(secondHorseMove)
-		game.Board[secondHorseMove.Destination].resolved = false
+		destination := game.Board[secondHorseMove.Destination]
+		destination.resolved = false
+		destination.partOfCycle = false
+		destination.transportsResolved = false
 	}
 
 	game.secondHorseMoves = nil
