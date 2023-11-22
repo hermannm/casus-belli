@@ -1,14 +1,49 @@
-package game_test
+package game
 
 import (
 	"testing"
 
-	"hermannm.dev/bfh-server/game"
 	"hermannm.dev/devlog/log"
 )
 
-func newMockGame() *game.Game {
-	regions := []*game.Region{
+// Tests whether units correctly move in circle without outside interference.
+func TestResolveConflictFreeMoveCycle(t *testing.T) {
+	units := map[RegionName]Unit{
+		"Leil":   {Type: UnitFootman, Faction: "Red"},
+		"Limbol": {Type: UnitFootman, Faction: "Green"},
+		"Worp":   {Type: UnitFootman, Faction: "Yellow"},
+	}
+
+	orders := []Order{
+		{Type: OrderMove, Origin: "Leil", Destination: "Limbol"},
+		{Type: OrderMove, Origin: "Limbol", Destination: "Worp"},
+		{Type: OrderMove, Origin: "Worp", Destination: "Leil"},
+	}
+
+	game := newMockGame()
+	placeUnits(units, game.Board)
+	placeOrders(orders, game.Board)
+
+	game.ResolveNonWinterOrders(orders)
+
+	ExpectedControl{
+		"Leil":   {ControllingFaction: "Yellow", Unit: units["Worp"]},
+		"Limbol": {ControllingFaction: "Red", Unit: units["Leil"]},
+		"Worp":   {ControllingFaction: "Green", Unit: units["Limbol"]},
+	}.check(game.Board, t)
+}
+
+func BenchmarkBoardResolve(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		b.StopTimer()
+		game, orders := benchmarkSetup()
+		b.StartTimer()
+		game.ResolveNonWinterOrders(orders)
+	}
+}
+
+func newMockGame() *Game {
+	regions := []*Region{
 		{Name: "Bom"},
 		{Name: "Brodo", Forest: true},
 		{Name: "Bassas", Forest: true, Castle: true},
@@ -45,11 +80,11 @@ func newMockGame() *game.Game {
 	}
 
 	neighbors := []struct {
-		region1    game.RegionName
-		region2    game.RegionName
+		region1    RegionName
+		region2    RegionName
 		river      bool
 		hasCliffs  bool
-		dangerZone game.DangerZone
+		dangerZone DangerZone
 	}{
 		{region1: "Bom", region2: "Brodo"},
 		{region1: "Bom", region2: "Bassas"},
@@ -107,7 +142,7 @@ func newMockGame() *game.Game {
 		{region1: "Mare Unna", region2: "Mare Bøso"},
 	}
 
-	board := make(game.Board)
+	board := make(Board)
 	for _, region := range regions {
 		board[region.Name] = region
 	}
@@ -116,14 +151,14 @@ func newMockGame() *game.Game {
 		region1 := board[neighbor.region1]
 		region2 := board[neighbor.region2]
 
-		region1.Neighbors = append(region1.Neighbors, game.Neighbor{
+		region1.Neighbors = append(region1.Neighbors, Neighbor{
 			Name:        neighbor.region2,
 			AcrossWater: neighbor.river || (region1.Sea && !region2.Sea),
 			Cliffs:      neighbor.hasCliffs,
 			DangerZone:  neighbor.dangerZone,
 		})
 
-		region2.Neighbors = append(region2.Neighbors, game.Neighbor{
+		region2.Neighbors = append(region2.Neighbors, Neighbor{
 			Name:        neighbor.region1,
 			AcrossWater: neighbor.river || (region2.Sea && !region1.Sea),
 			Cliffs:      neighbor.hasCliffs,
@@ -131,11 +166,11 @@ func newMockGame() *game.Game {
 		})
 	}
 
-	boardInfo := game.BoardInfo{ID: "test", Name: "Test game", WinningCastleCount: 5}
-	return game.New(board, boardInfo, MockMessenger{}, log.Default())
+	boardInfo := BoardInfo{ID: "test", Name: "Test game", WinningCastleCount: 5}
+	return New(board, boardInfo, MockMessenger{}, log.Default())
 }
 
-func placeUnits(units map[game.RegionName]game.Unit, board game.Board) {
+func placeUnits(units map[RegionName]Unit, board Board) {
 	for regionName, unit := range units {
 		region := board[regionName]
 		region.Unit = unit
@@ -143,7 +178,7 @@ func placeUnits(units map[game.RegionName]game.Unit, board game.Board) {
 	}
 }
 
-func placeOrders(orders []game.Order, board game.Board) {
+func placeOrders(orders []Order, board Board) {
 	for i, order := range orders {
 		region, ok := board[order.Origin]
 		if !ok {
@@ -156,12 +191,12 @@ func placeOrders(orders []game.Order, board game.Board) {
 	}
 }
 
-type ExpectedControl map[game.RegionName]struct {
-	ControllingFaction game.PlayerFaction
-	Unit               game.Unit
+type ExpectedControl map[RegionName]struct {
+	ControllingFaction PlayerFaction
+	Unit               Unit
 }
 
-func (expected ExpectedControl) check(board game.Board, t *testing.T) {
+func (expected ExpectedControl) check(board Board, t *testing.T) {
 	for name, region := range board {
 		expectation, ok := expected[name]
 		if !ok {
@@ -182,54 +217,128 @@ func (expected ExpectedControl) check(board game.Board, t *testing.T) {
 	}
 }
 
+func benchmarkSetup() (*Game, []Order) {
+	units := map[RegionName]Unit{
+		"Emman": {Type: UnitFootman, Faction: "White"},
+
+		"Lomone": {Type: UnitFootman, Faction: "Green"},
+		"Lusía":  {Type: UnitFootman, Faction: "Red"},
+		"Brodo":  {Type: UnitFootman, Faction: "Red"},
+
+		"Gron":  {Type: UnitFootman, Faction: "White"},
+		"Gnade": {Type: UnitFootman, Faction: "Black"},
+
+		"Firril": {Type: UnitFootman, Faction: "Black"},
+
+		"Ovo":       {Type: UnitFootman, Faction: "Green"},
+		"Mare Elle": {Type: UnitShip, Faction: "Green"},
+
+		"Winde":      {Type: UnitFootman, Faction: "Green"},
+		"Mare Gond":  {Type: UnitShip, Faction: "Green"},
+		"Mare Ovond": {Type: UnitShip, Faction: "Green"},
+		"Mare Unna":  {Type: UnitShip, Faction: "Black"},
+
+		"Tusser": {Type: UnitFootman, Faction: "White"},
+		"Tige":   {Type: UnitFootman, Faction: "Black"},
+
+		"Tond": {Type: UnitFootman, Faction: "Green"},
+
+		"Leil":   {Type: UnitFootman, Faction: "Red"},
+		"Limbol": {Type: UnitFootman, Faction: "Green"},
+		"Worp":   {Type: UnitFootman, Faction: "Yellow"},
+	}
+
+	orders := []Order{
+		// Auto-success
+		{Type: OrderMove, Origin: "Emman", Destination: "Erren"},
+
+		// PvP battle with supported defender
+		{Type: OrderMove, Origin: "Lomone", Destination: "Lusía"},
+		{Type: OrderSupport, Origin: "Brodo", Destination: "Lusía"},
+
+		// PvP battle, no defender
+		{Type: OrderMove, Origin: "Gron", Destination: "Gewel"},
+		{Type: OrderMove, Origin: "Gnade", Destination: "Gewel"},
+
+		// PvE battle
+		{Type: OrderMove, Origin: "Firril", Destination: "Furie"},
+
+		// PvE battle, transport not attacked
+		{Type: OrderMove, Origin: "Ovo", Destination: "Zona"},
+		{Type: OrderTransport, Origin: "Mare Elle"},
+
+		// PvE battle, transport attacked
+		{Type: OrderMove, Origin: "Winde", Destination: "Fond"},
+		{Type: OrderTransport, Origin: "Mare Gond"},
+		{Type: OrderTransport, Origin: "Mare Ovond"},
+		{Type: OrderMove, Origin: "Mare Unna", Destination: "Mare Ovond"},
+
+		// Border battle
+		{Type: OrderMove, Origin: "Tusser", Destination: "Tige"},
+		{Type: OrderMove, Origin: "Tige", Destination: "Tusser"},
+
+		// Danger zone, dependent move
+		{Type: OrderMove, Origin: "Tond", Destination: "Tige"},
+
+		// Move cycle
+		{Type: OrderMove, Origin: "Leil", Destination: "Limbol"},
+		{Type: OrderMove, Origin: "Limbol", Destination: "Worp"},
+		{Type: OrderMove, Origin: "Worp", Destination: "Leil"},
+	}
+
+	game := newMockGame()
+	placeUnits(units, game.Board)
+	placeOrders(orders, game.Board)
+
+	return game, orders
+}
+
 type MockMessenger struct{}
 
-func (MockMessenger) SendError(to game.PlayerFaction, err error) {}
+func (MockMessenger) SendError(to PlayerFaction, err error) {}
 
-func (MockMessenger) SendGameStarted(board game.Board) error {
+func (MockMessenger) SendGameStarted(board Board) error {
 	return nil
 }
 
-func (MockMessenger) SendOrderRequest(to game.PlayerFaction, season game.Season) error {
+func (MockMessenger) SendOrderRequest(to PlayerFaction, season Season) error {
 	return nil
 }
 
-func (MockMessenger) AwaitOrders(
-	from game.PlayerFaction,
-) ([]game.Order, error) {
+func (MockMessenger) AwaitOrders(from PlayerFaction) ([]Order, error) {
 	return nil, nil
 }
 
-func (MockMessenger) SendOrdersReceived(orders map[game.PlayerFaction][]game.Order) error {
+func (MockMessenger) SendOrdersReceived(orders map[PlayerFaction][]Order) error {
 	return nil
 }
 
-func (MockMessenger) SendOrdersConfirmation(factionThatSubmittedOrders game.PlayerFaction) error {
+func (MockMessenger) SendOrdersConfirmation(factionThatSubmittedOrders PlayerFaction) error {
 	return nil
 
 }
 func (MockMessenger) SendSupportRequest(
-	to game.PlayerFaction,
-	supporting game.RegionName,
-	embattled game.RegionName,
-	supportable []game.PlayerFaction,
+	to PlayerFaction,
+	supporting RegionName,
+	embattled RegionName,
+	supportable []PlayerFaction,
 ) error {
 	return nil
 }
 
 func (MockMessenger) AwaitSupport(
-	from game.PlayerFaction,
-	supporting game.RegionName,
-	embattled game.RegionName,
-) (supported game.PlayerFaction, err error) {
+	from PlayerFaction,
+	supporting RegionName,
+	embattled RegionName,
+) (supported PlayerFaction, err error) {
 	return "", nil
 }
 
-func (MockMessenger) SendBattleResults(battles ...game.Battle) error {
+func (MockMessenger) SendBattleResults(battles ...Battle) error {
 	return nil
 }
 
-func (MockMessenger) SendWinner(winner game.PlayerFaction) error {
+func (MockMessenger) SendWinner(winner PlayerFaction) error {
 	return nil
 }
 
