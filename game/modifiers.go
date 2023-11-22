@@ -72,7 +72,7 @@ func defenseModifiers(region *Region) []Modifier {
 }
 
 func attackModifiers(
-	move *Order,
+	move Order,
 	region *Region,
 	hasOtherAttackers bool,
 	borderBattle bool,

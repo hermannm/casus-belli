@@ -172,7 +172,7 @@ func (game *Game) resolveMoves() {
 
 func (game *Game) resolveRegionMoves(region *Region) (resolved bool) {
 	// Skips the region if it has already been processed
-	if region.resolving || (region.resolved && region.unresolvedRetreat == nil) {
+	if region.resolving || (region.resolved && !region.hasUnresolvedRetreat()) {
 		return false
 	}
 
@@ -181,7 +181,7 @@ func (game *Game) resolveRegionMoves(region *Region) (resolved bool) {
 		region.transportsResolved = true
 
 		for _, move := range region.incomingMoves {
-			transportMustWait := game.resolveTransport(&move)
+			transportMustWait := game.resolveTransport(move)
 			if transportMustWait {
 				return false
 			}
@@ -190,11 +190,11 @@ func (game *Game) resolveRegionMoves(region *Region) (resolved bool) {
 
 	// Resolves retreats if region has no attackers
 	if !region.attacked() {
-		if region.unresolvedRetreat != nil {
+		if region.hasUnresolvedRetreat() {
 			if region.empty() {
 				region.Unit = region.unresolvedRetreat.unit
 			}
-			region.unresolvedRetreat = nil
+			region.unresolvedRetreat = Order{}
 		}
 
 		region.resolved = true
@@ -208,7 +208,7 @@ func (game *Game) resolveRegionMoves(region *Region) (resolved bool) {
 		// regions, as they may not be allowed to retreat if their origin region is taken
 		for _, cycleRegion := range [2]*Region{region, region2} {
 			cycleRegion.removeUnit()
-			cycleRegion.order = nil
+			cycleRegion.order = Order{}
 			cycleRegion.partOfCycle = true
 		}
 	} else if twoWayCycle {
@@ -224,7 +224,7 @@ func (game *Game) resolveRegionMoves(region *Region) (resolved bool) {
 	// A single move to an empty region is either an autosuccess, or a singleplayer battle
 	if len(region.incomingMoves) == 1 && region.empty() {
 		if region.controlled() || region.Sea {
-			game.board.succeedMove(&region.incomingMoves[0])
+			game.board.succeedMove(region.incomingMoves[0])
 			return true
 		}
 
@@ -233,7 +233,7 @@ func (game *Game) resolveRegionMoves(region *Region) (resolved bool) {
 	}
 
 	// If the destination region has an outgoing move order, that must be resolved first
-	if region.order != nil && region.order.Type == OrderMove {
+	if region.order.Type == OrderMove {
 		return false
 	}
 
@@ -244,7 +244,7 @@ func (game *Game) resolveRegionMoves(region *Region) (resolved bool) {
 
 func (game *Game) resolveSieges() {
 	for _, region := range game.board {
-		if region.order == nil || region.order.Type != OrderBesiege {
+		if region.order.isNone() || region.order.Type != OrderBesiege {
 			continue
 		}
 

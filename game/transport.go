@@ -4,7 +4,7 @@ import (
 	"hermannm.dev/set"
 )
 
-func (game *Game) resolveTransport(move *Order) (transportMustWait bool) {
+func (game *Game) resolveTransport(move Order) (transportMustWait bool) {
 	// If the move is between two adjacent regions, then it does not need transport
 	if game.board[move.Destination].hasNeighbor(move.Origin) {
 		return false
@@ -134,7 +134,6 @@ func (region *Region) getTransportingNeighbors(
 		neighborRegion := board[neighbor.Name]
 
 		if regionsToExclude.Contains(neighbor.Name) ||
-			neighborRegion.order == nil ||
 			neighborRegion.order.Type != OrderTransport ||
 			neighborRegion.Unit.Faction != region.Unit.Faction {
 			continue

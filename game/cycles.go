@@ -3,9 +3,9 @@ package game
 // Recursively finds a cycle of moves starting and ending with the given firstRegionName.
 func (board Board) discoverCycle(
 	firstRegionName RegionName,
-	order *Order,
+	order Order,
 ) (cycle []Order, hasOutsideAttackers bool) {
-	if order == nil || order.Type != OrderMove {
+	if order.isNone() || order.Type != OrderMove {
 		return nil, false
 	}
 
@@ -17,7 +17,7 @@ func (board Board) discoverCycle(
 
 	// The base case: the destination is the beginning of the cycle.
 	if destination.Name == firstRegionName {
-		return []Order{*order}, hasOutsideAttackers
+		return []Order{order}, hasOutsideAttackers
 	}
 
 	// If the base case is not yet reached, passes cycle discovery to the next order in the chain.
@@ -28,7 +28,7 @@ func (board Board) discoverCycle(
 	if continuedCycle == nil {
 		return nil, false
 	} else {
-		return append(continuedCycle, *order), hasOutsideAttackers || continuedOutsideAttackers
+		return append(continuedCycle, order), hasOutsideAttackers || continuedOutsideAttackers
 	}
 }
 
@@ -37,13 +37,13 @@ func (board Board) discoverTwoWayCycle(
 	region1 *Region,
 ) (isCycle bool, region2 *Region, sameFaction bool) {
 	order1 := region1.order
-	if order1 == nil || order1.Type != OrderMove {
+	if order1.Type != OrderMove {
 		return false, nil, false
 	}
 
 	region2 = board[region1.order.Destination]
 	order2 := region2.order
-	if order2 == nil || order2.Type != OrderMove {
+	if order2.Type != OrderMove {
 		return false, nil, false
 	}
 
@@ -56,7 +56,7 @@ func (game *Game) resolveCycle(cycle []Order) {
 	for i, move := range cycle {
 		destination := game.board[move.Destination]
 		destination.removeUnit()
-		destination.order = nil
+		destination.order = Order{}
 		destination.partOfCycle = true
 		regions[i] = destination
 	}
@@ -64,7 +64,7 @@ func (game *Game) resolveCycle(cycle []Order) {
 	for _, region := range regions {
 		if len(region.incomingMoves) == 1 {
 			if region.controlled() || region.Sea {
-				game.board.succeedMove(&region.incomingMoves[0])
+				game.board.succeedMove(region.incomingMoves[0])
 			} else {
 				game.calculateSingleplayerBattle(region)
 			}
