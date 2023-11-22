@@ -1,6 +1,7 @@
 package game
 
 import (
+	"fmt"
 	"slices"
 	"sync"
 
@@ -60,6 +61,13 @@ func (resultMap ResultMap) toBattle() Battle {
 		battle.Results = append(battle.Results, *result)
 	}
 	return battle
+}
+
+func (resultMap ResultMap) addSupport(from PlayerFaction, to PlayerFaction) {
+	resultMap[to].Parts = append(
+		resultMap[to].Parts,
+		Modifier{Type: ModifierSupport, Value: 1, SupportingFaction: from},
+	)
 }
 
 func (game *Game) calculateSingleplayerBattle(region *Region, move Order) {
@@ -179,14 +187,7 @@ func (game *Game) callSupportForRegion(
 			continue
 		}
 
-		result, isFaction := resultMap[support.to]
-		if isFaction {
-			result.Parts = append(
-				result.Parts,
-				Modifier{Type: ModifierSupport, Value: 1, SupportingFaction: support.from},
-			)
-			resultMap[support.to] = result
-		}
+		resultMap.addSupport(support.from, support.to)
 	}
 }
 
@@ -236,9 +237,24 @@ func (game *Game) callSupportFromPlayer(
 	if err != nil {
 		game.log.ErrorCausef(
 			err,
-			"failed to receive support declaration from faction '%s'",
+			"failed to receive support declaration from faction '%s' in '%s' for battle in '%s'",
 			support.Faction,
+			support.Origin,
+			region.Name,
 		)
+		supportReceiver <- supportDeclaration{from: support.Faction, to: ""}
+		return
+	}
+
+	if supported != "" && !slices.Contains(supportableFactions, supported) {
+		err := fmt.Errorf(
+			"received invalid supported faction '%s' from support order in '%s' for battle in '%s'",
+			supported,
+			support.Origin,
+			region.Name,
+		)
+		game.log.Error(err)
+		game.messenger.SendError(support.Faction, err)
 		supportReceiver <- supportDeclaration{from: support.Faction, to: ""}
 		return
 	}
