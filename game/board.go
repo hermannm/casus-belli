@@ -175,11 +175,6 @@ func (region *Region) isAttacked() bool {
 	return len(region.incomingMoves) != 0
 }
 
-// Checks if any players have support orders against the region.
-func (region *Region) isSupported() bool {
-	return len(region.incomingSupports) != 0
-}
-
 func (region *Region) hasRetreat() bool {
 	return !region.retreat.isNone()
 }
