@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 
 	"hermannm.dev/enumnames"
 	"hermannm.dev/set"
@@ -96,6 +97,18 @@ func (order Order) MarshalJSON() ([]byte, error) {
 	type orderAlias Order
 
 	return json.Marshal(orderAlias(order))
+}
+
+func (order Order) logAttribute() slog.Attr {
+	attributes := []any{
+		slog.String("faction", string(order.Faction)),
+		slog.String("origin", string(order.Origin)),
+	}
+	if order.Destination != "" {
+		attributes = append(attributes, slog.String("destination", string(order.Destination)))
+	}
+
+	return slog.Group("order", attributes...)
 }
 
 func (game *Game) gatherAndValidateOrders() []Order {

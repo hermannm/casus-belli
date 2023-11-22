@@ -228,14 +228,12 @@ func (game *Game) resolveRegionMoves(region *Region) (resolved bool) {
 
 	// A single move to an empty region is either an autosuccess, or a singleplayer battle
 	if len(region.incomingMoves) == 1 && region.isEmpty() {
-		move := region.incomingMoves[0]
-
 		if region.isControlled() || region.IsSea {
-			game.succeedMove(move)
+			game.succeedMove(region.incomingMoves[0])
 			return true
 		}
 
-		game.calculateSingleplayerBattle(region, move)
+		game.calculateSingleplayerBattle(region)
 		return true
 	}
 

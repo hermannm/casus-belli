@@ -42,18 +42,10 @@ const (
 
 type ResultMap map[PlayerFaction]*Result
 
-func (resultMap ResultMap) moves(destination RegionName) []Order {
-	var moves []Order
-	for _, result := range resultMap {
-		if result.DefenderRegion == "" && result.Move.Destination == destination {
-			moves = append(moves, result.Move)
-		}
-	}
-	return moves
-}
-
 func (resultMap ResultMap) toBattle() Battle {
-	battle := Battle{Results: make([]Result, 0, len(resultMap))}
+	battle := Battle{
+		Results: make([]Result, 0, len(resultMap)),
+	}
 	for _, result := range resultMap {
 		for _, mod := range result.Parts {
 			result.Total += mod.Value
@@ -70,19 +62,21 @@ func (resultMap ResultMap) addSupport(from PlayerFaction, to PlayerFaction) {
 	)
 }
 
-func (game *Game) calculateSingleplayerBattle(region *Region, move Order) {
+func (game *Game) calculateSingleplayerBattle(region *Region) {
+	move := region.incomingMoves[0]
 	resultMap := ResultMap{
 		move.Faction: {Parts: attackModifiers(move, region, false, false), Move: move},
 	}
 
-	if !region.isSupported() {
+	remainingSupports := resultMap.addAutomaticSupports(region, region.incomingMoves, false)
+	if len(remainingSupports) == 0 {
 		game.resolveSingleplayerBattle(resultMap.toBattle())
 		return
 	}
 
 	region.resolving = true
 	go func() {
-		game.callSupportForRegion(region, resultMap, false)
+		game.callSupportForRegion(region, remainingSupports, region.incomingMoves, resultMap, false)
 		game.battleReceiver <- resultMap.toBattle()
 	}()
 }
@@ -104,28 +98,42 @@ func (game *Game) calculateMultiplayerBattle(region *Region) {
 		}
 	}
 
-	if !region.isSupported() {
+	remainingSupports := resultMap.addAutomaticSupports(region, region.incomingMoves, false)
+	if len(remainingSupports) == 0 {
 		game.resolveMultiplayerBattle(resultMap.toBattle())
 		return
 	}
 
 	region.resolving = true
 	go func() {
-		game.callSupportForRegion(region, resultMap, false)
+		game.callSupportForRegion(region, remainingSupports, region.incomingMoves, resultMap, false)
 		game.battleReceiver <- resultMap.toBattle()
 	}()
 }
 
 // Battle where units from two regions attack each other simultaneously.
 func (game *Game) calculateBorderBattle(region1 *Region, region2 *Region) {
-	move1 := region1.order
-	move2 := region2.order
+	moveToRegion1, moveToRegion2 := region2.order, region1.order
+	movesToRegion1, movesToRegion2 := []Order{moveToRegion1}, []Order{moveToRegion2}
+
 	resultMap := ResultMap{
-		move1.Faction: {Parts: attackModifiers(move1, region2, true, true), Move: move1},
-		move2.Faction: {Parts: attackModifiers(move2, region1, true, true), Move: move2},
+		moveToRegion1.Faction: {
+			Parts: attackModifiers(moveToRegion1, region1, true, true),
+			Move:  moveToRegion1,
+		},
+		moveToRegion2.Faction: {
+			Parts: attackModifiers(moveToRegion2, region2, true, true),
+			Move:  moveToRegion2,
+		},
 	}
 
-	if !region1.isSupported() && !region2.isSupported() {
+	remainingSupportsRegion1 := resultMap.addAutomaticSupports(region1, movesToRegion1, true)
+	region1Done := len(remainingSupportsRegion1) == 0
+
+	remainingSupportsRegion2 := resultMap.addAutomaticSupports(region2, movesToRegion2, true)
+	region2Done := len(remainingSupportsRegion2) == 0
+
+	if region1Done && region2Done {
 		game.resolveBorderBattle(resultMap.toBattle())
 		return
 	}
@@ -133,12 +141,68 @@ func (game *Game) calculateBorderBattle(region1 *Region, region2 *Region) {
 	region1.resolving = true
 	region2.resolving = true
 	go func() {
-		// TODO: make these two calls run concurrently (possibly race condition on results)
-		game.callSupportForRegion(region1, resultMap, true)
-		game.callSupportForRegion(region2, resultMap, true)
+		if !region1Done && !region2Done {
+			var waitGroup sync.WaitGroup
+			waitGroup.Add(2)
+
+			go func() {
+				game.callSupportForRegion(
+					region1,
+					remainingSupportsRegion1,
+					movesToRegion1,
+					resultMap,
+					true,
+				)
+				waitGroup.Done()
+			}()
+
+			go func() {
+				game.callSupportForRegion(
+					region2,
+					remainingSupportsRegion2,
+					movesToRegion2,
+					resultMap,
+					true,
+				)
+			}()
+
+			waitGroup.Wait()
+		} else if !region1Done {
+			game.callSupportForRegion(region1, remainingSupportsRegion1, movesToRegion1, resultMap, true)
+		} else if !region2Done {
+			game.callSupportForRegion(region2, remainingSupportsRegion2, movesToRegion2, resultMap, true)
+		}
 
 		game.battleReceiver <- resultMap.toBattle()
 	}()
+}
+
+// Adds modifiers for support orders from players involved in the battle, as we assume they always
+// want to support themselves, so we don't need to ask. Returns support orders that could not be
+// added automatically.
+func (resultMap ResultMap) addAutomaticSupports(
+	region *Region,
+	incomingMoves []Order,
+	isBorderBattle bool,
+) (remainingSupports []Order) {
+SupportLoop:
+	for _, support := range region.incomingSupports {
+		if !region.isEmpty() && !isBorderBattle && support.Faction == region.Unit.Faction {
+			resultMap.addSupport(support.Faction, support.Faction)
+			continue
+		}
+
+		for _, move := range incomingMoves {
+			if move.Faction == support.Faction {
+				resultMap.addSupport(support.Faction, support.Faction)
+				continue SupportLoop
+			}
+		}
+
+		remainingSupports = append(remainingSupports, support)
+	}
+
+	return remainingSupports
 }
 
 type supportDeclaration struct {
@@ -149,30 +213,21 @@ type supportDeclaration struct {
 // Calls support from support orders to the given region, and adds modifiers to the result map.
 func (game *Game) callSupportForRegion(
 	region *Region,
+	supports []Order,
+	moves []Order,
 	resultMap ResultMap,
 	isBorderBattle bool,
 ) {
-	supports := region.incomingSupports
 	supportReceiver := make(chan supportDeclaration, len(supports))
 
 	var waitGroup sync.WaitGroup
 	waitGroup.Add(len(supports))
 
-	incomingMoves := []Order{}
-	for _, result := range resultMap {
-		if result.DefenderRegion != "" {
-			continue
-		}
-		if result.Move.Destination == region.Name {
-			incomingMoves = append(incomingMoves, result.Move)
-		}
-	}
-
 	for _, support := range supports {
 		go game.callSupportFromPlayer(
 			support,
 			region,
-			incomingMoves,
+			moves,
 			isBorderBattle,
 			supportReceiver,
 			&waitGroup,
@@ -201,24 +256,11 @@ func (game *Game) callSupportFromPlayer(
 ) {
 	defer waitGroup.Done()
 
-	includeDefender := !region.isEmpty() && !isBorderBattle
-	if includeDefender && region.Unit.Faction == support.Faction {
-		supportReceiver <- supportDeclaration{from: support.Faction, to: support.Faction}
-		return
-	}
-
-	for _, move := range moves {
-		if support.Faction == move.Faction {
-			supportReceiver <- supportDeclaration{from: support.Faction, to: support.Faction}
-			return
-		}
-	}
-
 	supportableFactions := make([]PlayerFaction, 0, len(moves)+1)
 	for _, move := range moves {
 		supportableFactions = append(supportableFactions, move.Faction)
 	}
-	if includeDefender {
+	if !region.isEmpty() && !isBorderBattle {
 		supportableFactions = append(supportableFactions, region.Unit.Faction)
 	}
 
@@ -228,32 +270,21 @@ func (game *Game) callSupportFromPlayer(
 		region.Name,
 		supportableFactions,
 	); err != nil {
-		game.log.ErrorCause(err, "failed to send support request")
+		game.log.ErrorCause(err, "failed to send request for support", support.logAttribute())
 		supportReceiver <- supportDeclaration{from: support.Faction, to: ""}
 		return
 	}
 
 	supported, err := game.messenger.AwaitSupport(support.Faction, support.Origin, region.Name)
 	if err != nil {
-		game.log.ErrorCausef(
-			err,
-			"failed to receive support declaration from faction '%s' in '%s' for battle in '%s'",
-			support.Faction,
-			support.Origin,
-			region.Name,
-		)
+		game.log.ErrorCause(err, "failed to receive support declaration", support.logAttribute())
 		supportReceiver <- supportDeclaration{from: support.Faction, to: ""}
 		return
 	}
 
 	if supported != "" && !slices.Contains(supportableFactions, supported) {
-		err := fmt.Errorf(
-			"received invalid supported faction '%s' from support order in '%s' for battle in '%s'",
-			supported,
-			support.Origin,
-			region.Name,
-		)
-		game.log.Error(err)
+		err := fmt.Errorf("received invalid supported faction '%s'", supported)
+		game.log.Error(err, support.logAttribute())
 		game.messenger.SendError(support.Faction, err)
 		supportReceiver <- supportDeclaration{from: support.Faction, to: ""}
 		return
