@@ -4,7 +4,7 @@ import (
 	"hermannm.dev/set"
 )
 
-func (game *Game) resolveTransport(move Order) (transportMustWait bool) {
+func (game *Game) resolveTransport(move *Order) (transportMustWait bool) {
 	// If the move is between two adjacent regions, then it does not need transport
 	if game.board[move.Destination].hasNeighbor(move.Origin) {
 		return false

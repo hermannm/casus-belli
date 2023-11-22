@@ -43,7 +43,7 @@ type Region struct {
 // Internal resolving state for a region. Resets to its zero value every round.
 // Since all fields are private, they're not included in JSON messages.
 type regionResolvingState struct {
-	order                    Order
+	order                    *Order
 	incomingMoves            []Order
 	incomingSupports         []Order
 	expectedSecondHorseMoves int
@@ -51,7 +51,7 @@ type regionResolvingState struct {
 	resolving                bool
 	resolved                 bool
 	transportsResolved       bool
-	unresolvedRetreat        Order
+	unresolvedRetreat        *Order
 	partOfCycle              bool // Whether the region is part of a cycle of move orders.
 }
 
@@ -95,7 +95,7 @@ func (board Board) addOrders(orders []Order) {
 
 func (board Board) addOrder(order Order) {
 	origin := board[order.Origin]
-	origin.order = order
+	origin.order = &order
 
 	if order.Destination == "" {
 		return
@@ -115,7 +115,7 @@ func (board Board) addOrder(order Order) {
 
 func (board Board) hasUnresolvedRetreats() bool {
 	for _, region := range board {
-		if region.hasUnresolvedRetreat() {
+		if region.unresolvedRetreat != nil {
 			return true
 		}
 	}
@@ -139,16 +139,16 @@ func (board Board) resetResolvingState() {
 	}
 }
 
-func (board Board) removeOrder(order Order) {
+func (board Board) removeOrder(order *Order) {
 	if !order.Retreat {
-		board[order.Origin].order = Order{}
+		board[order.Origin].order = nil
 	}
 
 	switch order.Type {
 	case OrderMove:
 		destination := board[order.Destination]
 		for i, move := range destination.incomingMoves {
-			if move == order {
+			if move == *order {
 				destination.incomingMoves = slices.Delete(destination.incomingMoves, i, i+1)
 				break
 			}
@@ -156,7 +156,7 @@ func (board Board) removeOrder(order Order) {
 	case OrderSupport:
 		destination := board[order.Destination]
 		for i, support := range destination.incomingSupports {
-			if support == order {
+			if support == *order {
 				destination.incomingSupports = slices.Delete(destination.incomingSupports, i, i+1)
 				break
 			}
@@ -164,11 +164,11 @@ func (board Board) removeOrder(order Order) {
 	}
 }
 
-func (board Board) succeedMove(move Order) {
+func (board Board) succeedMove(move *Order) {
 	destination := board[move.Destination]
 
 	destination.replaceUnit(move.unit)
-	destination.order = Order{}
+	destination.order = nil
 	if !destination.Sea {
 		destination.ControllingFaction = move.Faction
 	}
@@ -188,7 +188,7 @@ func (board Board) succeedMove(move Order) {
 	}
 }
 
-func (board Board) killMove(move Order) {
+func (board Board) killMove(move *Order) {
 	board.removeOrder(move)
 	if !move.Retreat {
 		board[move.Origin].removeUnit()
@@ -199,7 +199,7 @@ func (board Board) killMove(move Order) {
 	}
 }
 
-func (board Board) retreatMove(move Order) {
+func (board Board) retreatMove(move *Order) {
 	board.removeOrder(move)
 
 	origin := board[move.Origin]
@@ -208,11 +208,12 @@ func (board Board) retreatMove(move Order) {
 	} else if origin.partOfCycle {
 		origin.unresolvedRetreat = move
 	} else if !move.Retreat {
-		move.Retreat = true
-		move.Origin, move.Destination = move.Destination, move.Origin
-		move.SecondDestination = ""
-		origin.incomingMoves = append(origin.incomingMoves, move)
-		origin.order = Order{}
+		retreat := *move
+		retreat.Retreat = true
+		retreat.Origin, retreat.Destination = retreat.Destination, retreat.Origin
+		retreat.SecondDestination = ""
+		origin.incomingMoves = append(origin.incomingMoves, retreat)
+		origin.order = nil
 		origin.removeUnit()
 	}
 
@@ -234,10 +235,6 @@ func (region *Region) controlled() bool {
 // Checks if any players have move orders against the region.
 func (region *Region) attacked() bool {
 	return len(region.incomingMoves) != 0
-}
-
-func (region *Region) hasUnresolvedRetreat() bool {
-	return !region.unresolvedRetreat.isNone()
 }
 
 func (region *Region) removeUnit() {

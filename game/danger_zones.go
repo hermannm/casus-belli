@@ -31,7 +31,7 @@ func resolveDangerZones(board Board) (results []Battle) {
 }
 
 // Rolls dice to see if order makes it across danger zone.
-func crossDangerZone(order Order, dangerZone DangerZone) (survived bool, result Battle) {
+func crossDangerZone(order *Order, dangerZone DangerZone) (survived bool, result Battle) {
 	diceModifier := Modifier{Type: ModifierDice, Value: rollDice()}
 
 	result = Battle{
@@ -47,7 +47,7 @@ func crossDangerZone(order Order, dangerZone DangerZone) (survived bool, result 
 }
 
 func crossDangerZones(
-	order Order,
+	order *Order,
 	dangerZones []DangerZone,
 ) (survivedAll bool, results []Battle) {
 	for _, dangerZone := range dangerZones {

@@ -24,8 +24,8 @@ type Result struct {
 	Total int
 	Parts []Modifier
 
-	// If result of a move order to the battle: the move order in question, otherwise empty.
-	Move Order
+	// If result of a move order to the battle: the move order in question, otherwise nil.
+	Move *Order
 
 	// If result of a defending unit in a region: the name of the region, otherwise blank.
 	DefenderRegion RegionName `json:",omitempty"`
@@ -65,7 +65,7 @@ func (resultMap ResultMap) addSupport(from PlayerFaction, to PlayerFaction) {
 func (game *Game) calculateSingleplayerBattle(region *Region) {
 	move := region.incomingMoves[0]
 	resultMap := ResultMap{
-		move.Faction: {Parts: attackModifiers(move, region, false, false), Move: move},
+		move.Faction: {Parts: attackModifiers(&move, region, false, false), Move: &move},
 	}
 
 	remainingSupports := resultMap.addAutomaticSupports(region, region.incomingMoves, false)
@@ -86,8 +86,8 @@ func (game *Game) calculateMultiplayerBattle(region *Region) {
 
 	for _, move := range region.incomingMoves {
 		resultMap[move.Faction] = &Result{
-			Parts: attackModifiers(move, region, true, false),
-			Move:  move,
+			Parts: attackModifiers(&move, region, true, false),
+			Move:  &move,
 		}
 	}
 
@@ -114,7 +114,7 @@ func (game *Game) calculateMultiplayerBattle(region *Region) {
 // Battle where units from two regions attack each other simultaneously.
 func (game *Game) calculateBorderBattle(region1 *Region, region2 *Region) {
 	moveToRegion1, moveToRegion2 := region2.order, region1.order
-	movesToRegion1, movesToRegion2 := []Order{moveToRegion1}, []Order{moveToRegion2}
+	movesToRegion1, movesToRegion2 := []Order{*moveToRegion1}, []Order{*moveToRegion2}
 
 	resultMap := ResultMap{
 		moveToRegion1.Faction: {
@@ -208,7 +208,7 @@ func (game *Game) callSupportForRegion(
 ) {
 	if len(supports) == 1 {
 		support := supports[0]
-		supported := game.callSupportFromPlayer(support, region, incomingMoves, borderBattle)
+		supported := game.callSupportFromPlayer(&support, region, incomingMoves, borderBattle)
 		if supported != "" {
 			resultMap.addSupport(support.Faction, supported)
 		}
@@ -223,7 +223,7 @@ func (game *Game) callSupportForRegion(
 		support := support // Avoids mutating loop variable
 
 		go func() {
-			supported := game.callSupportFromPlayer(support, region, incomingMoves, borderBattle)
+			supported := game.callSupportFromPlayer(&support, region, incomingMoves, borderBattle)
 			if supported != "" {
 				resultsLock.Lock()
 				resultMap.addSupport(support.Faction, supported)
@@ -237,7 +237,7 @@ func (game *Game) callSupportForRegion(
 }
 
 func (game *Game) callSupportFromPlayer(
-	support Order,
+	support *Order,
 	region *Region,
 	incomingMoves []Order,
 	borderBattle bool,
@@ -364,15 +364,14 @@ func (game *Game) resolveBorderBattle(battle Battle) {
 		return
 	}
 
+	// Only the loser is affected by the results of the border battle; the winner may still have
+	// to win a battle in the destination region, which will be handled by the next cycle of the
+	// move resolver
 	loser := losers[0]
-	for _, move := range []Order{move1, move2} {
-		// Only the loser is affected by the results of the border battle; the winner may still have
-		// to win a battle in the destination region, which will be handled by the next cycle of the
-		// move resolver
-		if move.Faction == loser {
-			game.board.killMove(move)
-			break
-		}
+	if move1.Faction == loser {
+		game.board.killMove(move1)
+	} else {
+		game.board.killMove(move2)
 	}
 
 	game.resolvedBattles = append(game.resolvedBattles, battle)
