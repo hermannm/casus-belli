@@ -49,7 +49,7 @@ type regionResolvingState struct {
 	resolving                bool
 	resolved                 bool
 	transportsResolved       bool
-	retreat                  Order
+	unresolvedRetreat        Order
 	partOfCycle              bool // Whether the region is part of a cycle of move orders.
 }
 
@@ -114,7 +114,7 @@ func (board Board) addOrder(order Order) {
 
 func (board Board) hasUnresolvedRetreats() bool {
 	for _, region := range board {
-		if region.hasRetreat() {
+		if region.hasUnresolvedRetreat() {
 			return true
 		}
 	}
@@ -190,27 +190,30 @@ func (board Board) succeedMove(move Order) {
 	}
 }
 
-func (board Board) failMove(move Order) {
+func (board Board) killMove(move Order) {
 	board.removeOrder(move)
+	board[move.Origin].removeUnit()
 
 	if move.hasSecondHorseMove() {
 		board[move.SecondDestination].expectedSecondHorseMoves--
 	}
 }
 
-func (board Board) killMove(move Order) {
-	board.failMove(move)
-	board[move.Origin].removeUnit()
-}
-
 func (board Board) retreatMove(move Order) {
-	board.failMove(move)
+	board.removeOrder(move)
 
 	origin := board[move.Origin]
-	if origin.attacked() {
-		origin.retreat = move
-	} else if origin.empty() {
+	if !origin.attacked() {
 		origin.Unit = move.Unit
+	} else if origin.partOfCycle {
+		origin.unresolvedRetreat = move
+	} else {
+		origin.removeUnit()
+		origin.incomingMoves = append(origin.incomingMoves, move)
+	}
+
+	if move.hasSecondHorseMove() {
+		board[move.SecondDestination].expectedSecondHorseMoves--
 	}
 }
 
@@ -229,8 +232,8 @@ func (region *Region) attacked() bool {
 	return len(region.incomingMoves) != 0
 }
 
-func (region *Region) hasRetreat() bool {
-	return !region.retreat.isNone()
+func (region *Region) hasUnresolvedRetreat() bool {
+	return !region.unresolvedRetreat.isNone()
 }
 
 func (region *Region) removeUnit() {

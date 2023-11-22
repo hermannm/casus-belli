@@ -16,7 +16,7 @@ func (game *Game) resolveTransport(move Order) (transportMustWait bool) {
 	)
 
 	if !canTransport {
-		game.Board.failMove(move)
+		game.Board.retreatMove(move)
 		return false
 	}
 

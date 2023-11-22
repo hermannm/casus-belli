@@ -172,7 +172,7 @@ func (game *Game) resolveMoves() {
 
 func (game *Game) resolveRegionMoves(region *Region) (resolved bool) {
 	// Skips the region if it has already been processed
-	if region.resolving || (region.resolved && !region.hasRetreat()) {
+	if region.resolving || (region.resolved && !region.hasUnresolvedRetreat()) {
 		return false
 	}
 
@@ -190,11 +190,11 @@ func (game *Game) resolveRegionMoves(region *Region) (resolved bool) {
 
 	// Resolves retreats if region has no attackers
 	if !region.attacked() {
-		if region.hasRetreat() {
+		if region.hasUnresolvedRetreat() {
 			if region.empty() {
-				region.Unit = region.retreat.Unit
+				region.Unit = region.unresolvedRetreat.Unit
 			}
-			region.retreat = Order{}
+			region.unresolvedRetreat = Order{}
 		}
 
 		region.resolved = true
