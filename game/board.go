@@ -48,6 +48,10 @@ type regionResolvingState struct {
 	resolved           bool
 	transportsResolved bool
 	retreat            Order
+
+	// Whether the region was part of a unit swap between two regions controlled by the same player
+	// faction.
+	unitSwapped bool
 }
 
 type Neighbor struct {
@@ -66,17 +70,6 @@ type Neighbor struct {
 }
 
 type DangerZone string
-
-func (board Board) removeUnit(unit Unit, regionName RegionName) {
-	region, ok := board[regionName]
-	if !ok {
-		return
-	}
-
-	if unit == region.Unit {
-		region.Unit = Unit{}
-	}
-}
 
 // Populates regions on the board with the given orders.
 // Does not add support orders that have moves against them, as that cancels them.
@@ -192,6 +185,18 @@ func (region *Region) isSupported() bool {
 
 func (region *Region) hasRetreat() bool {
 	return !region.retreat.isNone()
+}
+
+func (region *Region) removeUnit() {
+	if !region.unitSwapped {
+		region.Unit = Unit{}
+		region.SiegeCount = 0
+	}
+}
+
+func (region *Region) replaceUnit(unit Unit) {
+	region.Unit = unit
+	region.SiegeCount = 0
 }
 
 // Returns a region's neighbor of the given name, and whether it was found.

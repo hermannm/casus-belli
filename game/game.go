@@ -196,7 +196,9 @@ func (game *Game) resolveRegionMoves(region *Region) (resolved bool) {
 	// Resolves retreats if region has no attackers
 	if !region.isAttacked() {
 		if region.hasRetreat() {
-			region.Unit = region.retreat.Unit
+			if region.isEmpty() {
+				region.Unit = region.retreat.Unit
+			}
 			region.retreat = Order{}
 		}
 
@@ -210,8 +212,9 @@ func (game *Game) resolveRegionMoves(region *Region) (resolved bool) {
 		// If both moves are by the same player faction, removes the units from their origin
 		// regions, as they may not be allowed to retreat if their origin region is taken
 		for _, cycleRegion := range [2]*Region{region, region2} {
-			cycleRegion.Unit = Unit{}
+			cycleRegion.removeUnit()
 			cycleRegion.order = Order{}
+			cycleRegion.unitSwapped = true
 		}
 	} else if twoWayCycle {
 		// If the moves are from different player factions, they battle in the middle
@@ -263,13 +266,13 @@ func (game *Game) resolveSieges() {
 func (game *Game) succeedMove(move Order) {
 	destination := game.Board[move.Destination]
 
-	destination.Unit = move.Unit
+	destination.replaceUnit(move.Unit)
 	destination.order = Order{}
 	if !destination.IsSea {
 		destination.ControllingFaction = move.Faction
 	}
 
-	game.Board.removeUnit(move.Unit, move.Origin)
+	game.Board[move.Origin].removeUnit()
 	game.Board.removeOrder(move)
 
 	destination.resolved = true
