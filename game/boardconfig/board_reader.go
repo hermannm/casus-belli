@@ -17,30 +17,30 @@ import (
 var boardConfigFiles embed.FS
 
 type JSONBoard struct {
-	Name               string
-	WinningCastleCount int
-	Nations            map[string][]JSONLandRegion
-	Seas               []JSONSeaRegion
-	Neighbors          []JSONNeighbor
+	Name               string                      `json:"name"`
+	WinningCastleCount int                         `json:"winningCastleCount"`
+	Nations            map[string][]JSONLandRegion `json:"nations"`
+	Seas               []JSONSeaRegion             `json:"seas"`
+	Neighbors          []JSONNeighbor              `json:"neighbors"`
 }
 
 type JSONLandRegion struct {
-	Name        string
-	Forest      bool
-	Castle      bool
-	HomeFaction string
+	Name        string `json:"name"`
+	Forest      bool   `json:"forest"`
+	Castle      bool   `json:"castle"`
+	HomeFaction string `json:"homeFaction"`
 }
 
 type JSONSeaRegion struct {
-	Name string
+	Name string `json:"name"`
 }
 
 type JSONNeighbor struct {
-	Region1    string
-	Region2    string
-	River      bool
-	Cliffs     bool
-	DangerZone string
+	Region1    string `json:"region1"`
+	Region2    string `json:"region2"`
+	River      bool   `json:"river"`
+	Cliffs     bool   `json:"cliffs"`
+	DangerZone string `json:"dangerZone"`
 }
 
 func ReadBoardFromConfigFile(boardID string) (game.Board, game.BoardInfo, error) {
