@@ -46,9 +46,9 @@ func (game *Game) resolveTransport(move Order) (transportMustWait bool) {
 func (board Board) findTransportPath(
 	originName RegionName,
 	destinationName RegionName,
-) (canTransport bool, isTransportAttacked bool, dangerZones []DangerZone) {
+) (canTransport bool, transportAttacked bool, dangerZones []DangerZone) {
 	origin := board[originName]
-	if origin.isEmpty() || origin.Unit.Type == UnitShip || origin.IsSea {
+	if origin.empty() || origin.Unit.Type == UnitShip || origin.Sea {
 		return false, false, nil
 	}
 
@@ -57,7 +57,7 @@ func (board Board) findTransportPath(
 
 // Stores status of a path of transport orders to destination.
 type transportPath struct {
-	isAttacked  bool
+	attacked    bool
 	dangerZones []DangerZone
 }
 
@@ -65,7 +65,7 @@ func (board Board) recursivelyFindTransportPath(
 	region *Region,
 	destination RegionName,
 	regionsToExclude set.Set[RegionName],
-) (canTransport bool, isTransportAttacked bool, dangerZones []DangerZone) {
+) (canTransport bool, transportAttacked bool, dangerZones []DangerZone) {
 	transportingNeighbors, newRegionsToExclude := region.getTransportingNeighbors(
 		board,
 		regionsToExclude,
@@ -93,7 +93,7 @@ func (board Board) recursivelyFindTransportPath(
 			subPaths = append(
 				subPaths,
 				transportPath{
-					isAttacked:  transportRegion.isAttacked(),
+					attacked:    transportRegion.attacked(),
 					dangerZones: []DangerZone{destinationDangerZone},
 				},
 			)
@@ -102,7 +102,7 @@ func (board Board) recursivelyFindTransportPath(
 			subPaths = append(
 				subPaths,
 				transportPath{
-					isAttacked:  transportRegion.isAttacked() || nextTransportAttacked,
+					attacked:    transportRegion.attacked() || nextTransportAttacked,
 					dangerZones: nextDangerZones,
 				},
 			)
@@ -118,7 +118,7 @@ func (board Board) recursivelyFindTransportPath(
 	}
 
 	bestPath, canTransport := bestTransportPath(paths)
-	return canTransport, bestPath.isAttacked, bestPath.dangerZones
+	return canTransport, bestPath.attacked, bestPath.dangerZones
 }
 
 func (region *Region) getTransportingNeighbors(
@@ -127,7 +127,7 @@ func (region *Region) getTransportingNeighbors(
 ) (transports []Neighbor, newRegionsToExclude set.Set[RegionName]) {
 	newRegionsToExclude = regionsToExclude.Copy()
 
-	if region.isEmpty() {
+	if region.empty() {
 		return transports, newRegionsToExclude
 	}
 
@@ -179,15 +179,15 @@ func bestTransportPath(paths []transportPath) (bestPath transportPath, canTransp
 	bestPath = paths[0]
 
 	for _, path := range paths[1:] {
-		if bestPath.isAttacked {
-			if path.isAttacked {
+		if bestPath.attacked {
+			if path.attacked {
 				if len(path.dangerZones) < len(bestPath.dangerZones) {
 					bestPath = path
 				}
 			} else {
 				bestPath = path
 			}
-		} else if !path.isAttacked {
+		} else if !path.attacked {
 			if len(path.dangerZones) < len(bestPath.dangerZones) {
 				bestPath = path
 			}

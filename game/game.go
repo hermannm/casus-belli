@@ -194,9 +194,9 @@ func (game *Game) resolveRegionMoves(region *Region) (resolved bool) {
 	}
 
 	// Resolves retreats if region has no attackers
-	if !region.isAttacked() {
+	if !region.attacked() {
 		if region.hasRetreat() {
-			if region.isEmpty() {
+			if region.empty() {
 				region.Unit = region.retreat.Unit
 			}
 			region.retreat = Order{}
@@ -227,8 +227,8 @@ func (game *Game) resolveRegionMoves(region *Region) (resolved bool) {
 	}
 
 	// A single move to an empty region is either an autosuccess, or a singleplayer battle
-	if len(region.incomingMoves) == 1 && region.isEmpty() {
-		if region.isControlled() || region.IsSea {
+	if len(region.incomingMoves) == 1 && region.empty() {
+		if region.controlled() || region.Sea {
 			game.succeedMove(region.incomingMoves[0])
 			return true
 		}
@@ -266,7 +266,7 @@ func (game *Game) succeedMove(move Order) {
 
 	destination.replaceUnit(move.Unit)
 	destination.order = Order{}
-	if !destination.IsSea {
+	if !destination.Sea {
 		destination.ControllingFaction = move.Faction
 	}
 
@@ -293,7 +293,7 @@ func (game *Game) checkWinner() (winner PlayerFaction) {
 	castleCount := make(map[PlayerFaction]int)
 
 	for _, region := range game.Board {
-		if region.HasCastle && region.isControlled() {
+		if region.Castle && region.controlled() {
 			castleCount[region.ControllingFaction]++
 		}
 	}

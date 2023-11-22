@@ -91,7 +91,7 @@ func (game *Game) calculateMultiplayerBattle(region *Region) {
 		}
 	}
 
-	if !region.isEmpty() {
+	if !region.empty() {
 		resultMap[region.Unit.Faction] = &Result{
 			Parts:          defenseModifiers(region),
 			DefenderRegion: region.Name,
@@ -176,11 +176,11 @@ func (game *Game) calculateBorderBattle(region1 *Region, region2 *Region) {
 func (resultMap ResultMap) addAutomaticSupports(
 	region *Region,
 	incomingMoves []Order,
-	isBorderBattle bool,
+	borderBattle bool,
 ) (remainingSupports []Order) {
 SupportLoop:
 	for _, support := range region.incomingSupports {
-		if !region.isEmpty() && !isBorderBattle && support.Faction == region.Unit.Faction {
+		if !region.empty() && !borderBattle && support.Faction == region.Unit.Faction {
 			resultMap.addSupport(support.Faction, support.Faction)
 			continue
 		}
@@ -204,11 +204,11 @@ func (game *Game) callSupportForRegion(
 	supports []Order,
 	incomingMoves []Order,
 	resultMap ResultMap,
-	isBorderBattle bool,
+	borderBattle bool,
 ) {
 	if len(supports) == 1 {
 		support := supports[0]
-		supported := game.callSupportFromPlayer(support, region, incomingMoves, isBorderBattle)
+		supported := game.callSupportFromPlayer(support, region, incomingMoves, borderBattle)
 		if supported != "" {
 			resultMap.addSupport(support.Faction, supported)
 		}
@@ -223,7 +223,7 @@ func (game *Game) callSupportForRegion(
 		support := support // Avoids mutating loop variable
 
 		go func() {
-			supported := game.callSupportFromPlayer(support, region, incomingMoves, isBorderBattle)
+			supported := game.callSupportFromPlayer(support, region, incomingMoves, borderBattle)
 			if supported != "" {
 				resultsLock.Lock()
 				resultMap.addSupport(support.Faction, supported)
@@ -240,13 +240,13 @@ func (game *Game) callSupportFromPlayer(
 	support Order,
 	region *Region,
 	incomingMoves []Order,
-	isBorderBattle bool,
+	borderBattle bool,
 ) (supported PlayerFaction) {
 	supportableFactions := make([]PlayerFaction, 0, len(incomingMoves)+1)
 	for _, move := range incomingMoves {
 		supportableFactions = append(supportableFactions, move.Faction)
 	}
-	if !region.isEmpty() && !isBorderBattle {
+	if !region.empty() && !borderBattle {
 		supportableFactions = append(supportableFactions, region.Unit.Faction)
 	}
 
@@ -320,7 +320,7 @@ func (game *Game) resolveMultiplayerBattle(battle Battle) {
 			if slices.Contains(losers, region.Unit.Faction) {
 				if tie {
 					region.removeUnit()
-				} else if !region.isControlled() {
+				} else if !region.controlled() {
 					region.removeUnit()
 				}
 			}
@@ -340,9 +340,9 @@ func (game *Game) resolveMultiplayerBattle(battle Battle) {
 			continue
 		}
 
-		// If the destination is not controlled, then the winner will have to battle there
-		// before we can succeed the move
-		if game.Board[move.Destination].isControlled() {
+		// If the destination is not controlled, then the winner will have to battle there before we
+		// can succeed the move
+		if game.Board[move.Destination].controlled() {
 			game.succeedMove(move)
 		}
 	}
@@ -452,12 +452,12 @@ func (game *Game) attemptRetreat(move Order) {
 		return
 	}
 
-	if origin.isAttacked() {
+	if origin.attacked() {
 		origin.retreat = move
 		return
 	}
 
-	if origin.isEmpty() {
+	if origin.empty() {
 		origin.Unit = move.Unit
 	}
 	origin.resolved = true

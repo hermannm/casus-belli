@@ -76,8 +76,8 @@ func ReadBoardFromConfigFile(boardID string) (game.Board, game.BoardInfo, error)
 				Nation:             nation,
 				ControllingFaction: homeFaction,
 				HomeFaction:        homeFaction,
-				IsForest:           landRegion.Forest,
-				HasCastle:          landRegion.Castle,
+				Forest:             landRegion.Forest,
+				Castle:             landRegion.Castle,
 			}
 
 			board[region.Name] = &region
@@ -89,7 +89,7 @@ func ReadBoardFromConfigFile(boardID string) (game.Board, game.BoardInfo, error)
 	}
 
 	for _, sea := range jsonBoard.Seas {
-		region := game.Region{Name: game.RegionName(sea.Name), IsSea: true}
+		region := game.Region{Name: game.RegionName(sea.Name), Sea: true}
 		board[region.Name] = &region
 	}
 
@@ -108,20 +108,20 @@ func ReadBoardFromConfigFile(boardID string) (game.Board, game.BoardInfo, error)
 		region1.Neighbors = append(
 			region1.Neighbors,
 			game.Neighbor{
-				Name:          region2.Name,
-				IsAcrossWater: neighbor.River || (region1.IsSea && !region2.IsSea),
-				HasCliffs:     neighbor.Cliffs,
-				DangerZone:    game.DangerZone(neighbor.DangerZone),
+				Name:        region2.Name,
+				AcrossWater: neighbor.River || (region1.Sea && !region2.Sea),
+				Cliffs:      neighbor.Cliffs,
+				DangerZone:  game.DangerZone(neighbor.DangerZone),
 			},
 		)
 
 		region2.Neighbors = append(
 			region2.Neighbors,
 			game.Neighbor{
-				Name:          region1.Name,
-				IsAcrossWater: neighbor.River || (region2.IsSea && !region1.IsSea),
-				HasCliffs:     neighbor.Cliffs,
-				DangerZone:    game.DangerZone(neighbor.DangerZone),
+				Name:        region1.Name,
+				AcrossWater: neighbor.River || (region2.Sea && !region1.Sea),
+				Cliffs:      neighbor.Cliffs,
+				DangerZone:  game.DangerZone(neighbor.DangerZone),
 			},
 		)
 	}

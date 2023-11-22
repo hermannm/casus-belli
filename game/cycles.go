@@ -63,7 +63,7 @@ func (game *Game) resolveCycle(cycle []Order) {
 
 	for _, region := range regions {
 		if len(region.incomingMoves) == 1 {
-			if region.isControlled() || region.IsSea {
+			if region.controlled() || region.Sea {
 				game.succeedMove(region.incomingMoves[0])
 			} else {
 				game.calculateSingleplayerBattle(region)

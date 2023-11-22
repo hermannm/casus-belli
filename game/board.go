@@ -10,14 +10,14 @@ type Region struct {
 	Neighbors []Neighbor
 
 	// Whether the region is a sea region that can only have ship units.
-	IsSea bool
+	Sea bool
 
 	// For land regions: affects the difficulty of conquering the region.
-	IsForest bool
+	Forest bool
 
 	// For land regions: affects the difficulty of conquering the region, and the points gained from
 	// it.
-	HasCastle bool
+	Castle bool
 
 	// For land regions: the collection of regions that the region belongs to (affects units gained
 	// from conquering).
@@ -56,10 +56,10 @@ type Neighbor struct {
 
 	// Whether a river separates the neighboring regions, or this region is a sea and the neighbor
 	// is a land region.
-	IsAcrossWater bool
+	AcrossWater bool
 
 	// Whether coast between neighboring land regions have cliffs (impassable to ships).
-	HasCliffs bool
+	Cliffs bool
 
 	// If not "": the name of the danger zone that the neighboring region lies across (requires
 	// check to pass).
@@ -83,7 +83,7 @@ func (board Board) addOrders(orders []Order) {
 	}
 
 	for _, supportOrder := range supportOrders {
-		if !board[supportOrder.Origin].isAttacked() {
+		if !board[supportOrder.Origin].attacked() {
 			board.addOrder(supportOrder)
 		}
 	}
@@ -161,17 +161,17 @@ func (board Board) removeOrder(order Order) {
 }
 
 // Checks whether the region contains a unit.
-func (region *Region) isEmpty() bool {
+func (region *Region) empty() bool {
 	return region.Unit.isNone()
 }
 
 // Checks whether the region is controlled by a player faction.
-func (region *Region) isControlled() bool {
+func (region *Region) controlled() bool {
 	return region.ControllingFaction != ""
 }
 
 // Checks if any players have move orders against the region.
-func (region *Region) isAttacked() bool {
+func (region *Region) attacked() bool {
 	return len(region.incomingMoves) != 0
 }
 
@@ -230,14 +230,14 @@ func (region *Region) hasNeighbor(neighborName RegionName) bool {
 // Returns whether the region is a land region that borders the sea.
 // Takes the board in order to go through the region's neighbor regions.
 func (region *Region) isCoast(board Board) bool {
-	if region.IsSea {
+	if region.Sea {
 		return false
 	}
 
 	for _, neighbor := range region.Neighbors {
 		neighborRegion := board[neighbor.Name]
 
-		if neighborRegion.IsSea {
+		if neighborRegion.Sea {
 			return true
 		}
 	}

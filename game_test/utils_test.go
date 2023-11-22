@@ -10,38 +10,38 @@ import (
 func newMockGame() *game.Game {
 	regions := []*game.Region{
 		{Name: "Bom"},
-		{Name: "Brodo", IsForest: true},
-		{Name: "Bassas", IsForest: true, HasCastle: true},
-		{Name: "Lusía", HasCastle: true},
-		{Name: "Lomone", IsForest: true},
-		{Name: "Limbol", IsForest: true},
+		{Name: "Brodo", Forest: true},
+		{Name: "Bassas", Forest: true, Castle: true},
+		{Name: "Lusía", Castle: true},
+		{Name: "Lomone", Forest: true},
+		{Name: "Limbol", Forest: true},
 		{Name: "Leil"},
-		{Name: "Worp", IsForest: true, HomeFaction: "Green", ControllingFaction: "Green"},
+		{Name: "Worp", Forest: true, HomeFaction: "Green", ControllingFaction: "Green"},
 		{
 			Name:               "Winde",
-			IsForest:           true,
-			HasCastle:          true,
+			Forest:             true,
+			Castle:             true,
 			HomeFaction:        "Green",
 			ControllingFaction: "Green",
 		},
-		{Name: "Ovo", IsForest: true},
-		{Name: "Mare Gond", IsSea: true},
-		{Name: "Mare Elle", IsSea: true},
+		{Name: "Ovo", Forest: true},
+		{Name: "Mare Gond", Sea: true},
+		{Name: "Mare Elle", Sea: true},
 		{Name: "Zona"},
 		{Name: "Tond"},
 		{Name: "Tige"},
 		{Name: "Tusser"},
-		{Name: "Mare Ovond", IsSea: true},
-		{Name: "Furie", HasCastle: true},
+		{Name: "Mare Ovond", Sea: true},
+		{Name: "Furie", Castle: true},
 		{Name: "Firril"},
 		{Name: "Fond"},
 		{Name: "Gron"},
 		{Name: "Gnade"},
-		{Name: "Gewel", IsForest: true, HasCastle: true},
-		{Name: "Mare Unna", IsSea: true},
-		{Name: "Emman", IsForest: true, HomeFaction: "Black", ControllingFaction: "Black"},
-		{Name: "Erren", HasCastle: true, HomeFaction: "Black", ControllingFaction: "Black"},
-		{Name: "Mare Bøso", IsSea: true},
+		{Name: "Gewel", Forest: true, Castle: true},
+		{Name: "Mare Unna", Sea: true},
+		{Name: "Emman", Forest: true, HomeFaction: "Black", ControllingFaction: "Black"},
+		{Name: "Erren", Castle: true, HomeFaction: "Black", ControllingFaction: "Black"},
+		{Name: "Mare Bøso", Sea: true},
 	}
 
 	neighbors := []struct {
@@ -117,17 +117,17 @@ func newMockGame() *game.Game {
 		region2 := board[neighbor.region2]
 
 		region1.Neighbors = append(region1.Neighbors, game.Neighbor{
-			Name:          neighbor.region2,
-			IsAcrossWater: neighbor.river || (region1.IsSea && !region2.IsSea),
-			HasCliffs:     neighbor.hasCliffs,
-			DangerZone:    neighbor.dangerZone,
+			Name:        neighbor.region2,
+			AcrossWater: neighbor.river || (region1.Sea && !region2.Sea),
+			Cliffs:      neighbor.hasCliffs,
+			DangerZone:  neighbor.dangerZone,
 		})
 
 		region2.Neighbors = append(region2.Neighbors, game.Neighbor{
-			Name:          neighbor.region1,
-			IsAcrossWater: neighbor.river || (region2.IsSea && !region1.IsSea),
-			HasCliffs:     neighbor.hasCliffs,
-			DangerZone:    neighbor.dangerZone,
+			Name:        neighbor.region1,
+			AcrossWater: neighbor.river || (region2.Sea && !region1.Sea),
+			Cliffs:      neighbor.hasCliffs,
+			DangerZone:  neighbor.dangerZone,
 		})
 	}
 

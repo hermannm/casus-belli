@@ -156,7 +156,7 @@ func (game *Game) gatherAndValidateOrderSet(faction PlayerFaction, orderChan cha
 			order.Faction = faction
 
 			origin, ok := game.Board[order.Origin]
-			if ok && !origin.isEmpty() && order.Type != OrderBuild {
+			if ok && !origin.empty() && order.Type != OrderBuild {
 				order.Unit = origin.Unit
 			}
 
@@ -247,7 +247,7 @@ func validateWinterMove(order Order, origin *Region, board Board) error {
 }
 
 func validateBuild(order Order, origin *Region, board Board) error {
-	if !origin.isEmpty() {
+	if !origin.empty() {
 		return errors.New("cannot build in region already occupied")
 	}
 
@@ -325,11 +325,11 @@ func validateMoveOrSupport(order Order, origin *Region, board Board) error {
 	}
 
 	if origin.Unit.Type == UnitShip {
-		if !(destination.IsSea || destination.isCoast(board)) {
+		if !(destination.Sea || destination.isCoast(board)) {
 			return errors.New("ship order destination must be sea or coast")
 		}
 	} else {
-		if destination.IsSea {
+		if destination.Sea {
 			return errors.New("only ships can order to seas")
 		}
 	}
@@ -386,11 +386,11 @@ func validateBesiegeOrTransport(order Order, origin *Region) error {
 }
 
 func validateBesiege(order Order, origin *Region) error {
-	if !origin.HasCastle {
+	if !origin.Castle {
 		return errors.New("besieged region must have castle")
 	}
 
-	if origin.isControlled() {
+	if origin.controlled() {
 		return errors.New("besieged region cannot already be controlled")
 	}
 
@@ -406,7 +406,7 @@ func validateTransport(order Order, origin *Region) error {
 		return errors.New("only ships can transport")
 	}
 
-	if !origin.IsSea {
+	if !origin.Sea {
 		return errors.New("transport orders can only be placed at sea")
 	}
 

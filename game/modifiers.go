@@ -75,7 +75,7 @@ func attackModifiers(
 	move Order,
 	region *Region,
 	hasOtherAttackers bool,
-	isBorderBattle bool,
+	borderBattle bool,
 ) []Modifier {
 	modifiers := []Modifier{}
 
@@ -87,26 +87,26 @@ func attackModifiers(
 		modifiers = append(modifiers, Modifier{Type: ModifierSurprise, Value: 1})
 	}
 
-	isOnlyAttackerOnUncontrolledRegion := !region.isControlled() && !hasOtherAttackers
-	isAttackOnDefendedRegion := region.isControlled() && !region.isEmpty() && !isBorderBattle
+	isOnlyAttackerOnUncontrolledRegion := !region.controlled() && !hasOtherAttackers
+	isAttackOnDefendedRegion := region.controlled() && !region.empty() && !borderBattle
 	includeTerrainModifiers := isOnlyAttackerOnUncontrolledRegion || isAttackOnDefendedRegion
 
 	if includeTerrainModifiers {
-		if region.IsForest {
+		if region.Forest {
 			modifiers = append(modifiers, Modifier{Type: ModifierForest, Value: -1})
 		}
 
-		if region.HasCastle {
+		if region.Castle {
 			modifiers = append(modifiers, Modifier{Type: ModifierCastle, Value: -1})
 		}
 
-		isMovingAcrossWater := !adjacent || neighbor.IsAcrossWater
+		isMovingAcrossWater := !adjacent || neighbor.AcrossWater
 		if isMovingAcrossWater {
 			modifiers = append(modifiers, Modifier{Type: ModifierWater, Value: -1})
 		}
 	}
 
-	if unitModifier, hasModifier := region.Unit.battleModifier(region.HasCastle); hasModifier {
+	if unitModifier, hasModifier := region.Unit.battleModifier(region.Castle); hasModifier {
 		modifiers = append(modifiers, unitModifier)
 	}
 
