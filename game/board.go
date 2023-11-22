@@ -1,5 +1,7 @@
 package game
 
+import "slices"
+
 type Board map[RegionName]*Region
 
 type RegionName string
@@ -145,24 +147,20 @@ func (board Board) removeOrder(order Order) {
 	switch order.Type {
 	case OrderMove:
 		destination := board[order.Destination]
-
-		var newMoves []Order
-		for _, incomingMove := range destination.incomingMoves {
-			if incomingMove != order {
-				newMoves = append(newMoves, incomingMove)
+		for i, move := range destination.incomingMoves {
+			if move == order {
+				destination.incomingMoves = slices.Delete(destination.incomingMoves, i, i+1)
+				break
 			}
 		}
-		destination.incomingMoves = newMoves
 	case OrderSupport:
 		destination := board[order.Destination]
-
-		var newSupports []Order
-		for _, incSupport := range destination.incomingSupports {
-			if incSupport != order {
-				newSupports = append(newSupports, incSupport)
+		for i, support := range destination.incomingSupports {
+			if support == order {
+				destination.incomingSupports = slices.Delete(destination.incomingSupports, i, i+1)
+				break
 			}
 		}
-		destination.incomingSupports = newSupports
 	}
 }
 
