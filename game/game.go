@@ -214,7 +214,7 @@ func (game *Game) resolveRegionMoves(region *Region) (resolved bool) {
 		for _, cycleRegion := range [2]*Region{region, region2} {
 			cycleRegion.removeUnit()
 			cycleRegion.order = Order{}
-			cycleRegion.unitSwapped = true
+			cycleRegion.partOfCycle = true
 		}
 	} else if twoWayCycle {
 		// If the moves are from different player factions, they battle in the middle
@@ -245,7 +245,7 @@ func (game *Game) resolveRegionMoves(region *Region) (resolved bool) {
 	}
 
 	// If the function has not returned yet, then it must be a multiplayer battle
-	game.calculateMultiplayerBattle(region, !region.isEmpty())
+	game.calculateMultiplayerBattle(region)
 	return true
 }
 

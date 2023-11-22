@@ -51,27 +51,26 @@ func (board Board) discoverTwoWayCycle(
 }
 
 func (game *Game) resolveCycle(cycle []Order) {
-	var battleRegions []*Region
+	regions := make([]*Region, len(cycle))
 
-	// First resolves non-conflicting cycle moves
-	for _, move := range cycle {
+	for i, move := range cycle {
 		destination := game.Board[move.Destination]
-
-		if (destination.isControlled() || destination.IsSea) &&
-			len(destination.incomingMoves) == 1 {
-			game.succeedMove(move)
-			continue
-		}
-
-		battleRegions = append(battleRegions, destination)
+		destination.removeUnit()
+		destination.order = Order{}
+		destination.partOfCycle = true
+		regions[i] = destination
 	}
 
-	// Then resolves cycle moves that require battle
-	for _, region := range battleRegions {
+	for _, region := range regions {
 		if len(region.incomingMoves) == 1 {
-			game.calculateSingleplayerBattle(region, region.incomingMoves[0])
+			move := region.incomingMoves[0]
+			if region.isControlled() || region.IsSea {
+				game.succeedMove(move)
+			} else {
+				game.calculateSingleplayerBattle(region, move)
+			}
 		} else {
-			game.calculateMultiplayerBattle(region, false)
+			game.calculateMultiplayerBattle(region)
 		}
 	}
 }

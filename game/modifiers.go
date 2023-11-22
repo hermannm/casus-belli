@@ -76,7 +76,6 @@ func attackModifiers(
 	region *Region,
 	hasOtherAttackers bool,
 	isBorderBattle bool,
-	includeDefender bool,
 ) []Modifier {
 	modifiers := []Modifier{}
 
@@ -89,8 +88,7 @@ func attackModifiers(
 	}
 
 	isOnlyAttackerOnUncontrolledRegion := !region.isControlled() && !hasOtherAttackers
-	isAttackOnDefendedRegion := region.isControlled() && !region.isEmpty() && includeDefender &&
-		!isBorderBattle
+	isAttackOnDefendedRegion := region.isControlled() && !region.isEmpty() && !isBorderBattle
 	includeTerrainModifiers := isOnlyAttackerOnUncontrolledRegion || isAttackOnDefendedRegion
 
 	if includeTerrainModifiers {

@@ -48,10 +48,7 @@ type regionResolvingState struct {
 	resolved           bool
 	transportsResolved bool
 	retreat            Order
-
-	// Whether the region was part of a unit swap between two regions controlled by the same player
-	// faction.
-	unitSwapped bool
+	partOfCycle        bool // Whether the region is part of a cycle of move orders.
 }
 
 type Neighbor struct {
@@ -188,7 +185,9 @@ func (region *Region) hasRetreat() bool {
 }
 
 func (region *Region) removeUnit() {
-	if !region.unitSwapped {
+	// If the region is part of a move cycle, then the unit has already been removed, and another
+	// unit may have taken its place
+	if !region.partOfCycle {
 		region.Unit = Unit{}
 		region.SiegeCount = 0
 	}
