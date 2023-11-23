@@ -38,11 +38,11 @@ public record Order
     public string? Build { get; set; }
 
     [JsonIgnore]
-    public Unit Unit = null!; // Initialized when orders are received.
+    public UnitType UnitType; // Initialized when orders are received.
 
     public Order? TryGetSecondHorseMove()
     {
-        if (Type != OrderType.Move || SecondDestination is null || Unit.Type != UnitType.Horse)
+        if (Type != OrderType.Move || UnitType != UnitType.Horse || SecondDestination is null)
         {
             return null;
         }

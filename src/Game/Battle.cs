@@ -34,7 +34,7 @@ public record Result
     public Order? Move { get; set; }
 
     /// <summary>
-    /// If result of a defending unit in a region: the name of the region.
+    /// If result of a defending unit in a region: the faction of the defender.
     /// </summary>
-    public string? DefenderRegion { get; set; }
+    public string? DefenderFaction { get; set; }
 }
