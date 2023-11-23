@@ -192,7 +192,7 @@ func (game *Game) resolveRegionMoves(region *Region) (resolved bool) {
 	if !region.attacked() {
 		if region.hasUnresolvedRetreat() {
 			if region.empty() {
-				region.Unit = region.unresolvedRetreat.unit
+				region.Unit = region.unresolvedRetreat.unit()
 			}
 			region.unresolvedRetreat = Order{}
 		}

@@ -185,7 +185,7 @@ func placeOrders(orders []Order, board Board) {
 			continue
 		}
 
-		order.unit = region.Unit
+		order.unitType = region.Unit.Type
 		order.Faction = region.Unit.Faction
 		orders[i] = order
 	}
