@@ -24,6 +24,29 @@ public class Board : Dictionary<string, Region>
     {
         return Values.All(region => region.Resolved);
     }
+
+    public (Region region2, bool sameFaction)? DiscoverTwoWayCycle(Region region1)
+    {
+        if (region1.Order?.Type != OrderType.Move)
+        {
+            return null;
+        }
+
+        var region2 = this[region1.Order.Destination!];
+        if (region2.Order?.Type != OrderType.Move)
+        {
+            return null;
+        }
+
+        if (region1.Name != region2.Order.Destination!)
+        {
+            return null;
+        }
+
+        return (region2, region1.Order.Faction == region2.Order.Faction);
+    }
+
+
 }
 
 /// <summary>
@@ -75,16 +98,31 @@ public record Region
     /// For land regions with castles: the number of times an occupying unit has besieged the
     /// castle.
     /// </summary>
-    public int? SiegeCount { get; set; }
+    public int SiegeCount { get; set; } = 0;
 
     [JsonIgnore]
-    public Order? Order { get; set; }
+    public Order? Order { get; set; } = null;
 
     [JsonIgnore]
     public List<Order> IncomingMoves { get; set; } = new();
 
     [JsonIgnore]
+    public int ExpectedSecondHorseMoves { get; set; } = 0;
+
+    [JsonIgnore]
+    public List<Order> IncomingSecondHorseMoves { get; set; } = new();
+
+    [JsonIgnore]
     public bool Resolved { get; set; } = false;
+
+    [JsonIgnore]
+    public Order? UnresolvedRetreat { get; set; } = null;
+
+    /// <summary>
+    /// Whether the region is part of a cycle of move orders.
+    /// </summary>
+    [JsonIgnore]
+    public bool PartOfCycle { get; set; } = false;
 
     public bool Attacked()
     {
