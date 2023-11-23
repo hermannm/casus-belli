@@ -21,8 +21,8 @@ public partial class LobbyState : Node
     public override void _EnterTree()
     {
         Instance = this;
-        ApiClient.Instance.AddMessageHandler<LobbyJoinedMessage>(HandleLobbyJoinedMessage);
-        ApiClient.Instance.AddMessageHandler<PlayerStatusMessage>(HandlePlayerStatusMessage);
+        ApiClient.Instance.AddMessageHandler<LobbyJoinedMessage>(HandleLobbyJoined);
+        ApiClient.Instance.AddMessageHandler<PlayerStatusMessage>(HandlePlayerStatus);
     }
 
     public async Task<bool> TryJoinLobby(LobbyInfo lobby, string username)
@@ -70,7 +70,7 @@ public partial class LobbyState : Node
         return ApiClient.Instance.LeaveLobby();
     }
 
-    private void HandleLobbyJoinedMessage(LobbyJoinedMessage message)
+    private void HandleLobbyJoined(LobbyJoinedMessage message)
     {
         SelectableFactions = message.SelectableFactions;
         foreach (var playerStatus in message.PlayerStatuses)
@@ -87,7 +87,7 @@ public partial class LobbyState : Node
         LobbyChangedSignal.Emit();
     }
 
-    private void HandlePlayerStatusMessage(PlayerStatusMessage message)
+    private void HandlePlayerStatus(PlayerStatusMessage message)
     {
         if (GetPlayerByUsername(message.Username) is { } player)
         {

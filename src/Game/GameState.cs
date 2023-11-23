@@ -28,16 +28,12 @@ public partial class GameState : Node
     public override void _EnterTree()
     {
         Instance = this;
-        ApiClient.Instance.AddMessageHandler<GameStartedMessage>(HandleGameStartedMessage);
-        ApiClient.Instance.AddMessageHandler<OrderRequestMessage>(HandleOrderRequestMessage);
-        ApiClient.Instance.AddMessageHandler<OrdersConfirmationMessage>(
-            HandleOrdersConfirmationMessage
-        );
-        ApiClient.Instance.AddMessageHandler<OrdersReceivedMessage>(HandleOrdersReceivedMessage);
-        ApiClient.Instance.AddMessageHandler<BattleResultsMessage>(HandleBattleResultsMessage);
-        ApiClient.Instance.AddMessageHandler<DangerZoneCrossingsMessage>(
-            HandleDangerZoneCrossingsMessage
-        );
+        ApiClient.Instance.AddMessageHandler<GameStartedMessage>(HandleGameStarted);
+        ApiClient.Instance.AddMessageHandler<OrderRequestMessage>(HandleOrderRequest);
+        ApiClient.Instance.AddMessageHandler<OrdersConfirmationMessage>(HandleOrdersConfirmation);
+        ApiClient.Instance.AddMessageHandler<OrdersReceivedMessage>(HandleOrdersReceived);
+        ApiClient.Instance.AddMessageHandler<BattleResultsMessage>(HandleBattleResults);
+        ApiClient.Instance.AddMessageHandler<DangerZoneCrossingsMessage>(HandleDangerZoneCrossings);
 
         LobbyState.Instance.LobbyChangedSignal.Connect(() =>
         {
@@ -47,12 +43,12 @@ public partial class GameState : Node
 
     public override void _Process(double delta) { }
 
-    private void HandleGameStartedMessage(GameStartedMessage message)
+    private void HandleGameStarted(GameStartedMessage message)
     {
         _board.Regions = message.Board;
     }
 
-    private void HandleOrderRequestMessage(OrderRequestMessage message)
+    private void HandleOrderRequest(OrderRequestMessage message)
     {
         Season = message.Season;
         Phase = GamePhase.SubmittingOrders;
@@ -61,7 +57,7 @@ public partial class GameState : Node
         PlayersYetToSubmitOrders = new List<Player>(LobbyState.Instance.OtherPlayers);
     }
 
-    private void HandleOrdersConfirmationMessage(OrdersConfirmationMessage message)
+    private void HandleOrdersConfirmation(OrdersConfirmationMessage message)
     {
         if (message.FactionThatSubmittedOrders == LobbyState.Instance.Player.Faction)
         {
@@ -76,7 +72,7 @@ public partial class GameState : Node
         }
     }
 
-    private void HandleOrdersReceivedMessage(OrdersReceivedMessage message)
+    private void HandleOrdersReceived(OrdersReceivedMessage message)
     {
         OrdersByFaction = message.OrdersByFaction;
         _board.PlaceOrders(OrdersByFaction, SupportCutSignal);
@@ -87,12 +83,12 @@ public partial class GameState : Node
         ResolveMoves();
     }
 
-    private void HandleBattleResultsMessage(BattleResultsMessage message)
+    private void HandleBattleResults(BattleResultsMessage message)
     {
         throw new NotImplementedException();
     }
 
-    private void HandleDangerZoneCrossingsMessage(DangerZoneCrossingsMessage message)
+    private void HandleDangerZoneCrossings(DangerZoneCrossingsMessage message)
     {
         DangerZoneCrossings.AddRange(message.Crossings);
     }

@@ -50,7 +50,7 @@ public partial class ApiClient : Node
     {
         Instance = this;
         AddMessageReceivedSignals();
-        AddMessageHandler<ErrorMessage>(DisplayServerError);
+        AddMessageHandler<ErrorMessage>(HandleServerError);
 
         if (OS.IsDebugBuild())
         {
@@ -237,7 +237,7 @@ public partial class ApiClient : Node
         }
     }
 
-    private static void DisplayServerError(ErrorMessage errorMessage)
+    private static void HandleServerError(ErrorMessage errorMessage)
     {
         MessageDisplay.Instance.ShowError(errorMessage.Error);
     }
