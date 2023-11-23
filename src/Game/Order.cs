@@ -39,7 +39,7 @@ public record Order
 
     /// <summary>
     /// For move orders that lost a singleplayer battle or tied a multiplayer battle, and have to
-    /// fight their way back to their origin region. Can only be set by the server.
+    /// fight their way back to their origin region. Must be false when submitting orders.
     /// </summary>
     public bool Retreat { get; set; } = false;
 
@@ -58,8 +58,13 @@ public record Order
             && SecondDestination is not null;
     }
 
-    public Order SecondHorseMove()
+    public Order? TryGetSecondHorseMove()
     {
+        if (!HasSecondHorseMove())
+        {
+            return null;
+        }
+
         return this with
         {
             Origin = Destination!,

@@ -76,7 +76,7 @@ public partial class StartGameMessage : GodotObject, ISendableMessage { }
 /// </summary>
 public partial class GameStartedMessage : GodotObject, IReceivableMessage
 {
-    public required Board Board { get; set; }
+    public required Dictionary<string, Region> Board { get; set; }
 }
 
 /// <summary>

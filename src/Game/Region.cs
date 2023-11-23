@@ -111,11 +111,31 @@ public record Region
         Unit = null;
     }
 
-    public void RemoveUnit(Unit unit)
+    public void RemoveUnit()
     {
-        if (unit == Unit)
+        if (!PartOfCycle)
         {
             Unit = null;
+            SiegeCount = 0;
+        }
+    }
+
+    public void ReplaceUnit(Unit unit)
+    {
+        Unit = unit;
+        SiegeCount = 0;
+    }
+
+    public void ResolveRetreatIfUnresolved()
+    {
+        if (UnresolvedRetreat is not null)
+        {
+            if (Empty())
+            {
+                Unit = UnresolvedRetreat.Unit();
+            }
+
+            UnresolvedRetreat = null;
         }
     }
 }

@@ -1,9 +1,9 @@
+using System;
 using System.Collections.Generic;
 using Godot;
 using Immerse.BfhClient.Api;
 using Immerse.BfhClient.Api.Messages;
 using Immerse.BfhClient.Lobby;
-using Immerse.BfhClient.UI;
 using Immerse.BfhClient.Utils;
 
 namespace Immerse.BfhClient.Game;
@@ -22,8 +22,7 @@ public partial class GameState : Node
     public CustomSignal<SupportCut> SupportCutSignal = new("SupportCut");
     public CustomSignal<UncontestedMove> UncontestedMoveSignal = new("UncontestedMove");
 
-    private Board? _board = null;
-    private List<Battle> _unprocessedBattles = new();
+    private readonly Board _board = new();
 
     public override void _EnterTree()
     {
@@ -46,7 +45,7 @@ public partial class GameState : Node
 
     private void HandleGameStartedMessage(GameStartedMessage message)
     {
-        _board = message.Board;
+        _board.Regions = message.Board;
     }
 
     private void HandleOrderRequestMessage(OrderRequestMessage message)
@@ -75,85 +74,33 @@ public partial class GameState : Node
 
     private void HandleOrdersReceivedMessage(OrdersReceivedMessage message)
     {
-        if (_board is null)
-        {
-            MessageDisplay.Instance.ShowError(
-                "Tried to resolve moves before board was initialized"
-            );
-            return;
-        }
-
         OrdersByFaction = message.OrdersByFaction;
-        PlaceOrdersOnBoard();
+        _board.PlaceOrders(OrdersByFaction, SupportCutSignal);
 
         Phase = GamePhase.ResolvingOrders;
         PhaseChangedSignal.Emit();
 
-        ResolveUncontestedMoves();
+        ResolveMoves();
     }
 
     private void HandleBattleResultsMessage(BattleResultsMessage message)
     {
-        if (_board is null)
-        {
-            MessageDisplay.Instance.ShowError(
-                "Tried to resolve moves before board was initialized"
-            );
-            return;
-        }
-
-        _unprocessedBattles.AddRange(message.Battles);
+        throw new NotImplementedException();
     }
 
-    private void PlaceOrdersOnBoard()
-    {
-        foreach (var (_, factionOrders) in OrdersByFaction)
-        {
-            foreach (var order in factionOrders)
-            {
-                var origin = _board![order.Origin];
-                if (origin.Unit is { } unit)
-                {
-                    order.UnitType = unit.Type;
-                    origin.Order = order;
-
-                    if (order is { Type: OrderType.Move, Destination: not null })
-                    {
-                        _board[order.Destination].IncomingMoves.Add(order);
-                    }
-                }
-                else
-                {
-                    MessageDisplay.Instance.ShowError(
-                        "Received order for board region without unit"
-                    );
-                }
-            }
-        }
-
-        foreach (var (_, region) in _board!)
-        {
-            if (region.Order?.Type == OrderType.Support && region.Attacked())
-            {
-                region.Order = null;
-                SupportCutSignal.Emit(new SupportCut { RegionName = region.Name });
-            }
-        }
-    }
-
-    private void ResolveUncontestedMoves()
+    private void ResolveMoves()
     {
         var allRegionsWaiting = false;
-        while (allRegionsWaiting)
+        while (!allRegionsWaiting)
         {
             allRegionsWaiting = true;
 
-            foreach (var (_, region) in _board!)
+            foreach (var (_, region) in _board!.Regions)
             {
                 if (region.Empty() && region.Controlled() && region.IncomingMoves.Count == 1)
                 {
                     var move = region.IncomingMoves[0];
-                    _board[move.Origin].MoveUnitTo(region);
+                    _board.Regions[move.Origin].MoveUnitTo(region);
 
                     UncontestedMoveSignal.Emit(
                         new UncontestedMove { FromRegion = move.Origin, ToRegion = region.Name }
@@ -163,22 +110,5 @@ public partial class GameState : Node
                 }
             }
         }
-    }
-
-    private void SucceedMove(Order move)
-    {
-        var destination = _board![move.Destination!];
-
-        destination.Unit = move.Unit();
-        destination.Order = null;
-        if (!destination.Sea)
-        {
-            destination.ControllingFaction = move.Faction;
-        }
-
-        _board[move.Origin].RemoveUnit(move.Unit());
-        _board.RemoveOrder(move);
-
-        destination.Resolved = true;
     }
 }
