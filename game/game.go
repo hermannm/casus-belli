@@ -197,7 +197,16 @@ func (game *Game) resolveRegionMoves(region *Region) (resolved bool) {
 			region.unresolvedRetreat = Order{}
 		}
 
-		region.resolved = true
+		if region.expectedSecondHorseMoves == 0 {
+			region.resolved = true
+		} else if region.expectedSecondHorseMoves == len(region.incomingSecondHorseMoves) {
+			region.incomingMoves = region.incomingSecondHorseMoves
+			region.incomingSecondHorseMoves = nil
+			region.expectedSecondHorseMoves = 0
+			region.transportsResolved = false
+			region.partOfCycle = false
+		}
+
 		return true
 	}
 

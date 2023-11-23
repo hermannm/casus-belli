@@ -176,8 +176,6 @@ func (board Board) succeedMove(move Order) {
 	board[move.Origin].removeUnit()
 	board.removeOrder(move)
 
-	destination.resolved = true
-
 	if move.hasSecondHorseMove() {
 		secondHorseMove := move.secondHorseMove()
 		destination := board[secondHorseMove.Destination]
