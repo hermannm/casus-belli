@@ -218,7 +218,7 @@ func (game *Game) resolveRegionMoves(region *Region) (waiting bool) {
 		return false
 	} else if cycle := game.board.discoverCycle(region.Name, region.order); cycle != nil {
 		// If there is a cycle longer than 2 moves, forwards the resolving to resolveCycle
-		game.resolveCycle(cycle)
+		game.board.prepareCycleForResolving(cycle)
 		return false
 	}
 

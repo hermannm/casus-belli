@@ -40,26 +40,11 @@ func (board Board) discoverTwoWayCycle(
 	return order1.Origin == order2.Destination, region2, order1.Faction == order2.Faction
 }
 
-func (game *Game) resolveCycle(cycle []Order) {
-	regions := make([]*Region, len(cycle))
-
-	for i, move := range cycle {
-		destination := game.board[move.Destination]
-		destination.removeUnit()
-		destination.order = Order{}
-		destination.partOfCycle = true
-		regions[i] = destination
-	}
-
-	for _, region := range regions {
-		if len(region.incomingMoves) == 1 {
-			if region.controlled() || region.Sea {
-				game.board.succeedMove(region.incomingMoves[0])
-			} else {
-				game.calculateSingleplayerBattle(region)
-			}
-		} else {
-			game.calculateMultiplayerBattle(region)
-		}
+func (board Board) prepareCycleForResolving(cycle []Order) {
+	for _, move := range cycle {
+		cycleRegion := board[move.Origin]
+		cycleRegion.removeUnit()
+		cycleRegion.order = Order{}
+		cycleRegion.partOfCycle = true
 	}
 }
