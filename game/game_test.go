@@ -1,10 +1,20 @@
 package game
 
 import (
+	"log/slog"
+	"os"
 	"testing"
 
+	"hermannm.dev/devlog"
 	"hermannm.dev/devlog/log"
 )
+
+func TestMain(m *testing.M) {
+	logHandler := devlog.NewHandler(os.Stdout, &devlog.Options{Level: slog.LevelDebug})
+	slog.SetDefault(slog.New(logHandler))
+
+	os.Exit(m.Run())
+}
 
 // Tests whether units correctly move in circle without outside interference.
 func TestResolveConflictFreeMoveCycle(t *testing.T) {
@@ -207,12 +217,12 @@ func (expected ExpectedControl) check(board Board, t *testing.T) {
 			t.Errorf(
 				"unexpected control of %v, want %v, got %v",
 				name,
-				region.ControllingFaction,
 				expectation.ControllingFaction,
+				region.ControllingFaction,
 			)
 		}
 		if region.Unit != expectation.Unit {
-			t.Errorf("unexpected unit in %v, want %v, got %v", name, region.Unit, expectation.Unit)
+			t.Errorf("unexpected unit in %v, want %v, got %v", name, expectation.Unit, region.Unit)
 		}
 	}
 }
