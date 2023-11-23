@@ -121,12 +121,7 @@ func (game *Game) resolveWinterOrders(orders []Order) {
 
 func (game *Game) resolveNonWinterOrders(orders []Order) {
 	game.board.placeOrders(orders)
-
-	dangerZoneBattles := resolveDangerZones(game.board)
-	if err := game.messenger.SendBattleResults(dangerZoneBattles...); err != nil {
-		game.log.Error(err)
-	}
-
+	game.resolveDangerZoneSupports()
 	game.resolveMoves()
 	game.resolveSieges()
 }
@@ -179,6 +174,10 @@ func (game *Game) resolveRegionMoves(region *Region) (waiting bool) {
 				return true
 			}
 		}
+	}
+
+	if !region.dangerZonesResolved {
+		game.resolveDangerZoneMoves(region)
 	}
 
 	// Resolves any unresolved retreat or incoming second horse moves to the region.

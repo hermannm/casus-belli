@@ -46,13 +46,14 @@ type regionResolvingState struct {
 	order                    Order
 	incomingMoves            []Order
 	incomingSupports         []Order
-	expectedSecondHorseMoves int
 	incomingSecondHorseMoves []Order
+	expectedSecondHorseMoves int
 	resolving                bool
 	resolved                 bool
 	transportsResolved       bool
-	unresolvedRetreat        Order
+	dangerZonesResolved      bool
 	partOfCycle              bool // Whether the region is part of a cycle of move orders.
+	unresolvedRetreat        Order
 }
 
 type Neighbor struct {
@@ -122,6 +123,7 @@ func (board Board) placeSecondHorseMoves(region *Region) {
 	region.incomingSecondHorseMoves = nil
 	region.expectedSecondHorseMoves = 0
 	region.transportsResolved = false
+	region.dangerZonesResolved = false
 	region.partOfCycle = false
 }
 

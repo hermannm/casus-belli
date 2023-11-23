@@ -1,21 +1,48 @@
 package game
 
-// Finds move and support orders attempting to cross danger zones to their destinations, and fails
-// them if they don't make it across.
-func resolveDangerZones(board Board) (results []Battle) {
-	for _, region := range board {
-		order := region.order
-		if order.Type != OrderMove && order.Type != OrderSupport {
+// Finds support orders attempting to cross danger zones to their destinations, and fails them if
+// they don't make it across.
+func (game *Game) resolveDangerZoneSupports() {
+	var results []Battle
+	for _, region := range game.board {
+		results = game.board.resolveDangerZoneCrossings(region, region.incomingSupports, results)
+	}
+
+	if len(results) != 0 {
+		if err := game.messenger.SendBattleResults(results...); err != nil {
+			game.log.Error(err)
+		}
+	}
+}
+
+// Finds incoming move orders to the given region that attempt to cross danger zones, and kills them
+// if they fail.
+func (game *Game) resolveDangerZoneMoves(region *Region) {
+	results := game.board.resolveDangerZoneCrossings(region, region.incomingMoves, nil)
+	if len(results) != 0 {
+		if err := game.messenger.SendBattleResults(results...); err != nil {
+			game.log.Error(err)
+		}
+	}
+
+	region.dangerZonesResolved = true
+}
+
+func (board Board) resolveDangerZoneCrossings(
+	region *Region,
+	incomingMovesOrSupports []Order,
+	resultsToAppend []Battle,
+) []Battle {
+	for _, order := range incomingMovesOrSupports {
+		crossing, adjacent := region.getNeighbor(order.Origin, order.ViaDangerZone)
+
+		// Non-adjacent moves are handled by resolveTransports
+		if !adjacent || crossing.DangerZone == "" {
 			continue
 		}
 
-		destination, adjacent := region.getNeighbor(order.Destination, order.ViaDangerZone)
-		if !adjacent || destination.DangerZone == "" {
-			continue
-		}
-
-		survived, result := crossDangerZone(order, destination.DangerZone)
-		results = append(results, result)
+		survived, result := crossDangerZone(order, crossing.DangerZone)
+		resultsToAppend = append(resultsToAppend, result)
 
 		if !survived {
 			if order.Type == OrderMove {
@@ -26,7 +53,7 @@ func resolveDangerZones(board Board) (results []Battle) {
 		}
 	}
 
-	return results
+	return resultsToAppend
 }
 
 // Rolls dice to see if order makes it across danger zone.
