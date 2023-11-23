@@ -37,6 +37,12 @@ public record Order
     /// </summary>
     public string? Build { get; set; }
 
+    /// <summary>
+    /// For move orders that lost a singleplayer battle or tied a multiplayer battle, and have to
+    /// fight their way back to their origin region. Can only be set by the server.
+    /// </summary>
+    public bool Retreat { get; set; } = false;
+
     [JsonIgnore]
     public UnitType UnitType = 0; // Initialized when orders are received.
 
