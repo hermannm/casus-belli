@@ -31,7 +31,7 @@ type Order struct {
 	Build UnitType
 
 	// For move orders that lost a singleplayer battle or tied a multiplayer battle, and have to
-	// fight their way back to their origin region. Can only be set by the server.
+	// fight their way back to their origin region. Must be false when submitting orders.
 	Retreat bool
 
 	// For move orders: the type of unit moved.
