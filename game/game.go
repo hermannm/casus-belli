@@ -10,9 +10,8 @@ type Game struct {
 	messenger Messenger
 	log       log.Logger
 
-	season          Season
-	resolvedBattles []Battle
-	battleReceiver  chan Battle
+	season         Season
+	battleReceiver chan Battle
 }
 
 type BoardInfo struct {
@@ -55,13 +54,12 @@ func New(
 	logger log.Logger,
 ) *Game {
 	return &Game{
-		board:           board,
-		BoardInfo:       boardInfo,
-		messenger:       messenger,
-		log:             logger,
-		season:          SeasonWinter,
-		resolvedBattles: nil,
-		battleReceiver:  make(chan Battle),
+		board:          board,
+		BoardInfo:      boardInfo,
+		messenger:      messenger,
+		log:            logger,
+		season:         SeasonWinter,
+		battleReceiver: make(chan Battle),
 	}
 }
 
@@ -93,7 +91,6 @@ func (game *Game) nextRound() {
 
 	game.messenger.ClearMessages()
 	game.board.resetResolvingState()
-	game.resolvedBattles = game.resolvedBattles[:0] // Keeps same capacity
 	for len(game.battleReceiver) > 0 {
 		// Drains the channel - won't block, since there are no other concurrent channel readers, as
 		// this function is called from the same goroutine as the one that read
@@ -120,22 +117,16 @@ func (game *Game) resolveWinterOrders(orders []Order) {
 	}
 }
 
-func (game *Game) resolveNonWinterOrders(orders []Order) []Battle {
-	var battles []Battle
-
+func (game *Game) resolveNonWinterOrders(orders []Order) {
 	game.board.placeOrders(orders)
 
 	dangerZoneBattles := resolveDangerZones(game.board)
-	battles = append(battles, dangerZoneBattles...)
 	if err := game.messenger.SendBattleResults(dangerZoneBattles...); err != nil {
 		game.log.Error(err)
 	}
 
 	game.resolveMoves()
 	game.resolveSieges()
-
-	battles = append(battles, game.resolvedBattles...)
-	return battles
 }
 
 func (game *Game) resolveMoves() {

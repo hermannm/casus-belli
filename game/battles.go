@@ -300,7 +300,6 @@ func (game *Game) resolveSingleplayerBattle(battle Battle) {
 	}
 
 	game.board.succeedMove(move)
-	game.resolvedBattles = append(game.resolvedBattles, battle)
 	game.messenger.SendBattleResults(battle)
 }
 
@@ -346,7 +345,6 @@ func (game *Game) resolveMultiplayerBattle(battle Battle) {
 		}
 	}
 
-	game.resolvedBattles = append(game.resolvedBattles, battle)
 	game.messenger.SendBattleResults(battle)
 }
 
@@ -377,7 +375,6 @@ func (game *Game) resolveBorderBattle(battle Battle) {
 		}
 	}
 
-	game.resolvedBattles = append(game.resolvedBattles, battle)
 	game.messenger.SendBattleResults(battle)
 }
 

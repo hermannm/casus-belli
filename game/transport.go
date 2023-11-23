@@ -30,7 +30,6 @@ func (game *Game) resolveTransport(move Order) (transportMustWait bool) {
 			game.board.killMove(move)
 		}
 
-		game.resolvedBattles = append(game.resolvedBattles, dangerZoneBattles...)
 		if err := game.messenger.SendBattleResults(dangerZoneBattles...); err != nil {
 			game.log.Error(err)
 		}
