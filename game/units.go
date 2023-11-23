@@ -48,9 +48,11 @@ func (unit Unit) isNone() bool {
 	return unit.Type.isNone()
 }
 
-func (unit Unit) battleModifier(isAttackOnCastle bool) (modifier Modifier, hasModifier bool) {
+func (unitType UnitType) battleModifier(
+	isAttackOnCastle bool,
+) (modifier Modifier, hasModifier bool) {
 	modifierValue := 0
-	switch unit.Type {
+	switch unitType {
 	case UnitFootman:
 		modifierValue = 1
 	case UnitCatapult:

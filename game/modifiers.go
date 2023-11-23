@@ -58,7 +58,7 @@ func (game *Game) defenseModifiers(region *Region) []Modifier {
 		{Type: ModifierDice, Value: game.rollDice()},
 	}
 
-	if unitModifier, hasModifier := region.Unit.battleModifier(false); hasModifier {
+	if unitModifier, hasModifier := region.Unit.Type.battleModifier(false); hasModifier {
 		modifiers = append(modifiers, unitModifier)
 	}
 
@@ -100,7 +100,7 @@ func (game *Game) attackModifiers(
 		}
 	}
 
-	if unitModifier, hasModifier := region.Unit.battleModifier(region.Castle); hasModifier {
+	if unitModifier, hasModifier := move.unitType.battleModifier(region.Castle); hasModifier {
 		modifiers = append(modifiers, unitModifier)
 	}
 
