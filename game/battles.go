@@ -53,7 +53,7 @@ func (resultMap ResultMap) addSupport(from PlayerFaction, to PlayerFaction) {
 func (game *Game) calculateSingleplayerBattle(region *Region) {
 	move := region.incomingMoves[0]
 	resultMap := ResultMap{
-		move.Faction: {Parts: attackModifiers(move, region, false, false), Move: move},
+		move.Faction: {Parts: game.attackModifiers(move, region, false, false), Move: move},
 	}
 
 	remainingSupports := resultMap.addAutomaticSupports(region, region.incomingMoves, false)
@@ -74,14 +74,14 @@ func (game *Game) calculateMultiplayerBattle(region *Region) {
 
 	for _, move := range region.incomingMoves {
 		resultMap[move.Faction] = &Result{
-			Parts: attackModifiers(move, region, true, false),
+			Parts: game.attackModifiers(move, region, true, false),
 			Move:  move,
 		}
 	}
 
 	if !region.empty() {
 		resultMap[region.Unit.Faction] = &Result{
-			Parts:           defenseModifiers(region),
+			Parts:           game.defenseModifiers(region),
 			DefenderFaction: region.Unit.Faction,
 		}
 	}
@@ -106,11 +106,11 @@ func (game *Game) calculateBorderBattle(region1 *Region, region2 *Region) {
 
 	resultMap := ResultMap{
 		moveToRegion1.Faction: {
-			Parts: attackModifiers(moveToRegion1, region1, true, true),
+			Parts: game.attackModifiers(moveToRegion1, region1, true, true),
 			Move:  moveToRegion1,
 		},
 		moveToRegion2.Faction: {
-			Parts: attackModifiers(moveToRegion2, region2, true, true),
+			Parts: game.attackModifiers(moveToRegion2, region2, true, true),
 			Move:  moveToRegion2,
 		},
 	}
@@ -379,7 +379,7 @@ func (battle Battle) isBorderBattle() bool {
 }
 
 // Number to beat when attempting to conquer a neutral region.
-const MinDiceResultToConquerNeutralRegion int = 4
+const MinResultToConquerNeutralRegion int = 4
 
 // In case of a battle against an unconquered region or a danger zone, only one player faction is
 // returned in one of the lists.
@@ -389,7 +389,7 @@ func (battle Battle) winnersAndLosers() (winners []PlayerFaction, losers []Playe
 	if len(battle.Results) == 1 {
 		result := battle.Results[0]
 
-		if result.Total >= MinDiceResultToConquerNeutralRegion {
+		if result.Total >= MinResultToConquerNeutralRegion {
 			return []PlayerFaction{result.Move.Faction}, nil
 		} else {
 			return nil, []PlayerFaction{result.Move.Faction}

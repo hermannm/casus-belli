@@ -1,8 +1,6 @@
 package game
 
 import (
-	"math/rand"
-
 	"hermannm.dev/enumnames"
 )
 
@@ -55,13 +53,9 @@ func (modifierType ModifierType) String() string {
 	return modifierNames.GetNameOrFallback(modifierType, "INVALID")
 }
 
-func rollDice() int {
-	return rand.Intn(6) + 1
-}
-
-func defenseModifiers(region *Region) []Modifier {
+func (game *Game) defenseModifiers(region *Region) []Modifier {
 	modifiers := []Modifier{
-		{Type: ModifierDice, Value: rollDice()},
+		{Type: ModifierDice, Value: game.rollDice()},
 	}
 
 	if unitModifier, hasModifier := region.Unit.battleModifier(false); hasModifier {
@@ -71,7 +65,7 @@ func defenseModifiers(region *Region) []Modifier {
 	return modifiers
 }
 
-func attackModifiers(
+func (game *Game) attackModifiers(
 	move Order,
 	region *Region,
 	hasOtherAttackers bool,
@@ -110,7 +104,7 @@ func attackModifiers(
 		modifiers = append(modifiers, unitModifier)
 	}
 
-	modifiers = append(modifiers, Modifier{Type: ModifierDice, Value: rollDice()})
+	modifiers = append(modifiers, Modifier{Type: ModifierDice, Value: game.rollDice()})
 
 	return modifiers
 }

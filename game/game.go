@@ -1,17 +1,19 @@
 package game
 
 import (
+	"math/rand"
+
 	"hermannm.dev/devlog/log"
 )
 
 type Game struct {
 	BoardInfo
-	board     Board
-	messenger Messenger
-	log       log.Logger
-
+	board          Board
 	season         Season
 	battleReceiver chan Battle
+	messenger      Messenger
+	log            log.Logger
+	rollDice       func() int
 }
 
 type BoardInfo struct {
@@ -53,15 +55,24 @@ func New(
 	boardInfo BoardInfo,
 	messenger Messenger,
 	logger log.Logger,
+	customDiceRoller func() int,
 ) *Game {
-	return &Game{
+	game := Game{
 		board:          board,
 		BoardInfo:      boardInfo,
-		messenger:      messenger,
-		log:            logger,
 		season:         SeasonWinter,
 		battleReceiver: make(chan Battle),
+		messenger:      messenger,
+		log:            logger,
+		rollDice:       customDiceRoller,
 	}
+	if game.rollDice == nil {
+		game.rollDice = func() int {
+			return rand.Intn(6) + 1
+		}
+	}
+
+	return &game
 }
 
 func (game *Game) Run() {

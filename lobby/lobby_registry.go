@@ -57,7 +57,7 @@ func (registry *LobbyRegistry) CreateLobby(
 		return wrap.Error(err, "failed to read board from config file")
 	}
 
-	game := game.New(board, boardInfo, lobby, lobby.log)
+	game := game.New(board, boardInfo, lobby, lobby.log, nil)
 	lobby.game = game
 	lobby.players = make([]*Player, 0, len(game.PlayerFactions))
 

@@ -41,7 +41,7 @@ func (game *Game) resolveTransports(region *Region) (mustWait bool) {
 
 		for _, transport := range dangerZoneTransports {
 			for _, dangerZone := range transport.dangerZones {
-				crossing := crossDangerZone(transport.move, dangerZone)
+				crossing := game.crossDangerZone(transport.move, dangerZone)
 				crossings = append(crossings, crossing)
 
 				if !crossing.Survived {

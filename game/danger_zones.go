@@ -17,11 +17,7 @@ type DangerZoneCrossing struct {
 func (game *Game) resolveDangerZoneSupports() {
 	var crossings []DangerZoneCrossing
 	for _, region := range game.board {
-		crossings = game.board.resolveDangerZoneCrossings(
-			region,
-			region.incomingSupports,
-			crossings,
-		)
+		crossings = game.resolveDangerZoneCrossings(region, region.incomingSupports, crossings)
 	}
 
 	if len(crossings) != 0 {
@@ -34,7 +30,7 @@ func (game *Game) resolveDangerZoneSupports() {
 // Finds incoming move orders to the given region that attempt to cross danger zones, and kills them
 // if they fail.
 func (game *Game) resolveDangerZoneMoves(region *Region) {
-	crossings := game.board.resolveDangerZoneCrossings(region, region.incomingMoves, nil)
+	crossings := game.resolveDangerZoneCrossings(region, region.incomingMoves, nil)
 	if len(crossings) != 0 {
 		if err := game.messenger.SendDangerZoneCrossings(crossings); err != nil {
 			game.log.Error(err)
@@ -44,7 +40,7 @@ func (game *Game) resolveDangerZoneMoves(region *Region) {
 	region.dangerZonesResolved = true
 }
 
-func (board Board) resolveDangerZoneCrossings(
+func (game *Game) resolveDangerZoneCrossings(
 	region *Region,
 	incomingMovesOrSupports []Order,
 	crossingsToAppend []DangerZoneCrossing,
@@ -57,14 +53,14 @@ func (board Board) resolveDangerZoneCrossings(
 			continue
 		}
 
-		crossing := crossDangerZone(order, neighbor.DangerZone)
+		crossing := game.crossDangerZone(order, neighbor.DangerZone)
 		crossingsToAppend = append(crossingsToAppend, crossing)
 
 		if !crossing.Survived {
 			if order.Type == OrderMove {
-				board.killMove(order)
+				game.board.killMove(order)
 			} else {
-				board.removeOrder(order)
+				game.board.removeOrder(order)
 			}
 		}
 	}
@@ -76,8 +72,8 @@ func (board Board) resolveDangerZoneCrossings(
 const MinDiceResultToSurviveDangerZone = 3
 
 // Rolls dice to see if order makes it across danger zone.
-func crossDangerZone(order Order, dangerZone DangerZone) DangerZoneCrossing {
-	diceResult := rollDice()
+func (game *Game) crossDangerZone(order Order, dangerZone DangerZone) DangerZoneCrossing {
+	diceResult := game.rollDice()
 	return DangerZoneCrossing{
 		DangerZone: dangerZone,
 		Survived:   diceResult > MinDiceResultToSurviveDangerZone,

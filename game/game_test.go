@@ -167,7 +167,7 @@ func newMockGame() *Game {
 	}
 
 	boardInfo := BoardInfo{ID: "test", Name: "Test game", WinningCastleCount: 5}
-	return New(board, boardInfo, MockMessenger{}, log.Default())
+	return New(board, boardInfo, MockMessenger{}, log.Default(), nil)
 }
 
 func placeUnits(units map[RegionName]Unit, board Board) {
