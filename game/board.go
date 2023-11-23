@@ -1,6 +1,8 @@
 package game
 
-import "slices"
+import (
+	"slices"
+)
 
 type Board map[RegionName]*Region
 

@@ -17,6 +17,10 @@ func (game *Game) resolveTransports(region *Region) (mustWait bool) {
 	var dangerZoneTransports []DangerZoneTransport
 
 	for _, move := range region.incomingMoves {
+		if region.hasNeighbor(move.Origin) {
+			return false
+		}
+
 		canTransport, transportAttacked, dangerZones := game.board.findTransportPath(
 			move.Origin,
 			move.Destination,
