@@ -1,34 +1,24 @@
 package game
 
 // Recursively finds a cycle of moves starting and ending with the given firstRegionName.
-func (board Board) discoverCycle(
-	firstRegionName RegionName,
-	order Order,
-) (cycle []Order, hasOutsideAttackers bool) {
+func (board Board) discoverCycle(firstRegionName RegionName, order Order) (cycle []Order) {
 	if order.Type != OrderMove {
-		return nil, false
+		return nil
 	}
 
 	destination := board[order.Destination]
 
-	// The cycle has outside attackers if more than just this order in the cycle is attacking the
-	// destination.
-	hasOutsideAttackers = len(destination.incomingMoves) > 1
-
 	// The base case: the destination is the beginning of the cycle.
 	if destination.Name == firstRegionName {
-		return []Order{order}, hasOutsideAttackers
+		return []Order{order}
 	}
 
 	// If the base case is not yet reached, passes cycle discovery to the next order in the chain.
-	continuedCycle, continuedOutsideAttackers := board.discoverCycle(
-		firstRegionName,
-		destination.order,
-	)
-	if continuedCycle == nil {
-		return nil, false
+	cycle = board.discoverCycle(firstRegionName, destination.order)
+	if cycle == nil {
+		return nil
 	} else {
-		return append(continuedCycle, order), hasOutsideAttackers || continuedOutsideAttackers
+		return append(cycle, order)
 	}
 }
 

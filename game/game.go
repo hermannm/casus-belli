@@ -203,8 +203,8 @@ func (game *Game) resolveRegionMoves(region *Region) (waiting bool) {
 	}
 
 	// Finds out if the region is part of a cycle (moves in a circle)
-	twoWayCycle, region2, sameFaction := game.board.discoverTwoWayCycle(region)
-	if twoWayCycle && sameFaction {
+	isTwoWayCycle, region2, sameFaction := game.board.discoverTwoWayCycle(region)
+	if isTwoWayCycle && sameFaction {
 		// If both moves are by the same player faction, removes the units from their origin
 		// regions, as they may not be allowed to retreat if their origin region is taken
 		for _, cycleRegion := range [2]*Region{region, region2} {
@@ -212,11 +212,11 @@ func (game *Game) resolveRegionMoves(region *Region) (waiting bool) {
 			cycleRegion.order = Order{}
 			cycleRegion.partOfCycle = true
 		}
-	} else if twoWayCycle {
+	} else if isTwoWayCycle {
 		// If the moves are from different player factions, they battle in the middle
 		game.calculateBorderBattle(region, region2)
 		return false
-	} else if cycle, _ := game.board.discoverCycle(region.Name, region.order); cycle != nil {
+	} else if cycle := game.board.discoverCycle(region.Name, region.order); cycle != nil {
 		// If there is a cycle longer than 2 moves, forwards the resolving to resolveCycle
 		game.resolveCycle(cycle)
 		return false
