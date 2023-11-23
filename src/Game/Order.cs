@@ -38,7 +38,7 @@ public record Order
     public string? Build { get; set; }
 
     [JsonIgnore]
-    public UnitType UnitType; // Initialized when orders are received.
+    public UnitType UnitType = 0; // Initialized when orders are received.
 
     public Order? TryGetSecondHorseMove()
     {

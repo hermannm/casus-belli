@@ -44,7 +44,11 @@ public partial class LobbyState : Node
 
     public bool ReadyToStartGame()
     {
-        if (Player.Faction is null)
+        if (
+            Player.Faction is null
+            || _joinedLobby is null
+            || OtherPlayers.Count + 1 < _joinedLobby.BoardInfo.PlayerFactions.Count
+        )
         {
             return false;
         }

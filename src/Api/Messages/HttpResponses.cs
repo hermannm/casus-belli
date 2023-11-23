@@ -3,14 +3,14 @@ using System.Text.Json.Serialization;
 
 namespace Immerse.BfhClient.Api.Messages;
 
-public record struct LobbyInfo
+public record LobbyInfo
 {
     public required string Name { get; set; }
     public required int PlayerCount { get; set; }
     public required BoardInfo BoardInfo { get; set; }
 }
 
-public record struct BoardInfo
+public record BoardInfo
 {
     [JsonPropertyName("ID")]
     public required string Id { get; set; }
