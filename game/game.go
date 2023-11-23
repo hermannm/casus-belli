@@ -188,25 +188,17 @@ func (game *Game) resolveRegionMoves(region *Region) (waiting bool) {
 		}
 	}
 
-	// Resolves retreats if region has no attackers
+	// Resolves any unresolved retreat or incoming second horse moves to the region.
+	// If the region is not attacked and has no incoming second horse moves, it is fully resolved.
 	if !region.attacked() {
 		if region.hasUnresolvedRetreat() {
-			if region.empty() {
-				region.Unit = region.unresolvedRetreat.unit()
-			}
-			region.unresolvedRetreat = Order{}
+			region.resolveRetreat()
 		}
-
 		if region.expectedSecondHorseMoves == 0 {
 			region.resolved = true
 		} else if region.expectedSecondHorseMoves == len(region.incomingSecondHorseMoves) {
-			region.incomingMoves = region.incomingSecondHorseMoves
-			region.incomingSecondHorseMoves = nil
-			region.expectedSecondHorseMoves = 0
-			region.transportsResolved = false
-			region.partOfCycle = false
+			game.board.placeSecondHorseMoves(region)
 		}
-
 		return false
 	}
 

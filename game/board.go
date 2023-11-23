@@ -113,6 +113,18 @@ func (board Board) addOrder(order Order) {
 	}
 }
 
+func (board Board) placeSecondHorseMoves(region *Region) {
+	region.incomingMoves = region.incomingSecondHorseMoves
+	for _, move := range region.incomingMoves {
+		board[move.Origin].order = move
+	}
+
+	region.incomingSecondHorseMoves = nil
+	region.expectedSecondHorseMoves = 0
+	region.transportsResolved = false
+	region.partOfCycle = false
+}
+
 func (board Board) hasUnresolvedRetreats() bool {
 	for _, region := range board {
 		if region.hasUnresolvedRetreat() {
@@ -234,10 +246,6 @@ func (region *Region) attacked() bool {
 	return len(region.incomingMoves) != 0
 }
 
-func (region *Region) hasUnresolvedRetreat() bool {
-	return !region.unresolvedRetreat.isNone()
-}
-
 func (region *Region) removeUnit() {
 	// If the region is part of a move cycle, then the unit has already been removed, and another
 	// unit may have taken its place
@@ -250,6 +258,17 @@ func (region *Region) removeUnit() {
 func (region *Region) replaceUnit(unit Unit) {
 	region.Unit = unit
 	region.SiegeCount = 0
+}
+
+func (region *Region) hasUnresolvedRetreat() bool {
+	return !region.unresolvedRetreat.isNone()
+}
+
+func (region *Region) resolveRetreat() {
+	if region.empty() {
+		region.Unit = region.unresolvedRetreat.unit()
+	}
+	region.unresolvedRetreat = Order{}
 }
 
 // Returns a region's neighbor of the given name, and whether it was found.
