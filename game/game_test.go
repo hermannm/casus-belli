@@ -7,52 +7,286 @@ import (
 
 	"hermannm.dev/devlog"
 	"hermannm.dev/devlog/log"
+	"hermannm.dev/wrap"
 )
 
-func TestMain(m *testing.M) {
-	logHandler := devlog.NewHandler(os.Stdout, &devlog.Options{Level: slog.LevelDebug})
-	slog.SetDefault(slog.New(logHandler))
-
-	os.Exit(m.Run())
+func diceRollerForTests() int {
+	return 3
 }
 
-// Tests whether units correctly move in circle without outside interference.
-func TestResolveConflictFreeMoveCycle(t *testing.T) {
-	units := map[RegionName]Unit{
+func TestNonWinterOrders(t *testing.T) {
+	testCases := []struct {
+		name     string
+		units    unitMap
+		control  controlMap
+		orders   []Order
+		expected expectedUnits
+	}{
+		{
+			name: "UncontestedMove",
+			units: unitMap{
+				"Emman": {Type: UnitFootman, Faction: "White"},
+			},
+			orders: []Order{
+				{Type: OrderMove, Origin: "Emman", Destination: "Erren"},
+			},
+			expected: expectedUnits{
+				"Erren": "Emman",
+				"Emman": "",
+			},
+		},
+		{
+			name: "SingleplayerBattle",
+			units: unitMap{
+				"Furie": {Type: UnitHorse, Faction: "Black"},
+			},
+			orders: []Order{
+				{Type: OrderMove, Origin: "Furie", Destination: "Firril"},
+			},
+			expected: expectedUnits{
+				"Furie":  "Furie",
+				"Firril": "",
+			},
+		},
+		{
+			name: "SingleplayerBattleWithSupport",
+			units: unitMap{
+				"Furie":      {Type: UnitHorse, Faction: "Black"},
+				"Mare Ovond": {Type: UnitShip, Faction: "Black"},
+			},
+			orders: []Order{
+				{Type: OrderMove, Origin: "Furie", Destination: "Firril"},
+				{Type: OrderSupport, Origin: "Mare Ovond", Destination: "Firril"},
+			},
+			expected: expectedUnits{
+				"Furie":  "",
+				"Firril": "Furie",
+			},
+		},
+		{
+			name: "MultiplayerBattleNoDefender",
+			units: unitMap{
+				"Gron":  {Type: UnitFootman, Faction: "White"},
+				"Gewel": {Type: UnitHorse, Faction: "Black"},
+			},
+			control: controlMap{
+				"Gnade": "Black",
+			},
+			orders: []Order{
+				{Type: OrderMove, Origin: "Gron", Destination: "Gnade"},
+				{Type: OrderMove, Origin: "Gewel", Destination: "Gnade"},
+			},
+			expected: expectedUnits{
+				"Gron":  "",
+				"Gewel": "",
+				"Gnade": "Gron",
+			},
+		},
+		{
+			name: "MultiplayerBattleWithSupportedDefender",
+			units: unitMap{
+				"Lomone": {Type: UnitFootman, Faction: "Green"},
+				"Lusía":  {Type: UnitFootman, Faction: "Red"},
+				"Brodo":  {Type: UnitFootman, Faction: "Red"},
+			},
+			orders: []Order{
+				{Type: OrderMove, Origin: "Lomone", Destination: "Lusía"},
+				{Type: OrderSupport, Origin: "Brodo", Destination: "Lusía"},
+			},
+			expected: expectedUnits{
+				"Lusía":  "Lusía",
+				"Lomone": "",
+			},
+		},
+		{
+			name: "BorderBattle",
+			units: unitMap{
+				"Tusser": {Type: UnitFootman, Faction: "White"},
+				"Tige":   {Type: UnitHorse, Faction: "Black"},
+			},
+			orders: []Order{
+				{Type: OrderMove, Origin: "Tusser", Destination: "Tige"},
+				{Type: OrderMove, Origin: "Tige", Destination: "Tusser"},
+			},
+			expected: expectedUnits{
+				"Tige":   "Tusser",
+				"Tusser": "",
+			},
+		},
+		{
+			name: "Transport",
+			units: unitMap{
+				"Ovo":       {Type: UnitFootman, Faction: "Green"},
+				"Mare Elle": {Type: UnitShip, Faction: "Green"},
+			},
+			control: controlMap{
+				"Zona": "White",
+			},
+			orders: []Order{
+				{Type: OrderMove, Origin: "Ovo", Destination: "Zona"},
+				{Type: OrderTransport, Origin: "Mare Elle"},
+			},
+			expected: expectedUnits{
+				"Zona":      "Ovo",
+				"Ovo":       "",
+				"Mare Elle": "Mare Elle",
+			},
+		},
+		{
+			name: "TransportAttacked",
+			units: unitMap{
+				"Winde":      {Type: UnitFootman, Faction: "Green"},
+				"Mare Gond":  {Type: UnitShip, Faction: "Green"},
+				"Mare Ovond": {Type: UnitShip, Faction: "Green"},
+				"Mare Unna":  {Type: UnitShip, Faction: "Black"},
+			},
+			control: controlMap{
+				"Fond": "Black",
+			},
+			orders: []Order{
+				{Type: OrderMove, Origin: "Winde", Destination: "Fond"},
+				{Type: OrderTransport, Origin: "Mare Gond"},
+				{Type: OrderTransport, Origin: "Mare Ovond"},
+				{Type: OrderMove, Origin: "Mare Unna", Destination: "Mare Ovond"},
+			},
+			expected: expectedUnits{
+				"Fond":       "Winde",
+				"Winde":      "",
+				"Mare Ovond": "Mare Ovond",
+				"Mare Gond":  "Mare Gond",
+				"Mare Unna":  "Mare Unna",
+			},
+		},
+		{
+			name: "UncontestedMoveCycle",
+			units: unitMap{
+				"Leil":   {Type: UnitFootman, Faction: "Red"},
+				"Limbol": {Type: UnitFootman, Faction: "Green"},
+				"Worp":   {Type: UnitFootman, Faction: "Yellow"},
+			},
+			orders: []Order{
+				{Type: OrderMove, Origin: "Leil", Destination: "Limbol"},
+				{Type: OrderMove, Origin: "Limbol", Destination: "Worp"},
+				{Type: OrderMove, Origin: "Worp", Destination: "Leil"},
+			},
+			expected: expectedUnits{
+				"Leil":   "Worp",
+				"Limbol": "Leil",
+				"Worp":   "Limbol",
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			game := newMockGame(t, testCase.units, testCase.control, testCase.orders, SeasonSpring)
+			game.resolveNonWinterOrders(testCase.orders)
+			testCase.expected.check(t, game, testCase.units)
+		})
+	}
+}
+
+func BenchmarkBoardResolve(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		b.StopTimer()
+		game, orders := benchmarkSetup(b)
+		b.StartTimer()
+		game.resolveNonWinterOrders(orders)
+	}
+}
+
+func benchmarkSetup(b *testing.B) (*Game, []Order) {
+	units := unitMap{
+		"Emman": {Type: UnitFootman, Faction: "White"},
+
+		"Furie": {Type: UnitHorse, Faction: "Black"},
+
+		"Gron":  {Type: UnitFootman, Faction: "White"},
+		"Gewel": {Type: UnitHorse, Faction: "Black"},
+
+		"Lomone": {Type: UnitFootman, Faction: "Green"},
+		"Lusía":  {Type: UnitFootman, Faction: "Red"},
+		"Brodo":  {Type: UnitFootman, Faction: "Red"},
+
+		"Tusser": {Type: UnitFootman, Faction: "White"},
+		"Tige":   {Type: UnitHorse, Faction: "Black"},
+
+		"Tond": {Type: UnitFootman, Faction: "Green"},
+
+		"Ovo":       {Type: UnitFootman, Faction: "Green"},
+		"Mare Elle": {Type: UnitShip, Faction: "Green"},
+
+		"Winde":      {Type: UnitFootman, Faction: "Green"},
+		"Mare Gond":  {Type: UnitShip, Faction: "Green"},
+		"Mare Ovond": {Type: UnitShip, Faction: "Green"},
+		"Mare Unna":  {Type: UnitShip, Faction: "Black"},
+
 		"Leil":   {Type: UnitFootman, Faction: "Red"},
 		"Limbol": {Type: UnitFootman, Faction: "Green"},
 		"Worp":   {Type: UnitFootman, Faction: "Yellow"},
 	}
 
 	orders := []Order{
+		// Auto-success
+		{Type: OrderMove, Origin: "Emman", Destination: "Erren"},
+
+		// Singleplayer battle
+		{Type: OrderMove, Origin: "Furie", Destination: "Firril"},
+
+		// Multiplayer battle, no defender
+		{Type: OrderMove, Origin: "Gron", Destination: "Gnade"},
+		{Type: OrderMove, Origin: "Gewel", Destination: "Gnade"},
+
+		// Multiplayer battle with supported defender
+		{Type: OrderMove, Origin: "Lomone", Destination: "Lusía"},
+		{Type: OrderSupport, Origin: "Brodo", Destination: "Lusía"},
+
+		// Border battle
+		{Type: OrderMove, Origin: "Tusser", Destination: "Tige"},
+		{Type: OrderMove, Origin: "Tige", Destination: "Tusser"},
+
+		// Danger zone, dependent move
+		{Type: OrderMove, Origin: "Tond", Destination: "Tige"},
+
+		// Transport
+		{Type: OrderMove, Origin: "Ovo", Destination: "Zona"},
+		{Type: OrderTransport, Origin: "Mare Elle"},
+
+		// Transport attacked
+		{Type: OrderMove, Origin: "Winde", Destination: "Fond"},
+		{Type: OrderTransport, Origin: "Mare Gond"},
+		{Type: OrderTransport, Origin: "Mare Ovond"},
+		{Type: OrderMove, Origin: "Mare Unna", Destination: "Mare Ovond"},
+
+		// Move cycle
 		{Type: OrderMove, Origin: "Leil", Destination: "Limbol"},
 		{Type: OrderMove, Origin: "Limbol", Destination: "Worp"},
 		{Type: OrderMove, Origin: "Worp", Destination: "Leil"},
 	}
 
-	game := newMockGame()
-	placeUnits(units, game.board)
-	prepareOrders(orders, game.board)
-
-	game.resolveNonWinterOrders(orders)
-
-	ExpectedControl{
-		"Leil":   {ControllingFaction: "Yellow", Unit: units["Worp"]},
-		"Limbol": {ControllingFaction: "Red", Unit: units["Leil"]},
-		"Worp":   {ControllingFaction: "Green", Unit: units["Limbol"]},
-	}.check(game.board, t)
+	game := newMockGame(b, units, nil, orders, SeasonSpring)
+	return game, orders
 }
 
-func BenchmarkBoardResolve(b *testing.B) {
-	for n := 0; n < b.N; n++ {
-		b.StopTimer()
-		game, orders := benchmarkSetup()
-		b.StartTimer()
-		game.resolveNonWinterOrders(orders)
-	}
+func TestMain(m *testing.M) {
+	os.Setenv("FORCE_COLOR", "1")
+	log.ColorsEnabled = true
+	logHandler := devlog.NewHandler(os.Stdout, &devlog.Options{Level: slog.LevelDebug})
+	slog.SetDefault(slog.New(logHandler))
+
+	os.Exit(m.Run())
 }
 
-func newMockGame() *Game {
+type unitMap map[RegionName]Unit
+type controlMap map[RegionName]PlayerFaction
+
+func newMockGame(
+	t testing.TB,
+	units unitMap,
+	control controlMap,
+	orders []Order,
+	season Season,
+) *Game {
 	regions := []*Region{
 		{Name: "Bom"},
 		{Name: "Brodo", Forest: true},
@@ -120,7 +354,7 @@ func newMockGame() *Game {
 		{region1: "Ovo", region2: "Mare Elle"},
 		{region1: "Zona", region2: "Mare Elle"},
 		{region1: "Zona", region2: "Mare Gond"},
-		{region1: "Tond", region2: "Tige", dangerZone: "Bankene"},
+		{region1: "Tond", region2: "Tige", dangerZone: "Bankene", river: true},
 		{region1: "Tond", region2: "Mare Elle"},
 		{region1: "Tond", region2: "Mare Gond"},
 		{region1: "Tond", region2: "Mare Ovond"},
@@ -176,19 +410,20 @@ func newMockGame() *Game {
 		})
 	}
 
-	boardInfo := BoardInfo{ID: "test", Name: "Test game", WinningCastleCount: 5}
-	return New(board, boardInfo, MockMessenger{}, log.Default(), nil)
-}
-
-func placeUnits(units map[RegionName]Unit, board Board) {
 	for regionName, unit := range units {
 		region := board[regionName]
 		region.Unit = unit
-		region.ControllingFaction = unit.Faction
+		if !region.Sea {
+			region.ControllingFaction = unit.Faction
+		}
 	}
-}
 
-func prepareOrders(orders []Order, board Board) {
+	for regionName, faction := range control {
+		region := board[regionName]
+		region.ControllingFaction = faction
+	}
+
+	ordersByFaction := make(map[PlayerFaction][]Order)
 	for i, order := range orders {
 		region, ok := board[order.Origin]
 		if !ok {
@@ -198,109 +433,53 @@ func prepareOrders(orders []Order, board Board) {
 		order.unitType = region.Unit.Type
 		order.Faction = region.Unit.Faction
 		orders[i] = order
+
+		ordersByFaction[order.Faction] = append(ordersByFaction[order.Faction], order)
 	}
+
+	for _, orders := range ordersByFaction {
+		if err := validateOrders(orders, board, season); err != nil {
+			t.Fatal(wrap.Error(err, "invalid orders in test setup"))
+		}
+	}
+
+	boardInfo := BoardInfo{ID: "test", Name: "Test game", WinningCastleCount: 5}
+	return New(board, boardInfo, MockMessenger{}, log.Default(), diceRollerForTests)
 }
 
-type ExpectedControl map[RegionName]struct {
-	ControllingFaction PlayerFaction
-	Unit               Unit
-}
+type expectedUnits map[RegionName]RegionName
 
-func (expected ExpectedControl) check(board Board, t *testing.T) {
-	for name, region := range board {
-		expectation, ok := expected[name]
+func (expected expectedUnits) check(t *testing.T, game *Game, units unitMap) {
+	for regionName, expected := range expected {
+		region, ok := game.board[regionName]
 		if !ok {
-			continue
+			t.Fatalf("invalid test setup: '%s' is not a region on the board", regionName)
 		}
 
-		if region.ControllingFaction != expectation.ControllingFaction {
-			t.Errorf(
-				"unexpected control of %v, want %v, got %v",
-				name,
-				expectation.ControllingFaction,
-				region.ControllingFaction,
-			)
+		var expectedUnit Unit
+		if expected != "" {
+			unit, ok := units[expected]
+			if !ok {
+				t.Fatalf("invalid test setup: no unit for region '%s' in unit map", expected)
+			}
+			expectedUnit = unit
 		}
-		if region.Unit != expectation.Unit {
-			t.Errorf("unexpected unit in %v, want %v, got %v", name, expectation.Unit, region.Unit)
+
+		if region.Unit != expectedUnit {
+			if expected == "" {
+				t.Errorf("%s: want no unit, got %v", regionName, region.Unit)
+			} else if region.Unit.isNone() {
+				t.Errorf("%s: want %v, got no unit", regionName, expectedUnit)
+			} else {
+				t.Errorf(
+					"%s: want %v, got %v",
+					regionName,
+					expectedUnit,
+					region.Unit,
+				)
+			}
 		}
 	}
-}
-
-func benchmarkSetup() (*Game, []Order) {
-	units := map[RegionName]Unit{
-		"Emman": {Type: UnitFootman, Faction: "White"},
-
-		"Lomone": {Type: UnitFootman, Faction: "Green"},
-		"Lusía":  {Type: UnitFootman, Faction: "Red"},
-		"Brodo":  {Type: UnitFootman, Faction: "Red"},
-
-		"Gron":  {Type: UnitFootman, Faction: "White"},
-		"Gnade": {Type: UnitFootman, Faction: "Black"},
-
-		"Firril": {Type: UnitFootman, Faction: "Black"},
-
-		"Ovo":       {Type: UnitFootman, Faction: "Green"},
-		"Mare Elle": {Type: UnitShip, Faction: "Green"},
-
-		"Winde":      {Type: UnitFootman, Faction: "Green"},
-		"Mare Gond":  {Type: UnitShip, Faction: "Green"},
-		"Mare Ovond": {Type: UnitShip, Faction: "Green"},
-		"Mare Unna":  {Type: UnitShip, Faction: "Black"},
-
-		"Tusser": {Type: UnitFootman, Faction: "White"},
-		"Tige":   {Type: UnitFootman, Faction: "Black"},
-
-		"Tond": {Type: UnitFootman, Faction: "Green"},
-
-		"Leil":   {Type: UnitFootman, Faction: "Red"},
-		"Limbol": {Type: UnitFootman, Faction: "Green"},
-		"Worp":   {Type: UnitFootman, Faction: "Yellow"},
-	}
-
-	orders := []Order{
-		// Auto-success
-		{Type: OrderMove, Origin: "Emman", Destination: "Erren"},
-
-		// PvP battle with supported defender
-		{Type: OrderMove, Origin: "Lomone", Destination: "Lusía"},
-		{Type: OrderSupport, Origin: "Brodo", Destination: "Lusía"},
-
-		// PvP battle, no defender
-		{Type: OrderMove, Origin: "Gron", Destination: "Gewel"},
-		{Type: OrderMove, Origin: "Gnade", Destination: "Gewel"},
-
-		// PvE battle
-		{Type: OrderMove, Origin: "Firril", Destination: "Furie"},
-
-		// PvE battle, transport not attacked
-		{Type: OrderMove, Origin: "Ovo", Destination: "Zona"},
-		{Type: OrderTransport, Origin: "Mare Elle"},
-
-		// PvE battle, transport attacked
-		{Type: OrderMove, Origin: "Winde", Destination: "Fond"},
-		{Type: OrderTransport, Origin: "Mare Gond"},
-		{Type: OrderTransport, Origin: "Mare Ovond"},
-		{Type: OrderMove, Origin: "Mare Unna", Destination: "Mare Ovond"},
-
-		// Border battle
-		{Type: OrderMove, Origin: "Tusser", Destination: "Tige"},
-		{Type: OrderMove, Origin: "Tige", Destination: "Tusser"},
-
-		// Danger zone, dependent move
-		{Type: OrderMove, Origin: "Tond", Destination: "Tige"},
-
-		// Move cycle
-		{Type: OrderMove, Origin: "Leil", Destination: "Limbol"},
-		{Type: OrderMove, Origin: "Limbol", Destination: "Worp"},
-		{Type: OrderMove, Origin: "Worp", Destination: "Leil"},
-	}
-
-	game := newMockGame()
-	placeUnits(units, game.board)
-	prepareOrders(orders, game.board)
-
-	return game, orders
 }
 
 type MockMessenger struct{}
