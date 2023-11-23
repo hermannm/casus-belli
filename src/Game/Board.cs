@@ -85,7 +85,17 @@ public class Board
 
         destination.ReplaceUnit(move.Unit());
         destination.Order = null;
-        if (!destination.Sea)
+
+        // Seas cannot be controlled, and unconquered castles must be besieged first, unless the
+        // attacking unit is a catapult
+        if (
+            !destination.Sea
+            && (
+                !destination.Castle
+                || destination.Controlled()
+                || move.UnitType == UnitType.Catapult
+            )
+        )
         {
             destination.ControllingFaction = move.Faction;
         }
