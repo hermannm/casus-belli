@@ -183,7 +183,11 @@ func (board Board) succeedMove(move Order) {
 
 	destination.replaceUnit(move.unit())
 	destination.order = Order{}
-	if !destination.Sea {
+
+	// Seas cannot be controlled, and unconquered castles must be besieged first, unless the
+	// attacking unit is a catapult
+	if !destination.Sea &&
+		(!destination.Castle || destination.controlled() || move.unitType == UnitCatapult) {
 		destination.ControllingFaction = move.Faction
 	}
 
