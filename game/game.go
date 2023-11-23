@@ -167,13 +167,8 @@ func (game *Game) resolveRegionMoves(region *Region) (waiting bool) {
 
 	// Resolves incoming moves that require transport
 	if !region.transportsResolved {
-		region.transportsResolved = true
-
-		for _, move := range region.incomingMoves {
-			transportMustWait := game.resolveTransport(move)
-			if transportMustWait {
-				return true
-			}
+		if mustWait := game.resolveTransports(region); mustWait {
+			return true
 		}
 	}
 

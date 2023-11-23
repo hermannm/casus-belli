@@ -4,37 +4,59 @@ import (
 	"hermannm.dev/set"
 )
 
-func (game *Game) resolveTransport(move Order) (transportMustWait bool) {
-	// If the move is between two adjacent regions, then it does not need transport
-	if game.board[move.Destination].hasNeighbor(move.Origin) {
-		return false
+func (game *Game) resolveTransports(region *Region) (mustWait bool) {
+	type DangerZoneTransport struct {
+		move        Order
+		dangerZones []DangerZone
 	}
 
-	canTransport, transportAttacked, dangerZones := game.board.findTransportPath(
-		move.Origin,
-		move.Destination,
-	)
+	// If a transport is attacked, we must wait to resolve the region, and may end up back here
+	// again. Therefore, we don't want to resolve danger zone crossings right away, as they may then
+	// get resolved twice. So instead, we store transports through danger zones in this slice, and
+	// only resolve them if the incoming move loop doesn't exit on attacked transports.
+	var dangerZoneTransports []DangerZoneTransport
 
-	if !canTransport {
-		game.board.retreatMove(move)
-		return false
-	}
-
-	if transportAttacked {
-		return true
-	}
-
-	if len(dangerZones) > 0 {
-		survived, crossings := crossDangerZones(move, dangerZones)
-		if !survived {
-			game.board.killMove(move)
+	for _, move := range region.incomingMoves {
+		canTransport, transportAttacked, dangerZones := game.board.findTransportPath(
+			move.Origin,
+			move.Destination,
+		)
+		if !canTransport {
+			game.board.retreatMove(move)
+			continue
 		}
+		if transportAttacked {
+			return true
+		}
+		if len(dangerZones) != 0 {
+			dangerZoneTransports = append(dangerZoneTransports, DangerZoneTransport{
+				move:        move,
+				dangerZones: dangerZones,
+			})
+		}
+	}
+
+	if len(dangerZoneTransports) != 0 {
+		var crossings []DangerZoneCrossing
+
+		for _, transport := range dangerZoneTransports {
+			for _, dangerZone := range transport.dangerZones {
+				crossing := crossDangerZone(transport.move, dangerZone)
+				crossings = append(crossings, crossing)
+
+				if !crossing.Survived {
+					game.board.killMove(transport.move)
+					break // If we fail a crossing, we don't need to cross any more
+				}
+			}
+		}
+
 		if err := game.messenger.SendDangerZoneCrossings(crossings); err != nil {
 			game.log.Error(err)
 		}
-		return false
 	}
 
+	region.transportsResolved = true
 	return false
 }
 

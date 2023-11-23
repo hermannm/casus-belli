@@ -85,18 +85,3 @@ func crossDangerZone(order Order, dangerZone DangerZone) DangerZoneCrossing {
 		Order:      order,
 	}
 }
-
-func crossDangerZones(
-	order Order,
-	dangerZones []DangerZone,
-) (survivedAll bool, crossings []DangerZoneCrossing) {
-	for _, dangerZone := range dangerZones {
-		crossing := crossDangerZone(order, dangerZone)
-		crossings = append(crossings, crossing)
-		if !crossing.Survived {
-			return false, crossings
-		}
-	}
-
-	return true, crossings
-}
