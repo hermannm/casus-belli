@@ -22,7 +22,7 @@ func TestResolveConflictFreeMoveCycle(t *testing.T) {
 
 	game := newMockGame()
 	placeUnits(units, game.board)
-	placeOrders(orders, game.board)
+	prepareOrders(orders, game.board)
 
 	game.resolveNonWinterOrders(orders)
 
@@ -178,7 +178,7 @@ func placeUnits(units map[RegionName]Unit, board Board) {
 	}
 }
 
-func placeOrders(orders []Order, board Board) {
+func prepareOrders(orders []Order, board Board) {
 	for i, order := range orders {
 		region, ok := board[order.Origin]
 		if !ok {
@@ -288,7 +288,7 @@ func benchmarkSetup() (*Game, []Order) {
 
 	game := newMockGame()
 	placeUnits(units, game.board)
-	placeOrders(orders, game.board)
+	prepareOrders(orders, game.board)
 
 	return game, orders
 }

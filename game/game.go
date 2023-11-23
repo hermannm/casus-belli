@@ -123,7 +123,7 @@ func (game *Game) resolveWinterOrders(orders []Order) {
 func (game *Game) resolveNonWinterOrders(orders []Order) []Battle {
 	var battles []Battle
 
-	game.board.addOrders(orders)
+	game.board.placeOrders(orders)
 
 	dangerZoneBattles := resolveDangerZones(game.board)
 	battles = append(battles, dangerZoneBattles...)

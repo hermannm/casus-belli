@@ -74,7 +74,7 @@ type DangerZone string
 
 // Populates regions on the board with the given orders.
 // Does not add support orders that have moves against them, as that cancels them.
-func (board Board) addOrders(orders []Order) {
+func (board Board) placeOrders(orders []Order) {
 	var supportOrders []Order
 
 	for _, order := range orders {
@@ -83,17 +83,17 @@ func (board Board) addOrders(orders []Order) {
 			continue
 		}
 
-		board.addOrder(order)
+		board.placeOrder(order)
 	}
 
 	for _, supportOrder := range supportOrders {
 		if !board[supportOrder.Origin].attacked() {
-			board.addOrder(supportOrder)
+			board.placeOrder(supportOrder)
 		}
 	}
 }
 
-func (board Board) addOrder(order Order) {
+func (board Board) placeOrder(order Order) {
 	origin := board[order.Origin]
 	origin.order = order
 

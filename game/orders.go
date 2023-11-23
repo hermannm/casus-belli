@@ -427,7 +427,7 @@ func validateReachableMoveDestinations(orders []Order, board Board) error {
 		boardCopy[regionName] = &regionCopy
 	}
 
-	boardCopy.addOrders(orders)
+	boardCopy.placeOrders(orders)
 
 	for _, order := range orders {
 		if order.Type != OrderMove {
