@@ -139,12 +139,12 @@ func (game *Game) resolveNonWinterOrders(orders []Order) []Battle {
 }
 
 func (game *Game) resolveMoves() {
-	anyResolvedInLastLoop := true
+	allRegionsWaiting := false
 
 	for {
-		// If nothing resolved in the last loop and there are no unresolved retreats, then we are
-		// either done resolving or waiting for concurrently resolving regions
-		if !anyResolvedInLastLoop && !game.board.hasUnresolvedRetreats() {
+		// If all regions are waiting to resolve, then we are either done resolving or waiting for
+		// concurrently resolving regions
+		if allRegionsWaiting && !game.board.hasUnresolvedRetreats() {
 			if !game.board.hasResolvingRegions() {
 				break
 			}
@@ -152,28 +152,28 @@ func (game *Game) resolveMoves() {
 			// Wait here instead of in select{}, to avoid busy spinning on default case
 			battle := <-game.battleReceiver
 			game.resolveBattle(battle)
-			anyResolvedInLastLoop = true
+			allRegionsWaiting = false
 		}
 
 		select {
 		case battle := <-game.battleReceiver:
 			game.resolveBattle(battle)
-			anyResolvedInLastLoop = true
+			allRegionsWaiting = false
 		default:
-			anyResolvedInLastLoop = false
+			allRegionsWaiting = true
 			for _, region := range game.board {
-				if resolved := game.resolveRegionMoves(region); resolved {
-					anyResolvedInLastLoop = true
+				if waiting := game.resolveRegionMoves(region); !waiting {
+					allRegionsWaiting = false
 				}
 			}
 		}
 	}
 }
 
-func (game *Game) resolveRegionMoves(region *Region) (resolved bool) {
+func (game *Game) resolveRegionMoves(region *Region) (waiting bool) {
 	// Skips the region if it has already been processed
 	if region.resolving || (region.resolved && !region.hasUnresolvedRetreat()) {
-		return false
+		return true
 	}
 
 	// Resolves incoming moves that require transport
@@ -183,7 +183,7 @@ func (game *Game) resolveRegionMoves(region *Region) (resolved bool) {
 		for _, move := range region.incomingMoves {
 			transportMustWait := game.resolveTransport(move)
 			if transportMustWait {
-				return false
+				return true
 			}
 		}
 	}
@@ -207,7 +207,7 @@ func (game *Game) resolveRegionMoves(region *Region) (resolved bool) {
 			region.partOfCycle = false
 		}
 
-		return true
+		return false
 	}
 
 	// Finds out if the region is part of a cycle (moves in a circle)
@@ -223,32 +223,32 @@ func (game *Game) resolveRegionMoves(region *Region) (resolved bool) {
 	} else if twoWayCycle {
 		// If the moves are from different player factions, they battle in the middle
 		game.calculateBorderBattle(region, region2)
-		return true
+		return false
 	} else if cycle, _ := game.board.discoverCycle(region.Name, region.order); cycle != nil {
 		// If there is a cycle longer than 2 moves, forwards the resolving to resolveCycle
 		game.resolveCycle(cycle)
-		return true
+		return false
 	}
 
 	// A single move to an empty region is either an autosuccess, or a singleplayer battle
 	if len(region.incomingMoves) == 1 && region.empty() {
 		if region.controlled() || region.Sea {
 			game.board.succeedMove(region.incomingMoves[0])
-			return true
+			return false
 		}
 
 		game.calculateSingleplayerBattle(region)
-		return true
+		return false
 	}
 
 	// If the destination region has an outgoing move order, that must be resolved first
 	if region.order.Type == OrderMove {
-		return false
+		return true
 	}
 
 	// If the function has not returned yet, then it must be a multiplayer battle
 	game.calculateMultiplayerBattle(region)
-	return true
+	return false
 }
 
 func (game *Game) resolveSieges() {
