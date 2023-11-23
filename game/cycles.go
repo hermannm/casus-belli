@@ -1,7 +1,8 @@
 package game
 
-// Recursively finds a cycle of moves starting and ending with the given firstRegionName.
-func (board Board) discoverCycle(firstRegionName RegionName, order Order) (cycle []Order) {
+// Recursively finds a cycle of move orders through regions starting and ending with the given
+// firstRegionName.
+func (board Board) discoverCycle(firstRegionName RegionName, order Order) (cycle []*Region) {
 	if order.Type != OrderMove {
 		return nil
 	}
@@ -10,7 +11,7 @@ func (board Board) discoverCycle(firstRegionName RegionName, order Order) (cycle
 
 	// The base case: the destination is the beginning of the cycle.
 	if destination.Name == firstRegionName {
-		return []Order{order}
+		return []*Region{destination}
 	}
 
 	// If the base case is not yet reached, passes cycle discovery to the next order in the chain.
@@ -18,7 +19,7 @@ func (board Board) discoverCycle(firstRegionName RegionName, order Order) (cycle
 	if cycle == nil {
 		return nil
 	} else {
-		return append(cycle, order)
+		return append(cycle, destination)
 	}
 }
 
@@ -40,11 +41,10 @@ func (board Board) discoverTwoWayCycle(
 	return order1.Origin == order2.Destination, region2, order1.Faction == order2.Faction
 }
 
-func (board Board) prepareCycleForResolving(cycle []Order) {
-	for _, move := range cycle {
-		cycleRegion := board[move.Origin]
-		cycleRegion.removeUnit()
-		cycleRegion.order = Order{}
-		cycleRegion.partOfCycle = true
+func (board Board) prepareCycleForResolving(cycle []*Region) {
+	for _, region := range cycle {
+		region.removeUnit()
+		region.order = Order{}
+		region.partOfCycle = true
 	}
 }
