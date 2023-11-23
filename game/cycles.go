@@ -5,7 +5,7 @@ func (board Board) discoverCycle(
 	firstRegionName RegionName,
 	order Order,
 ) (cycle []Order, hasOutsideAttackers bool) {
-	if order.isNone() || order.Type != OrderMove {
+	if order.Type != OrderMove {
 		return nil, false
 	}
 

@@ -244,7 +244,7 @@ func (game *Game) resolveRegionMoves(region *Region) (resolved bool) {
 
 func (game *Game) resolveSieges() {
 	for _, region := range game.board {
-		if region.order.isNone() || region.order.Type != OrderBesiege {
+		if region.order.Type != OrderBesiege {
 			continue
 		}
 
