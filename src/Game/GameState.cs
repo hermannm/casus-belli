@@ -24,8 +24,6 @@ public partial class GameState : Node
 
     private Board? _board = null;
     private List<Battle> _unprocessedBattles = new();
-    private List<Order> _orders = new();
-    private List<Order> _secondHorseMoves;
 
     public override void _EnterTree()
     {
@@ -116,8 +114,7 @@ public partial class GameState : Node
                 var origin = _board![order.Origin];
                 if (origin.Unit is { } unit)
                 {
-                    order.Unit = unit;
-                    _orders.Add(order);
+                    order.UnitType = unit.Type;
                     origin.Order = order;
 
                     if (order is { Type: OrderType.Move, Destination: not null })
@@ -146,10 +143,10 @@ public partial class GameState : Node
 
     private void ResolveUncontestedMoves()
     {
-        var anyResolvedInLastLoop = true;
-        while (anyResolvedInLastLoop)
+        var allRegionsWaiting = false;
+        while (allRegionsWaiting)
         {
-            anyResolvedInLastLoop = false;
+            allRegionsWaiting = true;
 
             foreach (var (_, region) in _board!)
             {
@@ -162,7 +159,7 @@ public partial class GameState : Node
                         new UncontestedMove { FromRegion = move.Origin, ToRegion = region.Name }
                     );
 
-                    anyResolvedInLastLoop = true;
+                    allRegionsWaiting = true;
                 }
             }
         }
@@ -172,22 +169,16 @@ public partial class GameState : Node
     {
         var destination = _board![move.Destination!];
 
-        destination.Unit = move.Unit;
+        destination.Unit = move.Unit();
         destination.Order = null;
         if (!destination.Sea)
         {
             destination.ControllingFaction = move.Faction;
         }
 
-        _board[move.Origin].RemoveUnit(move.Unit);
+        _board[move.Origin].RemoveUnit(move.Unit());
         _board.RemoveOrder(move);
 
         destination.Resolved = true;
-
-        var secondHorseMove = move.TryGetSecondHorseMove();
-        if (secondHorseMove is not null)
-        {
-            _secondHorseMoves.Add(secondHorseMove);
-        }
     }
 }

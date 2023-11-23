@@ -46,20 +46,25 @@ public record Order
     [JsonIgnore]
     public UnitType UnitType = 0; // Initialized when orders are received.
 
-    public Order? TryGetSecondHorseMove()
+    public Unit Unit()
     {
-        if (Type != OrderType.Move || UnitType != UnitType.Horse || SecondDestination is null)
-        {
-            return null;
-        }
+        return new Unit { Faction = Faction, Type = UnitType };
+    }
 
-        return new Order
+    public bool HasSecondHorseMove()
+    {
+        return Type == OrderType.Move
+            && UnitType == UnitType.Horse
+            && SecondDestination is not null;
+    }
+
+    public Order SecondHorseMove()
+    {
+        return this with
         {
-            Type = Type,
-            Faction = Faction,
             Origin = Destination!,
             Destination = SecondDestination,
-            ViaDangerZone = ViaDangerZone
+            SecondDestination = null
         };
     }
 }
