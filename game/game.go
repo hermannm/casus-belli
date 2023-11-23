@@ -77,7 +77,9 @@ func (game *Game) Run() {
 			game.resolveNonWinterOrders(orders)
 
 			if winner := game.checkWinner(); winner != "" {
-				game.messenger.SendWinner(winner)
+				if err := game.messenger.SendWinner(winner); err != nil {
+					game.log.Error(err)
+				}
 				break
 			}
 		}

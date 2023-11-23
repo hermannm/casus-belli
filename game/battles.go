@@ -300,7 +300,9 @@ func (game *Game) resolveSingleplayerBattle(battle Battle) {
 	}
 
 	game.board.succeedMove(move)
-	game.messenger.SendBattleResults(battle)
+	if err := game.messenger.SendBattleResults(battle); err != nil {
+		game.log.Error(err)
+	}
 }
 
 func (game *Game) resolveMultiplayerBattle(battle Battle) {
@@ -345,7 +347,9 @@ func (game *Game) resolveMultiplayerBattle(battle Battle) {
 		}
 	}
 
-	game.messenger.SendBattleResults(battle)
+	if err := game.messenger.SendBattleResults(battle); err != nil {
+		game.log.Error(err)
+	}
 }
 
 func (game *Game) resolveBorderBattle(battle Battle) {
@@ -375,7 +379,9 @@ func (game *Game) resolveBorderBattle(battle Battle) {
 		}
 	}
 
-	game.messenger.SendBattleResults(battle)
+	if err := game.messenger.SendBattleResults(battle); err != nil {
+		game.log.Error(err)
+	}
 }
 
 func (battle Battle) isBorderBattle() bool {
