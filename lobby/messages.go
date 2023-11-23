@@ -75,6 +75,11 @@ type BattleResultsMessage struct {
 	Battles []game.Battle
 }
 
+// Message sent from server to all clients when orders have to cross danger zones to succeed.
+type DangerZoneCrossingsMessage struct {
+	Crossings []game.DangerZoneCrossing
+}
+
 // Message sent from server to all clients when the game is won.
 type WinnerMessage struct {
 	WinningFaction game.PlayerFaction
@@ -109,26 +114,28 @@ const (
 	MessageTagOrdersReceived
 	MessageTagOrdersConfirmation
 	MessageTagBattleResults
+	MessageTagDangerZoneCrossings
 	MessageTagWinner
 	MessageTagSubmitOrders
 	MessageTagGiveSupport
 )
 
 var messageTags = enumnames.NewMap(map[MessageTag]string{
-	MessageTagError:              "Error",
-	MessageTagPlayerStatus:       "PlayerStatus",
-	MessageTagLobbyJoined:        "LobbyJoined",
-	MessageTagSelectFaction:      "SelectFaction",
-	MessageTagStartGame:          "StartGame",
-	MessageTagGameStarted:        "GameStarted",
-	MessageTagSupportRequest:     "SupportRequest",
-	MessageTagOrderRequest:       "OrderRequest",
-	MessageTagOrdersReceived:     "OrdersReceived",
-	MessageTagOrdersConfirmation: "OrdersConfirmation",
-	MessageTagBattleResults:      "BattleResults",
-	MessageTagWinner:             "Winner",
-	MessageTagSubmitOrders:       "SubmitOrders",
-	MessageTagGiveSupport:        "GiveSupport",
+	MessageTagError:               "Error",
+	MessageTagPlayerStatus:        "PlayerStatus",
+	MessageTagLobbyJoined:         "LobbyJoined",
+	MessageTagSelectFaction:       "SelectFaction",
+	MessageTagStartGame:           "StartGame",
+	MessageTagGameStarted:         "GameStarted",
+	MessageTagSupportRequest:      "SupportRequest",
+	MessageTagOrderRequest:        "OrderRequest",
+	MessageTagOrdersReceived:      "OrdersReceived",
+	MessageTagOrdersConfirmation:  "OrdersConfirmation",
+	MessageTagBattleResults:       "BattleResults",
+	MessageTagDangerZoneCrossings: "DangerZoneCrossings",
+	MessageTagWinner:              "Winner",
+	MessageTagSubmitOrders:        "SubmitOrders",
+	MessageTagGiveSupport:         "GiveSupport",
 })
 
 func (tag MessageTag) String() string {

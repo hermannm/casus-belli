@@ -25,15 +25,13 @@ func (game *Game) resolveTransport(move Order) (transportMustWait bool) {
 	}
 
 	if len(dangerZones) > 0 {
-		survived, dangerZoneBattles := crossDangerZones(move, dangerZones)
+		survived, crossings := crossDangerZones(move, dangerZones)
 		if !survived {
 			game.board.killMove(move)
 		}
-
-		if err := game.messenger.SendBattleResults(dangerZoneBattles...); err != nil {
+		if err := game.messenger.SendDangerZoneCrossings(crossings); err != nil {
 			game.log.Error(err)
 		}
-
 		return false
 	}
 

@@ -338,6 +338,10 @@ func (MockMessenger) SendBattleResults(battles ...Battle) error {
 	return nil
 }
 
+func (MockMessenger) SendDangerZoneCrossings(crossings []DangerZoneCrossing) error {
+	return nil
+}
+
 func (MockMessenger) SendWinner(winner PlayerFaction) error {
 	return nil
 }

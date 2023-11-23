@@ -1,15 +1,31 @@
 package game
 
+type DangerZone string
+
+// Result of an order that had to cross a danger zone to its destination, rolling dice to succeed.
+// For move orders, the moved unit dies if it fails the crossing.
+// For support orders, the support is cut if it fails the crossing.
+type DangerZoneCrossing struct {
+	DangerZone DangerZone
+	Survived   bool
+	DiceResult int
+	Order      Order
+}
+
 // Finds support orders attempting to cross danger zones to their destinations, and fails them if
 // they don't make it across.
 func (game *Game) resolveDangerZoneSupports() {
-	var results []Battle
+	var crossings []DangerZoneCrossing
 	for _, region := range game.board {
-		results = game.board.resolveDangerZoneCrossings(region, region.incomingSupports, results)
+		crossings = game.board.resolveDangerZoneCrossings(
+			region,
+			region.incomingSupports,
+			crossings,
+		)
 	}
 
-	if len(results) != 0 {
-		if err := game.messenger.SendBattleResults(results...); err != nil {
+	if len(crossings) != 0 {
+		if err := game.messenger.SendDangerZoneCrossings(crossings); err != nil {
 			game.log.Error(err)
 		}
 	}
@@ -18,9 +34,9 @@ func (game *Game) resolveDangerZoneSupports() {
 // Finds incoming move orders to the given region that attempt to cross danger zones, and kills them
 // if they fail.
 func (game *Game) resolveDangerZoneMoves(region *Region) {
-	results := game.board.resolveDangerZoneCrossings(region, region.incomingMoves, nil)
-	if len(results) != 0 {
-		if err := game.messenger.SendBattleResults(results...); err != nil {
+	crossings := game.board.resolveDangerZoneCrossings(region, region.incomingMoves, nil)
+	if len(crossings) != 0 {
+		if err := game.messenger.SendDangerZoneCrossings(crossings); err != nil {
 			game.log.Error(err)
 		}
 	}
@@ -31,20 +47,20 @@ func (game *Game) resolveDangerZoneMoves(region *Region) {
 func (board Board) resolveDangerZoneCrossings(
 	region *Region,
 	incomingMovesOrSupports []Order,
-	resultsToAppend []Battle,
-) []Battle {
+	crossingsToAppend []DangerZoneCrossing,
+) []DangerZoneCrossing {
 	for _, order := range incomingMovesOrSupports {
-		crossing, adjacent := region.getNeighbor(order.Origin, order.ViaDangerZone)
+		neighbor, adjacent := region.getNeighbor(order.Origin, order.ViaDangerZone)
 
 		// Non-adjacent moves are handled by resolveTransports
-		if !adjacent || crossing.DangerZone == "" {
+		if !adjacent || neighbor.DangerZone == "" {
 			continue
 		}
 
-		survived, result := crossDangerZone(order, crossing.DangerZone)
-		resultsToAppend = append(resultsToAppend, result)
+		crossing := crossDangerZone(order, neighbor.DangerZone)
+		crossingsToAppend = append(crossingsToAppend, crossing)
 
-		if !survived {
+		if !crossing.Survived {
 			if order.Type == OrderMove {
 				board.killMove(order)
 			} else {
@@ -53,36 +69,34 @@ func (board Board) resolveDangerZoneCrossings(
 		}
 	}
 
-	return resultsToAppend
+	return crossingsToAppend
 }
 
+// Number to beat when attempting to cross a danger zone.
+const MinDiceResultToSurviveDangerZone = 3
+
 // Rolls dice to see if order makes it across danger zone.
-func crossDangerZone(order Order, dangerZone DangerZone) (survived bool, result Battle) {
-	diceModifier := Modifier{Type: ModifierDice, Value: rollDice()}
-
-	result = Battle{
-		Results: []Result{
-			{Total: diceModifier.Value, Parts: []Modifier{diceModifier}, Move: order},
-		},
+func crossDangerZone(order Order, dangerZone DangerZone) DangerZoneCrossing {
+	diceResult := rollDice()
+	return DangerZoneCrossing{
 		DangerZone: dangerZone,
+		Survived:   diceResult > MinDiceResultToSurviveDangerZone,
+		DiceResult: diceResult,
+		Order:      order,
 	}
-
-	// All danger zones currently require a dice roll greater than 2.
-	// May need to be changed in the future if a more dynamic implementation is preferred.
-	return diceModifier.Value > 2, result
 }
 
 func crossDangerZones(
 	order Order,
 	dangerZones []DangerZone,
-) (survivedAll bool, results []Battle) {
+) (survivedAll bool, crossings []DangerZoneCrossing) {
 	for _, dangerZone := range dangerZones {
-		survived, result := crossDangerZone(order, dangerZone)
-		results = append(results, result)
-		if !survived {
-			return false, results
+		crossing := crossDangerZone(order, dangerZone)
+		crossings = append(crossings, crossing)
+		if !crossing.Survived {
+			return false, crossings
 		}
 	}
 
-	return true, results
+	return true, crossings
 }

@@ -195,6 +195,13 @@ func (lobby *Lobby) SendBattleResults(battles ...game.Battle) error {
 	})
 }
 
+func (lobby *Lobby) SendDangerZoneCrossings(crossings []game.DangerZoneCrossing) error {
+	return lobby.sendMessageToAll(Message{
+		Tag:  MessageTagDangerZoneCrossings,
+		Data: DangerZoneCrossingsMessage{Crossings: crossings},
+	})
+}
+
 func (lobby *Lobby) SendWinner(winner game.PlayerFaction) error {
 	return lobby.sendMessageToAll(Message{
 		Tag:  MessageTagWinner,

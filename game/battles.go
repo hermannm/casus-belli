@@ -14,9 +14,6 @@ type Battle struct {
 	// If length is one, the battle was a neutral region conquest attempt or danger zone crossing.
 	// If length is more than one, the battle was between players.
 	Results []Result
-
-	// If battle was from a danger zone crossing: name of the danger zone, otherwise blank.
-	DangerZone DangerZone `json:",omitempty"`
 }
 
 // Dice and modifier result for a battle.
@@ -30,15 +27,6 @@ type Result struct {
 	// If result of a defending unit in a region: the faction of the defender, otherwise blank.
 	DefenderFaction PlayerFaction `json:",omitempty"`
 }
-
-// Numbers to beat in different types of battles.
-const (
-	// Number to beat when attempting to conquer a neutral region.
-	RequirementConquer int = 4
-
-	// Number to beat when attempting to cross a danger zone.
-	RequirementDangerZone int = 3
-)
 
 type ResultMap map[PlayerFaction]*Result
 
@@ -390,6 +378,9 @@ func (battle Battle) isBorderBattle() bool {
 		(battle.Results[1].Move.Destination == battle.Results[0].Move.Origin)
 }
 
+// Number to beat when attempting to conquer a neutral region.
+const MinDiceResultToConquerNeutralRegion int = 4
+
 // In case of a battle against an unconquered region or a danger zone, only one player faction is
 // returned in one of the lists.
 //
@@ -398,15 +389,7 @@ func (battle Battle) winnersAndLosers() (winners []PlayerFaction, losers []Playe
 	if len(battle.Results) == 1 {
 		result := battle.Results[0]
 
-		if battle.DangerZone != "" {
-			if result.Total >= RequirementDangerZone {
-				return []PlayerFaction{result.Move.Faction}, nil
-			} else {
-				return nil, []PlayerFaction{result.Move.Faction}
-			}
-		}
-
-		if result.Total >= RequirementConquer {
+		if result.Total >= MinDiceResultToConquerNeutralRegion {
 			return []PlayerFaction{result.Move.Faction}, nil
 		} else {
 			return nil, []PlayerFaction{result.Move.Faction}
