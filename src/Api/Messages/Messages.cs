@@ -123,6 +123,14 @@ public partial class BattleResultsMessage : GodotObject, IReceivableMessage
 }
 
 /// <summary>
+/// Message sent from server to all clients when orders have to cross danger zones to succeed.
+/// </summary>
+public partial class DangerZoneCrossingsMessage : GodotObject, IReceivableMessage
+{
+    public required List<DangerZoneCrossing> Crossings { get; set; }
+}
+
+/// <summary>
 /// Message sent from server to all clients when the game is won.
 /// </summary>
 public partial class WinnerMessage : GodotObject, IReceivableMessage

@@ -17,6 +17,7 @@ public partial class GameState : Node
     public Dictionary<string, List<Order>> OrdersByFaction { get; private set; } = new();
     public List<Player> PlayersYetToSubmitOrders = new();
     public List<Battle> Battles = new();
+    public List<DangerZoneCrossing> DangerZoneCrossings = new();
 
     public CustomSignal PhaseChangedSignal = new("PhaseChanged");
     public CustomSignal<SupportCut> SupportCutSignal = new("SupportCut");
@@ -34,6 +35,9 @@ public partial class GameState : Node
         );
         ApiClient.Instance.AddMessageHandler<OrdersReceivedMessage>(HandleOrdersReceivedMessage);
         ApiClient.Instance.AddMessageHandler<BattleResultsMessage>(HandleBattleResultsMessage);
+        ApiClient.Instance.AddMessageHandler<DangerZoneCrossingsMessage>(
+            HandleDangerZoneCrossingsMessage
+        );
 
         LobbyState.Instance.LobbyChangedSignal.Connect(() =>
         {
@@ -86,6 +90,11 @@ public partial class GameState : Node
     private void HandleBattleResultsMessage(BattleResultsMessage message)
     {
         throw new NotImplementedException();
+    }
+
+    private void HandleDangerZoneCrossingsMessage(DangerZoneCrossingsMessage message)
+    {
+        DangerZoneCrossings.AddRange(message.Crossings);
     }
 
     private void ResolveMoves()

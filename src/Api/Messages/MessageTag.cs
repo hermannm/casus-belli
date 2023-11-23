@@ -13,6 +13,7 @@ public enum MessageTag
     OrdersReceived,
     OrdersConfirmation,
     BattleResults,
+    DangerZoneCrossings,
     Winner,
     SubmitOrders,
     GiveSupport

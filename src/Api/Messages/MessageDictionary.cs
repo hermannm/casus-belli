@@ -19,6 +19,7 @@ public static class MessageDictionary
             { MessageTag.OrdersReceived, typeof(OrdersReceivedMessage) },
             { MessageTag.OrdersConfirmation, typeof(OrdersConfirmationMessage) },
             { MessageTag.BattleResults, typeof(BattleResultsMessage) },
+            { MessageTag.DangerZoneCrossings, typeof(DangerZoneCrossingsMessage) },
             { MessageTag.Winner, typeof(WinnerMessage) }
         };
 
