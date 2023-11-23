@@ -76,7 +76,7 @@ func (game *Game) crossDangerZone(order Order, dangerZone DangerZone) DangerZone
 	diceResult := game.rollDice()
 	return DangerZoneCrossing{
 		DangerZone: dangerZone,
-		Survived:   diceResult > MinDiceResultToSurviveDangerZone,
+		Survived:   diceResult >= MinDiceResultToSurviveDangerZone,
 		DiceResult: diceResult,
 		Order:      order,
 	}
