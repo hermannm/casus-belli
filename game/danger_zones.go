@@ -5,7 +5,6 @@ package game
 func resolveDangerZones(board Board) (results []Battle) {
 	for _, region := range board {
 		order := region.order
-
 		if order.Type != OrderMove && order.Type != OrderSupport {
 			continue
 		}
