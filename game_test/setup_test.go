@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"hermannm.dev/bfh-server/game"
-	"hermannm.dev/bfh-server/game/boardconfig"
 	"hermannm.dev/devlog"
 	"hermannm.dev/devlog/log"
 	"hermannm.dev/wrap"
@@ -18,7 +17,7 @@ func TestMain(m *testing.M) {
 	logHandler := devlog.NewHandler(os.Stdout, &devlog.Options{Level: slog.LevelDebug})
 	slog.SetDefault(slog.New(logHandler))
 
-	board, boardInfo, err := boardconfig.ReadBoardFromConfigFile("bfh_5players")
+	board, boardInfo, err := game.ReadBoardFromConfigFile("bfh_5players")
 	if err != nil {
 		log.ErrorCause(err, "failed to read board config for tests")
 		os.Exit(1)

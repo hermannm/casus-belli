@@ -8,7 +8,6 @@ import (
 	"sync"
 
 	"hermannm.dev/bfh-server/game"
-	"hermannm.dev/bfh-server/game/boardconfig"
 	"hermannm.dev/devlog/log"
 	"hermannm.dev/wrap"
 )
@@ -52,7 +51,7 @@ func (registry *LobbyRegistry) CreateLobby(
 	}
 	lobby.log = logger
 
-	board, boardInfo, err := boardconfig.ReadBoardFromConfigFile(boardID)
+	board, boardInfo, err := game.ReadBoardFromConfigFile(boardID)
 	if err != nil {
 		return wrap.Error(err, "failed to read board from config file")
 	}

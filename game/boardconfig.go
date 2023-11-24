@@ -1,4 +1,4 @@
-package boardconfig
+package game
 
 import (
 	"embed"
@@ -8,34 +8,33 @@ import (
 	"strings"
 
 	"golang.org/x/sync/errgroup"
-	"hermannm.dev/bfh-server/game"
 	"hermannm.dev/set"
 	"hermannm.dev/wrap"
 )
 
-//go:embed bfh_5players.json
+//go:embed boardconfig
 var boardConfigFiles embed.FS
 
-type JSONBoard struct {
-	Name               string                      `json:"name"`
-	WinningCastleCount int                         `json:"winningCastleCount"`
-	Nations            map[string][]JSONLandRegion `json:"nations"`
-	Seas               []JSONSeaRegion             `json:"seas"`
-	Neighbors          []JSONNeighbor              `json:"neighbors"`
+type boardConfig struct {
+	Name               string                        `json:"name"`
+	WinningCastleCount int                           `json:"winningCastleCount"`
+	Nations            map[string][]landRegionConfig `json:"nations"`
+	Seas               []seaRegionConfig             `json:"seas"`
+	Neighbors          []neighborConfig              `json:"neighbors"`
 }
 
-type JSONLandRegion struct {
+type landRegionConfig struct {
 	Name        string `json:"name"`
 	Forest      bool   `json:"forest"`
 	Castle      bool   `json:"castle"`
 	HomeFaction string `json:"homeFaction"`
 }
 
-type JSONSeaRegion struct {
+type seaRegionConfig struct {
 	Name string `json:"name"`
 }
 
-type JSONNeighbor struct {
+type neighborConfig struct {
 	Region1    string `json:"region1"`
 	Region2    string `json:"region2"`
 	River      bool   `json:"river"`
@@ -43,36 +42,36 @@ type JSONNeighbor struct {
 	DangerZone string `json:"dangerZone"`
 }
 
-func ReadBoardFromConfigFile(boardID string) (game.Board, game.BoardInfo, error) {
+func ReadBoardFromConfigFile(boardID string) (Board, BoardInfo, error) {
 	content, err := boardConfigFiles.ReadFile(fmt.Sprintf("%s.json", boardID))
 	if err != nil {
-		return game.Board{}, game.BoardInfo{}, wrap.Errorf(
+		return Board{}, BoardInfo{}, wrap.Errorf(
 			err,
 			"failed to read config file '%s.json'",
 			boardID,
 		)
 	}
 
-	var jsonBoard JSONBoard
-	if err := json.Unmarshal(content, &jsonBoard); err != nil {
-		return game.Board{}, game.BoardInfo{}, wrap.Error(err, "failed to parse board config file")
+	var boardConfig boardConfig
+	if err := json.Unmarshal(content, &boardConfig); err != nil {
+		return Board{}, BoardInfo{}, wrap.Error(err, "failed to parse board config file")
 	}
 
-	if jsonBoard.WinningCastleCount <= 0 {
-		return game.Board{}, game.BoardInfo{}, errors.New(
+	if boardConfig.WinningCastleCount <= 0 {
+		return Board{}, BoardInfo{}, errors.New(
 			"invalid winningCastleCount in board config",
 		)
 	}
 
-	board := make(game.Board)
-	var factions set.ArraySet[game.PlayerFaction]
+	board := make(Board)
+	var factions set.ArraySet[PlayerFaction]
 
-	for nation, regions := range jsonBoard.Nations {
+	for nation, regions := range boardConfig.Nations {
 		for _, landRegion := range regions {
-			homeFaction := game.PlayerFaction(landRegion.HomeFaction)
+			homeFaction := PlayerFaction(landRegion.HomeFaction)
 
-			region := game.Region{
-				Name:               game.RegionName(landRegion.Name),
+			region := Region{
+				Name:               RegionName(landRegion.Name),
 				Nation:             nation,
 				ControllingFaction: homeFaction,
 				HomeFaction:        homeFaction,
@@ -88,17 +87,17 @@ func ReadBoardFromConfigFile(boardID string) (game.Board, game.BoardInfo, error)
 		}
 	}
 
-	for _, sea := range jsonBoard.Seas {
-		region := game.Region{Name: game.RegionName(sea.Name), Sea: true}
+	for _, sea := range boardConfig.Seas {
+		region := Region{Name: RegionName(sea.Name), Sea: true}
 		board[region.Name] = &region
 	}
 
-	for _, neighbor := range jsonBoard.Neighbors {
-		region1, ok1 := board[game.RegionName(neighbor.Region1)]
-		region2, ok2 := board[game.RegionName(neighbor.Region2)]
+	for _, neighbor := range boardConfig.Neighbors {
+		region1, ok1 := board[RegionName(neighbor.Region1)]
+		region2, ok2 := board[RegionName(neighbor.Region2)]
 
 		if !ok1 || !ok2 {
-			return game.Board{}, game.BoardInfo{}, fmt.Errorf(
+			return Board{}, BoardInfo{}, fmt.Errorf(
 				"failed to find regions for neighbor relation '%s' <-> '%s' in board config",
 				neighbor.Region1,
 				neighbor.Region2,
@@ -107,35 +106,35 @@ func ReadBoardFromConfigFile(boardID string) (game.Board, game.BoardInfo, error)
 
 		region1.Neighbors = append(
 			region1.Neighbors,
-			game.Neighbor{
+			Neighbor{
 				Name:        region2.Name,
 				AcrossWater: neighbor.River || (region1.Sea && !region2.Sea),
 				Cliffs:      neighbor.Cliffs,
-				DangerZone:  game.DangerZone(neighbor.DangerZone),
+				DangerZone:  DangerZone(neighbor.DangerZone),
 			},
 		)
 
 		region2.Neighbors = append(
 			region2.Neighbors,
-			game.Neighbor{
+			Neighbor{
 				Name:        region1.Name,
 				AcrossWater: neighbor.River || (region2.Sea && !region1.Sea),
 				Cliffs:      neighbor.Cliffs,
-				DangerZone:  game.DangerZone(neighbor.DangerZone),
+				DangerZone:  DangerZone(neighbor.DangerZone),
 			},
 		)
 	}
 
 	if factions.Size() == 0 {
-		return game.Board{}, game.BoardInfo{}, errors.New(
+		return Board{}, BoardInfo{}, errors.New(
 			"found no playable factions in board config",
 		)
 	}
 
-	boardInfo := game.BoardInfo{
+	boardInfo := BoardInfo{
 		ID:                 boardID,
-		Name:               jsonBoard.Name,
-		WinningCastleCount: jsonBoard.WinningCastleCount,
+		Name:               boardConfig.Name,
+		WinningCastleCount: boardConfig.WinningCastleCount,
 		PlayerFactions:     factions.ToSlice(),
 	}
 
@@ -150,13 +149,13 @@ type PartialJSONBoard struct {
 	}
 }
 
-func GetAvailableBoards() ([]game.BoardInfo, error) {
+func GetAvailableBoards() ([]BoardInfo, error) {
 	directory, err := boardConfigFiles.ReadDir(".")
 	if err != nil {
 		return nil, wrap.Error(err, "failed to read config file directory")
 	}
 
-	availableBoards := make([]game.BoardInfo, len(directory))
+	availableBoards := make([]BoardInfo, len(directory))
 	var goroutines errgroup.Group
 
 	for i, directoryEntry := range directory {
@@ -179,11 +178,11 @@ func GetAvailableBoards() ([]game.BoardInfo, error) {
 				return wrap.Errorf(err, "failed to parse board config file '%s'", fullName)
 			}
 
-			var factions set.ArraySet[game.PlayerFaction]
+			var factions set.ArraySet[PlayerFaction]
 			for _, regions := range board.Nations {
 				for _, region := range regions {
 					if region.HomeFaction != "" {
-						factions.Add(game.PlayerFaction(region.HomeFaction))
+						factions.Add(PlayerFaction(region.HomeFaction))
 					}
 				}
 			}
@@ -191,7 +190,7 @@ func GetAvailableBoards() ([]game.BoardInfo, error) {
 				return fmt.Errorf("found no playable factions in board config file '%s'", fullName)
 			}
 
-			boardInfo := game.BoardInfo{
+			boardInfo := BoardInfo{
 				ID:                 baseName,
 				Name:               board.Name,
 				WinningCastleCount: board.WinningCastleCount,

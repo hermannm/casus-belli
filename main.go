@@ -14,7 +14,6 @@ import (
 
 	"hermannm.dev/bfh-server/api"
 	"hermannm.dev/bfh-server/game"
-	"hermannm.dev/bfh-server/game/boardconfig"
 	"hermannm.dev/bfh-server/lobby"
 	"hermannm.dev/devlog"
 	"hermannm.dev/devlog/log"
@@ -29,7 +28,7 @@ func main() {
 
 	local, port := getCommandLineFlags()
 
-	availableBoards, err := boardconfig.GetAvailableBoards()
+	availableBoards, err := game.GetAvailableBoards()
 	if err != nil {
 		log.ErrorCause(err, "failed to get available boards for game server")
 		os.Exit(1)
