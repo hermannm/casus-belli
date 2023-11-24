@@ -105,12 +105,6 @@ public record Region
         return false;
     }
 
-    public void MoveUnitTo(Region destination)
-    {
-        destination.Unit = Unit;
-        Unit = null;
-    }
-
     public void RemoveUnit()
     {
         if (!PartOfCycle)

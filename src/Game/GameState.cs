@@ -102,18 +102,17 @@ public partial class GameState : Node
 
             foreach (var (_, region) in _board!.Regions)
             {
-                if (region.Empty() && region.Controlled() && region.IncomingMoves.Count == 1)
+                var waiting = ResolveRegionMoves(region);
+                if (!waiting)
                 {
-                    var move = region.IncomingMoves[0];
-                    _board.Regions[move.Origin].MoveUnitTo(region);
-
-                    UncontestedMoveSignal.Emit(
-                        new UncontestedMove { FromRegion = move.Origin, ToRegion = region.Name }
-                    );
-
-                    allRegionsWaiting = true;
+                    allRegionsWaiting = false;
                 }
             }
         }
+    }
+
+    private bool ResolveRegionMoves(Region region)
+    {
+        return false;
     }
 }
