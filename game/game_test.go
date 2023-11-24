@@ -28,7 +28,7 @@ func TestNonWinterOrders(t *testing.T) {
 			},
 			expected: expectedUnits{
 				"Erren": "Emman",
-				"Emman": "",
+				"Emman": empty,
 			},
 		},
 		{
@@ -41,7 +41,7 @@ func TestNonWinterOrders(t *testing.T) {
 			},
 			expected: expectedUnits{
 				"Furie":  "Furie",
-				"Firril": "",
+				"Firril": empty,
 			},
 		},
 		{
@@ -55,7 +55,7 @@ func TestNonWinterOrders(t *testing.T) {
 				{Type: OrderSupport, Origin: "Mare Ovond", Destination: "Firril"},
 			},
 			expected: expectedUnits{
-				"Furie":  "",
+				"Furie":  empty,
 				"Firril": "Furie",
 			},
 		},
@@ -73,8 +73,8 @@ func TestNonWinterOrders(t *testing.T) {
 				{Type: OrderMove, Origin: "Gewel", Destination: "Gnade"},
 			},
 			expected: expectedUnits{
-				"Gron":  "",
-				"Gewel": "",
+				"Gron":  empty,
+				"Gewel": empty,
 				"Gnade": "Gron",
 			},
 		},
@@ -91,7 +91,7 @@ func TestNonWinterOrders(t *testing.T) {
 			},
 			expected: expectedUnits{
 				"Lusía":  "Lusía",
-				"Lomone": "",
+				"Lomone": empty,
 			},
 		},
 		{
@@ -106,7 +106,7 @@ func TestNonWinterOrders(t *testing.T) {
 			},
 			expected: expectedUnits{
 				"Tige":   "Tusser",
-				"Tusser": "",
+				"Tusser": empty,
 			},
 		},
 		{
@@ -128,8 +128,8 @@ func TestNonWinterOrders(t *testing.T) {
 			},
 			expected: expectedUnits{
 				"Worp":   "Lomone",
-				"Limbol": "",
-				"Lomone": "",
+				"Limbol": empty,
+				"Lomone": empty,
 			},
 		},
 		{
@@ -171,10 +171,10 @@ func TestNonWinterOrders(t *testing.T) {
 			expected: expectedUnits{
 				"Lomone": "Worp",
 				"Lusía":  "Winde",
-				"Limbol": "",
-				"Leil":   "",
-				"Worp":   "",
-				"Winde":  "",
+				"Limbol": empty,
+				"Leil":   empty,
+				"Worp":   empty,
+				"Winde":  empty,
 			},
 		},
 		{
@@ -192,7 +192,7 @@ func TestNonWinterOrders(t *testing.T) {
 			},
 			expected: expectedUnits{
 				"Zona":      "Ovo",
-				"Ovo":       "",
+				"Ovo":       empty,
 				"Mare Elle": "Mare Elle",
 			},
 		},
@@ -215,7 +215,7 @@ func TestNonWinterOrders(t *testing.T) {
 			},
 			expected: expectedUnits{
 				"Fond":       "Winde",
-				"Winde":      "",
+				"Winde":      empty,
 				"Mare Ovond": "Mare Ovond",
 				"Mare Gond":  "Mare Gond",
 				"Mare Unna":  "Mare Unna",
@@ -369,6 +369,8 @@ const (
 	green  PlayerFaction = "Green"
 	white  PlayerFaction = "White"
 	black  PlayerFaction = "Black"
+
+	empty = ""
 )
 
 type unitMap map[RegionName]Unit
@@ -427,7 +429,9 @@ func newMockGame(
 	return New(board, baseBoardInfo, MockMessenger{}, log.Default(), diceRollerForTests), board
 }
 
-type expectedUnits map[RegionName]RegionName
+// Maps region names to either a Unit, or a region name from the original unit map where we expect
+// the unit to have moved from.
+type expectedUnits map[RegionName]any
 
 func (expected expectedUnits) check(t *testing.T, board Board, originalUnits unitMap) {
 	for regionName, expected := range expected {
@@ -437,16 +441,23 @@ func (expected expectedUnits) check(t *testing.T, board Board, originalUnits uni
 		}
 
 		var expectedUnit Unit
-		if expected != "" {
-			unit, ok := originalUnits[expected]
-			if !ok {
-				t.Fatalf("invalid test setup: no unit for region '%s' in unit map", expected)
+		switch expected := expected.(type) {
+		case Unit:
+			expectedUnit = expected
+		case string:
+			if expected != empty {
+				unit, ok := originalUnits[RegionName(expected)]
+				if !ok {
+					t.Fatalf("invalid test setup: no unit for region '%s' in unit map", expected)
+				}
+				expectedUnit = unit
 			}
-			expectedUnit = unit
+		default:
+			t.Fatalf("invalid test setup: expectedUnit is not Unit or RegionName")
 		}
 
 		if region.Unit != expectedUnit {
-			if expected == "" {
+			if expectedUnit.isNone() {
 				t.Errorf("%s: want no unit, got %v", regionName, region.Unit)
 			} else if region.Unit.isNone() {
 				t.Errorf("%s: want %v, got no unit", regionName, expectedUnit)
