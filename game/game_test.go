@@ -122,6 +122,66 @@ func TestNonWinterOrders(t *testing.T) {
 			},
 		},
 		{
+			name: "UncontestedHorseMove",
+			units: unitMap{
+				"Lomone": {Type: UnitHorse, Faction: red},
+			},
+			control: controlMap{
+				"Limbol": red,
+				"Worp":   green,
+			},
+			orders: []Order{
+				{
+					Type:              OrderMove,
+					Origin:            "Lomone",
+					Destination:       "Limbol",
+					SecondDestination: "Worp",
+				},
+			},
+			expected: expectedUnits{
+				"Worp":   "Lomone",
+				"Limbol": "",
+				"Lomone": "",
+			},
+		},
+		{
+			name: "HorseMovesCuttingSupport",
+			units: unitMap{
+				"Lomone": {Type: UnitHorse, Faction: red},
+				"Lusía":  {Type: UnitHorse, Faction: red},
+				"Worp":   {Type: UnitHorse, Faction: green},
+				"Winde":  {Type: UnitHorse, Faction: green},
+			},
+			control: controlMap{
+				"Limbol": red,
+				"Leil":   red,
+			},
+			orders: []Order{
+				{
+					Type:              OrderMove,
+					Origin:            "Lomone",
+					Destination:       "Limbol",
+					SecondDestination: "Worp",
+				},
+				{
+					Type:              OrderMove,
+					Origin:            "Lusía",
+					Destination:       "Leil",
+					SecondDestination: "Winde",
+				},
+				{Type: OrderSupport, Origin: "Worp", Destination: "Winde"},
+				{Type: OrderSupport, Origin: "Winde", Destination: "Worp"},
+			},
+			expected: expectedUnits{
+				"Lomone": "Worp",
+				"Lusía":  "Winde",
+				"Limbol": "",
+				"Leil":   "",
+				"Worp":   "",
+				"Winde":  "",
+			},
+		},
+		{
 			name: "Transport",
 			units: unitMap{
 				"Ovo":       {Type: UnitFootman, Faction: green},
@@ -312,6 +372,7 @@ func newMockGame(
 			ControllingFaction: green,
 		},
 		{Name: "Ovo", Forest: true},
+		{Name: "Mare Duna", Sea: true},
 		{Name: "Mare Gond", Sea: true},
 		{Name: "Mare Elle", Sea: true},
 		{Name: "Zona"},
@@ -349,12 +410,15 @@ func newMockGame(
 		{region1: "Lusía", region2: "Limbol"},
 		{region1: "Lusía", region2: "Leil"},
 		{region1: "Lomone", region2: "Limbol"},
+		{region1: "Lomone", region2: "Mare Duna"},
 		{region1: "Limbol", region2: "Leil"},
 		{region1: "Limbol", region2: "Worp"},
+		{region1: "Limbol", region2: "Mare Duna"},
 		{region1: "Leil", region2: "Worp"},
 		{region1: "Leil", region2: "Winde"},
 		{region1: "Leil", region2: "Ovo", river: true},
 		{region1: "Worp", region2: "Winde"},
+		{region1: "Worp", region2: "Mare Duna"},
 		{region1: "Worp", region2: "Mare Gond"},
 		{region1: "Winde", region2: "Mare Gond"},
 		{region1: "Winde", region2: "Mare Elle"},
@@ -387,6 +451,7 @@ func newMockGame(
 		{region1: "Emman", region2: "Erren", hasCliffs: true},
 		{region1: "Emman", region2: "Mare Unna"},
 		{region1: "Erren", region2: "Mare Bøso"},
+		{region1: "Mare Duna", region2: "Mare Gond"},
 		{region1: "Mare Gond", region2: "Mare Elle"},
 		{region1: "Mare Gond", region2: "Mare Ovond"},
 		{region1: "Mare Elle", region2: "Mare Ovond", dangerZone: "Bankene"},
