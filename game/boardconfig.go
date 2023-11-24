@@ -43,7 +43,7 @@ type neighborConfig struct {
 }
 
 func ReadBoardFromConfigFile(boardID string) (Board, BoardInfo, error) {
-	content, err := boardConfigFiles.ReadFile(fmt.Sprintf("boardconfig/%s.json", boardID))
+	content, err := boardConfigFiles.ReadFile("boardconfig/" + boardID + ".json")
 	if err != nil {
 		return Board{}, BoardInfo{}, wrap.Errorf(
 			err,
@@ -150,7 +150,7 @@ type PartialJSONBoard struct {
 }
 
 func GetAvailableBoards() ([]BoardInfo, error) {
-	directory, err := boardConfigFiles.ReadDir(".")
+	directory, err := boardConfigFiles.ReadDir("boardconfig")
 	if err != nil {
 		return nil, wrap.Error(err, "failed to read config file directory")
 	}
@@ -168,7 +168,7 @@ func GetAvailableBoards() ([]BoardInfo, error) {
 				return errors.New("non-JSON board config file found")
 			}
 
-			file, err := boardConfigFiles.Open(fullName)
+			file, err := boardConfigFiles.Open("boardconfig/" + fullName)
 			if err != nil {
 				return wrap.Errorf(err, "failed to read config file '%s'", fullName)
 			}
