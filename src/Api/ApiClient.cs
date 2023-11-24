@@ -28,23 +28,16 @@ public partial class ApiClient : Node
     public Uri? ServerUrl => _httpClient?.BaseAddress;
 
     private HttpClient? _httpClient = null;
-    private readonly ClientWebSocket _websocket = new();
+    private ClientWebSocket? _socket = null;
     private readonly CancellationTokenSource _cancellation = new();
-    private readonly MessageSender _messageSender;
-    private readonly MessageReceiver _messageReceiver;
-    private readonly Dictionary<MessageTag, StringName> _messageSignalNames;
-    private bool _hasJoinedLobby = false;
-
-    public ApiClient()
-    {
-        _websocket.Options.CollectHttpResponseDetails = true;
-        _messageSender = new MessageSender(_websocket);
-        _messageReceiver = new MessageReceiver(_websocket);
-        _messageSignalNames = MessageDictionary.ReceivableMessageTags.Keys.ToDictionary(
+    private readonly MessageSender _messageSender = new();
+    private readonly MessageReceiver _messageReceiver = new();
+    private readonly Dictionary<MessageTag, StringName> _messageSignalNames =
+        MessageDictionary.ReceivableMessageTags.Keys.ToDictionary(
             tag => tag,
             tag => new StringName(tag + "MessageReceived")
         );
-    }
+    private bool _hasJoinedLobby = false;
 
     public override void _EnterTree()
     {
@@ -174,8 +167,18 @@ public partial class ApiClient : Node
             return false;
         }
 
-        new Thread(() => _messageReceiver.ReadMessagesIntoQueue(_cancellation.Token)).Start();
-        new Thread(() => _messageSender.SendMessagesFromQueue(_cancellation.Token)).Start();
+        // We have to create a new ClientWebSocket here, as it does not support using the same
+        // instance across connections
+        _socket = new ClientWebSocket();
+        // This will populate the socket's HttpResponseHeaders, which we use for error messages
+        _socket.Options.CollectHttpResponseDetails = true;
+
+        new Thread(
+            () => _messageReceiver.ReadMessagesIntoQueue(_socket, _cancellation.Token)
+        ).Start();
+        new Thread(
+            () => _messageSender.SendMessagesFromQueue(_socket, _cancellation.Token)
+        ).Start();
 
         var joinLobbyUrl = new UriBuilder
         {
@@ -188,8 +191,8 @@ public partial class ApiClient : Node
 
         try
         {
-            await _websocket.ConnectAsync(joinLobbyUrl.Uri, _httpClient, _cancellation.Token);
-            _websocket.HttpResponseHeaders = null; // Frees now-redundant memory
+            await _socket.ConnectAsync(joinLobbyUrl.Uri, _httpClient, _cancellation.Token);
+            _socket.HttpResponseHeaders = null; // Frees now-redundant memory
         }
         catch (Exception e)
         {
@@ -198,7 +201,7 @@ public partial class ApiClient : Node
             string? errorMessage = null;
             // Since .NET ClientWebSockets do not provide us the HTTP response message in case of
             // failure, the server instead sends the error message through response headers
-            if (_websocket.HttpResponseHeaders?.TryGetValue("Error", out var values) == true)
+            if (_socket.HttpResponseHeaders?.TryGetValue("Error", out var values) == true)
             {
                 errorMessage = values.FirstOrDefault();
             }
@@ -218,10 +221,16 @@ public partial class ApiClient : Node
     {
         _cancellation.Cancel();
         _hasJoinedLobby = false;
+        _messageReceiver.ClearQueue();
+        _messageSender.ClearQueue();
+        if (_socket is null)
+        {
+            return;
+        }
 
         try
         {
-            await _websocket.CloseAsync(
+            await _socket.CloseAsync(
                 WebSocketCloseStatus.NormalClosure,
                 "client initiated disconnect from game server",
                 new CancellationToken()

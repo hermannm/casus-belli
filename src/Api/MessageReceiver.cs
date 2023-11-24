@@ -15,14 +15,13 @@ namespace Immerse.BfhClient.Api;
 internal class MessageReceiver
 {
     public ConcurrentQueue<Message> MessageQueue { get; } = new();
-    private readonly ClientWebSocket _websocket;
 
-    public MessageReceiver(ClientWebSocket websocket)
+    public void ClearQueue()
     {
-        _websocket = websocket;
+        MessageQueue.Clear();
     }
 
-    public void ReadMessagesIntoQueue(CancellationToken cancellationToken)
+    public void ReadMessagesIntoQueue(ClientWebSocket socket, CancellationToken cancellationToken)
     {
         while (true)
         {
@@ -33,13 +32,13 @@ internal class MessageReceiver
 
             try
             {
-                if (_websocket.State != WebSocketState.Open)
+                if (socket.State != WebSocketState.Open)
                 {
                     Task.Delay(50, cancellationToken).GetAwaiter().GetResult();
                     continue;
                 }
 
-                var messageString = ReadMessageFromSocket();
+                var messageString = ReadMessageFromSocket(socket);
                 var message = DeserializeMessage(messageString);
                 MessageQueue.Enqueue(message);
             }
@@ -56,7 +55,7 @@ internal class MessageReceiver
         }
     }
 
-    private string ReadMessageFromSocket()
+    private static string ReadMessageFromSocket(ClientWebSocket socket)
     {
         var memoryStream = new MemoryStream();
 
@@ -64,7 +63,7 @@ internal class MessageReceiver
         {
             var buffer = new ArraySegment<byte>(new byte[4 * 1024]);
 
-            var chunkResult = _websocket
+            var chunkResult = socket
                 .ReceiveAsync(buffer, new CancellationToken())
                 .GetAwaiter()
                 .GetResult();

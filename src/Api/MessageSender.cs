@@ -14,14 +14,13 @@ namespace Immerse.BfhClient.Api;
 internal class MessageSender
 {
     public readonly BlockingCollection<GodotObject> SendQueue = new();
-    private readonly ClientWebSocket _websocket;
 
-    public MessageSender(ClientWebSocket websocket)
+    public void ClearQueue()
     {
-        _websocket = websocket;
+        while (SendQueue.TryTake(out _)) { }
     }
 
-    public void SendMessagesFromQueue(CancellationToken cancellationToken)
+    public void SendMessagesFromQueue(ClientWebSocket socket, CancellationToken cancellationToken)
     {
         while (!SendQueue.IsCompleted)
         {
@@ -32,7 +31,7 @@ internal class MessageSender
 
             try
             {
-                if (_websocket.State != WebSocketState.Open)
+                if (socket.State != WebSocketState.Open)
                 {
                     Task.Delay(50, cancellationToken).GetAwaiter().GetResult();
                     continue;
@@ -40,11 +39,13 @@ internal class MessageSender
 
                 var message = SendQueue.Take(cancellationToken);
                 var serializedMessage = SerializeMessage(message);
-                _websocket
+                socket
                     .SendAsync(
                         serializedMessage,
                         WebSocketMessageType.Text,
                         true,
+                        // Not using the main cancellationToken here, as that will cause the socket
+                        // to be Aborted on close, when we want NormalClosure
                         new CancellationToken()
                     )
                     .GetAwaiter()
