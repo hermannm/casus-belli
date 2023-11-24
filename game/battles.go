@@ -426,7 +426,7 @@ func (battle Battle) regionNames() []RegionName {
 	nameSet := set.ArraySetWithCapacity[RegionName](2)
 
 	for _, result := range battle.Results {
-		if !result.Move.isNone() {
+		if !result.Move.IsNone() {
 			nameSet.Add(result.Move.Destination)
 		}
 	}

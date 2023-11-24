@@ -211,7 +211,7 @@ func (board Board) succeedMove(move Order) {
 	// Seas cannot be controlled, and unconquered castles must be besieged first, unless the
 	// attacking unit is a catapult
 	if !destination.Sea &&
-		(!destination.Castle || destination.controlled() || move.unitType == UnitCatapult) {
+		(!destination.Castle || destination.controlled() || move.UnitType == UnitCatapult) {
 		destination.ControllingFaction = move.Faction
 	}
 
@@ -261,7 +261,7 @@ func (board Board) retreatMove(move Order) {
 	}
 }
 
-func (board Board) copy() Board {
+func (board Board) Copy() Board {
 	boardCopy := make(Board, len(board))
 	for regionName, region := range board {
 		regionCopy := *region
@@ -272,7 +272,7 @@ func (board Board) copy() Board {
 
 // Checks whether the region contains a unit.
 func (region *Region) empty() bool {
-	return region.Unit.isNone()
+	return region.Unit.IsNone()
 }
 
 // Checks whether the region is controlled by a player faction.
@@ -300,7 +300,7 @@ func (region *Region) replaceUnit(unit Unit) {
 }
 
 func (region *Region) hasUnresolvedRetreat() bool {
-	return !region.unresolvedRetreat.isNone()
+	return !region.unresolvedRetreat.IsNone()
 }
 
 func (region *Region) resolveRetreat() {

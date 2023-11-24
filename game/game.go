@@ -84,9 +84,9 @@ func (game *Game) Run() {
 		orders := game.gatherAndValidateOrders()
 
 		if game.season == SeasonWinter {
-			game.resolveWinterOrders(orders)
+			game.ResolveWinterOrders(orders)
 		} else {
-			game.resolveNonWinterOrders(orders)
+			game.ResolveNonWinterOrders(orders)
 
 			if winner := game.checkWinner(); winner != "" {
 				if err := game.messenger.SendWinner(winner); err != nil {
@@ -112,7 +112,7 @@ func (game *Game) nextRound() {
 	}
 }
 
-func (game *Game) resolveWinterOrders(orders []Order) {
+func (game *Game) ResolveWinterOrders(orders []Order) {
 	for _, order := range orders {
 		switch order.Type {
 		case OrderBuild:
@@ -131,7 +131,7 @@ func (game *Game) resolveWinterOrders(orders []Order) {
 	}
 }
 
-func (game *Game) resolveNonWinterOrders(orders []Order) {
+func (game *Game) ResolveNonWinterOrders(orders []Order) {
 	game.board.placeOrders(orders)
 	game.resolveDangerZoneSupports()
 	game.resolveMoves()
@@ -289,4 +289,9 @@ func (game *Game) checkWinner() (winner PlayerFaction) {
 	}
 
 	return highestCountFaction
+}
+
+func (game *Game) GetBoardRegion(name RegionName) (region *Region, ok bool) {
+	region, ok = game.board[name]
+	return region, ok
 }
