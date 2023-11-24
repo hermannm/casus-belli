@@ -100,7 +100,7 @@ func (game *Game) attackModifiers(
 		}
 	}
 
-	if unitModifier, hasModifier := move.UnitType.battleModifier(region.Castle); hasModifier {
+	if unitModifier, hasModifier := move.unitType.battleModifier(region.Castle); hasModifier {
 		modifiers = append(modifiers, unitModifier)
 	}
 

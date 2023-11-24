@@ -35,9 +35,9 @@ type Order struct {
 	Retreat bool
 
 	// For move orders: the type of unit moved.
-	// Server sets this field on the order, to keep track of units between battles.
-	// It's excluded from JSON messages to clients -  they can deduce this from the Origin field.
-	UnitType UnitType `json:"-"`
+	// Server sets this field on the order, to keep track of units between battles. Since it's
+	// private, it's excluded from messages to clients - they can deduce this from the Origin field.
+	unitType UnitType
 }
 
 type OrderType uint8
@@ -77,12 +77,12 @@ func (order Order) isNone() bool {
 }
 
 func (order Order) unit() Unit {
-	return Unit{Type: order.UnitType, Faction: order.Faction}
+	return Unit{Type: order.unitType, Faction: order.Faction}
 }
 
 // Checks if the order is a move of a horse unit with a second destination.
 func (order Order) hasSecondHorseMove() bool {
-	return order.Type == OrderMove && order.UnitType == UnitHorse && order.SecondDestination != ""
+	return order.Type == OrderMove && order.unitType == UnitHorse && order.SecondDestination != ""
 }
 
 // Returns the order with the original destination set as the origin, and the destination set as the
@@ -164,13 +164,13 @@ func (game *Game) gatherAndValidateOrderSet(faction PlayerFaction, orderChan cha
 
 			origin, ok := game.board[order.Origin]
 			if ok && !origin.empty() && order.Type != OrderBuild {
-				order.UnitType = origin.Unit.Type
+				order.unitType = origin.Unit.Type
 			}
 
 			orders[i] = order
 		}
 
-		if err := ValidateOrders(orders, game.board, game.season); err != nil {
+		if err := validateOrders(orders, game.board, game.season); err != nil {
 			game.log.Error(err)
 			game.messenger.SendError(faction, err)
 			continue
@@ -186,7 +186,7 @@ func (game *Game) gatherAndValidateOrderSet(faction PlayerFaction, orderChan cha
 
 // Checks if the given set of orders are valid for the state of the board in the given season.
 // Assumes that all orders are from the same faction.
-func ValidateOrders(orders []Order, board Board, season Season) error {
+func validateOrders(orders []Order, board Board, season Season) error {
 	var err error
 	if season == SeasonWinter {
 		err = validateWinterOrders(orders, board)
@@ -422,7 +422,7 @@ func validateTransport(order Order, origin *Region) error {
 
 func validateReachableMoveDestinations(orders []Order, board Board) error {
 	// Copy the board, so orders do not persist
-	board = board.Copy()
+	board = board.copy()
 	board.placeOrders(orders)
 
 	for _, order := range orders {

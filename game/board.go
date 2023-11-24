@@ -211,7 +211,7 @@ func (board Board) succeedMove(move Order) {
 	// Seas cannot be controlled, and unconquered castles must be besieged first, unless the
 	// attacking unit is a catapult
 	if !destination.Sea &&
-		(!destination.Castle || destination.controlled() || move.UnitType == UnitCatapult) {
+		(!destination.Castle || destination.controlled() || move.unitType == UnitCatapult) {
 		destination.ControllingFaction = move.Faction
 	}
 
@@ -261,7 +261,7 @@ func (board Board) retreatMove(move Order) {
 	}
 }
 
-func (board Board) Copy() Board {
+func (board Board) copy() Board {
 	boardCopy := make(Board, len(board))
 	for regionName, region := range board {
 		regionCopy := *region
