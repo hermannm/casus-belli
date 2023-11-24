@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using Godot;
 using Immerse.BfhClient.Api;
 using Immerse.BfhClient.Api.Messages;
-using Immerse.BfhClient.Utils;
 
 namespace Immerse.BfhClient.Lobby;
 
@@ -14,7 +13,9 @@ public partial class LobbyState : Node
     public Player Player { get; private set; } = new();
     public List<Player> OtherPlayers { get; private set; } = new();
     public List<string> SelectableFactions { get; private set; } = new();
-    public CustomSignal LobbyChangedSignal { get; } = new("LobbyChanged");
+
+    [Signal]
+    public delegate void LobbyChangedEventHandler();
 
     private LobbyInfo? _joinedLobby = null;
 
@@ -84,7 +85,7 @@ public partial class LobbyState : Node
             );
         }
 
-        LobbyChangedSignal.Emit();
+        EmitSignal(SignalName.LobbyChanged);
     }
 
     private void HandlePlayerStatus(PlayerStatusMessage message)
@@ -100,7 +101,7 @@ public partial class LobbyState : Node
             );
         }
 
-        LobbyChangedSignal.Emit();
+        EmitSignal(SignalName.LobbyChanged);
     }
 
     private Player? GetPlayerByUsername(string username)

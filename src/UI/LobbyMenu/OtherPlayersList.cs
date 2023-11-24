@@ -13,7 +13,7 @@ public partial class OtherPlayersList : Node
     public override void _Ready()
     {
         UpdatePlayerList();
-        LobbyState.Instance.LobbyChangedSignal.Connect(UpdatePlayerList);
+        LobbyState.Instance.LobbyChanged += UpdatePlayerList;
     }
 
     private void UpdatePlayerList()

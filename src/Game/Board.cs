@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using Immerse.BfhClient.Utils;
 
 namespace Immerse.BfhClient.Game;
 
@@ -11,41 +10,7 @@ public class Board
     /// </summary>
     public Dictionary<string, Region> Regions { get; set; } = new();
 
-    public void PlaceOrders(
-        Dictionary<string, List<Order>> ordersByFaction,
-        CustomSignal<SupportCut> supportCutSignal
-    )
-    {
-        var supportOrders = new List<Order>();
-
-        foreach (var (_, factionOrders) in ordersByFaction)
-        {
-            foreach (var order in factionOrders)
-            {
-                if (order.Type == OrderType.Support)
-                {
-                    supportOrders.Add(order);
-                    continue;
-                }
-
-                PlaceOrder(order);
-            }
-        }
-
-        foreach (var supportOrder in supportOrders)
-        {
-            if (!Regions[supportOrder.Origin].Attacked())
-            {
-                PlaceOrder(supportOrder);
-            }
-            else
-            {
-                supportCutSignal.Emit(new SupportCut { RegionName = supportOrder.Origin });
-            }
-        }
-    }
-
-    private void PlaceOrder(Order order)
+    public void PlaceOrder(Order order)
     {
         var origin = Regions[order.Origin];
         origin.Order = order;

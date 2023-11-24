@@ -8,7 +8,7 @@ using Immerse.BfhClient.Api.Messages;
 using Godot;
 using System.Net.Http.Json;
 using Immerse.BfhClient.UI;
-using Immerse.BfhClient.Utils;
+
 using HttpClient = System.Net.Http.HttpClient;
 using GodotArray = Godot.Collections.Array;
 using GodotDictionary = Godot.Collections.Dictionary;
@@ -133,7 +133,11 @@ public partial class ApiClient : Node
         }
 
         var signal = _messageSignalNames[messageTag];
-        this.ConnectCustomSignal(signal, handler);
+        var error = Connect(signal, Callable.From(handler));
+        if (error != Error.Ok)
+        {
+            GD.PushError($"Failed to connect signal '{signal}': {error}");
+        }
     }
 
     public async Task<List<LobbyInfo>?> ListLobbies()
@@ -233,7 +237,17 @@ public partial class ApiClient : Node
     {
         foreach (var signal in _messageSignalNames.Values)
         {
-            this.RegisterCustomSignal(signal, typeof(GodotObject));
+            AddUserSignal(
+                signal,
+                new GodotArray
+                {
+                    new GodotDictionary
+                    {
+                        { "name", "message" },
+                        { "type", (int)Variant.Type.Object }
+                    }
+                }
+            );
         }
     }
 

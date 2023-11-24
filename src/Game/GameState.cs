@@ -4,26 +4,37 @@ using Godot;
 using Immerse.BfhClient.Api;
 using Immerse.BfhClient.Api.Messages;
 using Immerse.BfhClient.Lobby;
-using Immerse.BfhClient.Utils;
 
 namespace Immerse.BfhClient.Game;
 
 public partial class GameState : Node
 {
-    public static GameState Instance { get; private set; }
+    public static GameState Instance { get; private set; } = null!;
 
     public Season Season { get; private set; } = Season.Winter;
-    public GamePhase Phase { get; private set; } = GamePhase.SubmittingOrders;
+    public Phase CurrentPhase { get; private set; } = Phase.SubmittingOrders;
     public Dictionary<string, List<Order>> OrdersByFaction { get; private set; } = new();
     public List<Player> PlayersYetToSubmitOrders = new();
     public List<Battle> Battles = new();
     public List<DangerZoneCrossing> DangerZoneCrossings = new();
 
-    public CustomSignal PhaseChangedSignal = new("PhaseChanged");
-    public CustomSignal<SupportCut> SupportCutSignal = new("SupportCut");
-    public CustomSignal<UncontestedMove> UncontestedMoveSignal = new("UncontestedMove");
+    [Signal]
+    public delegate void PhaseChangedEventHandler();
+
+    [Signal]
+    public delegate void SupportCutEventHandler(string regionName);
+
+    [Signal]
+    public delegate void UncontestedMoveEventHandler(string fromRegion, string toRegion);
 
     private readonly Board _board = new();
+
+    public enum Phase
+    {
+        SubmittingOrders,
+        OrdersSubmitted,
+        ResolvingOrders
+    }
 
     public override void _EnterTree()
     {
@@ -35,10 +46,10 @@ public partial class GameState : Node
         ApiClient.Instance.AddMessageHandler<BattleResultsMessage>(HandleBattleResults);
         ApiClient.Instance.AddMessageHandler<DangerZoneCrossingsMessage>(HandleDangerZoneCrossings);
 
-        LobbyState.Instance.LobbyChangedSignal.Connect(() =>
+        LobbyState.Instance.LobbyChanged += () =>
         {
             PlayersYetToSubmitOrders = new List<Player>(LobbyState.Instance.OtherPlayers);
-        });
+        };
     }
 
     public override void _Process(double delta) { }
@@ -51,8 +62,8 @@ public partial class GameState : Node
     private void HandleOrderRequest(OrderRequestMessage message)
     {
         Season = message.Season;
-        Phase = GamePhase.SubmittingOrders;
-        PhaseChangedSignal.Emit();
+        CurrentPhase = Phase.SubmittingOrders;
+        EmitSignal(SignalName.PhaseChanged);
         OrdersByFaction.Clear();
         PlayersYetToSubmitOrders = new List<Player>(LobbyState.Instance.OtherPlayers);
     }
@@ -61,8 +72,8 @@ public partial class GameState : Node
     {
         if (message.FactionThatSubmittedOrders == LobbyState.Instance.Player.Faction)
         {
-            Phase = GamePhase.OrdersSubmitted;
-            PhaseChangedSignal.Emit();
+            CurrentPhase = Phase.OrdersSubmitted;
+            EmitSignal(SignalName.PhaseChanged);
         }
         else
         {
@@ -75,10 +86,10 @@ public partial class GameState : Node
     private void HandleOrdersReceived(OrdersReceivedMessage message)
     {
         OrdersByFaction = message.OrdersByFaction;
-        _board.PlaceOrders(OrdersByFaction, SupportCutSignal);
+        PlaceOrdersOnBoard();
 
-        Phase = GamePhase.ResolvingOrders;
-        PhaseChangedSignal.Emit();
+        CurrentPhase = Phase.ResolvingOrders;
+        EmitSignal(SignalName.PhaseChanged);
 
         ResolveMoves();
     }
@@ -91,6 +102,37 @@ public partial class GameState : Node
     private void HandleDangerZoneCrossings(DangerZoneCrossingsMessage message)
     {
         DangerZoneCrossings.AddRange(message.Crossings);
+    }
+
+    public void PlaceOrdersOnBoard()
+    {
+        var supportOrders = new List<Order>();
+
+        foreach (var (_, factionOrders) in OrdersByFaction)
+        {
+            foreach (var order in factionOrders)
+            {
+                if (order.Type == OrderType.Support)
+                {
+                    supportOrders.Add(order);
+                    continue;
+                }
+
+                _board.PlaceOrder(order);
+            }
+        }
+
+        foreach (var supportOrder in supportOrders)
+        {
+            if (!_board.Regions[supportOrder.Origin].Attacked())
+            {
+                _board.PlaceOrder(supportOrder);
+            }
+            else
+            {
+                EmitSignal(SignalName.SupportCut, supportOrder.Origin);
+            }
+        }
     }
 
     private void ResolveMoves()

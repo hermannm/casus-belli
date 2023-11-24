@@ -20,7 +20,7 @@ public partial class CurrentPlayer : Node
         _factionSelect.AddThemeFontSizeOverride(Strings.FontSize, 20);
         GetNode("%FactionContainer").AddChild(_factionSelect);
 
-        LobbyState.Instance.LobbyChangedSignal.Connect(UpdateSelectedFaction);
+        LobbyState.Instance.LobbyChanged += UpdateSelectedFaction;
     }
 
     private static void SelectFaction(long selectedFactionIndex)
