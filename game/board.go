@@ -129,17 +129,30 @@ func (board Board) placeSecondHorseMoves(region *Region) {
 	region.partOfCycle = false
 }
 
-// Cuts incoming supports to the region that are attacked by second horse moves.
-// If origin regions of incoming supports have yet to reach second horse move resolving, then we
-// must wait for those to resolve.
+// Cuts outgoing and incoming supports to the region that are attacked by second horse moves.
+// If destination region of outgoing support, or origin regions of incoming supports, have yet to
+// reach second horse move resolving, then we must wait for those to resolve.
 func (board Board) cutSupportsAttackedBySecondHorseMoves(region *Region) (mustWait bool) {
+	if region.order.Type == OrderSupport {
+		destination := board[region.order.Destination]
+		if destination.resolving {
+			return true
+		}
+
+		if destination.resolved || destination.resolvingSecondHorseMoves {
+			board.removeOrder(region.order)
+		} else {
+			return true
+		}
+	}
+
 	for _, support := range region.incomingSupports {
 		origin := board[support.Origin]
 		if origin.resolved {
 			continue
 		}
 
-		if !origin.resolvingSecondHorseMoves {
+		if !origin.resolvingSecondHorseMoves || origin.resolving {
 			return true
 		}
 

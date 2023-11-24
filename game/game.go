@@ -236,8 +236,8 @@ func (game *Game) resolveRegionMoves(region *Region) (waiting bool) {
 		return true
 	}
 
-	// Checks if incoming supports are cut by other second horse moves
 	if region.resolvingSecondHorseMoves {
+		// Checks if supports are cut by other second horse moves
 		if mustWait := game.board.cutSupportsAttackedBySecondHorseMoves(region); mustWait {
 			return true
 		}
