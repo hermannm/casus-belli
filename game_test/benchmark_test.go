@@ -84,6 +84,6 @@ func benchmarkSetup(b *testing.B) (*game.Game, []game.Order) {
 		{Type: game.OrderMove, Origin: "Worp", Destination: "Leil"},
 	}
 
-	game := newMockGame(b, units, nil, orders, game.SeasonSpring)
+	game, _ := newMockGame(b, units, nil, orders, game.SeasonSpring)
 	return game, orders
 }

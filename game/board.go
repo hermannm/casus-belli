@@ -272,7 +272,7 @@ func (board Board) Copy() Board {
 
 // Checks whether the region contains a unit.
 func (region *Region) empty() bool {
-	return region.Unit.IsNone()
+	return region.Unit.isNone()
 }
 
 // Checks whether the region is controlled by a player faction.
@@ -300,7 +300,7 @@ func (region *Region) replaceUnit(unit Unit) {
 }
 
 func (region *Region) hasUnresolvedRetreat() bool {
-	return !region.unresolvedRetreat.IsNone()
+	return !region.unresolvedRetreat.isNone()
 }
 
 func (region *Region) resolveRetreat() {

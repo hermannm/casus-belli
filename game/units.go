@@ -40,12 +40,12 @@ func (unitType UnitType) String() string {
 	return unitNames.GetNameOrFallback(unitType, "INVALID")
 }
 
-func (unitType UnitType) IsNone() bool {
+func (unitType UnitType) isNone() bool {
 	return unitType == 0
 }
 
-func (unit Unit) IsNone() bool {
-	return unit.Type.IsNone()
+func (unit Unit) isNone() bool {
+	return unit.Type.isNone()
 }
 
 func (unitType UnitType) battleModifier(
@@ -70,7 +70,7 @@ func (unitType UnitType) battleModifier(
 
 // Custom json.Marshaler implementation, to serialize uninitialized units to null.
 func (unit Unit) MarshalJSON() ([]byte, error) {
-	if unit.IsNone() {
+	if unit.isNone() {
 		return []byte("null"), nil
 	}
 

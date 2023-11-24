@@ -72,7 +72,7 @@ func (orderType OrderType) String() string {
 	return orderNames.GetNameOrFallback(orderType, "INVALID")
 }
 
-func (order Order) IsNone() bool {
+func (order Order) isNone() bool {
 	return order.Type == 0
 }
 
@@ -96,7 +96,7 @@ func (order Order) secondHorseMove() Order {
 
 // Custom json.Marshaler implementation, to serialize uninitialized orders to null.
 func (order Order) MarshalJSON() ([]byte, error) {
-	if order.IsNone() {
+	if order.isNone() {
 		return []byte("null"), nil
 	}
 
@@ -246,7 +246,7 @@ func validateWinterMove(order Order, origin *Region, board Board) error {
 		return errors.New("ship winter move destination must be coast")
 	}
 
-	if !order.Build.IsNone() {
+	if !order.Build.isNone() {
 		return errors.New("cannot build unit with move order")
 	}
 
@@ -299,7 +299,7 @@ func validateNonWinterOrders(orders []Order, board Board) error {
 }
 
 func validateNonWinterOrder(order Order, origin *Region, board Board) error {
-	if !order.Build.IsNone() {
+	if !order.Build.isNone() {
 		return errors.New("build orders can only be placed in winter")
 	}
 

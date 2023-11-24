@@ -290,8 +290,3 @@ func (game *Game) checkWinner() (winner PlayerFaction) {
 
 	return highestCountFaction
 }
-
-func (game *Game) GetBoardRegion(name RegionName) (region *Region, ok bool) {
-	region, ok = game.board[name]
-	return region, ok
-}

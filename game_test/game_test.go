@@ -131,10 +131,14 @@ func TestNonWinterOrders(t *testing.T) {
 		{
 			name: "HorseMovesCuttingSupport",
 			units: unitMap{
-				"Lomone": {Type: game.UnitHorse, Faction: red},
-				"Lusía":  {Type: game.UnitHorse, Faction: red},
-				"Worp":   {Type: game.UnitHorse, Faction: green},
-				"Winde":  {Type: game.UnitHorse, Faction: green},
+				"Worp":      {Type: game.UnitHorse, Faction: green},
+				"Winde":     {Type: game.UnitHorse, Faction: green},
+				"Lomone":    {Type: game.UnitHorse, Faction: red},
+				"Lusía":     {Type: game.UnitHorse, Faction: red},
+				"Mare Illa": {Type: game.UnitShip, Faction: green},
+				"Mare Duna": {Type: game.UnitShip, Faction: green},
+				"Morone":    {Type: game.UnitFootman, Faction: green},
+				"Brodo":     {Type: game.UnitFootman, Faction: green},
 			},
 			control: controlMap{
 				"Limbol": red,
@@ -143,18 +147,22 @@ func TestNonWinterOrders(t *testing.T) {
 			orders: []game.Order{
 				{
 					Type:              game.OrderMove,
-					Origin:            "Lomone",
+					Origin:            "Worp",
 					Destination:       "Limbol",
-					SecondDestination: "Worp",
+					SecondDestination: "Lomone",
 				},
 				{
 					Type:              game.OrderMove,
-					Origin:            "Lusía",
+					Origin:            "Winde",
 					Destination:       "Leil",
-					SecondDestination: "Winde",
+					SecondDestination: "Lusía",
 				},
-				{Type: game.OrderSupport, Origin: "Worp", Destination: "Winde"},
-				{Type: game.OrderSupport, Origin: "Winde", Destination: "Worp"},
+				{Type: game.OrderSupport, Origin: "Lusía", Destination: "Lomone"},
+				{Type: game.OrderSupport, Origin: "Lomone", Destination: "Lusía"},
+				{Type: game.OrderSupport, Origin: "Mare Illa", Destination: "Lomone"},
+				{Type: game.OrderSupport, Origin: "Mare Duna", Destination: "Lomone"},
+				{Type: game.OrderSupport, Origin: "Morone", Destination: "Lusía"},
+				{Type: game.OrderSupport, Origin: "Brodo", Destination: "Lusía"},
 			},
 			expected: expectedUnits{
 				"Lomone": "Worp",
@@ -231,7 +239,7 @@ func TestNonWinterOrders(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			game := newMockGame(
+			game, board := newMockGame(
 				t,
 				testCase.units,
 				testCase.control,
@@ -239,7 +247,7 @@ func TestNonWinterOrders(t *testing.T) {
 				game.SeasonSpring,
 			)
 			game.ResolveNonWinterOrders(testCase.orders)
-			testCase.expected.check(t, game, testCase.units)
+			testCase.expected.check(t, board, testCase.units)
 		})
 	}
 }
