@@ -261,6 +261,15 @@ func (board Board) retreatMove(move Order) {
 	}
 }
 
+func (board Board) copy() Board {
+	boardCopy := make(Board, len(board))
+	for regionName, region := range board {
+		regionCopy := *region
+		boardCopy[regionName] = &regionCopy
+	}
+	return boardCopy
+}
+
 // Checks whether the region contains a unit.
 func (region *Region) empty() bool {
 	return region.Unit.isNone()

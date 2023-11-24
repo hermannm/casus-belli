@@ -421,30 +421,23 @@ func validateTransport(order Order, origin *Region) error {
 }
 
 func validateReachableMoveDestinations(orders []Order, board Board) error {
-	boardCopy := make(Board, len(board))
-	for regionName, region := range board {
-		regionCopy := *region
-		boardCopy[regionName] = &regionCopy
-	}
-
-	boardCopy.placeOrders(orders)
+	// Copy the board, so orders do not persist
+	board = board.copy()
+	board.placeOrders(orders)
 
 	for _, order := range orders {
 		if order.Type != OrderMove {
 			continue
 		}
 
-		if err := validateReachableMoveDestination(order, boardCopy); err != nil {
+		if err := validateReachableMoveDestination(order, board); err != nil {
 			return wrap.Errorf(
 				err, "invalid move from '%s' to '%s'", order.Origin, order.Destination,
 			)
 		}
 
 		if order.hasSecondHorseMove() {
-			if err := validateReachableMoveDestination(
-				order.secondHorseMove(),
-				boardCopy,
-			); err != nil {
+			if err := validateReachableMoveDestination(order.secondHorseMove(), board); err != nil {
 				return wrap.Errorf(
 					err,
 					"invalid second destination for horse move from '%s' to '%s'",
