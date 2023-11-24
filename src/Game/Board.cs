@@ -22,11 +22,10 @@ public class Board
 
         if (order.Type == OrderType.Move)
         {
-            var destination = Regions[order.Destination!];
-            destination.IncomingMoves.Add(order);
+            Regions[order.Destination!].IncomingMoves.Add(order);
             if (order.HasSecondHorseMove())
             {
-                destination.ExpectedSecondHorseMoves++;
+                Regions[order.SecondDestination!].ExpectedSecondHorseMoves++;
             }
         }
     }
