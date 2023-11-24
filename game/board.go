@@ -108,7 +108,7 @@ func (board Board) placeOrder(order Order) {
 	case OrderMove:
 		destination.incomingMoves = append(destination.incomingMoves, order)
 		if order.hasSecondHorseMove() {
-			destination.expectedSecondHorseMoves++
+			board[order.SecondDestination].expectedSecondHorseMoves++
 		}
 	case OrderSupport:
 		destination.incomingSupports = append(destination.incomingSupports, order)
