@@ -14,6 +14,14 @@ func diceRollerForTests() int {
 	return 3
 }
 
+const (
+	yellow PlayerFaction = "Yellow"
+	red    PlayerFaction = "Red"
+	green  PlayerFaction = "Green"
+	white  PlayerFaction = "White"
+	black  PlayerFaction = "Black"
+)
+
 func TestNonWinterOrders(t *testing.T) {
 	testCases := []struct {
 		name     string
@@ -25,7 +33,7 @@ func TestNonWinterOrders(t *testing.T) {
 		{
 			name: "UncontestedMove",
 			units: unitMap{
-				"Emman": {Type: UnitFootman, Faction: "White"},
+				"Emman": {Type: UnitFootman, Faction: white},
 			},
 			orders: []Order{
 				{Type: OrderMove, Origin: "Emman", Destination: "Erren"},
@@ -38,7 +46,7 @@ func TestNonWinterOrders(t *testing.T) {
 		{
 			name: "SingleplayerBattle",
 			units: unitMap{
-				"Furie": {Type: UnitHorse, Faction: "Black"},
+				"Furie": {Type: UnitHorse, Faction: black},
 			},
 			orders: []Order{
 				{Type: OrderMove, Origin: "Furie", Destination: "Firril"},
@@ -51,8 +59,8 @@ func TestNonWinterOrders(t *testing.T) {
 		{
 			name: "SingleplayerBattleWithSupport",
 			units: unitMap{
-				"Furie":      {Type: UnitHorse, Faction: "Black"},
-				"Mare Ovond": {Type: UnitShip, Faction: "Black"},
+				"Furie":      {Type: UnitHorse, Faction: black},
+				"Mare Ovond": {Type: UnitShip, Faction: black},
 			},
 			orders: []Order{
 				{Type: OrderMove, Origin: "Furie", Destination: "Firril"},
@@ -66,11 +74,11 @@ func TestNonWinterOrders(t *testing.T) {
 		{
 			name: "MultiplayerBattleNoDefender",
 			units: unitMap{
-				"Gron":  {Type: UnitFootman, Faction: "White"},
-				"Gewel": {Type: UnitHorse, Faction: "Black"},
+				"Gron":  {Type: UnitFootman, Faction: white},
+				"Gewel": {Type: UnitHorse, Faction: black},
 			},
 			control: controlMap{
-				"Gnade": "Black",
+				"Gnade": black,
 			},
 			orders: []Order{
 				{Type: OrderMove, Origin: "Gron", Destination: "Gnade"},
@@ -85,9 +93,9 @@ func TestNonWinterOrders(t *testing.T) {
 		{
 			name: "MultiplayerBattleWithSupportedDefender",
 			units: unitMap{
-				"Lomone": {Type: UnitFootman, Faction: "Green"},
-				"Lusía":  {Type: UnitFootman, Faction: "Red"},
-				"Brodo":  {Type: UnitFootman, Faction: "Red"},
+				"Lomone": {Type: UnitFootman, Faction: green},
+				"Lusía":  {Type: UnitFootman, Faction: red},
+				"Brodo":  {Type: UnitFootman, Faction: red},
 			},
 			orders: []Order{
 				{Type: OrderMove, Origin: "Lomone", Destination: "Lusía"},
@@ -101,8 +109,8 @@ func TestNonWinterOrders(t *testing.T) {
 		{
 			name: "BorderBattle",
 			units: unitMap{
-				"Tusser": {Type: UnitFootman, Faction: "White"},
-				"Tige":   {Type: UnitHorse, Faction: "Black"},
+				"Tusser": {Type: UnitFootman, Faction: white},
+				"Tige":   {Type: UnitHorse, Faction: black},
 			},
 			orders: []Order{
 				{Type: OrderMove, Origin: "Tusser", Destination: "Tige"},
@@ -116,11 +124,11 @@ func TestNonWinterOrders(t *testing.T) {
 		{
 			name: "Transport",
 			units: unitMap{
-				"Ovo":       {Type: UnitFootman, Faction: "Green"},
-				"Mare Elle": {Type: UnitShip, Faction: "Green"},
+				"Ovo":       {Type: UnitFootman, Faction: green},
+				"Mare Elle": {Type: UnitShip, Faction: green},
 			},
 			control: controlMap{
-				"Zona": "White",
+				"Zona": white,
 			},
 			orders: []Order{
 				{Type: OrderMove, Origin: "Ovo", Destination: "Zona"},
@@ -135,13 +143,13 @@ func TestNonWinterOrders(t *testing.T) {
 		{
 			name: "TransportAttacked",
 			units: unitMap{
-				"Winde":      {Type: UnitFootman, Faction: "Green"},
-				"Mare Gond":  {Type: UnitShip, Faction: "Green"},
-				"Mare Ovond": {Type: UnitShip, Faction: "Green"},
-				"Mare Unna":  {Type: UnitShip, Faction: "Black"},
+				"Winde":      {Type: UnitFootman, Faction: green},
+				"Mare Gond":  {Type: UnitShip, Faction: green},
+				"Mare Ovond": {Type: UnitShip, Faction: green},
+				"Mare Unna":  {Type: UnitShip, Faction: black},
 			},
 			control: controlMap{
-				"Fond": "Black",
+				"Fond": black,
 			},
 			orders: []Order{
 				{Type: OrderMove, Origin: "Winde", Destination: "Fond"},
@@ -160,9 +168,9 @@ func TestNonWinterOrders(t *testing.T) {
 		{
 			name: "UncontestedMoveCycle",
 			units: unitMap{
-				"Leil":   {Type: UnitFootman, Faction: "Red"},
-				"Limbol": {Type: UnitFootman, Faction: "Green"},
-				"Worp":   {Type: UnitFootman, Faction: "Yellow"},
+				"Leil":   {Type: UnitFootman, Faction: red},
+				"Limbol": {Type: UnitFootman, Faction: green},
+				"Worp":   {Type: UnitFootman, Faction: yellow},
 			},
 			orders: []Order{
 				{Type: OrderMove, Origin: "Leil", Destination: "Limbol"},
@@ -197,33 +205,33 @@ func BenchmarkBoardResolve(b *testing.B) {
 
 func benchmarkSetup(b *testing.B) (*Game, []Order) {
 	units := unitMap{
-		"Emman": {Type: UnitFootman, Faction: "White"},
+		"Emman": {Type: UnitFootman, Faction: white},
 
-		"Furie": {Type: UnitHorse, Faction: "Black"},
+		"Furie": {Type: UnitHorse, Faction: black},
 
-		"Gron":  {Type: UnitFootman, Faction: "White"},
-		"Gewel": {Type: UnitHorse, Faction: "Black"},
+		"Gron":  {Type: UnitFootman, Faction: white},
+		"Gewel": {Type: UnitHorse, Faction: black},
 
-		"Lomone": {Type: UnitFootman, Faction: "Green"},
-		"Lusía":  {Type: UnitFootman, Faction: "Red"},
-		"Brodo":  {Type: UnitFootman, Faction: "Red"},
+		"Lomone": {Type: UnitFootman, Faction: green},
+		"Lusía":  {Type: UnitFootman, Faction: red},
+		"Brodo":  {Type: UnitFootman, Faction: red},
 
-		"Tusser": {Type: UnitFootman, Faction: "White"},
-		"Tige":   {Type: UnitHorse, Faction: "Black"},
+		"Tusser": {Type: UnitFootman, Faction: white},
+		"Tige":   {Type: UnitHorse, Faction: black},
 
-		"Tond": {Type: UnitFootman, Faction: "Green"},
+		"Tond": {Type: UnitFootman, Faction: green},
 
-		"Ovo":       {Type: UnitFootman, Faction: "Green"},
-		"Mare Elle": {Type: UnitShip, Faction: "Green"},
+		"Ovo":       {Type: UnitFootman, Faction: green},
+		"Mare Elle": {Type: UnitShip, Faction: green},
 
-		"Winde":      {Type: UnitFootman, Faction: "Green"},
-		"Mare Gond":  {Type: UnitShip, Faction: "Green"},
-		"Mare Ovond": {Type: UnitShip, Faction: "Green"},
-		"Mare Unna":  {Type: UnitShip, Faction: "Black"},
+		"Winde":      {Type: UnitFootman, Faction: green},
+		"Mare Gond":  {Type: UnitShip, Faction: green},
+		"Mare Ovond": {Type: UnitShip, Faction: green},
+		"Mare Unna":  {Type: UnitShip, Faction: black},
 
-		"Leil":   {Type: UnitFootman, Faction: "Red"},
-		"Limbol": {Type: UnitFootman, Faction: "Green"},
-		"Worp":   {Type: UnitFootman, Faction: "Yellow"},
+		"Leil":   {Type: UnitFootman, Faction: red},
+		"Limbol": {Type: UnitFootman, Faction: green},
+		"Worp":   {Type: UnitFootman, Faction: yellow},
 	}
 
 	orders := []Order{
@@ -295,13 +303,13 @@ func newMockGame(
 		{Name: "Lomone", Forest: true},
 		{Name: "Limbol", Forest: true},
 		{Name: "Leil"},
-		{Name: "Worp", Forest: true, HomeFaction: "Green", ControllingFaction: "Green"},
+		{Name: "Worp", Forest: true, HomeFaction: green, ControllingFaction: green},
 		{
 			Name:               "Winde",
 			Forest:             true,
 			Castle:             true,
-			HomeFaction:        "Green",
-			ControllingFaction: "Green",
+			HomeFaction:        green,
+			ControllingFaction: green,
 		},
 		{Name: "Ovo", Forest: true},
 		{Name: "Mare Gond", Sea: true},
@@ -318,8 +326,8 @@ func newMockGame(
 		{Name: "Gnade"},
 		{Name: "Gewel", Forest: true, Castle: true},
 		{Name: "Mare Unna", Sea: true},
-		{Name: "Emman", Forest: true, HomeFaction: "Black", ControllingFaction: "Black"},
-		{Name: "Erren", Castle: true, HomeFaction: "Black", ControllingFaction: "Black"},
+		{Name: "Emman", Forest: true, HomeFaction: black, ControllingFaction: black},
+		{Name: "Erren", Castle: true, HomeFaction: black, ControllingFaction: black},
 		{Name: "Mare Bøso", Sea: true},
 	}
 
