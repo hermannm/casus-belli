@@ -43,7 +43,7 @@ type neighborConfig struct {
 }
 
 func ReadBoardFromConfigFile(boardID string) (Board, BoardInfo, error) {
-	content, err := boardConfigFiles.ReadFile(fmt.Sprintf("%s.json", boardID))
+	content, err := boardConfigFiles.ReadFile(fmt.Sprintf("boardconfig/%s.json", boardID))
 	if err != nil {
 		return Board{}, BoardInfo{}, wrap.Errorf(
 			err,
