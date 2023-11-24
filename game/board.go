@@ -45,17 +45,18 @@ type Region struct {
 // Internal resolving state for a region. Resets to its zero value every round.
 // Since all fields are private, they're not included in JSON messages.
 type regionResolvingState struct {
-	order                    Order
-	incomingMoves            []Order
-	incomingSupports         []Order
-	incomingSecondHorseMoves []Order
-	expectedSecondHorseMoves int
-	resolving                bool
-	resolved                 bool
-	transportsResolved       bool
-	dangerZonesResolved      bool
-	partOfCycle              bool // Whether the region is part of a cycle of move orders.
-	unresolvedRetreat        Order
+	order                     Order
+	incomingMoves             []Order
+	incomingSupports          []Order
+	incomingSecondHorseMoves  []Order
+	expectedSecondHorseMoves  int
+	resolving                 bool
+	resolvingSecondHorseMoves bool
+	resolved                  bool
+	transportsResolved        bool
+	dangerZonesResolved       bool
+	partOfCycle               bool // Whether the region is part of a cycle of move orders.
+	unresolvedRetreat         Order
 }
 
 type Neighbor struct {
@@ -120,11 +121,34 @@ func (board Board) placeSecondHorseMoves(region *Region) {
 		board[move.Origin].order = move
 	}
 
+	region.resolvingSecondHorseMoves = true
 	region.incomingSecondHorseMoves = nil
 	region.expectedSecondHorseMoves = 0
 	region.transportsResolved = false
 	region.dangerZonesResolved = false
 	region.partOfCycle = false
+}
+
+// Cuts incoming supports to the region that are attacked by second horse moves.
+// If origin regions of incoming supports have yet to reach second horse move resolving, then we
+// must wait for those to resolve.
+func (board Board) cutSupportsAttackedBySecondHorseMoves(region *Region) (mustWait bool) {
+	for _, support := range region.incomingSupports {
+		origin := board[support.Origin]
+		if origin.resolved {
+			continue
+		}
+
+		if !origin.resolvingSecondHorseMoves {
+			return true
+		}
+
+		if origin.attacked() {
+			board.removeOrder(support)
+		}
+	}
+
+	return false
 }
 
 func (board Board) hasUnresolvedRetreats() bool {

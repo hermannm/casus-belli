@@ -236,6 +236,13 @@ func (game *Game) resolveRegionMoves(region *Region) (waiting bool) {
 		return true
 	}
 
+	// Checks if incoming supports are cut by other second horse moves
+	if region.resolvingSecondHorseMoves {
+		if mustWait := game.board.cutSupportsAttackedBySecondHorseMoves(region); mustWait {
+			return true
+		}
+	}
+
 	// If the function has not returned yet, then it must be a multiplayer battle
 	game.calculateMultiplayerBattle(region)
 	return false
