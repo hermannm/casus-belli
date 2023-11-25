@@ -32,7 +32,7 @@ client built with the Godot game engine and C#.
 
 - Install Godot 4.1 or newer, with .NET support: https://godotengine.org/
 - Install .NET 7.0: https://dotnet.microsoft.com/en-us/download
-- Run `dotnet tool restore` in the project directory to install local development tools
+- Install .NET project tools: navigate to `casus-belli/client`, and run `dotnet tool restore`
 - (Recommended) Install the Csharpier formatter plugin for your IDE, and enable format-on-save:
   https://csharpier.com/docs/Editors
 
