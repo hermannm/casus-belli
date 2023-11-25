@@ -12,15 +12,14 @@ client built with the Godot game engine and C#.
     between them
   - `api` defines API endpoints for finding, creating and joining game lobbies
   - `game` implements the game logic (resolving player orders on the board)
-    - `boardconfig` contains JSON files for board setups that can be played, and functions for
-      parsing them
+    - `boardconfig` contains JSON files for board setups that can be played
   - `magefiles` contains build scripts using [Mage](https://magefile.org/)
 - `client`
   - `src` contains C# game scripts
   - `scenes` contains Godot scene files
   - `assets` contains textures, images, icons and fonts
 
-## Development setup
+## Development Setup
 
 ### Server
 
