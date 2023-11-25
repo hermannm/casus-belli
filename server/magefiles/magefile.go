@@ -6,12 +6,12 @@ import (
 	"fmt"
 
 	"github.com/magefile/mage/sh"
-	"hermannm.dev/bfh-server/magefiles/color"
+	"hermannm.dev/casus-belli/server/magefiles/color"
 	"hermannm.dev/wrap"
 )
 
 func CrossCompile() error {
-	appName := "bfh-server"
+	appName := "casus-belli-server"
 	outputDir := "bin"
 
 	platforms := map[string][]string{

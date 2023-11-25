@@ -1,4 +1,4 @@
-namespace Immerse.BfhClient.Game;
+namespace CasusBelli.Client.Game;
 
 /// <summary>
 /// A unit on the board, controlled by a player faction.

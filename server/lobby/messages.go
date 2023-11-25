@@ -1,7 +1,7 @@
 package lobby
 
 import (
-	"hermannm.dev/bfh-server/game"
+	"hermannm.dev/casus-belli/server/game"
 	"hermannm.dev/enumnames"
 )
 

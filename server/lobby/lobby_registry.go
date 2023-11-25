@@ -7,7 +7,7 @@ import (
 	"slices"
 	"sync"
 
-	"hermannm.dev/bfh-server/game"
+	"hermannm.dev/casus-belli/server/game"
 	"hermannm.dev/devlog/log"
 	"hermannm.dev/wrap"
 )

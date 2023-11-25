@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Immerse.BfhClient.Api.Messages;
+namespace CasusBelli.Client.Api.Messages;
 
 public static class MessageDictionary
 {

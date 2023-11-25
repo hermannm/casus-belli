@@ -1,6 +1,6 @@
 using Godot;
 
-namespace Immerse.BfhClient.UI.LobbyListMenu;
+namespace CasusBelli.Client.UI.LobbyListMenu;
 
 public partial class ChangeServerButton : Button
 {

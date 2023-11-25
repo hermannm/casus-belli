@@ -1,6 +1,6 @@
 using Godot;
 
-namespace Immerse.BfhClient.Utils;
+namespace CasusBelli.Client.Utils;
 
 public static class ClearChildrenExtension
 {

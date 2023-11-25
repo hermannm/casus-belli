@@ -1,6 +1,6 @@
 ﻿Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "bfh-client", "bfh-client.csproj", "{410D6D60-AF56-4918-A38A-6729A7B8D3C4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CasusBelli.Client", "CasusBelli.Client.csproj", "{410D6D60-AF56-4918-A38A-6729A7B8D3C4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

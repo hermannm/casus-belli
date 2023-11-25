@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Immerse.BfhClient.Game;
+namespace CasusBelli.Client.Game;
 
 /// <summary>
 /// An order submitted by a player for one of their units in a given round.

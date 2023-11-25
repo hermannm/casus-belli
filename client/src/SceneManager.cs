@@ -1,7 +1,7 @@
+using CasusBelli.Client.UI;
 using Godot;
-using Immerse.BfhClient.UI;
 
-namespace Immerse.BfhClient;
+namespace CasusBelli.Client;
 
 public partial class SceneManager : Node
 {

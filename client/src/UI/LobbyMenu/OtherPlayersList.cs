@@ -1,8 +1,8 @@
+using CasusBelli.Client.Lobby;
+using CasusBelli.Client.Utils;
 using Godot;
-using Immerse.BfhClient.Lobby;
-using Immerse.BfhClient.Utils;
 
-namespace Immerse.BfhClient.UI.LobbyMenu;
+namespace CasusBelli.Client.UI.LobbyMenu;
 
 public partial class OtherPlayersList : Node
 {

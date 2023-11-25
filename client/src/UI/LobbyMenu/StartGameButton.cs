@@ -1,7 +1,7 @@
+using CasusBelli.Client.Lobby;
 using Godot;
-using Immerse.BfhClient.Lobby;
 
-namespace Immerse.BfhClient.UI.LobbyMenu;
+namespace CasusBelli.Client.UI.LobbyMenu;
 
 public partial class StartGameButton : Button
 {

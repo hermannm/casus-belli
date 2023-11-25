@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace Immerse.BfhClient.Game;
+namespace CasusBelli.Client.Game;
 
 /// <summary>
 /// A region on the board.

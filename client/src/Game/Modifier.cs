@@ -1,4 +1,4 @@
-namespace Immerse.BfhClient.Game;
+namespace CasusBelli.Client.Game;
 
 /// <summary>
 /// A typed number that adds to a player's result in a battle.

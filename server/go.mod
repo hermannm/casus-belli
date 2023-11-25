@@ -1,4 +1,4 @@
-module hermannm.dev/bfh-server
+module hermannm.dev/casus-belli/server
 
 go 1.21.1
 

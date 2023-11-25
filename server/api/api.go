@@ -6,8 +6,8 @@ import (
 	"net/http"
 
 	"github.com/gorilla/websocket"
-	"hermannm.dev/bfh-server/game"
-	"hermannm.dev/bfh-server/lobby"
+	"hermannm.dev/casus-belli/server/game"
+	"hermannm.dev/casus-belli/server/lobby"
 	"hermannm.dev/devlog/log"
 	"hermannm.dev/wrap"
 )

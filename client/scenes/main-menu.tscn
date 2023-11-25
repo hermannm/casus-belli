@@ -57,7 +57,7 @@ alignment = 1
 layout_mode = 2
 theme_override_fonts/font = ExtResource("2_bhxow")
 theme_override_font_sizes/font_size = 100
-text = "The Battle for Hermannia"
+text = "Casus Belli"
 horizontal_alignment = 1
 vertical_alignment = 1
 

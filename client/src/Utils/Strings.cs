@@ -1,6 +1,6 @@
 using Godot;
 
-namespace Immerse.BfhClient.Utils;
+namespace CasusBelli.Client.Utils;
 
 /// <summary>
 /// Godot uses StringNames for strings internally. Therefore, passing a C# string requires

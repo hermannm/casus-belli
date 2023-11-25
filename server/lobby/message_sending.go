@@ -3,7 +3,7 @@ package lobby
 import (
 	"errors"
 
-	"hermannm.dev/bfh-server/game"
+	"hermannm.dev/casus-belli/server/game"
 	"hermannm.dev/wrap"
 )
 

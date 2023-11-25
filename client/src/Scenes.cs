@@ -1,4 +1,4 @@
-namespace Immerse.BfhClient;
+namespace CasusBelli.Client;
 
 public static class Scenes
 {

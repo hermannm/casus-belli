@@ -7,7 +7,7 @@ import (
 	"sync"
 
 	"github.com/gorilla/websocket"
-	"hermannm.dev/bfh-server/game"
+	"hermannm.dev/casus-belli/server/game"
 	"hermannm.dev/condqueue"
 	"hermannm.dev/devlog/log"
 )

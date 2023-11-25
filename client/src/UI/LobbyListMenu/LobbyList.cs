@@ -1,10 +1,10 @@
 using System.Threading.Tasks;
+using CasusBelli.Client.Api;
+using CasusBelli.Client.Api.Messages;
+using CasusBelli.Client.Lobby;
 using Godot;
-using Immerse.BfhClient.Api;
-using Immerse.BfhClient.Api.Messages;
-using Immerse.BfhClient.Lobby;
 
-namespace Immerse.BfhClient.UI.LobbyListMenu;
+namespace CasusBelli.Client.UI.LobbyListMenu;
 
 public partial class LobbyList : Node
 {

@@ -1,4 +1,4 @@
-namespace Immerse.BfhClient.Game;
+namespace CasusBelli.Client.Game;
 
 public enum Season
 {

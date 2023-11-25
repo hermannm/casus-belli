@@ -1,4 +1,4 @@
-namespace Immerse.BfhClient.Lobby;
+namespace CasusBelli.Client.Lobby;
 
 public class Player
 {

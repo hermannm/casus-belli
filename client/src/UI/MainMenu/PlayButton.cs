@@ -1,7 +1,7 @@
+using CasusBelli.Client.Api;
 using Godot;
-using Immerse.BfhClient.Api;
 
-namespace Immerse.BfhClient.UI.MainMenu;
+namespace CasusBelli.Client.UI.MainMenu;
 
 public partial class PlayButton : Button
 {

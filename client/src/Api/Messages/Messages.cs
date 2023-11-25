@@ -1,8 +1,8 @@
 using System.Collections.Generic;
+using CasusBelli.Client.Game;
 using Godot;
-using Immerse.BfhClient.Game;
 
-namespace Immerse.BfhClient.Api.Messages;
+namespace CasusBelli.Client.Api.Messages;
 
 /// <summary>
 /// Messages sent between the game client and server look like this:
@@ -13,7 +13,7 @@ namespace Immerse.BfhClient.Api.Messages;
 /// }
 /// </code>
 /// ...where the "tag" field is one of the enum values defined in <see cref="MessageTag"/>, and
-/// "data" is one of the message structs in <see cref="Immerse.BfhClient.Api.Messages"/>.
+/// "data" is one of the message structs in <see cref="CasusBelli.Client.Api.Messages"/>.
 /// </summary>
 public record struct Message
 {

@@ -1,6 +1,6 @@
 using Godot;
 
-namespace Immerse.BfhClient.UI.MainMenu;
+namespace CasusBelli.Client.UI.MainMenu;
 
 public partial class QuitButton : Button
 {

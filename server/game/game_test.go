@@ -338,7 +338,7 @@ func TestMain(m *testing.M) {
 	logHandler := devlog.NewHandler(os.Stdout, &devlog.Options{Level: slog.LevelDebug})
 	slog.SetDefault(slog.New(logHandler))
 
-	board, boardInfo, err := ReadBoardFromConfigFile("bfh_5players")
+	board, boardInfo, err := ReadBoardFromConfigFile("casus-belli-5players")
 	if err != nil {
 		log.ErrorCause(err, "failed to read board config for tests")
 		os.Exit(1)

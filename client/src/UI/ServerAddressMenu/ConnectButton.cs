@@ -1,7 +1,7 @@
+using CasusBelli.Client.Api;
 using Godot;
-using Immerse.BfhClient.Api;
 
-namespace Immerse.BfhClient.UI.ServerAddressMenu;
+namespace CasusBelli.Client.UI.ServerAddressMenu;
 
 public partial class ConnectButton : Button
 {

@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
+using CasusBelli.Client.Api;
+using CasusBelli.Client.Api.Messages;
+using CasusBelli.Client.Lobby;
 using Godot;
-using Immerse.BfhClient.Api;
-using Immerse.BfhClient.Api.Messages;
-using Immerse.BfhClient.Lobby;
 
-namespace Immerse.BfhClient.Game;
+namespace CasusBelli.Client.Game;
 
 public partial class GameState : Node
 {

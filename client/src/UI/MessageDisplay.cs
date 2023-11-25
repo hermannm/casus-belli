@@ -1,9 +1,9 @@
 using System;
 using System.Text;
+using CasusBelli.Client.Utils;
 using Godot;
-using Immerse.BfhClient.Utils;
 
-namespace Immerse.BfhClient.UI;
+namespace CasusBelli.Client.UI;
 
 public partial class MessageDisplay : Node
 {

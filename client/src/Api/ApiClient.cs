@@ -1,19 +1,18 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http.Json;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
-using Immerse.BfhClient.Api.Messages;
+using CasusBelli.Client.Api.Messages;
+using CasusBelli.Client.UI;
 using Godot;
-using System.Net.Http.Json;
-using Immerse.BfhClient.UI;
-
 using HttpClient = System.Net.Http.HttpClient;
 using GodotArray = Godot.Collections.Array;
 using GodotDictionary = Godot.Collections.Dictionary;
 
-namespace Immerse.BfhClient.Api;
+namespace CasusBelli.Client.Api;
 
 /// <summary>
 /// WebSocket client that connects to the game server.

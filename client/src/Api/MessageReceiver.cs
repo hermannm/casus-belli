@@ -6,11 +6,11 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using CasusBelli.Client.Api.Messages;
+using CasusBelli.Client.UI;
 using Godot;
-using Immerse.BfhClient.Api.Messages;
-using Immerse.BfhClient.UI;
 
-namespace Immerse.BfhClient.Api;
+namespace CasusBelli.Client.Api;
 
 internal class MessageReceiver
 {

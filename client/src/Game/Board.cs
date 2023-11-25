@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Immerse.BfhClient.Game;
+namespace CasusBelli.Client.Game;
 
 public class Board
 {

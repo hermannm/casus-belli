@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Immerse.BfhClient.Game;
+namespace CasusBelli.Client.Game;
 
 /// <summary>
 /// Dice and modifier result for a battle.

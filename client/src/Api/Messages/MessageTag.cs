@@ -1,4 +1,4 @@
-namespace Immerse.BfhClient.Api.Messages;
+namespace CasusBelli.Client.Api.Messages;
 
 public enum MessageTag
 {

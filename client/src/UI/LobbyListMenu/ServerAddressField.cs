@@ -1,7 +1,7 @@
+using CasusBelli.Client.Api;
 using Godot;
-using Immerse.BfhClient.Api;
 
-namespace Immerse.BfhClient.UI.LobbyListMenu;
+namespace CasusBelli.Client.UI.LobbyListMenu;
 
 public partial class ServerAddressField : Label
 {

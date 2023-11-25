@@ -12,9 +12,9 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"hermannm.dev/bfh-server/api"
-	"hermannm.dev/bfh-server/game"
-	"hermannm.dev/bfh-server/lobby"
+	"hermannm.dev/casus-belli/server/api"
+	"hermannm.dev/casus-belli/server/game"
+	"hermannm.dev/casus-belli/server/lobby"
 	"hermannm.dev/devlog"
 	"hermannm.dev/devlog/log"
 	"hermannm.dev/ipfinder"

@@ -1,4 +1,4 @@
-namespace Immerse.BfhClient.Game;
+namespace CasusBelli.Client.Game;
 
 /// <summary>
 /// Result of an order that had to cross a danger zone to its destination, rolling dice to succeed.
