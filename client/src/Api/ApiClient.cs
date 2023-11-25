@@ -28,7 +28,7 @@ public partial class ApiClient : Node
 
     private HttpClient? _httpClient = null;
     private ClientWebSocket? _socket = null;
-    private readonly CancellationTokenSource _cancellation = new();
+    private CancellationTokenSource? _cancellation = null;
     private readonly MessageSender _messageSender = new();
     private readonly MessageReceiver _messageReceiver = new();
     private readonly Dictionary<MessageTag, StringName> _messageSignalNames =
@@ -172,6 +172,9 @@ public partial class ApiClient : Node
         // This will populate the socket's HttpResponseHeaders, which we use for error messages
         _socket.Options.CollectHttpResponseDetails = true;
 
+        // Cannot be reused, so must be recreated for each lobby joined
+        _cancellation = new CancellationTokenSource();
+
         new Thread(
             () => _messageReceiver.ReadMessagesIntoQueue(_socket, _cancellation.Token)
         ).Start();
@@ -218,7 +221,7 @@ public partial class ApiClient : Node
 
     public async Task LeaveLobby()
     {
-        _cancellation.Cancel();
+        _cancellation?.Cancel();
         _hasJoinedLobby = false;
         _messageReceiver.ClearQueue();
         _messageSender.ClearQueue();
