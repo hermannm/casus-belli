@@ -113,11 +113,17 @@ func (game *Game) nextRound() {
 }
 
 func (game *Game) resolveWinterOrders(orders []Order) {
+	// Do disbands first, as moves may want to move in after
+	for _, order := range orders {
+		if order.Type == OrderDisband {
+			game.board[order.Origin].removeUnit()
+		}
+	}
+
 	for _, order := range orders {
 		switch order.Type {
 		case OrderBuild:
-			region := game.board[order.Origin]
-			region.Unit = Unit{
+			game.board[order.Origin].Unit = Unit{
 				Faction: order.Faction,
 				Type:    order.UnitType,
 			}
@@ -126,7 +132,7 @@ func (game *Game) resolveWinterOrders(orders []Order) {
 			destination := game.board[order.Destination]
 
 			destination.Unit = origin.Unit
-			origin.Unit = Unit{}
+			origin.removeUnit()
 		}
 	}
 }

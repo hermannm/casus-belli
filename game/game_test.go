@@ -241,17 +241,11 @@ func TestNonWinterOrders(t *testing.T) {
 		},
 	}
 
-	for _, testCase := range testCases {
-		t.Run(testCase.name, func(t *testing.T) {
-			game, board := newMockGame(
-				t,
-				testCase.units,
-				testCase.control,
-				testCase.orders,
-				SeasonSpring,
-			)
-			game.resolveNonWinterOrders(testCase.orders)
-			testCase.expected.check(t, board, testCase.units)
+	for _, test := range testCases {
+		t.Run(test.name, func(t *testing.T) {
+			game, board := newMockGame(t, test.units, test.control, test.orders, SeasonSpring)
+			game.resolveNonWinterOrders(test.orders)
+			test.expected.check(t, board, test.units)
 		})
 	}
 }
@@ -413,7 +407,7 @@ func newMockGame(
 			t.Fatalf("order origin region '%s' not found on board", order.Origin)
 		}
 
-		order.unitType = region.Unit.Type
+		order.UnitType = region.Unit.Type
 		order.Faction = region.Unit.Faction
 		orders[i] = order
 

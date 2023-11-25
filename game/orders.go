@@ -58,6 +58,10 @@ const (
 
 	// For empty player-controlled region in winter: an order to build a unit in the region.
 	OrderBuild
+
+	// For region with a player's own unit, in winter: an order to disband the unit, when their
+	// current number of units exceeds their max number of units.
+	OrderDisband
 )
 
 var orderNames = enumnames.NewMap(map[OrderType]string{
@@ -190,6 +194,13 @@ func validateOrders(orders []Order, board Board, season Season) error {
 }
 
 func validateWinterOrders(orders []Order, board Board) error {
+	var disbands set.ArraySet[RegionName]
+	for _, order := range orders {
+		if order.Type == OrderDisband {
+			disbands.Add(order.Origin)
+		}
+	}
+
 	for _, order := range orders {
 		origin, ok := board[order.Origin]
 		if !ok {
@@ -198,7 +209,7 @@ func validateWinterOrders(orders []Order, board Board) error {
 			)
 		}
 
-		if err := validateWinterOrder(order, origin, board); err != nil {
+		if err := validateWinterOrder(order, origin, board, &disbands); err != nil {
 			return wrap.Errorf(err, "invalid winter order in region '%s'", order.Origin)
 		}
 	}
@@ -210,22 +221,36 @@ func validateWinterOrders(orders []Order, board Board) error {
 	return nil
 }
 
-func validateWinterOrder(order Order, origin *Region, board Board) error {
+func validateWinterOrder(
+	order Order,
+	origin *Region,
+	board Board,
+	disbands set.Set[RegionName],
+) error {
 	if err := validateOrderedUnit(order, origin); err != nil {
 		return err
 	}
 
 	switch order.Type {
 	case OrderMove:
-		return validateWinterMove(order, origin, board)
+		return validateWinterMove(order, origin, board, disbands)
 	case OrderBuild:
 		return validateBuild(order, origin, board)
+	case OrderDisband:
+		// No extra validation needed - validateOrderedUnit already checks that the ordered region
+		// is not empty, and that its unit matches the submitting player's faction
+		return nil
 	default:
 		return fmt.Errorf("order type '%s' is invalid in winter", order.Type)
 	}
 }
 
-func validateWinterMove(order Order, origin *Region, board Board) error {
+func validateWinterMove(
+	order Order,
+	origin *Region,
+	board Board,
+	disbands set.Set[RegionName],
+) error {
 	if order.Destination == "" {
 		return errors.New("winter move orders must have destination")
 	}
@@ -237,6 +262,10 @@ func validateWinterMove(order Order, origin *Region, board Board) error {
 
 	if destination.ControllingFaction != order.Faction {
 		return errors.New("must control destination region in winter move")
+	}
+
+	if !destination.empty() && !disbands.Contains(destination.Name) {
+		return fmt.Errorf("move destination '%s' already has a unit", destination.Name)
 	}
 
 	if origin.Unit.Type == UnitShip && !destination.isCoast(board) {
