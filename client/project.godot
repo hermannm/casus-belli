@@ -1,0 +1,37 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="bfh-client"
+run/main_scene="res://scenes/main-menu.tscn"
+config/features=PackedStringArray("4.1", "C#", "Forward Plus")
+config/icon="res://assets/icon.svg"
+
+[autoload]
+
+MessageDisplay="*res://scenes/components/message-display.tscn"
+ApiClient="*res://src/Api/ApiClient.cs"
+SceneManager="*res://src/SceneManager.cs"
+LobbyState="*res://src/Lobby/LobbyState.cs"
+
+[display]
+
+window/size/viewport_width=1920
+window/size/viewport_height=1080
+window/size/mode=3
+
+[dotnet]
+
+project/assembly_name="bfh-client"
+
+[gui]
+
+theme/custom_font="res://assets/fonts/quantico/quantico-regular.ttf"

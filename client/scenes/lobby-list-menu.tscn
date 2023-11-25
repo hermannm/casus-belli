@@ -1,0 +1,158 @@
+[gd_scene load_steps=7 format=3 uid="uid://css0l6sta847s"]
+
+[ext_resource type="Texture2D" uid="uid://dua6cf3bykx6" path="res://assets/immerse-logo-transparent-background-with-text-under.svg" id="1_hlify"]
+[ext_resource type="FontFile" uid="uid://bjjxiy03d51n0" path="res://assets/fonts/quantico/quantico-bold.ttf" id="2_bhxow"]
+[ext_resource type="Script" path="res://src/UI/LobbyListMenu/LobbyList.cs" id="3_5nwro"]
+[ext_resource type="Script" path="res://src/UI/LobbyListMenu/ServerAddressField.cs" id="4_846ei"]
+[ext_resource type="Script" path="res://src/UI/LobbyListMenu/MainMenuButton.cs" id="5_2wooj"]
+[ext_resource type="Script" path="res://src/UI/LobbyListMenu/ChangeServerButton.cs" id="6_8fxgm"]
+
+[node name="Control" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ColorRect" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.137255, 0.137255, 0.137255, 1)
+
+[node name="TextureRect" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -181.0
+offset_top = -192.0
+grow_horizontal = 0
+grow_vertical = 0
+texture = ExtResource("1_hlify")
+expand_mode = 1
+stretch_mode = 4
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 400
+theme_override_constants/margin_top = 50
+theme_override_constants/margin_right = 400
+theme_override_constants/margin_bottom = 50
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_bhxow")
+theme_override_font_sizes/font_size = 50
+text = "Available lobbies:"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="CenterContainer" type="CenterContainer" parent="MarginContainer/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="LobbyList" type="VBoxContainer" parent="MarginContainer/VBoxContainer/ScrollContainer/CenterContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(1000, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 3
+theme_override_constants/separation = 20
+script = ExtResource("3_5nwro")
+
+[node name="ServerAddressField" type="Label" parent="MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_bhxow")
+theme_override_font_sizes/font_size = 30
+text = "Server: "
+horizontal_alignment = 1
+vertical_alignment = 1
+script = ExtResource("4_846ei")
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 200
+theme_override_constants/margin_right = 200
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="MainMenuButton" type="Button" parent="MarginContainer/VBoxContainer/MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("2_bhxow")
+theme_override_font_sizes/font_size = 30
+text = "Main menu
+"
+script = ExtResource("5_2wooj")
+
+[node name="ChangeServerButton" type="Button" parent="MarginContainer/VBoxContainer/MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("2_bhxow")
+theme_override_font_sizes/font_size = 30
+text = "Change server
+"
+script = ExtResource("6_8fxgm")
+
+[node name="UsernameInputPopup" type="Popup" parent="."]
+unique_name_in_owner = true
+size = Vector2i(345, 276)
+
+[node name="PanelContainer" type="PanelContainer" parent="UsernameInputPopup"]
+offset_right = 345.0
+offset_bottom = 276.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="UsernameInputPopup/PanelContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 50
+theme_override_constants/margin_top = 50
+theme_override_constants/margin_right = 50
+theme_override_constants/margin_bottom = 50
+
+[node name="VBoxContainer" type="VBoxContainer" parent="UsernameInputPopup/PanelContainer/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="Label" type="Label" parent="UsernameInputPopup/PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "Enter username:"
+
+[node name="UsernameInput" type="LineEdit" parent="UsernameInputPopup/PanelContainer/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+alignment = 1
+
+[node name="MarginContainer" type="MarginContainer" parent="UsernameInputPopup/PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="JoinLobbyButton" type="Button" parent="UsernameInputPopup/PanelContainer/MarginContainer/VBoxContainer/MarginContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "JOIN LOBBY"
