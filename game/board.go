@@ -224,7 +224,7 @@ func (board Board) succeedMove(move Order) {
 	// Seas cannot be controlled, and unconquered castles must be besieged first, unless the
 	// attacking unit is a catapult
 	if !destination.Sea &&
-		(!destination.Castle || destination.controlled() || move.unitType == UnitCatapult) {
+		(!destination.Castle || destination.controlled() || move.UnitType == UnitCatapult) {
 		destination.ControllingFaction = move.Faction
 	}
 

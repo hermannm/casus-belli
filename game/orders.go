@@ -13,9 +13,21 @@ import (
 
 // An order submitted by a player for one of their units in a given round.
 type Order struct {
-	Type    OrderType
+	Type OrderType
+
+	// For build orders: the type of unit moved.
+	// For all other orders: the type of unit in the ordered region.
+	UnitType UnitType
+
+	// For move orders that lost a singleplayer battle or tied a multiplayer battle, and have to
+	// fight their way back to their origin region. Must be false when submitting orders.
+	Retreat bool
+
+	// The faction of the player that submitted the order.
 	Faction PlayerFaction
-	Origin  RegionName
+
+	// The region where the order was placed.
+	Origin RegionName
 
 	// For move and support orders: name of destination region.
 	Destination RegionName
@@ -26,18 +38,6 @@ type Order struct {
 
 	// For move orders: name of DangerZone the order tries to pass through, if any.
 	ViaDangerZone DangerZone
-
-	// For build orders: type of unit to build.
-	Build UnitType
-
-	// For move orders that lost a singleplayer battle or tied a multiplayer battle, and have to
-	// fight their way back to their origin region. Must be false when submitting orders.
-	Retreat bool
-
-	// For move orders: the type of unit moved.
-	// Server sets this field on the order, to keep track of units between battles. Since it's
-	// private, it's excluded from messages to clients - they can deduce this from the Origin field.
-	unitType UnitType
 }
 
 type OrderType uint8
@@ -56,7 +56,7 @@ const (
 	// For land unit in unconquered castle region: an order to besiege the castle.
 	OrderBesiege
 
-	// For player-controlled region in winter: an order for the type of unit to build in the region.
+	// For empty player-controlled region in winter: an order to build a unit in the region.
 	OrderBuild
 )
 
@@ -77,12 +77,12 @@ func (order Order) isNone() bool {
 }
 
 func (order Order) unit() Unit {
-	return Unit{Type: order.unitType, Faction: order.Faction}
+	return Unit{Type: order.UnitType, Faction: order.Faction}
 }
 
 // Checks if the order is a move of a horse unit with a second destination.
 func (order Order) hasSecondHorseMove() bool {
-	return order.Type == OrderMove && order.unitType == UnitHorse && order.SecondDestination != ""
+	return order.Type == OrderMove && order.UnitType == UnitHorse && order.SecondDestination != ""
 }
 
 // Returns the order with the original destination set as the origin, and the destination set as the
@@ -159,15 +159,8 @@ func (game *Game) gatherAndValidateOrderSet(faction PlayerFaction, orderChan cha
 			return
 		}
 
-		for i, order := range orders {
-			order.Faction = faction
-
-			origin, ok := game.board[order.Origin]
-			if ok && !origin.empty() && order.Type != OrderBuild {
-				order.unitType = origin.Unit.Type
-			}
-
-			orders[i] = order
+		for i := range orders {
+			orders[i].Faction = faction
 		}
 
 		if err := validateOrders(orders, game.board, game.season); err != nil {
@@ -218,6 +211,10 @@ func validateWinterOrders(orders []Order, board Board) error {
 }
 
 func validateWinterOrder(order Order, origin *Region, board Board) error {
+	if err := validateOrderedUnit(order, origin); err != nil {
+		return err
+	}
+
 	switch order.Type {
 	case OrderMove:
 		return validateWinterMove(order, origin, board)
@@ -233,21 +230,17 @@ func validateWinterMove(order Order, origin *Region, board Board) error {
 		return errors.New("winter move orders must have destination")
 	}
 
-	to, ok := board[order.Destination]
+	destination, ok := board[order.Destination]
 	if !ok {
 		return fmt.Errorf("destination region with name '%s' not found", order.Destination)
 	}
 
-	if to.ControllingFaction != order.Faction {
+	if destination.ControllingFaction != order.Faction {
 		return errors.New("must control destination region in winter move")
 	}
 
-	if origin.Unit.Type == UnitShip && !to.isCoast(board) {
+	if origin.Unit.Type == UnitShip && !destination.isCoast(board) {
 		return errors.New("ship winter move destination must be coast")
-	}
-
-	if !order.Build.isNone() {
-		return errors.New("cannot build unit with move order")
 	}
 
 	return nil
@@ -258,14 +251,13 @@ func validateBuild(order Order, origin *Region, board Board) error {
 		return errors.New("cannot build in region already occupied")
 	}
 
-	switch order.Build {
+	switch order.UnitType {
 	case UnitShip:
 		if !origin.isCoast(board) {
 			return errors.New("ships can only be built on coast")
 		}
-	case UnitFootman:
-	case UnitHorse:
-	case UnitCatapult:
+	case UnitFootman, UnitHorse, UnitCatapult:
+		// Valid
 	default:
 		return errors.New("invalid unit type")
 	}
@@ -299,16 +291,12 @@ func validateNonWinterOrders(orders []Order, board Board) error {
 }
 
 func validateNonWinterOrder(order Order, origin *Region, board Board) error {
-	if !order.Build.isNone() {
-		return errors.New("build orders can only be placed in winter")
+	if err := validateOrderedUnit(order, origin); err != nil {
+		return err
 	}
 
 	if order.Retreat {
 		return errors.New("retreat orders can only be created by the server")
-	}
-
-	if order.Faction != origin.Unit.Faction {
-		return errors.New("must have unit in ordered region")
 	}
 
 	switch order.Type {
@@ -508,6 +496,36 @@ func validateOneOrderPerRegion(orders []Order, board Board) error {
 		}
 
 		orderedRegions.Add(order.Origin)
+	}
+
+	return nil
+}
+
+func validateOrderedUnit(order Order, origin *Region) error {
+	if !order.UnitType.isValid() {
+		return fmt.Errorf("invalid ordered unit type '%d'", order.UnitType)
+	}
+
+	if order.Type != OrderBuild {
+		if origin.empty() {
+			return errors.New("ordered region does not have a unit")
+		}
+
+		if origin.Unit.Faction != order.Faction {
+			return fmt.Errorf(
+				"faction of ordered unit '%s' does not match your faction '%s'",
+				origin.Unit.Faction,
+				order.Faction,
+			)
+		}
+
+		if origin.Unit.Type != order.UnitType {
+			return fmt.Errorf(
+				"order unit type '%v' does not match unit type '%v' in ordered region",
+				order.UnitType,
+				origin.Unit.Type,
+			)
+		}
 	}
 
 	return nil

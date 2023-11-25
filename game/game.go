@@ -119,7 +119,7 @@ func (game *Game) resolveWinterOrders(orders []Order) {
 			region := game.board[order.Origin]
 			region.Unit = Unit{
 				Faction: order.Faction,
-				Type:    order.Build,
+				Type:    order.UnitType,
 			}
 		case OrderMove:
 			origin := game.board[order.Origin]
