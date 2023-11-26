@@ -2,6 +2,8 @@ package game
 
 import (
 	"slices"
+
+	"hermannm.dev/set"
 )
 
 type Board map[RegionName]*Region
@@ -272,6 +274,36 @@ func (board Board) retreatMove(move Order) {
 	if move.hasSecondHorseMove() {
 		board[move.SecondDestination].expectedSecondHorseMoves--
 	}
+}
+
+func (board Board) unitCounts(faction PlayerFaction) (unitCount int, maxUnitCount int) {
+	homeRegionsControlled := 0
+	var nationsControlled set.ArraySet[string]
+	var nationsNotControlled set.ArraySet[string]
+
+	for _, region := range board {
+		if region.Unit.Faction == faction {
+			unitCount++
+		}
+
+		if region.HomeFaction == faction {
+			if region.ControllingFaction == faction {
+				homeRegionsControlled++
+			}
+		} else {
+			if region.ControllingFaction == faction {
+				if !nationsNotControlled.Contains(region.Nation) {
+					nationsControlled.Add(region.Nation)
+				}
+			} else {
+				nationsNotControlled.Add(region.Nation)
+				nationsControlled.Remove(region.Nation)
+			}
+		}
+	}
+
+	maxUnitCount = homeRegionsControlled + nationsControlled.Size()
+	return unitCount, maxUnitCount
 }
 
 func (board Board) copy() Board {

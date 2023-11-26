@@ -209,12 +209,16 @@ func validateWinterOrders(orders []Order, board Board) error {
 			)
 		}
 
-		if err := validateWinterOrder(order, origin, board, &disbands); err != nil {
+		if err := validateWinterOrder(order, origin, board, disbands); err != nil {
 			return wrap.Errorf(err, "invalid winter order in region '%s'", order.Origin)
 		}
 	}
 
 	if err := validateOrderSet(orders, board); err != nil {
+		return wrap.Error(err, "invalid winter order set")
+	}
+
+	if err := validateNumberOfBuilds(orders, board, disbands); err != nil {
 		return wrap.Error(err, "invalid winter order set")
 	}
 
@@ -225,7 +229,7 @@ func validateWinterOrder(
 	order Order,
 	origin *Region,
 	board Board,
-	disbands set.Set[RegionName],
+	disbands set.ArraySet[RegionName],
 ) error {
 	if err := validateOrderedUnit(order, origin); err != nil {
 		return err
@@ -249,7 +253,7 @@ func validateWinterMove(
 	order Order,
 	origin *Region,
 	board Board,
-	disbands set.Set[RegionName],
+	disbands set.ArraySet[RegionName],
 ) error {
 	if order.Destination == "" {
 		return errors.New("winter move orders must have destination")
@@ -289,6 +293,51 @@ func validateBuild(order Order, origin *Region, board Board) error {
 		// Valid
 	default:
 		return errors.New("invalid unit type")
+	}
+
+	return nil
+}
+
+func validateNumberOfBuilds(orders []Order, board Board, disbands set.ArraySet[RegionName]) error {
+	if len(orders) == 0 {
+		return nil
+	}
+	faction := orders[0].Faction
+
+	unitCount, maxUnitCount := board.unitCounts(faction)
+	unitsToBuild := maxUnitCount - unitCount
+
+	buildOrderCount := 0
+	for _, order := range orders {
+		if order.Type == OrderBuild {
+			buildOrderCount++
+		}
+	}
+
+	if unitsToBuild < 0 {
+		unitsToDisband := -unitsToBuild
+		if buildOrderCount != 0 {
+			return fmt.Errorf(
+				"cannot place build orders when you need to disband units (%d units to disband)",
+				unitsToDisband,
+			)
+		}
+		if disbands.Size() != unitsToDisband {
+			return fmt.Errorf(
+				"need to disband %d units, but received %d disband orders",
+				unitsToDisband,
+				disbands.Size(),
+			)
+		}
+		return nil
+	}
+
+	if buildOrderCount > unitsToBuild {
+		return fmt.Errorf(
+			"have %d units to build, but received %d build orders",
+			unitsToBuild,
+			buildOrderCount,
+		)
 	}
 
 	return nil
