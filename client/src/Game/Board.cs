@@ -15,11 +15,6 @@ public class Board
         var origin = Regions[order.Origin];
         origin.Order = order;
 
-        if (order.Type != OrderType.Build)
-        {
-            order.UnitType = origin.Unit!.Type;
-        }
-
         if (order.Type == OrderType.Move)
         {
             Regions[order.Destination!].IncomingMoves.Add(order);
