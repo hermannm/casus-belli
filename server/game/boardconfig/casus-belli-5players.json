@@ -118,7 +118,7 @@
     { "region1": "Arra", "region2": "Amarí" },
     { "region1": "Amarí", "region2": "Pesth" },
     { "region1": "Amarí", "region2": "Calis" },
-    { "region1": "Calis", "region2": "Pesth" },
+    { "region1": "Calis", "region2": "Pesth", "cliffs": true },
     { "region1": "Calis", "region2": "Cymere" },
     { "region1": "Calis", "region2": "Mare Furie" },
     { "region1": "Cymere", "region2": "Pesth" },
