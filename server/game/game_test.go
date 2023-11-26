@@ -239,6 +239,39 @@ func TestNonWinterOrders(t *testing.T) {
 				"Worp":   movedFrom{"Limbol"},
 			},
 		},
+		{
+			name: "UncontestedUnitSwap",
+			units: unitMap{
+				"Dordel": {Type: UnitFootman, Faction: white},
+				"Dalom":  {Type: UnitShip, Faction: white},
+			},
+			orders: []Order{
+				{Type: OrderMove, Origin: "Dordel", Destination: "Dalom"},
+				{Type: OrderMove, Origin: "Dalom", Destination: "Dordel"},
+			},
+			expected: expectedUnits{
+				"Dordel": movedFrom{"Dalom"},
+				"Dalom":  movedFrom{"Dordel"},
+			},
+		},
+		{
+			name: "ContestedUnitSwap",
+			units: unitMap{
+				"Firril": {Type: UnitShip, Faction: green},
+				"Fond":   {Type: UnitHorse, Faction: green},
+				"Gron":   {Type: UnitFootman, Faction: black},
+			},
+			orders: []Order{
+				{Type: OrderMove, Origin: "Firril", Destination: "Fond"},
+				{Type: OrderMove, Origin: "Fond", Destination: "Firril"},
+				{Type: OrderMove, Origin: "Gron", Destination: "Firril"},
+			},
+			expected: expectedUnits{
+				"Fond":   movedFrom{"Firril"},
+				"Firril": movedFrom{"Gron"},
+				"Gron":   empty,
+			},
+		},
 	}
 
 	for _, test := range testCases {
@@ -376,6 +409,7 @@ func newMockGame(
 	season Season,
 ) (*Game, Board) {
 	board := emptyBoard.copy()
+	ordersByFaction := make(map[PlayerFaction][]Order)
 
 	for regionName, unit := range units {
 		region, ok := board[regionName]
@@ -387,6 +421,8 @@ func newMockGame(
 		if !region.Sea {
 			region.ControllingFaction = unit.Faction
 		}
+
+		ordersByFaction[unit.Faction] = nil
 	}
 
 	for regionName, faction := range control {
@@ -396,24 +432,29 @@ func newMockGame(
 		}
 
 		region.ControllingFaction = faction
+
+		ordersByFaction[faction] = nil
 	}
 
-	ordersByFaction := make(map[PlayerFaction][]Order)
 	for i, order := range orders {
 		region, ok := board[order.Origin]
 		if !ok {
 			t.Fatalf("order origin region '%s' not found on board", order.Origin)
 		}
 
-		order.UnitType = region.Unit.Type
-		order.Faction = region.Unit.Faction
+		if order.Type == OrderBuild {
+			order.Faction = region.ControllingFaction
+		} else {
+			order.Faction = region.Unit.Faction
+			order.UnitType = region.Unit.Type
+		}
 		orders[i] = order
 
 		ordersByFaction[order.Faction] = append(ordersByFaction[order.Faction], order)
 	}
 
-	for _, orders := range ordersByFaction {
-		if err := validateOrders(orders, board, season); err != nil {
+	for faction, orders := range ordersByFaction {
+		if err := validateOrders(orders, faction, board, season); err != nil {
 			t.Fatal(wrap.Error(err, "invalid orders in test setup"))
 		}
 	}
