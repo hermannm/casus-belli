@@ -127,48 +127,26 @@ public class Board
         return Regions.Values.All(region => region.Resolved);
     }
 
-    public List<Region>? DiscoverCycle(string firstRegionName, Order? order)
+    public List<Region>? DiscoverCycle(string firstRegionName, Region region)
     {
-        if (order?.Type != OrderType.Move)
+        if (region.Order?.Type != OrderType.Move)
         {
             return null;
         }
 
-        var destination = Regions[order.Destination!];
-        if (destination.Name == firstRegionName)
+        if (region.Order.Destination == firstRegionName)
         {
-            return new List<Region> { destination };
+            return new List<Region> { region };
         }
 
-        var cycle = DiscoverCycle(firstRegionName, destination.Order);
+        var cycle = DiscoverCycle(firstRegionName, Regions[region.Order.Destination!]);
         if (cycle is null)
         {
             return null;
         }
 
-        cycle.Add(destination);
+        cycle.Add(region);
         return cycle;
-    }
-
-    public (Region? region2, bool sameFaction) DiscoverTwoWayCycle(Region region1)
-    {
-        if (region1.Order?.Type != OrderType.Move)
-        {
-            return (null, false);
-        }
-
-        var region2 = Regions[region1.Order.Destination!];
-        if (region2.Order?.Type != OrderType.Move)
-        {
-            return (null, false);
-        }
-
-        if (region1.Name != region2.Order.Destination!)
-        {
-            return (null, false);
-        }
-
-        return (region2, region1.Order.Faction == region2.Order.Faction);
     }
 
     public void PrepareCycleForResolving(List<Region> cycle)

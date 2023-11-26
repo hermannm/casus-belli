@@ -54,29 +54,26 @@ public record Region
     /// </summary>
     public int SiegeCount { get; set; } = 0;
 
-    [JsonIgnore]
-    public Order? Order { get; set; } = null;
+    [JsonIgnore] public Order? Order { get; set; } = null;
+    [JsonIgnore] public List<Order> IncomingMoves { get; set; } = new();
+    [JsonIgnore] public List<Order> IncomingSecondHorseMoves { get; set; } = new();
+    [JsonIgnore] public int ExpectedSecondHorseMoves { get; set; } = 0;
+    [JsonIgnore] public bool ResolvingSecondHorseMoves { get; set; } = false;
+    [JsonIgnore] public bool Resolved { get; set; } = false;
+    [JsonIgnore] public bool PartOfCycle { get; set; } = false;
+    [JsonIgnore] public Order? UnresolvedRetreat { get; set; } = null;
 
-    [JsonIgnore]
-    public List<Order> IncomingMoves { get; set; } = new();
-
-    [JsonIgnore]
-    public int ExpectedSecondHorseMoves { get; set; } = 0;
-
-    [JsonIgnore]
-    public List<Order> IncomingSecondHorseMoves { get; set; } = new();
-
-    [JsonIgnore]
-    public bool Resolved { get; set; } = false;
-
-    [JsonIgnore]
-    public Order? UnresolvedRetreat { get; set; } = null;
-
-    /// <summary>
-    /// Whether the region is part of a cycle of move orders.
-    /// </summary>
-    [JsonIgnore]
-    public bool PartOfCycle { get; set; } = false;
+    public void ResetResolvingState()
+    {
+        Order = null;
+        IncomingMoves = new List<Order>();
+        IncomingSecondHorseMoves = new List<Order>();
+        ExpectedSecondHorseMoves = 0;
+        ResolvingSecondHorseMoves = false;
+        Resolved = false;
+        PartOfCycle = false;
+        UnresolvedRetreat = null;
+    }
 
     public bool Attacked()
     {

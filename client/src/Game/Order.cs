@@ -8,10 +8,26 @@ namespace CasusBelli.Client.Game;
 public record Order
 {
     public required OrderType Type { get; set; }
+
+    /// <summary>
+    /// For build orders: the type of unit moved.
+    /// For all other orders: the type of unit in the ordered region.
+    /// </summary>
+    public required UnitType UnitType { get; set; }
+
+    /// <summary>
+    /// For move orders that lost a singleplayer battle or tied a multiplayer battle, and have to
+    /// fight their way back to their origin region. Must be false when submitting orders.
+    /// </summary>
+    public bool Retreat { get; set; } = false;
+
+    /// <summary>
+    /// The faction of the player that submitted the order.
+    /// </summary>
     public required string Faction { get; set; }
 
     /// <summary>
-    /// Name of the region where the order is placed.
+    /// The region where the order was placed.
     /// </summary>
     public required string Origin { get; set; }
 
@@ -30,21 +46,6 @@ public record Order
     /// For move orders: name of DangerZone the order tries to pass through, if any.
     /// </summary>
     public string? ViaDangerZone { get; set; }
-
-    /// <summary>
-    /// For build orders: type of unit to build.
-    /// Can only be of the constants defined in <see cref="UnitType"/>.
-    /// </summary>
-    public string? Build { get; set; }
-
-    /// <summary>
-    /// For move orders that lost a singleplayer battle or tied a multiplayer battle, and have to
-    /// fight their way back to their origin region. Must be false when submitting orders.
-    /// </summary>
-    public bool Retreat { get; set; } = false;
-
-    [JsonIgnore]
-    public UnitType UnitType = 0; // Initialized when orders are received.
 
     public Unit Unit()
     {
@@ -103,5 +104,11 @@ public enum OrderType
     /// <summary>
     /// For player-controlled area in winter: an order for what type of unit to build in the area.
     /// </summary>
-    Build
+    Build,
+
+    /// <summary>
+    /// For region with a player's own unit, in winter: an order to disband the unit, when their
+    /// current number of units exceeds their max number of units.
+    /// </summary>
+    Disband
 }
