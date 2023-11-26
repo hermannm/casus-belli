@@ -167,7 +167,7 @@ func (game *Game) gatherAndValidateOrderSet(faction PlayerFaction, orderChan cha
 			orders[i].Faction = faction
 		}
 
-		if err := validateOrders(orders, game.board, game.season); err != nil {
+		if err := validateOrders(orders, faction, game.board, game.season); err != nil {
 			game.log.Error(err)
 			game.messenger.SendError(faction, err)
 			continue
@@ -183,17 +183,17 @@ func (game *Game) gatherAndValidateOrderSet(faction PlayerFaction, orderChan cha
 
 // Checks if the given set of orders are valid for the state of the board in the given season.
 // Assumes that all orders are from the same faction.
-func validateOrders(orders []Order, board Board, season Season) error {
+func validateOrders(orders []Order, faction PlayerFaction, board Board, season Season) error {
 	var err error
 	if season == SeasonWinter {
-		err = validateWinterOrders(orders, board)
+		err = validateWinterOrders(orders, faction, board)
 	} else {
 		err = validateNonWinterOrders(orders, board)
 	}
 	return err
 }
 
-func validateWinterOrders(orders []Order, board Board) error {
+func validateWinterOrders(orders []Order, faction PlayerFaction, board Board) error {
 	var disbands set.ArraySet[RegionName]
 	for _, order := range orders {
 		if order.Type == OrderDisband {
@@ -218,7 +218,7 @@ func validateWinterOrders(orders []Order, board Board) error {
 		return wrap.Error(err, "invalid winter order set")
 	}
 
-	if err := validateNumberOfBuilds(orders, board, disbands); err != nil {
+	if err := validateNumberOfBuilds(orders, faction, board, disbands); err != nil {
 		return wrap.Error(err, "invalid winter order set")
 	}
 
@@ -298,12 +298,12 @@ func validateBuild(order Order, origin *Region, board Board) error {
 	return nil
 }
 
-func validateNumberOfBuilds(orders []Order, board Board, disbands set.ArraySet[RegionName]) error {
-	if len(orders) == 0 {
-		return nil
-	}
-	faction := orders[0].Faction
-
+func validateNumberOfBuilds(
+	orders []Order,
+	faction PlayerFaction,
+	board Board,
+	disbands set.ArraySet[RegionName],
+) error {
 	unitCount, maxUnitCount := board.unitCounts(faction)
 	unitsToBuild := maxUnitCount - unitCount
 
