@@ -113,26 +113,42 @@ func (game *Game) nextRound() {
 }
 
 func (game *Game) resolveWinterOrders(orders []Order) {
-	// Do disbands first, as moves may want to move in after
-	for _, order := range orders {
-		if order.Type == OrderDisband {
-			game.board[order.Origin].removeUnit()
-		}
-	}
+	game.board.placeOrders(orders)
 
-	for _, order := range orders {
-		switch order.Type {
-		case OrderBuild:
-			game.board[order.Origin].Unit = Unit{
-				Faction: order.Faction,
-				Type:    order.UnitType,
+	allResolved := false
+	for !allResolved {
+		allResolved = true
+
+		for _, region := range game.board {
+			switch region.order.Type {
+			case OrderBuild:
+				region.Unit = Unit{
+					Faction: region.order.Faction,
+					Type:    region.order.UnitType,
+				}
+				region.order = Order{}
+			case OrderDisband:
+				region.removeUnit()
+				region.order = Order{}
 			}
-		case OrderMove:
-			origin := game.board[order.Origin]
-			destination := game.board[order.Destination]
 
-			destination.Unit = origin.Unit
-			origin.removeUnit()
+			if !region.partOfCycle {
+				if cycle := game.board.discoverCycle(region.Name, region); cycle != nil {
+					game.board.prepareCycleForResolving(cycle)
+				}
+			}
+
+			if !region.order.isNone() {
+				allResolved = false
+				continue
+			}
+
+			if len(region.incomingMoves) != 0 {
+				move := region.incomingMoves[0] // Max 1 incoming move in winter
+				region.Unit = move.unit()
+				game.board[move.Origin].removeUnit()
+				game.board.removeOrder(move)
+			}
 		}
 	}
 }
@@ -209,7 +225,7 @@ func (game *Game) resolveRegionMoves(region *Region) (waiting bool) {
 
 	// Finds out if the region is part of a cycle (moves in a circle)
 	if !region.partOfCycle {
-		if cycle := game.board.discoverCycle(region.Name, region.order); cycle != nil {
+		if cycle := game.board.discoverCycle(region.Name, region); cycle != nil {
 			if len(cycle) == 2 && cycle[0].order.Faction != cycle[1].order.Faction {
 				// If two opposing units move against each other, they battle in the middle
 				game.calculateBorderBattle(cycle[0], cycle[1])
