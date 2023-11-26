@@ -283,6 +283,114 @@ func TestNonWinterOrders(t *testing.T) {
 	}
 }
 
+func TestWinterOrders(t *testing.T) {
+	testCases := []struct {
+		name     string
+		units    unitMap
+		control  controlMap
+		orders   []Order
+		expected expectedUnits
+	}{
+		{
+			name: "Build",
+			units: unitMap{
+				"Calis": {Type: UnitFootman, Faction: yellow},
+			},
+			control: controlMap{
+				"Cymere": yellow,
+			},
+			orders: []Order{
+				{Type: OrderBuild, Origin: "Cymere", UnitType: UnitShip},
+				{Type: OrderBuild, Origin: "Pesth", UnitType: UnitHorse},
+			},
+			expected: expectedUnits{
+				"Cymere": Unit{Type: UnitShip, Faction: yellow},
+				"Pesth":  Unit{Type: UnitHorse, Faction: yellow},
+			},
+		},
+		{
+			name: "Disband",
+			units: unitMap{
+				"Monté":  {Type: UnitFootman, Faction: red},
+				"Brodo":  {Type: UnitFootman, Faction: red},
+				"Bassas": {Type: UnitFootman, Faction: red},
+				"Bom":    {Type: UnitHorse, Faction: yellow},
+			},
+			orders: []Order{
+				{Type: OrderDisband, Origin: "Brodo"},
+			},
+			expected: expectedUnits{
+				"Brodo":  empty,
+				"Monté":  stayed,
+				"Bassas": stayed,
+				"Bom":    stayed,
+			},
+		},
+		{
+			name: "WinterMove",
+			units: unitMap{
+				"Worp":  {Type: UnitFootman, Faction: green},
+				"Winde": {Type: UnitShip, Faction: green},
+			},
+			control: controlMap{
+				"Limbol": green,
+				"Lomone": green,
+			},
+			orders: []Order{
+				{Type: OrderMove, Origin: "Worp", Destination: "Lomone"},
+				{Type: OrderMove, Origin: "Winde", Destination: "Worp"},
+			},
+			expected: expectedUnits{
+				"Lomone": movedFrom{"Worp"},
+				"Worp":   movedFrom{"Winde"},
+				"Winde":  empty,
+			},
+		},
+		{
+			name: "WinterMoveAfterDisband",
+			units: unitMap{
+				"Erren":  {Type: UnitShip, Faction: black},
+				"Samoje": {Type: UnitFootman, Faction: black},
+				"Emman":  {Type: UnitHorse, Faction: white},
+			},
+			orders: []Order{
+				{Type: OrderDisband, Origin: "Erren"},
+				{Type: OrderMove, Origin: "Samoje", Destination: "Erren"},
+			},
+			expected: expectedUnits{
+				"Erren":  movedFrom{"Samoje"},
+				"Samoje": empty,
+			},
+		},
+		{
+			name: "WinterMoveCycle",
+			units: unitMap{
+				"Calis":  {Type: UnitShip, Faction: yellow},
+				"Cymere": {Type: UnitHorse, Faction: yellow},
+				"Pesth":  {Type: UnitFootman, Faction: yellow},
+			},
+			orders: []Order{
+				{Type: OrderMove, Origin: "Calis", Destination: "Cymere"},
+				{Type: OrderMove, Origin: "Cymere", Destination: "Pesth"},
+				{Type: OrderMove, Origin: "Pesth", Destination: "Calis"},
+			},
+			expected: expectedUnits{
+				"Calis":  movedFrom{"Pesth"},
+				"Cymere": movedFrom{"Calis"},
+				"Pesth":  movedFrom{"Cymere"},
+			},
+		},
+	}
+
+	for _, test := range testCases {
+		t.Run(test.name, func(t *testing.T) {
+			game, board := newMockGame(t, test.units, test.control, test.orders, SeasonWinter)
+			game.resolveWinterOrders(test.orders)
+			test.expected.check(t, board, test.units)
+		})
+	}
+}
+
 func BenchmarkBoardResolve(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		b.StopTimer()
