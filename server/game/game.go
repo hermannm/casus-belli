@@ -209,19 +209,13 @@ func (game *Game) resolveRegionMoves(region *Region) (waiting bool) {
 
 	// Finds out if the region is part of a cycle (moves in a circle)
 	if !region.partOfCycle {
-		isTwoWayCycle, region2, sameFaction := game.board.discoverTwoWayCycle(region)
-		if isTwoWayCycle {
-			if sameFaction {
-				game.board.prepareCycleForResolving([]*Region{region, region2})
-			} else {
-				// If two opposing units move against each other, they battle in the middle
-				game.calculateBorderBattle(region, region2)
-			}
-			return false
-		}
-
 		if cycle := game.board.discoverCycle(region.Name, region.order); cycle != nil {
-			game.board.prepareCycleForResolving(cycle)
+			if len(cycle) == 2 && cycle[0].order.Faction != cycle[1].order.Faction {
+				// If two opposing units move against each other, they battle in the middle
+				game.calculateBorderBattle(cycle[0], cycle[1])
+			} else {
+				game.board.prepareCycleForResolving(cycle)
+			}
 			return false
 		}
 	}
