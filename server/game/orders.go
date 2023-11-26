@@ -195,9 +195,13 @@ func validateOrders(orders []Order, faction PlayerFaction, board Board, season S
 
 func validateWinterOrders(orders []Order, faction PlayerFaction, board Board) error {
 	var disbands set.ArraySet[RegionName]
+	var outgoingMoves set.ArraySet[RegionName]
 	for _, order := range orders {
-		if order.Type == OrderDisband {
+		switch order.Type {
+		case OrderDisband:
 			disbands.Add(order.Origin)
+		case OrderMove:
+			outgoingMoves.Add(order.Origin)
 		}
 	}
 
@@ -209,7 +213,7 @@ func validateWinterOrders(orders []Order, faction PlayerFaction, board Board) er
 			)
 		}
 
-		if err := validateWinterOrder(order, origin, board, disbands); err != nil {
+		if err := validateWinterOrder(order, origin, board, disbands, outgoingMoves); err != nil {
 			return wrap.Errorf(err, "invalid winter order in region '%s'", order.Origin)
 		}
 	}
@@ -230,6 +234,7 @@ func validateWinterOrder(
 	origin *Region,
 	board Board,
 	disbands set.ArraySet[RegionName],
+	outgoingMoves set.ArraySet[RegionName],
 ) error {
 	if err := validateOrderedUnit(order, origin); err != nil {
 		return err
@@ -237,7 +242,7 @@ func validateWinterOrder(
 
 	switch order.Type {
 	case OrderMove:
-		return validateWinterMove(order, origin, board, disbands)
+		return validateWinterMove(order, origin, board, disbands, outgoingMoves)
 	case OrderBuild:
 		return validateBuild(order, origin, board)
 	case OrderDisband:
@@ -254,6 +259,7 @@ func validateWinterMove(
 	origin *Region,
 	board Board,
 	disbands set.ArraySet[RegionName],
+	outgoingMoves set.ArraySet[RegionName],
 ) error {
 	if order.Destination == "" {
 		return errors.New("winter move orders must have destination")
@@ -268,7 +274,9 @@ func validateWinterMove(
 		return errors.New("must control destination region in winter move")
 	}
 
-	if !destination.empty() && !disbands.Contains(destination.Name) {
+	if !destination.empty() &&
+		!disbands.Contains(destination.Name) &&
+		!outgoingMoves.Contains(destination.Name) {
 		return fmt.Errorf("move destination '%s' already has a unit", destination.Name)
 	}
 
