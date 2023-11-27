@@ -44,7 +44,7 @@ type Messenger interface {
 		supporting RegionName,
 		embattled RegionName,
 	) (supported PlayerFaction, err error)
-	SendBattleResults(battles ...Battle) error
+	SendBattleResults(battle Battle) error
 	SendDangerZoneCrossings(crossings []DangerZoneCrossing) error
 	SendWinner(winner PlayerFaction) error
 	ClearMessages()

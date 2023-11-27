@@ -72,7 +72,7 @@ type OrdersConfirmationMessage struct {
 
 // Message sent from server to all clients when a battle result is calculated.
 type BattleResultsMessage struct {
-	Battles []game.Battle
+	Battle game.Battle
 }
 
 // Message sent from server to all clients when orders have to cross danger zones to succeed.

@@ -119,7 +119,7 @@ public partial class OrdersConfirmationMessage : GodotObject, IReceivableMessage
 /// </summary>
 public partial class BattleResultsMessage : GodotObject, IReceivableMessage
 {
-    public required List<Battle> Battles { get; set; }
+    public required Battle Battle { get; set; }
 }
 
 /// <summary>

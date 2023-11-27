@@ -669,7 +669,7 @@ func (MockMessenger) AwaitSupport(
 	return "", nil
 }
 
-func (MockMessenger) SendBattleResults(battles ...Battle) error {
+func (MockMessenger) SendBattleResults(battle Battle) error {
 	return nil
 }
 
