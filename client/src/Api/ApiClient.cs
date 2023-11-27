@@ -5,7 +5,6 @@ using System.Net.Http.Json;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
-using CasusBelli.Client.Api.Messages;
 using CasusBelli.Client.UI;
 using Godot;
 using HttpClient = System.Net.Http.HttpClient;
@@ -32,7 +31,7 @@ public partial class ApiClient : Node
     private readonly MessageSender _messageSender = new();
     private readonly MessageReceiver _messageReceiver = new();
     private readonly Dictionary<MessageTag, StringName> _messageSignalNames =
-        MessageDictionary.ReceivableMessageTags.Keys.ToDictionary(
+        MessageTagMap.ReceivableMessageTags.Keys.ToDictionary(
             tag => tag,
             tag => new StringName(tag + "MessageReceived")
         );
@@ -114,7 +113,7 @@ public partial class ApiClient : Node
         where TMessage : GodotObject, IReceivableMessage
     {
         if (
-            !MessageDictionary.ReceivableMessageTypes.TryGetValue(
+            !MessageTagMap.ReceivableMessageTypes.TryGetValue(
                 typeof(TMessage),
                 out var messageTag
             )

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace CasusBelli.Client.Api.Messages;
+namespace CasusBelli.Client.Api;
 
 public record LobbyInfo
 {

@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using CasusBelli.Client.Game;
 using Godot;
 
-namespace CasusBelli.Client.Api.Messages;
+namespace CasusBelli.Client.Api;
 
 /// <summary>
 /// Messages sent between the game client and server look like this:

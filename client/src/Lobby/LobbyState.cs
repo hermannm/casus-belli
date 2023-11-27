@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using CasusBelli.Client.Api;
-using CasusBelli.Client.Api.Messages;
 using Godot;
 
 namespace CasusBelli.Client.Lobby;

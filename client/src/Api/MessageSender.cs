@@ -5,7 +5,6 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
-using CasusBelli.Client.Api.Messages;
 using CasusBelli.Client.UI;
 using Godot;
 
@@ -67,7 +66,7 @@ internal class MessageSender
     private static byte[] SerializeMessage(GodotObject message)
     {
         if (
-            !MessageDictionary.SendableMessageTypes.TryGetValue(
+            !MessageTagMap.SendableMessageTypes.TryGetValue(
                 message.GetType(),
                 out var messageTag
             )

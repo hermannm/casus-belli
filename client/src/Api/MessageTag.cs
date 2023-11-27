@@ -2,9 +2,28 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace CasusBelli.Client.Api.Messages;
+namespace CasusBelli.Client.Api;
 
-public static class MessageDictionary
+public enum MessageTag
+{
+    Error = 1,
+    PlayerStatus,
+    LobbyJoined,
+    SelectFaction,
+    StartGame,
+    GameStarted,
+    SupportRequest,
+    OrderRequest,
+    OrdersReceived,
+    OrdersConfirmation,
+    BattleResults,
+    DangerZoneCrossings,
+    Winner,
+    SubmitOrders,
+    GiveSupport
+}
+
+public static class MessageTagMap
 {
     public static readonly Dictionary<MessageTag, Type> ReceivableMessageTags =
         new()

@@ -6,7 +6,6 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using CasusBelli.Client.Api.Messages;
 using CasusBelli.Client.UI;
 using Godot;
 
@@ -91,7 +90,7 @@ internal class MessageReceiver
         var json = JsonDocument.Parse(messageString).RootElement;
         var messageTag = json.GetProperty("Tag").Deserialize<MessageTag>();
 
-        if (!MessageDictionary.ReceivableMessageTags.TryGetValue(messageTag, out var messageType))
+        if (!MessageTagMap.ReceivableMessageTags.TryGetValue(messageTag, out var messageType))
         {
             throw new Exception($"Unrecognized message type '{messageTag}' received from server");
         }
