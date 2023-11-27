@@ -1,8 +1,10 @@
 package lobby
 
 import (
+	"encoding/json"
 	"errors"
 
+	"github.com/gorilla/websocket"
 	"hermannm.dev/casus-belli/server/game"
 	"hermannm.dev/wrap"
 )
@@ -37,13 +39,42 @@ func (lobby *Lobby) sendMessage(to game.PlayerFaction, message Message) error {
 	return player.sendMessage(message)
 }
 
+func (player *Player) sendPreparedMessage(
+	tag MessageTag,
+	message *websocket.PreparedMessage,
+) error {
+	player.lock.Lock()
+	defer player.lock.Unlock()
+
+	if err := player.socket.WritePreparedMessage(message); err != nil {
+		return wrap.Errorf(
+			err,
+			"failed to send prepared message of type '%s' to player '%s'",
+			tag,
+			player.username,
+		)
+	}
+
+	return nil
+}
+
 func (lobby *Lobby) sendMessageToAll(message Message) error {
+	messageJSON, err := json.Marshal(message)
+	if err != nil {
+		return wrap.Errorf(err, "failed to serialize message of type '%s'", message.Tag)
+	}
+
+	preparedMessage, err := websocket.NewPreparedMessage(websocket.TextMessage, messageJSON)
+	if err != nil {
+		return wrap.Errorf(err, "failed to prepare websocket for message of type '%s'", message.Tag)
+	}
+
 	lobby.lock.RLock()
 	defer lobby.lock.RUnlock()
 
 	var errs []error
 	for _, player := range lobby.players {
-		if err := player.sendMessage(message); err != nil {
+		if err := player.sendPreparedMessage(message.Tag, preparedMessage); err != nil {
 			errs = append(errs, err)
 		}
 	}
