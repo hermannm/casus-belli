@@ -242,6 +242,7 @@ func (board Board) succeedMove(move Order) {
 
 func (board Board) killMove(move Order) {
 	board.removeOrder(move)
+
 	if !move.Retreat {
 		board[move.Origin].removeUnit()
 
@@ -254,22 +255,24 @@ func (board Board) killMove(move Order) {
 func (board Board) retreatMove(move Order) {
 	board.removeOrder(move)
 
-	origin := board[move.Origin]
-	if !origin.attacked() {
-		origin.Unit = move.unit()
-	} else if origin.partOfCycle {
-		origin.unresolvedRetreat = move
-	} else if !move.Retreat {
-		move.Retreat = true
-		move.Origin, move.Destination = move.Destination, move.Origin
-		move.SecondDestination = ""
-		origin.incomingMoves = append(origin.incomingMoves, move)
-		origin.order = Order{}
-		origin.removeUnit()
-	}
+	if !move.Retreat {
+		origin := board[move.Origin]
+		if !origin.attacked() {
+			origin.Unit = move.unit()
+		} else if origin.partOfCycle {
+			origin.unresolvedRetreat = move
+		} else if !move.Retreat {
+			move.Retreat = true
+			move.Origin, move.Destination = move.Destination, move.Origin
+			move.SecondDestination = ""
+			origin.incomingMoves = append(origin.incomingMoves, move)
+			origin.order = Order{}
+			origin.removeUnit()
+		}
 
-	if move.hasKnightMove() {
-		board[move.SecondDestination].expectedKnightMoves--
+		if move.hasKnightMove() {
+			board[move.SecondDestination].expectedKnightMoves--
+		}
 	}
 }
 

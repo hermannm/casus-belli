@@ -87,33 +87,36 @@ public class Board
     {
         RemoveOrder(move);
 
-        var origin = Regions[move.Origin];
-        if (!origin.Attacked())
+        if (!move.Retreat)
         {
-            origin.Unit = move.Unit();
-        }
-        else if (origin.PartOfCycle)
-        {
-            origin.UnresolvedRetreat = move;
-        }
-        else
-        {
-            var retreat = move with
+            var origin = Regions[move.Origin];
+            if (!origin.Attacked())
             {
-                Retreat = true,
-                Origin = move.Destination!,
-                Destination = move.Origin,
-                SecondDestination = null
-            };
+                origin.Unit = move.Unit();
+            }
+            else if (origin.PartOfCycle)
+            {
+                origin.UnresolvedRetreat = move;
+            }
+            else
+            {
+                var retreat = move with
+                {
+                    Retreat = true,
+                    Origin = move.Destination!,
+                    Destination = move.Origin,
+                    SecondDestination = null
+                };
 
-            origin.IncomingMoves.Add(retreat);
-            origin.Order = null;
-            origin.RemoveUnit();
-        }
+                origin.IncomingMoves.Add(retreat);
+                origin.Order = null;
+                origin.RemoveUnit();
+            }
 
-        if (move.HasKnightMove())
-        {
-            Regions[move.SecondDestination!].ExpectedKnightMoves--;
+            if (move.HasKnightMove())
+            {
+                Regions[move.SecondDestination!].ExpectedKnightMoves--;
+            }
         }
     }
 
