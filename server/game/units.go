@@ -19,7 +19,7 @@ const (
 	UnitFootman UnitType = iota + 1
 
 	// A land unit that moves 2 regions at a time.
-	UnitHorse
+	UnitKnight
 
 	// A unit that can move into sea regions and coastal regions.
 	UnitShip
@@ -31,7 +31,7 @@ const (
 
 var unitNames = enumnames.NewMap(map[UnitType]string{
 	UnitFootman:  "Footman",
-	UnitHorse:    "Horse",
+	UnitKnight:   "Knight",
 	UnitShip:     "Ship",
 	UnitCatapult: "Catapult",
 })

@@ -56,9 +56,9 @@ public record Region
 
     [JsonIgnore] public Order? Order { get; set; } = null;
     [JsonIgnore] public List<Order> IncomingMoves { get; set; } = new();
-    [JsonIgnore] public List<Order> IncomingSecondHorseMoves { get; set; } = new();
-    [JsonIgnore] public int ExpectedSecondHorseMoves { get; set; } = 0;
-    [JsonIgnore] public bool ResolvingSecondHorseMoves { get; set; } = false;
+    [JsonIgnore] public List<Order> IncomingKnightMoves { get; set; } = new();
+    [JsonIgnore] public int ExpectedKnightMoves { get; set; } = 0;
+    [JsonIgnore] public bool ResolvingKnightMoves { get; set; } = false;
     [JsonIgnore] public bool Resolved { get; set; } = false;
     [JsonIgnore] public bool PartOfCycle { get; set; } = false;
     [JsonIgnore] public Order? UnresolvedRetreat { get; set; } = null;
@@ -67,9 +67,9 @@ public record Region
     {
         Order = null;
         IncomingMoves = new List<Order>();
-        IncomingSecondHorseMoves = new List<Order>();
-        ExpectedSecondHorseMoves = 0;
-        ResolvingSecondHorseMoves = false;
+        IncomingKnightMoves = new List<Order>();
+        ExpectedKnightMoves = 0;
+        ResolvingKnightMoves = false;
         Resolved = false;
         PartOfCycle = false;
         UnresolvedRetreat = null;

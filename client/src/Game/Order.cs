@@ -37,7 +37,7 @@ public record Order
     public string? Destination { get; set; }
 
     /// <summary>
-    /// For move orders with horse units: optional name of second destination region to move to if
+    /// For move orders with knight units: optional name of second destination region to move to if
     /// the first destination was reached.
     /// </summary>
     public string? SecondDestination { get; set; }
@@ -52,16 +52,16 @@ public record Order
         return new Unit { Faction = Faction, Type = UnitType };
     }
 
-    public bool HasSecondHorseMove()
+    public bool HasKnightMove()
     {
         return Type == OrderType.Move
-            && UnitType == UnitType.Horse
+            && UnitType == UnitType.Knight
             && SecondDestination is not null;
     }
 
-    public Order? TryGetSecondHorseMove()
+    public Order? TryGetKnightMove()
     {
-        if (!HasSecondHorseMove())
+        if (!HasKnightMove())
         {
             return null;
         }

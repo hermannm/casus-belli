@@ -34,7 +34,7 @@ func TestNonWinterOrders(t *testing.T) {
 		{
 			name: "SingleplayerBattle",
 			units: unitMap{
-				"Furie": {Type: UnitHorse, Faction: black},
+				"Furie": {Type: UnitKnight, Faction: black},
 			},
 			orders: []Order{
 				{Type: OrderMove, Origin: "Furie", Destination: "Firril"},
@@ -47,7 +47,7 @@ func TestNonWinterOrders(t *testing.T) {
 		{
 			name: "SingleplayerBattleWithSupport",
 			units: unitMap{
-				"Furie":      {Type: UnitHorse, Faction: black},
+				"Furie":      {Type: UnitKnight, Faction: black},
 				"Mare Ovond": {Type: UnitShip, Faction: black},
 			},
 			orders: []Order{
@@ -63,7 +63,7 @@ func TestNonWinterOrders(t *testing.T) {
 			name: "MultiplayerBattleNoDefender",
 			units: unitMap{
 				"Gron":  {Type: UnitFootman, Faction: white},
-				"Gewel": {Type: UnitHorse, Faction: black},
+				"Gewel": {Type: UnitKnight, Faction: black},
 			},
 			control: controlMap{
 				"Gnade": black,
@@ -98,7 +98,7 @@ func TestNonWinterOrders(t *testing.T) {
 			name: "BorderBattle",
 			units: unitMap{
 				"Tusser": {Type: UnitFootman, Faction: white},
-				"Tige":   {Type: UnitHorse, Faction: black},
+				"Tige":   {Type: UnitKnight, Faction: black},
 			},
 			orders: []Order{
 				{Type: OrderMove, Origin: "Tusser", Destination: "Tige"},
@@ -110,9 +110,9 @@ func TestNonWinterOrders(t *testing.T) {
 			},
 		},
 		{
-			name: "UncontestedHorseMove",
+			name: "UncontestedKnightMove",
 			units: unitMap{
-				"Lomone": {Type: UnitHorse, Faction: red},
+				"Lomone": {Type: UnitKnight, Faction: red},
 			},
 			control: controlMap{
 				"Limbol": red,
@@ -133,12 +133,12 @@ func TestNonWinterOrders(t *testing.T) {
 			},
 		},
 		{
-			name: "HorseMovesCuttingSupport",
+			name: "KnightMovesCuttingSupport",
 			units: unitMap{
-				"Worp":      {Type: UnitHorse, Faction: green},
-				"Winde":     {Type: UnitHorse, Faction: green},
-				"Lomone":    {Type: UnitHorse, Faction: red},
-				"Lusía":     {Type: UnitHorse, Faction: red},
+				"Worp":      {Type: UnitKnight, Faction: green},
+				"Winde":     {Type: UnitKnight, Faction: green},
+				"Lomone":    {Type: UnitKnight, Faction: red},
+				"Lusía":     {Type: UnitKnight, Faction: red},
 				"Mare Illa": {Type: UnitShip, Faction: green},
 				"Mare Duna": {Type: UnitShip, Faction: green},
 				"Morone":    {Type: UnitFootman, Faction: green},
@@ -258,7 +258,7 @@ func TestNonWinterOrders(t *testing.T) {
 			name: "ContestedUnitSwap",
 			units: unitMap{
 				"Firril": {Type: UnitShip, Faction: green},
-				"Fond":   {Type: UnitHorse, Faction: green},
+				"Fond":   {Type: UnitKnight, Faction: green},
 				"Gron":   {Type: UnitFootman, Faction: black},
 			},
 			orders: []Order{
@@ -301,11 +301,11 @@ func TestWinterOrders(t *testing.T) {
 			},
 			orders: []Order{
 				{Type: OrderBuild, Origin: "Cymere", UnitType: UnitShip},
-				{Type: OrderBuild, Origin: "Pesth", UnitType: UnitHorse},
+				{Type: OrderBuild, Origin: "Pesth", UnitType: UnitKnight},
 			},
 			expected: expectedUnits{
 				"Cymere": Unit{Type: UnitShip, Faction: yellow},
-				"Pesth":  Unit{Type: UnitHorse, Faction: yellow},
+				"Pesth":  Unit{Type: UnitKnight, Faction: yellow},
 			},
 		},
 		{
@@ -314,7 +314,7 @@ func TestWinterOrders(t *testing.T) {
 				"Monté":  {Type: UnitFootman, Faction: red},
 				"Brodo":  {Type: UnitFootman, Faction: red},
 				"Bassas": {Type: UnitFootman, Faction: red},
-				"Bom":    {Type: UnitHorse, Faction: yellow},
+				"Bom":    {Type: UnitKnight, Faction: yellow},
 			},
 			orders: []Order{
 				{Type: OrderDisband, Origin: "Brodo"},
@@ -351,7 +351,7 @@ func TestWinterOrders(t *testing.T) {
 			units: unitMap{
 				"Erren":  {Type: UnitShip, Faction: black},
 				"Samoje": {Type: UnitFootman, Faction: black},
-				"Emman":  {Type: UnitHorse, Faction: white},
+				"Emman":  {Type: UnitKnight, Faction: white},
 			},
 			orders: []Order{
 				{Type: OrderDisband, Origin: "Erren"},
@@ -366,7 +366,7 @@ func TestWinterOrders(t *testing.T) {
 			name: "WinterMoveCycle",
 			units: unitMap{
 				"Calis":  {Type: UnitShip, Faction: yellow},
-				"Cymere": {Type: UnitHorse, Faction: yellow},
+				"Cymere": {Type: UnitKnight, Faction: yellow},
 				"Pesth":  {Type: UnitFootman, Faction: yellow},
 			},
 			orders: []Order{
@@ -404,17 +404,17 @@ func benchmarkSetup(b *testing.B) (*Game, []Order) {
 	units := unitMap{
 		"Emman": {Type: UnitFootman, Faction: white},
 
-		"Furie": {Type: UnitHorse, Faction: black},
+		"Furie": {Type: UnitKnight, Faction: black},
 
 		"Gron":  {Type: UnitFootman, Faction: white},
-		"Gewel": {Type: UnitHorse, Faction: black},
+		"Gewel": {Type: UnitKnight, Faction: black},
 
 		"Lomone": {Type: UnitFootman, Faction: green},
 		"Lusía":  {Type: UnitFootman, Faction: red},
 		"Brodo":  {Type: UnitFootman, Faction: red},
 
 		"Tusser": {Type: UnitFootman, Faction: white},
-		"Tige":   {Type: UnitHorse, Faction: black},
+		"Tige":   {Type: UnitKnight, Faction: black},
 
 		"Tond": {Type: UnitFootman, Faction: green},
 

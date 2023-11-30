@@ -47,18 +47,18 @@ type Region struct {
 // Internal resolving state for a region. Resets to its zero value every round.
 // Since all fields are private, they're not included in JSON messages.
 type regionResolvingState struct {
-	order                     Order
-	incomingMoves             []Order
-	incomingSupports          []Order
-	incomingSecondHorseMoves  []Order
-	expectedSecondHorseMoves  int
-	resolving                 bool
-	resolvingSecondHorseMoves bool
-	resolved                  bool
-	transportsResolved        bool
-	dangerZonesResolved       bool
-	partOfCycle               bool // Whether the region is part of a cycle of move orders.
-	unresolvedRetreat         Order
+	order                Order
+	incomingMoves        []Order
+	incomingSupports     []Order
+	incomingKnightMoves  []Order
+	expectedKnightMoves  int
+	resolving            bool
+	resolvingKnightMoves bool
+	resolved             bool
+	transportsResolved   bool
+	dangerZonesResolved  bool
+	partOfCycle          bool // Whether the region is part of a cycle of move orders.
+	unresolvedRetreat    Order
 }
 
 type Neighbor struct {
@@ -109,38 +109,38 @@ func (board Board) placeOrder(order Order) {
 	switch order.Type {
 	case OrderMove:
 		destination.incomingMoves = append(destination.incomingMoves, order)
-		if order.hasSecondHorseMove() {
-			board[order.SecondDestination].expectedSecondHorseMoves++
+		if order.hasKnightMove() {
+			board[order.SecondDestination].expectedKnightMoves++
 		}
 	case OrderSupport:
 		destination.incomingSupports = append(destination.incomingSupports, order)
 	}
 }
 
-func (board Board) placeSecondHorseMoves(region *Region) {
-	region.incomingMoves = region.incomingSecondHorseMoves
+func (board Board) placeKnightMoves(region *Region) {
+	region.incomingMoves = region.incomingKnightMoves
 	for _, move := range region.incomingMoves {
 		board[move.Origin].order = move
 	}
 
-	region.resolvingSecondHorseMoves = true
-	region.incomingSecondHorseMoves = nil
-	region.expectedSecondHorseMoves = 0
+	region.resolvingKnightMoves = true
+	region.incomingKnightMoves = nil
+	region.expectedKnightMoves = 0
 	region.transportsResolved = false
 	region.dangerZonesResolved = false
 	region.partOfCycle = false
 }
 
-// Assumes that the given region is under attack from second horse moves. Cuts any outgoing support
-// order from the region, unless we must wait for the support's destination to reach second horse
-// move resolving.
+// Assumes that the given region is under attack from knight moves. Cuts any outgoing support order
+// from the region, unless we must wait for the support's destination to reach knight move
+// resolving.
 //
 // Also goes through incoming supports to the region, and cuts any incoming support orders that are
-// under attack, unless we must wait for their origin regions to reach second horse move resolving.
-func (board Board) cutSupportsAttackedBySecondHorseMoves(region *Region) (mustWait bool) {
+// under attack, unless we must wait for their origin regions to reach knight move resolving.
+func (board Board) cutSupportsAttackedByKnightMoves(region *Region) (mustWait bool) {
 	if region.order.Type == OrderSupport {
 		destination := board[region.order.Destination]
-		if (!destination.resolved && !destination.resolvingSecondHorseMoves) ||
+		if (!destination.resolved && !destination.resolvingKnightMoves) ||
 			destination.resolving {
 			return true
 		}
@@ -154,7 +154,7 @@ func (board Board) cutSupportsAttackedBySecondHorseMoves(region *Region) (mustWa
 			continue
 		}
 
-		if !origin.resolvingSecondHorseMoves || origin.resolving {
+		if !origin.resolvingKnightMoves || origin.resolving {
 			return true
 		}
 
@@ -233,13 +233,10 @@ func (board Board) succeedMove(move Order) {
 	board[move.Origin].removeUnit()
 	board.removeOrder(move)
 
-	if move.hasSecondHorseMove() {
-		secondHorseMove := move.secondHorseMove()
-		destination := board[secondHorseMove.Destination]
-		destination.incomingSecondHorseMoves = append(
-			destination.incomingSecondHorseMoves,
-			secondHorseMove,
-		)
+	if move.hasKnightMove() {
+		knightMove := move.knightMove()
+		destination := board[knightMove.Destination]
+		destination.incomingKnightMoves = append(destination.incomingKnightMoves, knightMove)
 	}
 }
 
@@ -248,8 +245,8 @@ func (board Board) killMove(move Order) {
 	if !move.Retreat {
 		board[move.Origin].removeUnit()
 
-		if move.hasSecondHorseMove() {
-			board[move.SecondDestination].expectedSecondHorseMoves--
+		if move.hasKnightMove() {
+			board[move.SecondDestination].expectedKnightMoves--
 		}
 	}
 }
@@ -271,8 +268,8 @@ func (board Board) retreatMove(move Order) {
 		origin.removeUnit()
 	}
 
-	if move.hasSecondHorseMove() {
-		board[move.SecondDestination].expectedSecondHorseMoves--
+	if move.hasKnightMove() {
+		board[move.SecondDestination].expectedKnightMoves--
 	}
 }
 

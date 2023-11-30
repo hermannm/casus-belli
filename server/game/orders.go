@@ -32,7 +32,7 @@ type Order struct {
 	// For move and support orders: name of destination region.
 	Destination RegionName
 
-	// For move orders with horse units: optional name of second destination region to move to if
+	// For move orders with knight units: optional name of second destination region to move to if
 	// the first destination was reached.
 	SecondDestination RegionName
 
@@ -84,14 +84,14 @@ func (order Order) unit() Unit {
 	return Unit{Type: order.UnitType, Faction: order.Faction}
 }
 
-// Checks if the order is a move of a horse unit with a second destination.
-func (order Order) hasSecondHorseMove() bool {
-	return order.Type == OrderMove && order.UnitType == UnitHorse && order.SecondDestination != ""
+// Checks if the order is a move by a knight unit with a second destination.
+func (order Order) hasKnightMove() bool {
+	return order.Type == OrderMove && order.UnitType == UnitKnight && order.SecondDestination != ""
 }
 
 // Returns the order with the original destination set as the origin, and the destination set as the
-// original second destination. Assumes hasSecondHorseMove has already been called.
-func (order Order) secondHorseMove() Order {
+// original second destination. Assumes hasKnightMove has already been called.
+func (order Order) knightMove() Order {
 	order.Origin = order.Destination
 	order.Destination = order.SecondDestination
 	order.SecondDestination = ""
@@ -297,7 +297,7 @@ func validateBuild(order Order, origin *Region, board Board) error {
 		if !origin.isCoast(board) {
 			return errors.New("ships can only be built on coast")
 		}
-	case UnitFootman, UnitHorse, UnitCatapult:
+	case UnitFootman, UnitKnight, UnitCatapult:
 		// Valid
 	default:
 		return errors.New("invalid unit type")
@@ -427,9 +427,9 @@ func validateMoveOrSupport(order Order, origin *Region, board Board) error {
 
 func validateMove(order Order, origin *Region, board Board) error {
 	if order.SecondDestination != "" {
-		if origin.Unit.Type != UnitHorse {
+		if origin.Unit.Type != UnitKnight {
 			return errors.New(
-				"second destinations for move orders can only be applied to horse units",
+				"second destinations for move orders can only be applied to knight units",
 			)
 		}
 
@@ -510,11 +510,11 @@ func validateReachableMoveDestinations(orders []Order, board Board) error {
 			)
 		}
 
-		if order.hasSecondHorseMove() {
-			if err := validateReachableMoveDestination(order.secondHorseMove(), board); err != nil {
+		if order.hasKnightMove() {
+			if err := validateReachableMoveDestination(order.knightMove(), board); err != nil {
 				return wrap.Errorf(
 					err,
-					"invalid second destination for horse move from '%s' to '%s'",
+					"invalid second destination for knight move from '%s' to '%s'",
 					order.Origin,
 					order.SecondDestination,
 				)

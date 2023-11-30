@@ -18,9 +18,9 @@ public class Board
         if (order.Type == OrderType.Move)
         {
             Regions[order.Destination!].IncomingMoves.Add(order);
-            if (order.HasSecondHorseMove())
+            if (order.HasKnightMove())
             {
-                Regions[order.SecondDestination!].ExpectedSecondHorseMoves++;
+                Regions[order.SecondDestination!].ExpectedKnightMoves++;
             }
         }
     }
@@ -62,10 +62,10 @@ public class Board
         Regions[move.Origin].RemoveUnit();
         RemoveOrder(move);
 
-        var secondHorseMove = move.TryGetSecondHorseMove();
-        if (secondHorseMove is not null)
+        var knightMove = move.TryGetKnightMove();
+        if (knightMove is not null)
         {
-            Regions[secondHorseMove.Destination!].IncomingSecondHorseMoves.Add(secondHorseMove);
+            Regions[knightMove.Destination!].IncomingKnightMoves.Add(knightMove);
         }
     }
 
@@ -76,9 +76,9 @@ public class Board
         {
             Regions[move.Origin].RemoveUnit();
 
-            if (move.HasSecondHorseMove())
+            if (move.HasKnightMove())
             {
-                Regions[move.SecondDestination!].ExpectedSecondHorseMoves--;
+                Regions[move.SecondDestination!].ExpectedKnightMoves--;
             }
         }
     }
@@ -111,9 +111,9 @@ public class Board
             origin.RemoveUnit();
         }
 
-        if (move.HasSecondHorseMove())
+        if (move.HasKnightMove())
         {
-            Regions[move.SecondDestination!].ExpectedSecondHorseMoves--;
+            Regions[move.SecondDestination!].ExpectedKnightMoves--;
         }
     }
 

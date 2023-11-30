@@ -22,7 +22,7 @@ public enum UnitType
     /// <summary>
     /// A land unit that moves 2 regions at a time.
     /// </summary>
-    Horse,
+    Knight,
 
     /// <summary>
     /// A unit that can move into sea regions and coastal regions.

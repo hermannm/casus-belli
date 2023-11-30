@@ -209,16 +209,16 @@ func (game *Game) resolveRegionMoves(region *Region) (waiting bool) {
 		game.resolveDangerZoneMoves(region)
 	}
 
-	// Resolves any unresolved retreat or incoming second horse moves to the region.
-	// If the region is not attacked and has no incoming second horse moves, it is fully resolved.
+	// Resolves any unresolved retreat or incoming knight moves to the region.
+	// If the region is not attacked and has no incoming knight moves, it is fully resolved.
 	if !region.attacked() {
 		if region.hasUnresolvedRetreat() {
 			region.resolveRetreat()
 		}
-		if region.expectedSecondHorseMoves == 0 {
+		if region.expectedKnightMoves == 0 {
 			region.resolved = true
-		} else if region.expectedSecondHorseMoves == len(region.incomingSecondHorseMoves) {
-			game.board.placeSecondHorseMoves(region)
+		} else if region.expectedKnightMoves == len(region.incomingKnightMoves) {
+			game.board.placeKnightMoves(region)
 		}
 		return false
 	}
@@ -252,9 +252,9 @@ func (game *Game) resolveRegionMoves(region *Region) (waiting bool) {
 		return true
 	}
 
-	if region.resolvingSecondHorseMoves {
-		// Checks if supports are cut by other second horse moves
-		if mustWait := game.board.cutSupportsAttackedBySecondHorseMoves(region); mustWait {
+	if region.resolvingKnightMoves {
+		// Checks if supports are cut by other knight moves
+		if mustWait := game.board.cutSupportsAttackedByKnightMoves(region); mustWait {
 			return true
 		}
 	}
