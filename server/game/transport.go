@@ -90,11 +90,11 @@ type transportPath struct {
 func (board Board) recursivelyFindTransportPath(
 	region *Region,
 	destination RegionName,
-	regionsToExclude set.Set[RegionName],
+	excludedRegions set.Set[RegionName],
 ) (canTransport bool, transportAttacked bool, dangerZone DangerZone) {
-	transportingNeighbors, newRegionsToExclude := region.getTransportingNeighbors(
+	transportingNeighbors, newExcludedRegions := region.getTransportingNeighbors(
 		board,
-		regionsToExclude,
+		excludedRegions,
 	)
 
 	var paths []transportPath
@@ -111,7 +111,7 @@ func (board Board) recursivelyFindTransportPath(
 		nextCanTransport, nextTransportAttacked, nextDangerZone := board.recursivelyFindTransportPath(
 			transportRegion,
 			destination,
-			newRegionsToExclude,
+			newExcludedRegions,
 		)
 
 		var subPaths []transportPath
@@ -149,50 +149,50 @@ func (board Board) recursivelyFindTransportPath(
 
 func (region *Region) getTransportingNeighbors(
 	board Board,
-	regionsToExclude set.Set[RegionName],
-) (transports []Neighbor, newRegionsToExclude set.Set[RegionName]) {
-	newRegionsToExclude = regionsToExclude.Copy()
+	excludedRegions set.Set[RegionName],
+) (transports []Neighbor, newExcludedRegions set.Set[RegionName]) {
+	newExcludedRegions = excludedRegions.Copy()
 
 	if region.empty() {
-		return transports, newRegionsToExclude
+		return transports, newExcludedRegions
 	}
 
 	for _, neighbor := range region.Neighbors {
 		neighborRegion := board[neighbor.Name]
 
-		if regionsToExclude.Contains(neighbor.Name) ||
+		if excludedRegions.Contains(neighbor.Name) ||
 			neighborRegion.order.Type != OrderTransport ||
 			neighborRegion.Unit.Faction != region.Unit.Faction {
 			continue
 		}
 
 		transports = append(transports, neighbor)
-		newRegionsToExclude.Add(neighbor.Name)
+		newExcludedRegions.Add(neighbor.Name)
 	}
 
-	return transports, newRegionsToExclude
+	return transports, newExcludedRegions
 }
 
 func (region *Region) checkNeighborsForDestination(
 	destination RegionName,
-) (destinationIsAdjacent bool, mustGoThrough DangerZone) {
+) (destinationAdjacent bool, mustGoThrough DangerZone) {
 	for _, neighbor := range region.Neighbors {
 		if neighbor.Name == destination {
 			// If destination is already found to be adjacent but only through a danger zone,
 			// checks if there is a different path to it without a danger zone.
-			if destinationIsAdjacent {
+			if destinationAdjacent {
 				if mustGoThrough != "" {
 					mustGoThrough = neighbor.DangerZone
 				}
 				continue
 			}
 
-			destinationIsAdjacent = true
+			destinationAdjacent = true
 			mustGoThrough = neighbor.DangerZone
 		}
 	}
 
-	return destinationIsAdjacent, mustGoThrough
+	return destinationAdjacent, mustGoThrough
 }
 
 // Prioritizes paths that are not attacked first, then paths that don't have to cross danger zones.
