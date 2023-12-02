@@ -65,12 +65,7 @@ internal class MessageSender
 
     private static byte[] SerializeMessage(GodotObject message)
     {
-        if (
-            !MessageTagMap.SendableMessageTypes.TryGetValue(
-                message.GetType(),
-                out var messageTag
-            )
-        )
+        if (!MessageTagMap.SendableMessageTypes.TryGetValue(message.GetType(), out var messageTag))
         {
             throw new Exception($"Unrecognized type of message object: '{message.GetType()}'");
         }

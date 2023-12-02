@@ -112,12 +112,7 @@ public partial class ApiClient : Node
     public void AddMessageHandler<TMessage>(Action<TMessage> handler)
         where TMessage : GodotObject, IReceivableMessage
     {
-        if (
-            !MessageTagMap.ReceivableMessageTypes.TryGetValue(
-                typeof(TMessage),
-                out var messageTag
-            )
-        )
+        if (!MessageTagMap.ReceivableMessageTypes.TryGetValue(typeof(TMessage), out var messageTag))
         {
             GD.PushError($"Invalid message type {typeof(TMessage)} for server message handler");
             return;
