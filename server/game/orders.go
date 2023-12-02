@@ -467,7 +467,7 @@ func validateMove(order Order, origin *Region, board Board) error {
 }
 
 func validateSupport(order Order, origin *Region, destination *Region) error {
-	if !origin.hasNeighbor(order.Destination) {
+	if !origin.adjacentTo(order.Destination) {
 		return errors.New("support order must be adjacent to destination")
 	}
 
@@ -551,7 +551,7 @@ func validateReachableMoveDestinations(orders []Order, board Board) error {
 func validateReachableMoveDestination(move Order, board Board) error {
 	origin := board[move.Origin]
 
-	if !origin.hasNeighbor(move.Destination) {
+	if !origin.adjacentTo(move.Destination) {
 		canTransport, _, _ := board.findTransportPath(move.Origin, move.Destination)
 
 		if !canTransport {

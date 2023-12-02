@@ -366,7 +366,7 @@ func (region *Region) getNeighbor(neighborName RegionName, via DangerZone) (Neig
 }
 
 // Returns whether the region is adjacent to a region of the given name.
-func (region *Region) hasNeighbor(neighborName RegionName) bool {
+func (region *Region) adjacentTo(neighborName RegionName) bool {
 	for _, neighbor := range region.Neighbors {
 		if neighbor.Name == neighborName {
 			return true

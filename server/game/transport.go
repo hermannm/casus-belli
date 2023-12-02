@@ -52,7 +52,7 @@ func (board Board) resolveTransport(
 	move Order,
 	destination *Region,
 ) (transportsAttacked bool, dangerZone DangerZone) {
-	if destination.hasNeighbor(move.Origin) {
+	if destination.adjacentTo(move.Origin) {
 		return false, ""
 	}
 
