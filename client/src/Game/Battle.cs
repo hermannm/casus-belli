@@ -18,4 +18,18 @@ public record Battle
     /// If the battle is a danger zone crossing: name of the crossed danger zone.
     /// </summary>
     public string? DangerZone { get; set; }
+
+    public (bool isDangerZoneCrossing, bool succeeded, Order? order) IsDangerZoneCrossing()
+    {
+        if (DangerZone is null)
+        {
+            return (false, false, null);
+        }
+
+        const int minResultToSurviveDangerZone = 3;
+
+        var result = Results[0];
+
+        return (true, result.Total >= minResultToSurviveDangerZone, result.Order);
+    }
 }

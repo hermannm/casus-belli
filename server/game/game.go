@@ -221,7 +221,7 @@ func (game *Game) resolveUncontestedRegion(region *Region) (waiting bool) {
 		if mustCross, _ := move.mustCrossDangerZone(region); mustCross {
 			return true
 		} else {
-			game.board.succeedMove(region.incomingMoves[0])
+			game.board.succeedMove(move)
 			return false
 		}
 	}

@@ -73,6 +73,12 @@ public record Order
             SecondDestination = null
         };
     }
+
+    public bool MustCrossDangerZone(Region destination)
+    {
+        var neighbor = destination.GetNeighbor(Origin, ViaDangerZone);
+        return neighbor?.DangerZone != null;
+    }
 }
 
 /// <summary>

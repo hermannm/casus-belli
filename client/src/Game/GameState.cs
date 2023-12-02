@@ -100,7 +100,8 @@ public partial class GameState : Node
 
     private void HandleBattleResults(BattleResultsMessage message)
     {
-        throw new NotImplementedException();
+        Battles.Add(message.Battle);
+        ResolveBattle(message.Battle);
     }
 
     public void PlaceOrdersOnBoard()
@@ -131,6 +132,23 @@ public partial class GameState : Node
             {
                 EmitSignal(SignalName.SupportCut, supportOrder.Origin);
             }
+        }
+    }
+
+    private void ResolveBattle(Battle battle)
+    {
+        var (isDangerZoneCrossing, succeeded, order) = battle.IsDangerZoneCrossing();
+        if (isDangerZoneCrossing && !succeeded)
+        {
+            if (order!.Type == OrderType.Move)
+            {
+                _board.KillMove(order);
+            }
+            else
+            {
+                _board.RemoveOrder(order);
+            }
+            return;
         }
     }
 
@@ -180,6 +198,45 @@ public partial class GameState : Node
         if (_board.FindBorderBattle(region))
         {
             return true;
+        }
+
+        if (!region.PartOfCycle)
+        {
+            var cycle = _board.FindCycle(region.Name, region);
+            if (cycle is not null)
+            {
+                Board.PrepareCycleForResolving(cycle);
+                return false;
+            }
+        }
+
+        if (
+            region.IncomingMoves.Count == 1 && region.Empty() && (region.Controlled() || region.Sea)
+        )
+        {
+            var move = region.IncomingMoves[0];
+            if (move.MustCrossDangerZone(region) && !HasCrossedDangerZone(move))
+            {
+                return true;
+            }
+            else
+            {
+                _board.SucceedMove(move);
+                return false;
+            }
+        }
+
+        return false;
+    }
+
+    public bool HasCrossedDangerZone(Order order)
+    {
+        foreach (var battle in Battles)
+        {
+            if (battle.DangerZone is not null && battle.Results[0].Order == order)
+            {
+                return true;
+            }
         }
 
         return false;

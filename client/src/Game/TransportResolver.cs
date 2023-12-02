@@ -20,7 +20,15 @@ public static class TransportResolver
             var path = ResolveTransport(move, region, board);
             if (path is not null && (path.Attacked || path.DangerZone is not null))
             {
-                return true;
+                if (path.Attacked)
+                {
+                    return true;
+                }
+
+                if (path.DangerZone is not null && !GameState.Instance.HasCrossedDangerZone(move))
+                {
+                    return true;
+                }
             }
         }
 

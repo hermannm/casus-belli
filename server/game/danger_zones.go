@@ -3,7 +3,7 @@ package game
 type DangerZone string
 
 // Number to beat when attempting to cross a danger zone.
-const MinDiceResultToSurviveDangerZone = 3
+const MinResultToSurviveDangerZone = 3
 
 func newDangerZoneCrossing(order Order, dangerZone DangerZone) Battle {
 	return Battle{Results: []Result{{Order: order}}, DangerZone: dangerZone}
@@ -41,7 +41,7 @@ func (game *Game) resolveDangerZoneCrossing(crossing Battle) {
 
 	crossing.addModifier(order.Faction, Modifier{Type: ModifierDice, Value: game.rollDice()})
 
-	if crossing.Results[0].Total < MinDiceResultToSurviveDangerZone {
+	if crossing.Results[0].Total < MinResultToSurviveDangerZone {
 		if order.Type == OrderMove {
 			game.board.killMove(order)
 		} else {

@@ -13,7 +13,7 @@ public record Result
     /// <summary>
     /// If result of a move order to the battle: the move order in question.
     /// </summary>
-    public Order? Move { get; set; }
+    public Order? Order { get; set; }
 
     /// <summary>
     /// If result of a defending unit in a region: the faction of the defender.
