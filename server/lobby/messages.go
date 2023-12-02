@@ -88,11 +88,11 @@ type SubmitOrdersMessage struct {
 type GiveSupportMessage struct {
 	EmbattledRegion game.RegionName
 
-	// Nil if none were supported.
-	SupportedFaction *game.PlayerFaction
+	// Blank if none were supported.
+	SupportedFaction game.PlayerFaction `json:",omitempty"`
 }
 
-// Message sent from client to server when they roll the dice in a battle.
+// Message sent from client when they roll the dice in a battle.
 type DiceRollMessage struct{}
 
 type MessageTag uint8

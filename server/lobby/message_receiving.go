@@ -180,11 +180,7 @@ func (lobby *Lobby) AwaitSupport(
 	}
 
 	messageData := message.Data.(GiveSupportMessage) // Already checked inside AwaitMatchingItem
-	if messageData.SupportedFaction != nil {
-		supported = *messageData.SupportedFaction
-	}
-
-	return supported, nil
+	return messageData.SupportedFaction, nil
 }
 
 func (lobby *Lobby) AwaitDiceRoll(ctx context.Context, from game.PlayerFaction) error {
