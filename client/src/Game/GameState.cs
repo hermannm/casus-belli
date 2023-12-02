@@ -160,6 +160,11 @@ public partial class GameState : Node
             return true;
         }
 
+        if (!region.Attacked())
+        {
+            region.ResolveRetreat();
+        }
+
         return false;
     }
 

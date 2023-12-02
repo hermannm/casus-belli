@@ -55,17 +55,38 @@ public record Region
     /// </summary>
     public int SiegeCount { get; set; } = 0;
 
-    [JsonIgnore] public Order? Order { get; set; } = null;
-    [JsonIgnore] public List<Order> IncomingMoves { get; set; } = new();
-    [JsonIgnore] public List<Order> IncomingSupports { get; set; } = new();
-    [JsonIgnore] public List<Order> IncomingKnightMoves { get; set; } = new();
-    [JsonIgnore] public int ExpectedKnightMoves { get; set; } = 0;
-    [JsonIgnore] public bool ResolvingKnightMoves { get; set; } = false;
-    [JsonIgnore] public bool Resolved { get; set; } = false;
-    [JsonIgnore] public bool TransportsResolved { get; set; } = false;
-    [JsonIgnore] public bool DangerZonesResolved { get; set; } = false;
-    [JsonIgnore] public bool PartOfCycle { get; set; } = false;
-    [JsonIgnore] public Order? UnresolvedRetreat { get; set; } = null;
+    [JsonIgnore]
+    public Order? Order { get; set; } = null;
+
+    [JsonIgnore]
+    public List<Order> IncomingMoves { get; set; } = new();
+
+    [JsonIgnore]
+    public List<Order> IncomingSupports { get; set; } = new();
+
+    [JsonIgnore]
+    public List<Order> IncomingKnightMoves { get; set; } = new();
+
+    [JsonIgnore]
+    public int ExpectedKnightMoves { get; set; } = 0;
+
+    [JsonIgnore]
+    public bool ResolvingKnightMoves { get; set; } = false;
+
+    [JsonIgnore]
+    public bool Resolved { get; set; } = false;
+
+    [JsonIgnore]
+    public bool TransportsResolved { get; set; } = false;
+
+    [JsonIgnore]
+    public bool DangerZonesResolved { get; set; } = false;
+
+    [JsonIgnore]
+    public bool PartOfCycle { get; set; } = false;
+
+    [JsonIgnore]
+    public Order? UnresolvedRetreat { get; set; } = null;
 
     public void ResetResolvingState()
     {
@@ -117,7 +138,7 @@ public record Region
         SiegeCount = 0;
     }
 
-    public void ResolveRetreatIfUnresolved()
+    public void ResolveRetreat()
     {
         if (UnresolvedRetreat is not null)
         {
@@ -125,7 +146,6 @@ public record Region
             {
                 Unit = UnresolvedRetreat.Unit();
             }
-
             UnresolvedRetreat = null;
         }
     }

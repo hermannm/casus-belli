@@ -331,15 +331,13 @@ func (region *Region) replaceUnit(unit Unit) {
 	region.SiegeCount = 0
 }
 
-func (region *Region) hasUnresolvedRetreat() bool {
-	return !region.unresolvedRetreat.isNone()
-}
-
 func (region *Region) resolveRetreat() {
-	if region.empty() {
-		region.Unit = region.unresolvedRetreat.unit()
+	if !region.unresolvedRetreat.isNone() {
+		if region.empty() {
+			region.Unit = region.unresolvedRetreat.unit()
+		}
+		region.unresolvedRetreat = Order{}
 	}
-	region.unresolvedRetreat = Order{}
 }
 
 // Returns a region's neighbor of the given name, and whether it was found.

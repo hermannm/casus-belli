@@ -193,9 +193,7 @@ func (game *Game) resolveUncontestedRegion(region *Region) (waiting bool) {
 	}
 
 	if !region.attacked() {
-		if region.hasUnresolvedRetreat() {
-			region.resolveRetreat()
-		}
+		region.resolveRetreat()
 
 		if region.expectedKnightMoves == 0 {
 			region.resolved = true
