@@ -120,12 +120,12 @@ public class Board
         }
     }
 
-    public bool AllResolved()
+    public bool Resolved()
     {
         return Regions.Values.All(region => region.Resolved);
     }
 
-    public List<Region>? DiscoverCycle(string firstRegionName, Region region)
+    public List<Region>? FindCycle(string firstRegionName, Region region)
     {
         if (region.Order?.Type != OrderType.Move)
         {
@@ -137,7 +137,7 @@ public class Board
             return new List<Region> { region };
         }
 
-        var cycle = DiscoverCycle(firstRegionName, Regions[region.Order.Destination!]);
+        var cycle = FindCycle(firstRegionName, Regions[region.Order.Destination!]);
         if (cycle is null)
         {
             return null;

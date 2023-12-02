@@ -4,7 +4,7 @@ type MoveCycle []*Region
 
 // Recursively finds a cycle of move orders through regions starting and ending with the given
 // firstRegionName.
-func (board Board) discoverCycle(firstRegionName RegionName, region *Region) MoveCycle {
+func (board Board) findCycle(firstRegionName RegionName, region *Region) MoveCycle {
 	if region.order.Type != OrderMove {
 		return nil
 	}
@@ -15,7 +15,7 @@ func (board Board) discoverCycle(firstRegionName RegionName, region *Region) Mov
 	}
 
 	// If the base case is not yet reached, passes cycle discovery to the next region in the chain.
-	cycle := board.discoverCycle(firstRegionName, board[region.order.Destination])
+	cycle := board.findCycle(firstRegionName, board[region.order.Destination])
 	if cycle == nil {
 		return nil
 	} else {

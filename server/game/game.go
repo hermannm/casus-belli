@@ -131,7 +131,7 @@ func (game *Game) resolveWinterOrders(orders []Order) {
 			}
 
 			if !region.partOfCycle {
-				if cycle := game.board.discoverCycle(region.Name, region); cycle != nil {
+				if cycle := game.board.findCycle(region.Name, region); cycle != nil {
 					cycle.prepareForResolving()
 				}
 			}
@@ -212,7 +212,7 @@ func (game *Game) resolveUncontestedRegion(region *Region) (waiting bool) {
 
 	// Finds out if the region is part of a cycle (moves in a circle)
 	if !region.partOfCycle {
-		if cycle := game.board.discoverCycle(region.Name, region); cycle != nil {
+		if cycle := game.board.findCycle(region.Name, region); cycle != nil {
 			cycle.prepareForResolving()
 			return false
 		}
