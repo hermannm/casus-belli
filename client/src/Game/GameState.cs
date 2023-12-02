@@ -5,19 +5,36 @@ using Godot;
 
 namespace CasusBelli.Client.Game;
 
+public enum GamePhase
+{
+    SubmittingOrders,
+    OrdersSubmitted,
+    ResolvingOrders
+}
+
 public partial class GameState : Node
 {
     public static GameState Instance { get; private set; } = null!;
 
     public Season Season { get; private set; } = Season.Winter;
-    public Phase CurrentPhase { get; private set; } = Phase.SubmittingOrders;
     public Dictionary<string, List<Order>> OrdersByFaction { get; private set; } = new();
     public List<Player> PlayersYetToSubmitOrders = new();
     public List<Battle> Battles = new();
     public Battle? CurrentBattle;
 
+    private GamePhase _phase = GamePhase.SubmittingOrders;
+    public GamePhase Phase
+    {
+        get => _phase;
+        private set
+        {
+            _phase = value;
+            EmitSignal(SignalName.PhaseChanged, (int)_phase);
+        }
+    }
+
     [Signal]
-    public delegate void PhaseChangedEventHandler();
+    public delegate void PhaseChangedEventHandler(GamePhase phase);
 
     [Signal]
     public delegate void SupportCutEventHandler(string regionName);
@@ -29,13 +46,6 @@ public partial class GameState : Node
     public delegate void BattleAnnouncementEventHandler(Battle battle);
 
     private readonly Board _board = new();
-
-    public enum Phase
-    {
-        SubmittingOrders,
-        OrdersSubmitted,
-        ResolvingOrders
-    }
 
     public override void _EnterTree()
     {
@@ -63,8 +73,7 @@ public partial class GameState : Node
     private void HandleOrderRequest(OrderRequestMessage message)
     {
         Season = message.Season;
-        CurrentPhase = Phase.SubmittingOrders;
-        EmitSignal(SignalName.PhaseChanged);
+        Phase = GamePhase.SubmittingOrders;
         OrdersByFaction.Clear();
         PlayersYetToSubmitOrders = new List<Player>(LobbyState.Instance.OtherPlayers);
     }
@@ -73,8 +82,7 @@ public partial class GameState : Node
     {
         if (message.FactionThatSubmittedOrders == LobbyState.Instance.Player.Faction)
         {
-            CurrentPhase = Phase.OrdersSubmitted;
-            EmitSignal(SignalName.PhaseChanged);
+            Phase = GamePhase.OrdersSubmitted;
         }
         else
         {
@@ -88,9 +96,7 @@ public partial class GameState : Node
     {
         OrdersByFaction = message.OrdersByFaction;
         PlaceOrdersOnBoard();
-
-        CurrentPhase = Phase.ResolvingOrders;
-        EmitSignal(SignalName.PhaseChanged);
+        Phase = GamePhase.ResolvingOrders;
 
         if (Season == Season.Winter)
         {
@@ -171,7 +177,7 @@ public partial class GameState : Node
         {
             allRegionsWaiting = true;
 
-            foreach (var (_, region) in _board!.Regions)
+            foreach (var (_, region) in _board.Regions)
             {
                 var waiting = ResolveUncontestedRegion(region);
                 if (!waiting)
