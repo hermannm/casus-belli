@@ -15,6 +15,7 @@ public partial class GameState : Node
     public Dictionary<string, List<Order>> OrdersByFaction { get; private set; } = new();
     public List<Player> PlayersYetToSubmitOrders = new();
     public List<Battle> Battles = new();
+    public Battle? CurrentBattle;
 
     [Signal]
     public delegate void PhaseChangedEventHandler();
@@ -24,6 +25,9 @@ public partial class GameState : Node
 
     [Signal]
     public delegate void UncontestedMoveEventHandler(string fromRegion, string toRegion);
+
+    [Signal]
+    public delegate void BattleAnnouncementEventHandler(Battle battle);
 
     private readonly Board _board = new();
 
@@ -41,6 +45,7 @@ public partial class GameState : Node
         ApiClient.Instance.AddMessageHandler<OrderRequestMessage>(HandleOrderRequest);
         ApiClient.Instance.AddMessageHandler<OrdersConfirmationMessage>(HandleOrdersConfirmation);
         ApiClient.Instance.AddMessageHandler<OrdersReceivedMessage>(HandleOrdersReceived);
+        ApiClient.Instance.AddMessageHandler<BattleAnnouncementMessage>(HandleBattleAnnouncement);
         ApiClient.Instance.AddMessageHandler<BattleResultsMessage>(HandleBattleResults);
 
         LobbyState.Instance.LobbyChanged += () =>
@@ -98,6 +103,11 @@ public partial class GameState : Node
         }
     }
 
+    private void HandleBattleAnnouncement(BattleAnnouncementMessage message)
+    {
+        EmitSignal(SignalName.BattleAnnouncement, message.Battle);
+    }
+
     private void HandleBattleResults(BattleResultsMessage message)
     {
         Battles.Add(message.Battle);
@@ -138,15 +148,18 @@ public partial class GameState : Node
     private void ResolveBattle(Battle battle)
     {
         var (isDangerZoneCrossing, succeeded, order) = battle.IsDangerZoneCrossing();
-        if (isDangerZoneCrossing && !succeeded)
+        if (isDangerZoneCrossing)
         {
-            if (order!.Type == OrderType.Move)
+            if (!succeeded)
             {
-                _board.KillMove(order);
-            }
-            else
-            {
-                _board.RemoveOrder(order);
+                if (order!.Type == OrderType.Move)
+                {
+                    _board.KillMove(order);
+                }
+                else
+                {
+                    _board.RemoveOrder(order);
+                }
             }
             return;
         }

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Godot;
 
 namespace CasusBelli.Client.Game;
 
@@ -6,7 +7,7 @@ namespace CasusBelli.Client.Game;
 /// Results of a battle between players, an attempt to conquer a neutral region, or an attempt to
 /// cross a danger zone.
 /// </summary>
-public record Battle
+public partial class Battle : GodotObject
 {
     /// <summary>
     /// If length is one, the battle was a neutral region conquest attempt or danger zone crossing.
