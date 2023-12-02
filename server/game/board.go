@@ -52,7 +52,6 @@ type regionResolvingState struct {
 	incomingSupports     []Order
 	incomingKnightMoves  []Order
 	expectedKnightMoves  int
-	resolving            bool
 	resolvingKnightMoves bool
 	resolved             bool
 	transportsResolved   bool
@@ -140,8 +139,7 @@ func (board Board) placeKnightMoves(region *Region) {
 func (board Board) cutSupportsAttackedByKnightMoves(region *Region) (mustWait bool) {
 	if region.order.Type == OrderSupport {
 		destination := board[region.order.Destination]
-		if (!destination.resolved && !destination.resolvingKnightMoves) ||
-			destination.resolving {
+		if !destination.resolved && !destination.resolvingKnightMoves {
 			return true
 		}
 
@@ -154,7 +152,7 @@ func (board Board) cutSupportsAttackedByKnightMoves(region *Region) (mustWait bo
 			continue
 		}
 
-		if !origin.resolvingKnightMoves || origin.resolving {
+		if !origin.resolvingKnightMoves {
 			return true
 		}
 
@@ -166,24 +164,13 @@ func (board Board) cutSupportsAttackedByKnightMoves(region *Region) (mustWait bo
 	return false
 }
 
-func (board Board) hasUnresolvedRetreats() bool {
+func (board Board) resolved() bool {
 	for _, region := range board {
-		if region.hasUnresolvedRetreat() {
-			return true
+		if !region.resolved {
+			return false
 		}
 	}
-
-	return false
-}
-
-func (board Board) hasResolvingRegions() bool {
-	for _, region := range board {
-		if region.resolving {
-			return true
-		}
-	}
-
-	return false
+	return true
 }
 
 func (board Board) resetResolvingState() {

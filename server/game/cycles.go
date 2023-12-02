@@ -1,8 +1,10 @@
 package game
 
+type MoveCycle []*Region
+
 // Recursively finds a cycle of move orders through regions starting and ending with the given
 // firstRegionName.
-func (board Board) discoverCycle(firstRegionName RegionName, region *Region) (cycle []*Region) {
+func (board Board) discoverCycle(firstRegionName RegionName, region *Region) MoveCycle {
 	if region.order.Type != OrderMove {
 		return nil
 	}
@@ -13,7 +15,7 @@ func (board Board) discoverCycle(firstRegionName RegionName, region *Region) (cy
 	}
 
 	// If the base case is not yet reached, passes cycle discovery to the next region in the chain.
-	cycle = board.discoverCycle(firstRegionName, board[region.order.Destination])
+	cycle := board.discoverCycle(firstRegionName, board[region.order.Destination])
 	if cycle == nil {
 		return nil
 	} else {
@@ -21,7 +23,21 @@ func (board Board) discoverCycle(firstRegionName RegionName, region *Region) (cy
 	}
 }
 
-func (board Board) prepareCycleForResolving(cycle []*Region) {
+func (board Board) findBorderBattle(region *Region) (isBorderBattle bool, secondRegion *Region) {
+	if region.order.Type != OrderMove {
+		return false, nil
+	}
+
+	secondRegion = board[region.order.Destination]
+	if secondRegion.order.Type == OrderMove && secondRegion.order.Destination == region.Name &&
+		region.order.Faction != secondRegion.order.Faction {
+		return true, secondRegion
+	}
+
+	return false, nil
+}
+
+func (cycle MoveCycle) prepareForResolving() {
 	for _, region := range cycle {
 		region.removeUnit()
 		region.order = Order{}

@@ -130,9 +130,12 @@ func (player *Player) handleGameMessage(
 	return nil
 }
 
-func (lobby *Lobby) AwaitOrders(from game.PlayerFaction) ([]game.Order, error) {
+func (lobby *Lobby) AwaitOrders(
+	ctx context.Context,
+	from game.PlayerFaction,
+) ([]game.Order, error) {
 	message, err := lobby.gameMessageQueue.AwaitMatchingItem(
-		context.Background(),
+		ctx,
 		func(message ReceivedMessage) bool {
 			return message.ReceivedFrom == from && message.Tag == MessageTagSubmitOrders
 		},
@@ -150,11 +153,11 @@ func (lobby *Lobby) AwaitOrders(from game.PlayerFaction) ([]game.Order, error) {
 }
 
 func (lobby *Lobby) AwaitSupport(
+	ctx context.Context,
 	from game.PlayerFaction,
-	supporting game.RegionName,
 	embattled game.RegionName,
 ) (supported game.PlayerFaction, err error) {
-	ctx, cancel := context.WithCancelCause(context.Background())
+	ctx, cancel := context.WithCancelCause(ctx)
 
 	message, err := lobby.gameMessageQueue.AwaitMatchingItem(
 		ctx,
@@ -169,17 +172,11 @@ func (lobby *Lobby) AwaitSupport(
 				return false
 			}
 
-			return messageData.SupportingRegion == supporting &&
-				messageData.EmbattledRegion == embattled
+			return messageData.EmbattledRegion == embattled
 		},
 	)
 	if err != nil {
-		return "", wrap.Errorf(
-			err,
-			"received no support message from region '%s' to region '%s'",
-			supporting,
-			embattled,
-		)
+		return "", err
 	}
 
 	messageData := message.Data.(GiveSupportMessage) // Already checked inside AwaitMatchingItem
@@ -188,4 +185,11 @@ func (lobby *Lobby) AwaitSupport(
 	}
 
 	return supported, nil
+}
+
+func (lobby *Lobby) AwaitDiceRoll(ctx context.Context, from game.PlayerFaction) error {
+	_, err := lobby.gameMessageQueue.AwaitMatchingItem(ctx, func(message ReceivedMessage) bool {
+		return message.ReceivedFrom == from && message.Tag == MessageTagDiceRoll
+	})
+	return err
 }

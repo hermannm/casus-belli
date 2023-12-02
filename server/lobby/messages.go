@@ -47,21 +47,9 @@ type GameStartedMessage struct {
 	Board game.Board
 }
 
-// Message sent from server when asking a supporting player who to support in an embattled region.
-type SupportRequestMessage struct {
-	SupportingRegion    game.RegionName
-	EmbattledRegion     game.RegionName
-	SupportableFactions []game.PlayerFaction
-}
-
 // Message sent from server to client to signal that client should submit orders.
 type OrderRequestMessage struct {
 	Season game.Season
-}
-
-// Message sent from server to all clients when valid orders are received from all players.
-type OrdersReceivedMessage struct {
-	OrdersByFaction map[game.PlayerFaction][]game.Order
 }
 
 // Message sent from server to all clients when valid orders are received from a player.
@@ -70,14 +58,19 @@ type OrdersConfirmationMessage struct {
 	FactionThatSubmittedOrders game.PlayerFaction
 }
 
-// Message sent from server to all clients when a battle result is calculated.
-type BattleResultsMessage struct {
+// Message sent from server to all clients when valid orders are received from all players.
+type OrdersReceivedMessage struct {
+	OrdersByFaction map[game.PlayerFaction][]game.Order
+}
+
+// Message sent from server to all clients when a battle has begun.
+type BattleAnnouncementMessage struct {
 	Battle game.Battle
 }
 
-// Message sent from server to all clients when orders have to cross danger zones to succeed.
-type DangerZoneCrossingsMessage struct {
-	Crossings []game.DangerZoneCrossing
+// Message sent from server to all clients when a battle has finished resolving.
+type BattleResultsMessage struct {
+	Battle game.Battle
 }
 
 // Message sent from server to all clients when the game is won.
@@ -93,12 +86,14 @@ type SubmitOrdersMessage struct {
 // Message sent from client when declaring who to support with their support order.
 // Forwarded by server to all clients to show who were given support.
 type GiveSupportMessage struct {
-	SupportingRegion game.RegionName
-	EmbattledRegion  game.RegionName
+	EmbattledRegion game.RegionName
 
 	// Nil if none were supported.
 	SupportedFaction *game.PlayerFaction
 }
+
+// Message sent from client to server when they roll the dice in a battle.
+type DiceRollMessage struct{}
 
 type MessageTag uint8
 
@@ -109,33 +104,33 @@ const (
 	MessageTagSelectFaction
 	MessageTagStartGame
 	MessageTagGameStarted
-	MessageTagSupportRequest
 	MessageTagOrderRequest
 	MessageTagOrdersReceived
 	MessageTagOrdersConfirmation
+	MessageTagBattleAnnouncement
 	MessageTagBattleResults
-	MessageTagDangerZoneCrossings
 	MessageTagWinner
 	MessageTagSubmitOrders
 	MessageTagGiveSupport
+	MessageTagDiceRoll
 )
 
 var messageTags = enumnames.NewMap(map[MessageTag]string{
-	MessageTagError:               "Error",
-	MessageTagPlayerStatus:        "PlayerStatus",
-	MessageTagLobbyJoined:         "LobbyJoined",
-	MessageTagSelectFaction:       "SelectFaction",
-	MessageTagStartGame:           "StartGame",
-	MessageTagGameStarted:         "GameStarted",
-	MessageTagSupportRequest:      "SupportRequest",
-	MessageTagOrderRequest:        "OrderRequest",
-	MessageTagOrdersReceived:      "OrdersReceived",
-	MessageTagOrdersConfirmation:  "OrdersConfirmation",
-	MessageTagBattleResults:       "BattleResults",
-	MessageTagDangerZoneCrossings: "DangerZoneCrossings",
-	MessageTagWinner:              "Winner",
-	MessageTagSubmitOrders:        "SubmitOrders",
-	MessageTagGiveSupport:         "GiveSupport",
+	MessageTagError:              "Error",
+	MessageTagPlayerStatus:       "PlayerStatus",
+	MessageTagLobbyJoined:        "LobbyJoined",
+	MessageTagSelectFaction:      "SelectFaction",
+	MessageTagStartGame:          "StartGame",
+	MessageTagGameStarted:        "GameStarted",
+	MessageTagOrderRequest:       "OrderRequest",
+	MessageTagOrdersReceived:     "OrdersReceived",
+	MessageTagOrdersConfirmation: "OrdersConfirmation",
+	MessageTagBattleAnnouncement: "BattleAnnouncement",
+	MessageTagBattleResults:      "BattleResults",
+	MessageTagWinner:             "Winner",
+	MessageTagSubmitOrders:       "SubmitOrders",
+	MessageTagGiveSupport:        "GiveSupport",
+	MessageTagDiceRoll:           "DiceRoll",
 })
 
 func (tag MessageTag) String() string {

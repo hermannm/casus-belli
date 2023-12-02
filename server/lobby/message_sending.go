@@ -203,19 +203,10 @@ func (lobby *Lobby) SendOrdersConfirmation(
 	})
 }
 
-func (lobby *Lobby) SendSupportRequest(
-	to game.PlayerFaction,
-	supporting game.RegionName,
-	embattled game.RegionName,
-	supportable []game.PlayerFaction,
-) error {
-	return lobby.sendMessage(to, Message{
-		Tag: MessageTagSupportRequest,
-		Data: SupportRequestMessage{
-			SupportingRegion:    supporting,
-			EmbattledRegion:     embattled,
-			SupportableFactions: supportable,
-		},
+func (lobby *Lobby) SendBattleAnnouncement(battle game.Battle) error {
+	return lobby.sendMessageToAll(Message{
+		Tag:  MessageTagBattleAnnouncement,
+		Data: BattleAnnouncementMessage{Battle: battle},
 	})
 }
 
@@ -223,13 +214,6 @@ func (lobby *Lobby) SendBattleResults(battle game.Battle) error {
 	return lobby.sendMessageToAll(Message{
 		Tag:  MessageTagBattleResults,
 		Data: BattleResultsMessage{Battle: battle},
-	})
-}
-
-func (lobby *Lobby) SendDangerZoneCrossings(crossings []game.DangerZoneCrossing) error {
-	return lobby.sendMessageToAll(Message{
-		Tag:  MessageTagDangerZoneCrossings,
-		Data: DangerZoneCrossingsMessage{Crossings: crossings},
 	})
 }
 

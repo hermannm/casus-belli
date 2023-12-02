@@ -53,24 +53,24 @@ func (modifierType ModifierType) String() string {
 	return modifierNames.GetNameOrFallback(modifierType, "INVALID")
 }
 
-func (game *Game) defenseModifiers(region *Region) []Modifier {
-	modifiers := []Modifier{
-		{Type: ModifierDice, Value: game.rollDice()},
-	}
+func (game *Game) newDefenderResult(region *Region) Result {
+	var modifiers []Modifier
+	total := 0
 
 	if unitModifier, hasModifier := region.Unit.Type.battleModifier(false); hasModifier {
 		modifiers = append(modifiers, unitModifier)
+		total += unitModifier.Value
 	}
 
-	return modifiers
+	return Result{DefenderFaction: region.Unit.Faction, Parts: modifiers, Total: total}
 }
 
-func (game *Game) attackModifiers(
+func (game *Game) newAttackerResult(
 	move Order,
 	region *Region,
-	hasOtherAttackers bool,
+	singleplayerBattle bool,
 	borderBattle bool,
-) []Modifier {
+) Result {
 	modifiers := []Modifier{}
 
 	neighbor, adjacent := region.getNeighbor(move.Origin, move.ViaDangerZone)
@@ -81,7 +81,7 @@ func (game *Game) attackModifiers(
 		modifiers = append(modifiers, Modifier{Type: ModifierSurprise, Value: 1})
 	}
 
-	isOnlyAttackerOnUncontrolledRegion := !region.controlled() && !hasOtherAttackers
+	isOnlyAttackerOnUncontrolledRegion := !region.controlled() && singleplayerBattle
 	isAttackOnDefendedRegion := region.controlled() && !region.empty() && !borderBattle
 	includeTerrainModifiers := isOnlyAttackerOnUncontrolledRegion || isAttackOnDefendedRegion
 
@@ -104,7 +104,10 @@ func (game *Game) attackModifiers(
 		modifiers = append(modifiers, unitModifier)
 	}
 
-	modifiers = append(modifiers, Modifier{Type: ModifierDice, Value: game.rollDice()})
+	total := 0
+	for _, modifier := range modifiers {
+		total += modifier.Value
+	}
 
-	return modifiers
+	return Result{Order: move, Parts: modifiers, Total: total}
 }

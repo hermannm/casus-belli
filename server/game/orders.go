@@ -1,10 +1,11 @@
 package game
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log/slog"
+	"time"
 
 	"hermannm.dev/enumnames"
 	"hermannm.dev/set"
@@ -98,6 +99,27 @@ func (order Order) knightMove() Order {
 	return order
 }
 
+func (order Order) mustCrossDangerZone(
+	destination *Region,
+) (mustCross bool, dangerZone DangerZone) {
+	neighbor, adjacent := destination.getNeighbor(order.Origin, order.ViaDangerZone)
+	if !adjacent {
+		return false, "" // Non-adjacent moves are handled by transport resolving
+	}
+
+	return neighbor.DangerZone != "", neighbor.DangerZone
+}
+
+func countOrdersFromFaction(orders []Order, faction PlayerFaction) int {
+	count := 0
+	for _, order := range orders {
+		if order.Faction == faction {
+			count++
+		}
+	}
+	return count
+}
+
 // Custom json.Marshaler implementation, to serialize uninitialized orders to null.
 func (order Order) MarshalJSON() ([]byte, error) {
 	if order.isNone() {
@@ -110,24 +132,19 @@ func (order Order) MarshalJSON() ([]byte, error) {
 	return json.Marshal(orderAlias(order))
 }
 
-func (order Order) logAttribute() slog.Attr {
-	attributes := []any{
-		slog.String("faction", string(order.Faction)),
-		slog.String("origin", string(order.Origin)),
-	}
-	if order.Destination != "" {
-		attributes = append(attributes, slog.String("destination", string(order.Destination)))
-	}
-
-	return slog.Group("order", attributes...)
-}
-
 func (game *Game) gatherAndValidateOrders() []Order {
+	ctx, cleanup := context.WithTimeoutCause(
+		context.Background(),
+		15*time.Minute,
+		errors.New("timed out after 15 minutes"),
+	)
+	defer cleanup()
+
 	orderChans := make(map[PlayerFaction]chan []Order, len(game.PlayerFactions))
 	for _, faction := range game.PlayerFactions {
 		orderChan := make(chan []Order, 1)
 		orderChans[faction] = orderChan
-		go game.gatherAndValidateOrderSet(faction, orderChan)
+		go game.gatherAndValidateOrderSet(ctx, faction, orderChan)
 	}
 
 	var allOrders []Order
@@ -148,7 +165,11 @@ func (game *Game) gatherAndValidateOrders() []Order {
 // Waits for the given player to submit orders, then validates them.
 // If valid, sends the order set to the given output channel.
 // If invalid, informs the client and waits for a new order set.
-func (game *Game) gatherAndValidateOrderSet(faction PlayerFaction, orderChan chan<- []Order) {
+func (game *Game) gatherAndValidateOrderSet(
+	ctx context.Context,
+	faction PlayerFaction,
+	orderChan chan<- []Order,
+) {
 	for {
 		if err := game.messenger.SendOrderRequest(faction, game.season); err != nil {
 			game.log.Error(err)
@@ -156,9 +177,11 @@ func (game *Game) gatherAndValidateOrderSet(faction PlayerFaction, orderChan cha
 			return
 		}
 
-		orders, err := game.messenger.AwaitOrders(faction)
+		orders, err := game.messenger.AwaitOrders(ctx, faction)
 		if err != nil {
+			err = wrap.Error(err, "failed to receive orders")
 			game.log.Error(err)
+			game.messenger.SendError(faction, err)
 			orderChan <- []Order{}
 			return
 		}

@@ -1,6 +1,7 @@
 package game
 
 import (
+	"context"
 	"log/slog"
 	"os"
 	"testing"
@@ -640,44 +641,39 @@ func (MockMessenger) SendOrderRequest(to PlayerFaction, season Season) error {
 	return nil
 }
 
-func (MockMessenger) AwaitOrders(from PlayerFaction) ([]Order, error) {
-	return nil, nil
-}
-
 func (MockMessenger) SendOrdersReceived(orders map[PlayerFaction][]Order) error {
 	return nil
 }
 
 func (MockMessenger) SendOrdersConfirmation(factionThatSubmittedOrders PlayerFaction) error {
 	return nil
-
 }
-func (MockMessenger) SendSupportRequest(
-	to PlayerFaction,
-	supporting RegionName,
-	embattled RegionName,
-	supportable []PlayerFaction,
-) error {
+
+func (MockMessenger) SendBattleAnnouncement(battle Battle) error {
 	return nil
-}
-
-func (MockMessenger) AwaitSupport(
-	from PlayerFaction,
-	supporting RegionName,
-	embattled RegionName,
-) (supported PlayerFaction, err error) {
-	return "", nil
 }
 
 func (MockMessenger) SendBattleResults(battle Battle) error {
 	return nil
 }
 
-func (MockMessenger) SendDangerZoneCrossings(crossings []DangerZoneCrossing) error {
+func (MockMessenger) SendWinner(winner PlayerFaction) error {
 	return nil
 }
 
-func (MockMessenger) SendWinner(winner PlayerFaction) error {
+func (MockMessenger) AwaitOrders(ctx context.Context, from PlayerFaction) ([]Order, error) {
+	return nil, nil
+}
+
+func (MockMessenger) AwaitSupport(
+	ctx context.Context,
+	from PlayerFaction,
+	embattled RegionName,
+) (supported PlayerFaction, err error) {
+	return "", nil
+}
+
+func (MockMessenger) AwaitDiceRoll(ctx context.Context, from PlayerFaction) error {
 	return nil
 }
 
