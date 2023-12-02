@@ -88,7 +88,14 @@ public partial class GameState : Node
         CurrentPhase = Phase.ResolvingOrders;
         EmitSignal(SignalName.PhaseChanged);
 
-        ResolveMoves();
+        if (Season == Season.Winter)
+        {
+            ResolveWinterOrders();
+        }
+        else
+        {
+            ResolveUncontestedRegions();
+        }
     }
 
     private void HandleBattleResults(BattleResultsMessage message)
@@ -127,7 +134,7 @@ public partial class GameState : Node
         }
     }
 
-    private void ResolveMoves()
+    private void ResolveUncontestedRegions()
     {
         var allRegionsWaiting = false;
         while (!allRegionsWaiting)
@@ -136,7 +143,7 @@ public partial class GameState : Node
 
             foreach (var (_, region) in _board!.Regions)
             {
-                var waiting = ResolveRegionMoves(region);
+                var waiting = ResolveUncontestedRegion(region);
                 if (!waiting)
                 {
                     allRegionsWaiting = false;
@@ -145,8 +152,66 @@ public partial class GameState : Node
         }
     }
 
-    private bool ResolveRegionMoves(Region region)
+    private bool ResolveUncontestedRegion(Region region)
     {
+        var mustWait = TransportResolver.ResolveUncontestedTransports(region, _board);
+        if (mustWait)
+        {
+            return true;
+        }
+
         return false;
+    }
+
+    private void ResolveWinterOrders()
+    {
+        var allResolved = false;
+        while (!allResolved)
+        {
+            allResolved = true;
+
+            foreach (var (_, region) in _board.Regions)
+            {
+                // ReSharper disable once SwitchStatementMissingSomeEnumCasesNoDefault
+                switch (region.Order?.Type)
+                {
+                    case OrderType.Build:
+                        region.Unit = new Unit
+                        {
+                            Faction = region.Order.Faction,
+                            Type = region.Order.UnitType,
+                        };
+                        region.Order = null;
+                        break;
+                    case OrderType.Disband:
+                        region.RemoveUnit();
+                        region.Order = null;
+                        break;
+                }
+
+                if (!region.PartOfCycle)
+                {
+                    var cycle = _board.FindCycle(region.Name, region);
+                    if (cycle is not null)
+                    {
+                        Board.PrepareCycleForResolving(cycle);
+                    }
+                }
+
+                if (region.Order is not null)
+                {
+                    allResolved = false;
+                    continue;
+                }
+
+                if (region.IncomingMoves.Count == 0)
+                {
+                    var move = region.IncomingMoves[0]; // Max 1 incoming move in winter
+                    region.Unit = move.Unit();
+                    _board.Regions[move.Origin].RemoveUnit();
+                    _board.RemoveOrder(move);
+                }
+            }
+        }
     }
 }

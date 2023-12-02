@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json.Serialization;
 
 namespace CasusBelli.Client.Game;
@@ -56,10 +57,13 @@ public record Region
 
     [JsonIgnore] public Order? Order { get; set; } = null;
     [JsonIgnore] public List<Order> IncomingMoves { get; set; } = new();
+    [JsonIgnore] public List<Order> IncomingSupports { get; set; } = new();
     [JsonIgnore] public List<Order> IncomingKnightMoves { get; set; } = new();
     [JsonIgnore] public int ExpectedKnightMoves { get; set; } = 0;
     [JsonIgnore] public bool ResolvingKnightMoves { get; set; } = false;
     [JsonIgnore] public bool Resolved { get; set; } = false;
+    [JsonIgnore] public bool TransportsResolved { get; set; } = false;
+    [JsonIgnore] public bool DangerZonesResolved { get; set; } = false;
     [JsonIgnore] public bool PartOfCycle { get; set; } = false;
     [JsonIgnore] public Order? UnresolvedRetreat { get; set; } = null;
 
@@ -67,10 +71,13 @@ public record Region
     {
         Order = null;
         IncomingMoves = new List<Order>();
+        IncomingSupports = new List<Order>();
         IncomingKnightMoves = new List<Order>();
         ExpectedKnightMoves = 0;
         ResolvingKnightMoves = false;
         Resolved = false;
+        TransportsResolved = false;
+        DangerZonesResolved = false;
         PartOfCycle = false;
         UnresolvedRetreat = null;
     }
@@ -92,14 +99,7 @@ public record Region
 
     public bool AdjacentTo(string regionName)
     {
-        foreach (var neighbor in Neighbors)
-        {
-            if (neighbor.Name == regionName)
-            {
-                return true;
-            }
-        }
-        return false;
+        return Neighbors.Any(neighbor => neighbor.Name == regionName);
     }
 
     public void RemoveUnit()

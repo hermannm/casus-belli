@@ -147,7 +147,7 @@ public class Board
         return cycle;
     }
 
-    public void PrepareCycleForResolving(List<Region> cycle)
+    public static void PrepareCycleForResolving(List<Region> cycle)
     {
         foreach (var region in cycle)
         {
