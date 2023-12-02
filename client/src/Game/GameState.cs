@@ -177,6 +177,11 @@ public partial class GameState : Node
             }
         }
 
+        if (_board.FindBorderBattle(region))
+        {
+            return true;
+        }
+
         return false;
     }
 

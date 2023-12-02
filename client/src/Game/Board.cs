@@ -141,6 +141,26 @@ public class Board
         return Regions.Values.All(region => region.Resolved);
     }
 
+    public bool FindBorderBattle(Region region)
+    {
+        if (region.Order?.Type != OrderType.Move)
+        {
+            return false;
+        }
+
+        var secondRegion = Regions[region.Order.Destination!];
+        if (
+            secondRegion.Order?.Type == OrderType.Move
+            && secondRegion.Order.Destination == region.Name
+            && region.Order.Faction != secondRegion.Order.Faction
+        )
+        {
+            return true;
+        }
+
+        return false;
+    }
+
     public List<Region>? FindCycle(string firstRegionName, Region region)
     {
         if (region.Order?.Type != OrderType.Move)
