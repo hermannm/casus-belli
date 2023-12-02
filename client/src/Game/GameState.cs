@@ -152,6 +152,7 @@ public partial class GameState : Node
         }
     }
 
+    /// <returns>Whether the region is waiting for a battle to resolve further.</returns>
     private bool ResolveUncontestedRegion(Region region)
     {
         var mustWait = TransportResolver.ResolveUncontestedTransports(region, _board);
@@ -163,6 +164,17 @@ public partial class GameState : Node
         if (!region.Attacked())
         {
             region.ResolveRetreat();
+
+            if (region.ExpectedKnightMoves == 0)
+            {
+                region.Resolved = true;
+                return true;
+            }
+            else if (region.ExpectedKnightMoves == region.IncomingKnightMoves.Count)
+            {
+                _board.PlaceKnightMoves(region);
+                return false;
+            }
         }
 
         return false;

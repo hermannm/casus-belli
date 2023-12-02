@@ -25,6 +25,22 @@ public class Board
         }
     }
 
+    public void PlaceKnightMoves(Region region)
+    {
+        region.IncomingMoves = region.IncomingKnightMoves;
+        foreach (var move in region.IncomingMoves)
+        {
+            Regions[move.Origin].Order = move;
+        }
+
+        region.ResolvingKnightMoves = true;
+        region.IncomingKnightMoves = new List<Order>();
+        region.ExpectedKnightMoves = 0;
+        region.TransportsResolved = false;
+        region.DangerZonesResolved = false;
+        region.PartOfCycle = false;
+    }
+
     public void RemoveOrder(Order order)
     {
         if (!order.Retreat)
