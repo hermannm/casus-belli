@@ -342,21 +342,21 @@ func (region *Region) resolveRetreat() {
 
 // Returns a region's neighbor of the given name, and whether it was found.
 // If the region has several neighbor relations to the region, returns the one matching the provided
-// 'via' string (currently the name of the neighbor relation's danger zone).
+// 'via' string.
 func (region *Region) getNeighbor(neighborName RegionName, via DangerZone) (Neighbor, bool) {
-	neighbor := Neighbor{}
+	var neighbor Neighbor
 	hasNeighbor := false
 
-	for _, otherNeighbor := range region.Neighbors {
-		if neighborName != otherNeighbor.Name {
+	for _, candidate := range region.Neighbors {
+		if neighborName != candidate.Name {
 			continue
 		}
 
 		if !hasNeighbor {
-			neighbor = otherNeighbor
+			neighbor = candidate
 			hasNeighbor = true
-		} else if otherNeighbor.DangerZone != "" && via == otherNeighbor.DangerZone {
-			neighbor = otherNeighbor
+		} else if candidate.DangerZone != "" && via == candidate.DangerZone {
+			neighbor = candidate
 		}
 	}
 

@@ -222,6 +222,7 @@ func (game *Game) resolveUncontestedRegion(region *Region) (waiting bool) {
 			return true
 		} else {
 			game.board.succeedMove(region.incomingMoves[0])
+			return false
 		}
 	}
 

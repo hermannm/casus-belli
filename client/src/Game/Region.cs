@@ -118,11 +118,6 @@ public record Region
         return ControllingFaction != null;
     }
 
-    public bool AdjacentTo(string regionName)
-    {
-        return Neighbors.Any(neighbor => neighbor.Name == regionName);
-    }
-
     public void RemoveUnit()
     {
         if (!PartOfCycle)
@@ -148,6 +143,40 @@ public record Region
             }
             UnresolvedRetreat = null;
         }
+    }
+
+    public bool AdjacentTo(string regionName)
+    {
+        return Neighbors.Any(neighbor => neighbor.Name == regionName);
+    }
+
+    /// <summary>
+    /// Returns a region's neighbor of the given name, if found.
+    /// If the region has several neighbor relations to the region, returns the one matching the
+    /// provided 'viaDangerZone' string.
+    /// </summary>
+    public Neighbor? GetNeighbor(string neighborName, string? viaDangerZone)
+    {
+        Neighbor? neighbor = null;
+
+        foreach (var candidate in Neighbors)
+        {
+            if (neighborName != candidate.Name)
+            {
+                continue;
+            }
+
+            if (neighbor is null)
+            {
+                neighbor = candidate;
+            }
+            else if (candidate.DangerZone is not null && viaDangerZone == candidate.DangerZone)
+            {
+                neighbor = candidate;
+            }
+        }
+
+        return neighbor;
     }
 }
 
