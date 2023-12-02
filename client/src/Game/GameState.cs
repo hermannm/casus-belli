@@ -15,7 +15,6 @@ public partial class GameState : Node
     public Dictionary<string, List<Order>> OrdersByFaction { get; private set; } = new();
     public List<Player> PlayersYetToSubmitOrders = new();
     public List<Battle> Battles = new();
-    public List<DangerZoneCrossing> DangerZoneCrossings = new();
 
     [Signal]
     public delegate void PhaseChangedEventHandler();
@@ -43,7 +42,6 @@ public partial class GameState : Node
         ApiClient.Instance.AddMessageHandler<OrdersConfirmationMessage>(HandleOrdersConfirmation);
         ApiClient.Instance.AddMessageHandler<OrdersReceivedMessage>(HandleOrdersReceived);
         ApiClient.Instance.AddMessageHandler<BattleResultsMessage>(HandleBattleResults);
-        ApiClient.Instance.AddMessageHandler<DangerZoneCrossingsMessage>(HandleDangerZoneCrossings);
 
         LobbyState.Instance.LobbyChanged += () =>
         {
@@ -96,11 +94,6 @@ public partial class GameState : Node
     private void HandleBattleResults(BattleResultsMessage message)
     {
         throw new NotImplementedException();
-    }
-
-    private void HandleDangerZoneCrossings(DangerZoneCrossingsMessage message)
-    {
-        DangerZoneCrossings.AddRange(message.Crossings);
     }
 
     public void PlaceOrdersOnBoard()

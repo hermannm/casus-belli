@@ -13,4 +13,9 @@ public record Battle
     /// If length is more than one, the battle was between players.
     /// </summary>
     public required List<Result> Results { get; set; }
+
+    /// <summary>
+    /// If the battle is a danger zone crossing: name of the crossed danger zone.
+    /// </summary>
+    public string? DangerZone { get; set; }
 }

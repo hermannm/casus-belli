@@ -80,29 +80,11 @@ public partial class GameStartedMessage : GodotObject, IReceivableMessage
 }
 
 /// <summary>
-/// Message sent from server when asking a supporting player who to support in an embattled region.
-/// </summary>
-public partial class SupportRequestMessage : GodotObject, IReceivableMessage
-{
-    public required string SupportingRegion { get; set; }
-    public required string EmbattledRegion { get; set; }
-    public required List<string> SupportableFactions { get; set; }
-}
-
-/// <summary>
 /// Message sent from server to client to signal that client should submit orders.
 /// </summary>
 public partial class OrderRequestMessage : GodotObject, IReceivableMessage
 {
     public required Season Season { get; set; }
-}
-
-/// <summary>
-/// Message sent from server to all clients when valid orders are received from all players.
-/// </summary>
-public partial class OrdersReceivedMessage : GodotObject, IReceivableMessage
-{
-    public required Dictionary<string, List<Order>> OrdersByFaction { get; set; }
 }
 
 /// <summary>
@@ -115,19 +97,29 @@ public partial class OrdersConfirmationMessage : GodotObject, IReceivableMessage
 }
 
 /// <summary>
-/// Message sent from server to all clients when a battle result is calculated.
+/// Message sent from server to all clients when valid orders are received from all players.
 /// </summary>
-public partial class BattleResultsMessage : GodotObject, IReceivableMessage
+public partial class OrdersReceivedMessage : GodotObject, IReceivableMessage
+{
+    public required Dictionary<string, List<Order>> OrdersByFaction { get; set; }
+}
+
+/// <summary>
+/// Message sent from server to all clients when a battle has begun.
+/// resolving.
+/// </summary>
+public partial class BattleAnnouncementMessage : GodotObject, IReceivableMessage
 {
     public required Battle Battle { get; set; }
 }
 
 /// <summary>
-/// Message sent from server to all clients when orders have to cross danger zones to succeed.
+/// Message sent from server to all clients when a battle or danger zone crossing has finished
+/// resolving.
 /// </summary>
-public partial class DangerZoneCrossingsMessage : GodotObject, IReceivableMessage
+public partial class BattleResultsMessage : GodotObject, IReceivableMessage
 {
-    public required List<DangerZoneCrossing> Crossings { get; set; }
+    public required Battle Battle { get; set; }
 }
 
 /// <summary>
@@ -152,7 +144,6 @@ public partial class SubmitOrdersMessage : GodotObject, ISendableMessage
 /// </summary>
 public partial class GiveSupportMessage : GodotObject, IReceivableMessage, ISendableMessage
 {
-    public required string SupportingRegion { get; set; }
     public required string EmbattledRegion { get; set; }
 
     /// <summary>
@@ -160,3 +151,8 @@ public partial class GiveSupportMessage : GodotObject, IReceivableMessage, ISend
     /// </summary>
     public string? SupportedFaction { get; set; }
 }
+
+/// <summary>
+/// Message sent from client when they roll the dice in a battle.
+/// </summary>
+public partial class DiceRollMessage : GodotObject, ISendableMessage { }
