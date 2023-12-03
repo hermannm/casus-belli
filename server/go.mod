@@ -7,7 +7,7 @@ require (
 	github.com/magefile/mage v1.14.0
 	golang.org/x/sync v0.5.0
 	hermannm.dev/condqueue v0.2.1
-	hermannm.dev/devlog v0.3.2
+	hermannm.dev/devlog v0.4.0
 	hermannm.dev/enumnames v0.1.0
 	hermannm.dev/ipfinder v0.2.0
 	hermannm.dev/set v0.2.1

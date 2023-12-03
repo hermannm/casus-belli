@@ -475,9 +475,10 @@ func benchmarkSetup(b *testing.B) (*Game, []Order) {
 }
 
 func TestMain(m *testing.M) {
-	os.Setenv("FORCE_COLOR", "1")
-	log.ColorsEnabled = true
-	logHandler := devlog.NewHandler(os.Stdout, &devlog.Options{Level: slog.LevelDebug})
+	logHandler := devlog.NewHandler(
+		os.Stdout,
+		&devlog.Options{Level: slog.LevelDebug, ForceColors: true},
+	)
 	slog.SetDefault(slog.New(logHandler))
 
 	board, boardInfo, err := ReadBoardFromConfigFile("casus-belli-5players")
