@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net"
 
 	"github.com/gorilla/websocket"
 	"hermannm.dev/casus-belli/server/game"
@@ -31,10 +32,9 @@ func (player *Player) readMessage(lobby *Lobby) (socketClosed bool, err error) {
 	// See https://pkg.go.dev/github.com/gorilla/websocket#hdr-Concurrency
 	_, messageBytes, err := player.socket.ReadMessage()
 	if err != nil {
-		switch err.(type) {
-		case *websocket.CloseError:
+		if _, closed := err.(*websocket.CloseError); closed || errors.Is(err, net.ErrClosed) {
 			return true, err
-		default:
+		} else {
 			return false, wrap.Error(err, "failed to read message from WebSocket connection")
 		}
 	}
