@@ -75,19 +75,11 @@ func (player *Player) handleLobbyMessage(
 			return wrap.Error(err, "failed to parse message")
 		}
 
-		factionErr := player.selectFaction(message.Faction, lobby)
-		sendErr := lobby.SendPlayerStatusMessage(player)
-		if factionErr != nil && sendErr != nil {
-			return wrap.Errors(
-				"failed to select faction, AND failed to send message about it",
-				factionErr,
-				sendErr,
-			)
-		} else if factionErr != nil {
-			return wrap.Error(factionErr, "failed to select faction")
-		} else if sendErr != nil {
-			return wrap.Error(sendErr, "failed to update other players about faction selection")
+		if err := player.selectFaction(message.Faction, lobby); err != nil {
+			return wrap.Error(err, "failed to select faction")
 		}
+
+		lobby.SendPlayerStatusMessage(player)
 	case MessageTagStartGame:
 		if err := lobby.startGame(); err != nil {
 			return wrap.Error(err, "failed to start game")

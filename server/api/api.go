@@ -101,12 +101,8 @@ func (api LobbyAPI) JoinLobby(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if err := player.SendLobbyJoinedMessage(gameLobby); err != nil {
-		log.Error(err)
-	}
-	if err := gameLobby.SendPlayerStatusMessage(player); err != nil {
-		log.Error(err)
-	}
+	player.SendLobbyJoinedMessage(gameLobby)
+	gameLobby.SendPlayerStatusMessage(player)
 }
 
 // Endpoint for creating lobbies (for servers with public lobby creation enabled).

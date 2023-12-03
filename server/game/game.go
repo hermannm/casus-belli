@@ -31,13 +31,13 @@ type PlayerFaction string
 
 type Messenger interface {
 	SendError(to PlayerFaction, err error)
-	SendGameStarted(board Board) error
-	SendOrderRequest(to PlayerFaction, season Season) error
-	SendOrdersConfirmation(factionThatSubmittedOrders PlayerFaction) error
-	SendOrdersReceived(orders map[PlayerFaction][]Order) error
-	SendBattleAnnouncement(battle Battle) error
-	SendBattleResults(battle Battle) error
-	SendWinner(winner PlayerFaction) error
+	SendGameStarted(board Board)
+	SendOrderRequest(to PlayerFaction, season Season) (succeeded bool)
+	SendOrdersConfirmation(factionThatSubmittedOrders PlayerFaction)
+	SendOrdersReceived(orders map[PlayerFaction][]Order)
+	SendBattleAnnouncement(battle Battle)
+	SendBattleResults(battle Battle)
+	SendWinner(winner PlayerFaction)
 	AwaitOrders(ctx context.Context, from PlayerFaction) ([]Order, error)
 	AwaitDiceRoll(ctx context.Context, from PlayerFaction) error
 	AwaitSupport(
@@ -74,9 +74,7 @@ func New(
 }
 
 func (game *Game) Run() {
-	if err := game.messenger.SendGameStarted(game.board); err != nil {
-		game.log.Error(err)
-	}
+	game.messenger.SendGameStarted(game.board)
 
 	for {
 		orders := game.gatherAndValidateOrders()
@@ -87,9 +85,7 @@ func (game *Game) Run() {
 			game.resolveNonWinterOrders(orders)
 
 			if winner := game.checkWinner(); winner != "" {
-				if err := game.messenger.SendWinner(winner); err != nil {
-					game.log.Error(err)
-				}
+				game.messenger.SendWinner(winner)
 				break
 			}
 		}

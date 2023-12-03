@@ -1,13 +1,24 @@
 package lobby
 
 import (
+	"log/slog"
+
 	"hermannm.dev/casus-belli/server/game"
+	"hermannm.dev/devlog/log"
 	"hermannm.dev/enumnames"
 )
 
 type Message struct {
 	Tag  MessageTag
 	Data any
+}
+
+func (message Message) log() slog.Attr {
+	return slog.Group(
+		"message",
+		slog.String("tag", message.Tag.String()),
+		log.JSON("data", message.Data),
+	)
 }
 
 type ReceivedMessage struct {

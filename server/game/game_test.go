@@ -633,39 +633,18 @@ func (expected expectedUnits) check(t *testing.T, board Board, originalUnits uni
 type MockMessenger struct{}
 
 func (MockMessenger) SendError(to PlayerFaction, err error) {}
-
-func (MockMessenger) SendGameStarted(board Board) error {
-	return nil
+func (MockMessenger) SendGameStarted(board Board)           {}
+func (MockMessenger) SendOrderRequest(to PlayerFaction, season Season) (succeeded bool) {
+	return true
 }
-
-func (MockMessenger) SendOrderRequest(to PlayerFaction, season Season) error {
-	return nil
-}
-
-func (MockMessenger) SendOrdersReceived(orders map[PlayerFaction][]Order) error {
-	return nil
-}
-
-func (MockMessenger) SendOrdersConfirmation(factionThatSubmittedOrders PlayerFaction) error {
-	return nil
-}
-
-func (MockMessenger) SendBattleAnnouncement(battle Battle) error {
-	return nil
-}
-
-func (MockMessenger) SendBattleResults(battle Battle) error {
-	return nil
-}
-
-func (MockMessenger) SendWinner(winner PlayerFaction) error {
-	return nil
-}
-
+func (MockMessenger) SendOrdersReceived(orders map[PlayerFaction][]Order)             {}
+func (MockMessenger) SendOrdersConfirmation(factionThatSubmittedOrders PlayerFaction) {}
+func (MockMessenger) SendBattleAnnouncement(battle Battle)                            {}
+func (MockMessenger) SendBattleResults(battle Battle)                                 {}
+func (MockMessenger) SendWinner(winner PlayerFaction)                                 {}
 func (MockMessenger) AwaitOrders(ctx context.Context, from PlayerFaction) ([]Order, error) {
 	return nil, nil
 }
-
 func (MockMessenger) AwaitSupport(
 	ctx context.Context,
 	from PlayerFaction,
@@ -673,9 +652,7 @@ func (MockMessenger) AwaitSupport(
 ) (supported PlayerFaction, err error) {
 	return "", nil
 }
-
 func (MockMessenger) AwaitDiceRoll(ctx context.Context, from PlayerFaction) error {
 	return nil
 }
-
 func (MockMessenger) ClearMessages() {}

@@ -155,10 +155,7 @@ func (game *Game) gatherAndValidateOrders() []Order {
 		factionOrders[faction] = orders
 	}
 
-	if err := game.messenger.SendOrdersReceived(factionOrders); err != nil {
-		game.log.Error(err)
-	}
-
+	game.messenger.SendOrdersReceived(factionOrders)
 	return allOrders
 }
 
@@ -171,8 +168,7 @@ func (game *Game) gatherAndValidateOrderSet(
 	orderChan chan<- []Order,
 ) {
 	for {
-		if err := game.messenger.SendOrderRequest(faction, game.season); err != nil {
-			game.log.Error(err)
+		if succeeded := game.messenger.SendOrderRequest(faction, game.season); !succeeded {
 			orderChan <- []Order{}
 			return
 		}
@@ -196,10 +192,7 @@ func (game *Game) gatherAndValidateOrderSet(
 			continue
 		}
 
-		if err := game.messenger.SendOrdersConfirmation(faction); err != nil {
-			game.log.Error(err)
-		}
-
+		game.messenger.SendOrdersConfirmation(faction)
 		orderChan <- orders
 	}
 }

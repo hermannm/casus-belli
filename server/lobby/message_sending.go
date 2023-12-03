@@ -2,38 +2,32 @@ package lobby
 
 import (
 	"encoding/json"
-	"errors"
+	"fmt"
 
 	"github.com/gorilla/websocket"
 	"hermannm.dev/casus-belli/server/game"
-	"hermannm.dev/wrap"
 )
 
-func (player *Player) sendMessage(message Message) error {
+func (player *Player) sendMessage(message Message) (succeeded bool) {
 	player.lock.Lock()
 	defer player.lock.Unlock()
 
 	if err := player.socket.WriteJSON(message); err != nil {
-		return wrap.Errorf(
-			err,
-			"failed to send message of type '%s' to player '%s'",
-			message.Tag,
-			player.username,
-		)
+		player.log.ErrorCause(err, "failed to send message", message.log())
+		return false
 	}
 
-	return nil
+	return true
 }
 
-func (lobby *Lobby) sendMessage(to game.PlayerFaction, message Message) error {
+func (lobby *Lobby) sendMessage(to game.PlayerFaction, message Message) (succeeded bool) {
 	player, ok := lobby.getPlayer(to)
 	if !ok {
-		return wrap.Errorf(
-			errors.New("player not found"),
-			"failed to send message of type '%s' to player faction '%s'",
-			message.Tag,
-			to,
+		lobby.log.ErrorMessage(
+			fmt.Sprintf("tried to send message to unrecognized player faction '%s'", to),
+			message.log(),
 		)
+		return false
 	}
 
 	return player.sendMessage(message)
@@ -46,50 +40,33 @@ func (player *Player) sendPreparedMessage(
 	player.lock.Lock()
 	defer player.lock.Unlock()
 
-	if err := player.socket.WritePreparedMessage(message); err != nil {
-		return wrap.Errorf(
-			err,
-			"failed to send prepared message of type '%s' to player '%s'",
-			tag,
-			player.username,
-		)
-	}
-
-	return nil
+	return player.socket.WritePreparedMessage(message)
 }
 
-func (lobby *Lobby) sendMessageToAll(message Message) error {
+func (lobby *Lobby) sendMessageToAll(message Message) {
 	messageJSON, err := json.Marshal(message)
 	if err != nil {
-		return wrap.Errorf(err, "failed to serialize message of type '%s'", message.Tag)
+		lobby.log.ErrorCause(err, "failed to serialize message", message.log())
+		return
 	}
 
 	preparedMessage, err := websocket.NewPreparedMessage(websocket.TextMessage, messageJSON)
 	if err != nil {
-		return wrap.Errorf(err, "failed to prepare websocket for message of type '%s'", message.Tag)
+		lobby.log.ErrorCause(err, "failed to prepare websocket message", message.log())
+		return
 	}
 
 	lobby.lock.RLock()
 	defer lobby.lock.RUnlock()
 
-	var errs []error
 	for _, player := range lobby.players {
 		if err := player.sendPreparedMessage(message.Tag, preparedMessage); err != nil {
-			errs = append(errs, err)
+			player.log.ErrorCause(err, "failed to send prepared message", message.log())
 		}
-	}
-
-	switch len(errs) {
-	case 0:
-		return nil
-	case 1:
-		return errs[0]
-	default:
-		return wrap.Errors("failed to send message to multiple players", errs...)
 	}
 }
 
-func (player *Player) SendLobbyJoinedMessage(lobby *Lobby) error {
+func (player *Player) SendLobbyJoinedMessage(lobby *Lobby) {
 	lobby.lock.RLock()
 	defer lobby.lock.RUnlock()
 
@@ -118,20 +95,16 @@ func (player *Player) SendLobbyJoinedMessage(lobby *Lobby) error {
 		otherPlayer.lock.RUnlock()
 	}
 
-	if err := player.sendMessage(Message{
+	player.sendMessage(Message{
 		Tag: MessageTagLobbyJoined,
 		Data: LobbyJoinedMessage{
 			SelectableFactions: lobby.game.PlayerFactions,
 			PlayerStatuses:     statuses,
 		},
-	}); err != nil {
-		return err
-	}
-
-	return nil
+	})
 }
 
-func (lobby *Lobby) SendPlayerStatusMessage(player *Player) error {
+func (lobby *Lobby) SendPlayerStatusMessage(player *Player) {
 	player.lock.RLock()
 
 	statusMsg := PlayerStatusMessage{
@@ -145,80 +118,71 @@ func (lobby *Lobby) SendPlayerStatusMessage(player *Player) error {
 
 	player.lock.RUnlock()
 
-	if err := lobby.sendMessageToAll(Message{
+	lobby.sendMessageToAll(Message{
 		Tag:  MessageTagPlayerStatus,
 		Data: statusMsg,
-	}); err != nil {
-		return wrap.Error(err, "failed to send player status message")
-	}
-
-	return nil
+	})
 }
 
 func (player *Player) SendError(err error) {
-	if err := player.sendMessage(Message{
+	player.sendMessage(Message{
 		Tag:  MessageTagError,
 		Data: ErrorMessage{Error: err.Error()},
-	}); err != nil {
-		player.log.Error(err)
-	}
+	})
 }
 
 func (lobby *Lobby) SendError(to game.PlayerFaction, err error) {
-	if err := lobby.sendMessage(to, Message{
+	lobby.sendMessage(to, Message{
 		Tag:  MessageTagError,
 		Data: ErrorMessage{Error: err.Error()},
-	}); err != nil {
-		lobby.log.Error(err)
-	}
+	})
 }
 
-func (lobby *Lobby) SendGameStarted(board game.Board) error {
-	return lobby.sendMessageToAll(Message{
+func (lobby *Lobby) SendGameStarted(board game.Board) {
+	lobby.sendMessageToAll(Message{
 		Tag:  MessageTagGameStarted,
 		Data: GameStartedMessage{Board: board},
 	})
 }
 
-func (lobby *Lobby) SendOrderRequest(to game.PlayerFaction, season game.Season) error {
+func (lobby *Lobby) SendOrderRequest(to game.PlayerFaction, season game.Season) (succeeded bool) {
 	return lobby.sendMessage(to, Message{
 		Tag:  MessageTagOrderRequest,
 		Data: OrderRequestMessage{Season: season},
 	})
 }
 
-func (lobby *Lobby) SendOrdersReceived(orders map[game.PlayerFaction][]game.Order) error {
-	return lobby.sendMessageToAll(Message{
+func (lobby *Lobby) SendOrdersReceived(orders map[game.PlayerFaction][]game.Order) {
+	lobby.sendMessageToAll(Message{
 		Tag:  MessageTagOrdersReceived,
 		Data: OrdersReceivedMessage{OrdersByFaction: orders},
 	})
 }
 
-func (lobby *Lobby) SendOrdersConfirmation(
-	factionThatSubmittedOrders game.PlayerFaction,
-) error {
-	return lobby.sendMessageToAll(Message{
+func (lobby *Lobby) SendOrdersConfirmation(factionThatSubmittedOrders game.PlayerFaction) {
+	lobby.sendMessageToAll(Message{
 		Tag:  MessageTagOrdersConfirmation,
 		Data: OrdersConfirmationMessage{FactionThatSubmittedOrders: factionThatSubmittedOrders},
 	})
 }
 
-func (lobby *Lobby) SendBattleAnnouncement(battle game.Battle) error {
-	return lobby.sendMessageToAll(Message{
+func (lobby *Lobby) SendBattleAnnouncement(battle game.Battle) {
+	lobby.sendMessageToAll(Message{
 		Tag:  MessageTagBattleAnnouncement,
 		Data: BattleAnnouncementMessage{Battle: battle},
 	})
 }
 
-func (lobby *Lobby) SendBattleResults(battle game.Battle) error {
-	return lobby.sendMessageToAll(Message{
+func (lobby *Lobby) SendBattleResults(battle game.Battle) {
+	lobby.sendMessageToAll(Message{
 		Tag:  MessageTagBattleResults,
 		Data: BattleResultsMessage{Battle: battle},
 	})
 }
 
-func (lobby *Lobby) SendWinner(winner game.PlayerFaction) error {
-	return lobby.sendMessageToAll(Message{
+func (lobby *Lobby) SendWinner(winner game.PlayerFaction) {
+	lobby.sendMessageToAll(Message{
 		Tag:  MessageTagWinner,
-		Data: WinnerMessage{WinningFaction: winner}})
+		Data: WinnerMessage{WinningFaction: winner},
+	})
 }

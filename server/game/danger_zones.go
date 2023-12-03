@@ -28,9 +28,7 @@ func (game *Game) resolveDangerZoneCrossings(region *Region) {
 func (game *Game) resolveDangerZoneCrossing(crossing Battle) {
 	order := crossing.Results[0].Order
 
-	if err := game.messenger.SendBattleAnnouncement(crossing); err != nil {
-		game.log.Error(err)
-	}
+	game.messenger.SendBattleAnnouncement(crossing)
 
 	ctx, cleanup := newPlayerInputContext()
 	defer cleanup()
@@ -49,7 +47,5 @@ func (game *Game) resolveDangerZoneCrossing(crossing Battle) {
 		}
 	}
 
-	if err := game.messenger.SendBattleResults(crossing); err != nil {
-		game.log.Error(err)
-	}
+	game.messenger.SendBattleResults(crossing)
 }

@@ -84,9 +84,7 @@ func (game *Game) resolveSingleplayerBattle(region *Region) {
 		game.board.retreatMove(move)
 	}
 
-	if err := game.messenger.SendBattleResults(battle); err != nil {
-		game.log.Error(err)
-	}
+	game.messenger.SendBattleResults(battle)
 }
 
 func (game *Game) resolveMultiplayerBattle(region *Region) {
@@ -141,17 +139,13 @@ func (game *Game) resolveMultiplayerBattle(region *Region) {
 		}
 	}
 
-	if err := game.messenger.SendBattleResults(battle); err != nil {
-		game.log.Error(err)
-	}
+	game.messenger.SendBattleResults(battle)
 }
 
 func (game *Game) calculateBattle(battle *Battle, region *Region) {
 	remainingSupports := battle.addAutomaticSupports(region, region.incomingMoves, false)
 
-	if err := game.messenger.SendBattleAnnouncement(*battle); err != nil {
-		game.log.Error(err)
-	}
+	game.messenger.SendBattleAnnouncement(*battle)
 
 	ctx, cleanup := newPlayerInputContext()
 	defer cleanup()
@@ -233,9 +227,7 @@ func (game *Game) resolveBorderBattle(region1 *Region, region2 *Region) {
 		}
 	}
 
-	if err := game.messenger.SendBattleResults(battle); err != nil {
-		game.log.Error(err)
-	}
+	game.messenger.SendBattleResults(battle)
 }
 
 var errSupportedOtherRegion error = errors.New("supported other region in border battle")
@@ -244,9 +236,7 @@ func (game *Game) calculateBorderBattle(battle *Battle, region1 *Region, region2
 	remainingSupports1 := battle.addAutomaticSupports(region1, []Order{region2.order}, true)
 	remainingSupports2 := battle.addAutomaticSupports(region2, []Order{region1.order}, true)
 
-	if err := game.messenger.SendBattleAnnouncement(*battle); err != nil {
-		game.log.Error(err)
-	}
+	game.messenger.SendBattleAnnouncement(*battle)
 
 	ctx, cleanup := newPlayerInputContext()
 	defer cleanup()
