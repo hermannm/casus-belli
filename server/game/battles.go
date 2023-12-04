@@ -29,8 +29,7 @@ type Result struct {
 	Parts []Modifier
 
 	// If result of a move order to the battle: the move order in question, otherwise empty.
-	// If the result is part of a danger zone crossing, the order is is either a move or support
-	// order.
+	// If the result is part of a danger zone crossing, the order is either a move or support order.
 	Order Order
 
 	// If result of a defending unit in a region: the faction of the defender, otherwise blank.

@@ -12,6 +12,8 @@ public record Result
 
     /// <summary>
     /// If result of a move order to the battle: the move order in question.
+    /// If the result is part of a danger zone crossing, the order is either a move or support
+    /// order.
     /// </summary>
     public Order? Order { get; set; }
 
