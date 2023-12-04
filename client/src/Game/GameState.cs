@@ -179,6 +179,8 @@ public partial class GameState : Node
         {
             ResolveMultiplayerBattle(battle);
         }
+
+        ResolveUncontestedRegions();
     }
 
     private void ResolveSingleplayerBattle(Battle battle)
@@ -296,6 +298,11 @@ public partial class GameState : Node
                 }
             }
         }
+
+        if (_board.Resolved())
+        {
+            ResolveSieges();
+        }
     }
 
     /// <returns>Whether the region is waiting for a battle to resolve further.</returns>
@@ -357,17 +364,22 @@ public partial class GameState : Node
         return false;
     }
 
-    public bool HasCrossedDangerZone(Order order)
+    public void ResolveSieges()
     {
-        foreach (var battle in Battles)
+        foreach (var (_, region) in _board.Regions)
         {
-            if (battle.DangerZone is not null && battle.Results[0].Order == order)
+            if (region.Order?.Type != OrderType.Besiege)
             {
-                return true;
+                continue;
+            }
+
+            region.SiegeCount++;
+            if (region.SiegeCount == 2)
+            {
+                region.ControllingFaction = region.Unit!.Faction;
+                region.SiegeCount = 0;
             }
         }
-
-        return false;
     }
 
     private void ResolveWinterOrders()
@@ -420,5 +432,18 @@ public partial class GameState : Node
                 }
             }
         }
+    }
+
+    public bool HasCrossedDangerZone(Order order)
+    {
+        foreach (var battle in Battles)
+        {
+            if (battle.DangerZone is not null && battle.Results[0].Order == order)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
