@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Godot;
 
 namespace CasusBelli.Client.Game;
@@ -50,5 +51,45 @@ public partial class Battle : GodotObject
 
         return result1.Order.Destination == result2.Order.Origin
             && result2.Order.Destination == result1.Order.Origin;
+    }
+
+    private const int MinResultToConquerNeutralRegion = 4;
+
+    public (List<string> winnerFactions, List<string> loserFactions) WinnersAndLosers()
+    {
+        var winners = new List<string>();
+        var losers = new List<string>();
+
+        if (Results.Count == 1)
+        {
+            var result = Results[0];
+            if (result.Total >= MinResultToConquerNeutralRegion)
+            {
+                winners.Add(result.Order!.Faction);
+            }
+            else
+            {
+                losers.Add(result.Order!.Faction);
+            }
+        }
+        else
+        {
+            var highestResult = Results.Select(result => result.Total).Max();
+
+            foreach (var result in Results)
+            {
+                var faction = result.DefenderFaction ?? result.Order!.Faction;
+                if (result.Total >= highestResult)
+                {
+                    winners.Add(faction);
+                }
+                else
+                {
+                    losers.Add(faction);
+                }
+            }
+        }
+
+        return (winners, losers);
     }
 }
