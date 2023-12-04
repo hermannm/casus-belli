@@ -21,6 +21,21 @@ public partial class Battle : GodotObject
     /// </summary>
     public string? DangerZone { get; set; }
 
+    public List<string> RegionNames()
+    {
+        var regionNames = new List<string>();
+
+        foreach (var result in Results)
+        {
+            if (result.Order is not null && !regionNames.Contains(result.Order.Destination!))
+            {
+                regionNames.Add(result.Order.Destination!);
+            }
+        }
+
+        return regionNames;
+    }
+
     public (bool isDangerZoneCrossing, bool succeeded, Order? order) IsDangerZoneCrossing()
     {
         if (DangerZone is null)
