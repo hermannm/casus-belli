@@ -33,4 +33,22 @@ public partial class Battle : GodotObject
 
         return (true, result.Total >= minResultToSurviveDangerZone, result.Order);
     }
+
+    public bool IsBorderBattle()
+    {
+        if (Results.Count != 2)
+        {
+            return false;
+        }
+
+        var result1 = Results[0];
+        var result2 = Results[1];
+        if (result1.Order is null || result2.Order is null)
+        {
+            return false;
+        }
+
+        return result1.Order.Destination == result2.Order.Origin
+            && result2.Order.Destination == result1.Order.Origin;
+    }
 }
