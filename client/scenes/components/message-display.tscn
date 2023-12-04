@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://dnc8427jcvbhm"]
 
-[ext_resource type="Script" path="res://src/UI/MessageDisplay.cs" id="1_gk0yb"]
+[ext_resource type="Script" path="res://src/MessageDisplay.cs" id="1_gk0yb"]
 
 [node name="MessageDisplay" type="CanvasLayer"]
 layer = 10

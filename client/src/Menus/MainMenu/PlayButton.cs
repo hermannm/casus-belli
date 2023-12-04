@@ -1,7 +1,7 @@
 using CasusBelli.Client.Api;
 using Godot;
 
-namespace CasusBelli.Client.UI.MainMenu;
+namespace CasusBelli.Client.Menus.MainMenu;
 
 public partial class PlayButton : Button
 {

@@ -1,6 +1,6 @@
 using Godot;
 
-namespace CasusBelli.Client.UI;
+namespace CasusBelli.Client.Menus;
 
 public partial class BackButton : Button
 {

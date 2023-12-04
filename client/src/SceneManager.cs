@@ -1,4 +1,3 @@
-using CasusBelli.Client.UI;
 using Godot;
 
 namespace CasusBelli.Client;

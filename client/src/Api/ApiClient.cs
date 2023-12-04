@@ -5,7 +5,6 @@ using System.Net.Http.Json;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
-using CasusBelli.Client.UI;
 using Godot;
 using HttpClient = System.Net.Http.HttpClient;
 using GodotArray = Godot.Collections.Array;

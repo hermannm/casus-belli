@@ -6,7 +6,6 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using CasusBelli.Client.UI;
 using Godot;
 
 namespace CasusBelli.Client.Api;

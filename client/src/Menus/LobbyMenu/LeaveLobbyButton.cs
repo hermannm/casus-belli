@@ -1,7 +1,7 @@
 using CasusBelli.Client.Lobby;
 using Godot;
 
-namespace CasusBelli.Client.UI.LobbyMenu;
+namespace CasusBelli.Client.Menus.LobbyMenu;
 
 public partial class LeaveLobbyButton : Button
 {

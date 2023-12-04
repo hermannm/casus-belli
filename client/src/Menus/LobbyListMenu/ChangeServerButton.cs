@@ -1,6 +1,6 @@
 using Godot;
 
-namespace CasusBelli.Client.UI.LobbyListMenu;
+namespace CasusBelli.Client.Menus.LobbyListMenu;
 
 public partial class ChangeServerButton : Button
 {

@@ -3,7 +3,7 @@ using System.Text;
 using CasusBelli.Client.Utils;
 using Godot;
 
-namespace CasusBelli.Client.UI;
+namespace CasusBelli.Client;
 
 public partial class MessageDisplay : Node
 {

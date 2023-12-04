@@ -2,7 +2,7 @@ using CasusBelli.Client.Lobby;
 using CasusBelli.Client.Utils;
 using Godot;
 
-namespace CasusBelli.Client.UI.LobbyMenu;
+namespace CasusBelli.Client.Menus.LobbyMenu;
 
 public partial class OtherPlayersList : Node
 {

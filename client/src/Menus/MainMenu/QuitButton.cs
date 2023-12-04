@@ -1,6 +1,6 @@
 using Godot;
 
-namespace CasusBelli.Client.UI.MainMenu;
+namespace CasusBelli.Client.Menus.MainMenu;
 
 public partial class QuitButton : Button
 {

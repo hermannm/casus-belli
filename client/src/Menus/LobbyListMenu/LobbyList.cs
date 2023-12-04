@@ -3,7 +3,7 @@ using CasusBelli.Client.Api;
 using CasusBelli.Client.Lobby;
 using Godot;
 
-namespace CasusBelli.Client.UI.LobbyListMenu;
+namespace CasusBelli.Client.Menus.LobbyListMenu;
 
 public partial class LobbyList : Node
 {
