@@ -11,12 +11,11 @@ import (
 
 type Game struct {
 	BoardInfo
-	board          Board
-	season         Season
-	battleReceiver chan Battle
-	messenger      Messenger
-	log            log.Logger
-	rollDice       func() int
+	board     Board
+	season    Season
+	messenger Messenger
+	log       log.Logger
+	rollDice  func() int
 }
 
 type BoardInfo struct {
@@ -56,13 +55,12 @@ func New(
 	customDiceRoller func() int,
 ) *Game {
 	game := Game{
-		board:          board,
-		BoardInfo:      boardInfo,
-		season:         SeasonWinter,
-		battleReceiver: make(chan Battle),
-		messenger:      messenger,
-		log:            logger,
-		rollDice:       customDiceRoller,
+		board:     board,
+		BoardInfo: boardInfo,
+		season:    SeasonWinter,
+		messenger: messenger,
+		log:       logger,
+		rollDice:  customDiceRoller,
 	}
 	if game.rollDice == nil {
 		game.rollDice = func() int {
@@ -96,14 +94,8 @@ func (game *Game) Run() {
 
 func (game *Game) nextRound() {
 	game.season = game.season.next()
-
 	game.messenger.ClearMessages()
 	game.board.resetResolvingState()
-	for len(game.battleReceiver) > 0 {
-		// Drains the channel - won't block, since there are no other concurrent channel readers, as
-		// this function is called from the same goroutine as the one that read
-		<-game.battleReceiver
-	}
 }
 
 func (game *Game) resolveWinterOrders(orders []Order) {
