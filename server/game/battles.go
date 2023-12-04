@@ -111,9 +111,7 @@ func (game *Game) resolveMultiplayerBattle(region *Region) {
 				// Guaranteed to have 1 element, since this is not a border battle
 				regionName := battle.regionNames()[0]
 				region := game.board[regionName]
-				if tie {
-					region.removeUnit()
-				} else if !region.controlled() {
+				if tie || !region.controlled() {
 					region.removeUnit()
 				}
 			}
@@ -213,16 +211,15 @@ func (game *Game) resolveBorderBattle(region1 *Region, region2 *Region) {
 
 		game.board.retreatMove(region1.order)
 		game.board.retreatMove(region2.order)
-		return
-	}
-
-	for _, result := range battle.Results {
-		// Only the loser is affected by the results of the border battle; the winner may still have
-		// to win a battle in the destination region, which will be handled by the next cycle of the
-		// move resolver
-		if result.Order.Faction == losers[0] {
-			game.board.killMove(result.Order)
-			break
+	} else {
+		for _, result := range battle.Results {
+			// Only the loser is affected by the results of the border battle; the winner may still
+			// have to win a battle in the destination region, which will be handled by the next
+			// cycle of move resolving.
+			if result.Order.Faction == losers[0] {
+				game.board.killMove(result.Order)
+				break
+			}
 		}
 	}
 
