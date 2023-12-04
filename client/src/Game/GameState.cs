@@ -166,7 +166,117 @@ public partial class GameState : Node
                     _board.RemoveOrder(order);
                 }
             }
-            return;
+        }
+        else if (battle.IsBorderBattle())
+        {
+            ResolveBorderBattle(battle);
+        }
+        else if (battle.Results.Count == 1)
+        {
+            ResolveSingleplayerBattle(battle);
+        }
+        else
+        {
+            ResolveMultiplayerBattle(battle);
+        }
+    }
+
+    private void ResolveSingleplayerBattle(Battle battle)
+    {
+        var move = battle.Results[0].Order!;
+
+        var (winners, _) = battle.WinnersAndLosers();
+        if (winners.Count == 1)
+        {
+            _board.SucceedMove(move);
+        }
+        else
+        {
+            _board.RetreatMove(move);
+        }
+    }
+
+    private void ResolveMultiplayerBattle(Battle battle)
+    {
+        var (winners, losers) = battle.WinnersAndLosers();
+        var tie = winners.Count > 1;
+
+        foreach (var result in battle.Results)
+        {
+            if (result.DefenderFaction is not null)
+            {
+                // If the defender won or or was part of a tie, nothing changes for them.
+                // If an attacker won alone and the defender controlled the region, the defender
+                // will be removed as part of succeedMove for the winner.
+                // If the defender was on the losing end of a tie in a battle with multiple
+                // combatants, or the defender lost but did not control the region, we have to
+                // remove the unit here.
+                if (losers.Contains(result.DefenderFaction))
+                {
+                    // Guaranteed to have 1 element, since this is not a border battle
+                    var regionName = battle.RegionNames()[0];
+                    var region = _board.Regions[regionName];
+                    if (tie || !region.Controlled())
+                    {
+                        region.RemoveUnit();
+                    }
+                }
+
+                continue;
+            }
+
+            var move = result.Order!;
+            if (losers.Contains(move.Faction))
+            {
+                _board.KillMove(move);
+                continue;
+            }
+
+            if (tie)
+            {
+                _board.RetreatMove(move);
+                continue;
+            }
+
+            // If the destination is not controlled, then the winner will have to battle there
+            // before we can succeed the move
+            if (_board.Regions[move.Destination!].Controlled())
+            {
+                _board.SucceedMove(move);
+            }
+        }
+    }
+
+    private void ResolveBorderBattle(Battle battle)
+    {
+        var (winners, losers) = battle.WinnersAndLosers();
+
+        // If battle was a tie, both moves retreat
+        if (winners.Count > 1)
+        {
+            var order1 = battle.Results[0].Order!;
+            var order2 = battle.Results[1].Order!;
+
+            // Remove both orders before retreating, so they don't think their origins are attacked
+            _board.RemoveOrder(order1);
+            _board.RemoveOrder(order2);
+
+            _board.RetreatMove(order1);
+            _board.RetreatMove(order2);
+        }
+        else
+        {
+            foreach (var result in battle.Results)
+            {
+                // Only the loser is affected by the results of the border battle; the winner may
+                // still have to win a battle in the destination region, which will be handled by
+                // the next cycle of move resolving.
+                if (result.Order!.Faction == losers[0])
+                {
+                    _board.KillMove(result.Order);
+                    break;
+                }
+            }
         }
     }
 
