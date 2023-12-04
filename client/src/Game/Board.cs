@@ -141,6 +141,14 @@ public class Board
         return Regions.Values.All(region => region.Resolved);
     }
 
+    public void ResetResolvingState()
+    {
+        foreach (var (_, region) in Regions)
+        {
+            region.ResetResolvingState();
+        }
+    }
+
     public bool FindBorderBattle(Region region)
     {
         if (region.Order?.Type != OrderType.Move)

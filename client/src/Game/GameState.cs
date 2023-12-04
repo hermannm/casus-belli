@@ -72,10 +72,11 @@ public partial class GameState : Node
 
     private void HandleOrderRequest(OrderRequestMessage message)
     {
-        Season = message.Season;
-        Phase = GamePhase.SubmittingOrders;
+        _board.ResetResolvingState();
         OrdersByFaction.Clear();
         PlayersYetToSubmitOrders = new List<Player>(LobbyState.Instance.OtherPlayers);
+        Season = message.Season;
+        Phase = GamePhase.SubmittingOrders;
     }
 
     private void HandleOrdersConfirmation(OrdersConfirmationMessage message)
