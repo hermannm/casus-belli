@@ -7,20 +7,20 @@ namespace CasusBelli.Client.Api;
 public enum MessageTag
 {
     Error = 1,
-    PlayerStatus,
     LobbyJoined,
+    PlayerStatus,
     SelectFaction,
     StartGame,
     GameStarted,
     OrderRequest,
-    OrdersReceived,
     OrdersConfirmation,
+    OrdersReceived,
     BattleAnnouncement,
     BattleResults,
     Winner,
     SubmitOrders,
-    GiveSupport,
-    DiceRoll
+    DiceRoll,
+    GiveSupport
 }
 
 public static class MessageTagMap
@@ -29,13 +29,12 @@ public static class MessageTagMap
         new()
         {
             { MessageTag.Error, typeof(ErrorMessage) },
-            { MessageTag.GameStarted, typeof(GameStartedMessage) },
-            { MessageTag.PlayerStatus, typeof(PlayerStatusMessage) },
             { MessageTag.LobbyJoined, typeof(LobbyJoinedMessage) },
-            { MessageTag.GiveSupport, typeof(GiveSupportMessage) },
+            { MessageTag.PlayerStatus, typeof(PlayerStatusMessage) },
+            { MessageTag.GameStarted, typeof(GameStartedMessage) },
             { MessageTag.OrderRequest, typeof(OrderRequestMessage) },
-            { MessageTag.OrdersReceived, typeof(OrdersReceivedMessage) },
             { MessageTag.OrdersConfirmation, typeof(OrdersConfirmationMessage) },
+            { MessageTag.OrdersReceived, typeof(OrdersReceivedMessage) },
             { MessageTag.BattleAnnouncement, typeof(BattleAnnouncementMessage) },
             { MessageTag.BattleResults, typeof(BattleResultsMessage) },
             { MessageTag.Winner, typeof(WinnerMessage) }
@@ -47,8 +46,8 @@ public static class MessageTagMap
             { MessageTag.SelectFaction, typeof(SelectFactionMessage) },
             { MessageTag.StartGame, typeof(StartGameMessage) },
             { MessageTag.SubmitOrders, typeof(SubmitOrdersMessage) },
-            { MessageTag.GiveSupport, typeof(GiveSupportMessage) },
-            { MessageTag.DiceRoll, typeof(DiceRollMessage) }
+            { MessageTag.DiceRoll, typeof(DiceRollMessage) },
+            { MessageTag.GiveSupport, typeof(GiveSupportMessage) }
         };
 
     public static readonly Dictionary<Type, MessageTag> ReceivableMessageTypes =

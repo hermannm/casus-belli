@@ -32,16 +32,16 @@ type ErrorMessage struct {
 	Error string
 }
 
-// Message sent from server to all clients when a player's status changes.
-type PlayerStatusMessage struct {
-	Username        Username
-	SelectedFaction *game.PlayerFaction `json:",omitempty"`
-}
-
 // Message sent to a player when they join a lobby, to inform them about the game and other players.
 type LobbyJoinedMessage struct {
 	SelectableFactions []game.PlayerFaction
 	PlayerStatuses     []PlayerStatusMessage
+}
+
+// Message sent from server to all clients when a player's status changes.
+type PlayerStatusMessage struct {
+	Username        Username
+	SelectedFaction game.PlayerFaction `json:",omitempty"`
 }
 
 // Message sent from client when they want to select a faction to play for the game.
@@ -94,8 +94,10 @@ type SubmitOrdersMessage struct {
 	Orders []game.Order
 }
 
+// Message sent from client when they roll the dice in a battle.
+type DiceRollMessage struct{}
+
 // Message sent from client when declaring who to support with their support order.
-// Forwarded by server to all clients to show who were given support.
 type GiveSupportMessage struct {
 	EmbattledRegion game.RegionName
 
@@ -103,15 +105,12 @@ type GiveSupportMessage struct {
 	SupportedFaction game.PlayerFaction `json:",omitempty"`
 }
 
-// Message sent from client when they roll the dice in a battle.
-type DiceRollMessage struct{}
-
 type MessageTag uint8
 
 const (
 	MessageTagError MessageTag = iota + 1
-	MessageTagPlayerStatus
 	MessageTagLobbyJoined
+	MessageTagPlayerStatus
 	MessageTagSelectFaction
 	MessageTagStartGame
 	MessageTagGameStarted
@@ -122,26 +121,26 @@ const (
 	MessageTagBattleResults
 	MessageTagWinner
 	MessageTagSubmitOrders
-	MessageTagGiveSupport
 	MessageTagDiceRoll
+	MessageTagGiveSupport
 )
 
 var messageTags = enumnames.NewMap(map[MessageTag]string{
 	MessageTagError:              "Error",
-	MessageTagPlayerStatus:       "PlayerStatus",
 	MessageTagLobbyJoined:        "LobbyJoined",
+	MessageTagPlayerStatus:       "PlayerStatus",
 	MessageTagSelectFaction:      "SelectFaction",
 	MessageTagStartGame:          "StartGame",
 	MessageTagGameStarted:        "GameStarted",
 	MessageTagOrderRequest:       "OrderRequest",
-	MessageTagOrdersReceived:     "OrdersReceived",
 	MessageTagOrdersConfirmation: "OrdersConfirmation",
+	MessageTagOrdersReceived:     "OrdersReceived",
 	MessageTagBattleAnnouncement: "BattleAnnouncement",
 	MessageTagBattleResults:      "BattleResults",
 	MessageTagWinner:             "Winner",
 	MessageTagSubmitOrders:       "SubmitOrders",
-	MessageTagGiveSupport:        "GiveSupport",
 	MessageTagDiceRoll:           "DiceRoll",
+	MessageTagGiveSupport:        "GiveSupport",
 })
 
 func (tag MessageTag) String() string {

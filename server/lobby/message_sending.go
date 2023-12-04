@@ -78,21 +78,13 @@ func (player *Player) SendLobbyJoinedMessage(lobby *Lobby) {
 		}
 
 		otherPlayer.lock.RLock()
-
-		var faction *game.PlayerFaction
-		if otherPlayer.gameFaction != "" {
-			faction = &otherPlayer.gameFaction
+		status := PlayerStatusMessage{
+			Username:        otherPlayer.username,
+			SelectedFaction: otherPlayer.gameFaction,
 		}
-
-		statuses = append(
-			statuses,
-			PlayerStatusMessage{
-				Username:        otherPlayer.username,
-				SelectedFaction: faction,
-			},
-		)
-
 		otherPlayer.lock.RUnlock()
+
+		statuses = append(statuses, status)
 	}
 
 	player.sendMessage(Message{
@@ -106,21 +98,15 @@ func (player *Player) SendLobbyJoinedMessage(lobby *Lobby) {
 
 func (lobby *Lobby) SendPlayerStatusMessage(player *Player) {
 	player.lock.RLock()
-
-	statusMsg := PlayerStatusMessage{
+	message := PlayerStatusMessage{
 		Username:        player.username,
-		SelectedFaction: nil,
+		SelectedFaction: player.gameFaction,
 	}
-	if player.gameFaction != "" {
-		faction := player.gameFaction
-		statusMsg.SelectedFaction = &faction
-	}
-
 	player.lock.RUnlock()
 
 	lobby.sendMessageToAll(Message{
 		Tag:  MessageTagPlayerStatus,
-		Data: statusMsg,
+		Data: message,
 	})
 }
 

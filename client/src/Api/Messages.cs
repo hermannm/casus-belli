@@ -40,21 +40,21 @@ public partial class ErrorMessage : GodotObject, IReceivableMessage
 }
 
 /// <summary>
-/// Message sent from server to all clients when a player's status changes.
-/// </summary>
-public partial class PlayerStatusMessage : GodotObject, IReceivableMessage
-{
-    public required string Username { get; set; }
-    public string? SelectedFaction { get; set; }
-}
-
-/// <summary>
 /// Message sent to a player when they join a lobby, to inform them about the game and other players.
 /// </summary>
 public partial class LobbyJoinedMessage : GodotObject, IReceivableMessage
 {
     public required List<string> SelectableFactions { get; set; }
     public required List<PlayerStatusMessage> PlayerStatuses { get; set; }
+}
+
+/// <summary>
+/// Message sent from server to all clients when a player's status changes.
+/// </summary>
+public partial class PlayerStatusMessage : GodotObject, IReceivableMessage
+{
+    public required string Username { get; set; }
+    public string? SelectedFaction { get; set; }
 }
 
 /// <summary>
@@ -139,10 +139,14 @@ public partial class SubmitOrdersMessage : GodotObject, ISendableMessage
 }
 
 /// <summary>
-/// Message sent from client when declaring who to support with their support order.
-/// Forwarded by server to all clients to show who were given support.
+/// Message sent from client when they roll the dice in a battle.
 /// </summary>
-public partial class GiveSupportMessage : GodotObject, IReceivableMessage, ISendableMessage
+public partial class DiceRollMessage : GodotObject, ISendableMessage { }
+
+/// <summary>
+/// Message sent from client when declaring who to support with their support order.
+/// </summary>
+public partial class GiveSupportMessage : GodotObject, ISendableMessage
 {
     public required string EmbattledRegion { get; set; }
 
@@ -151,8 +155,3 @@ public partial class GiveSupportMessage : GodotObject, IReceivableMessage, ISend
     /// </summary>
     public string? SupportedFaction { get; set; }
 }
-
-/// <summary>
-/// Message sent from client when they roll the dice in a battle.
-/// </summary>
-public partial class DiceRollMessage : GodotObject, ISendableMessage { }
