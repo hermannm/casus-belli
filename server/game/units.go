@@ -45,7 +45,7 @@ func (unitType UnitType) isNone() bool {
 }
 
 func (unitType UnitType) isValid() bool {
-	return unitNames.ContainsEnumValue(unitType)
+	return unitNames.ContainsKey(unitType)
 }
 
 func (unit Unit) isNone() bool {

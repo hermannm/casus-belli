@@ -8,7 +8,7 @@ require (
 	golang.org/x/sync v0.5.0
 	hermannm.dev/condqueue v0.2.1
 	hermannm.dev/devlog v0.4.1
-	hermannm.dev/enumnames v0.1.0
+	hermannm.dev/enumnames v0.2.0
 	hermannm.dev/ipfinder v0.2.0
 	hermannm.dev/set v0.2.1
 	hermannm.dev/wrap v0.3.1
