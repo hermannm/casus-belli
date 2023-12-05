@@ -12,8 +12,6 @@ client built with the Godot game engine and C#.
     between them
   - `api` defines API endpoints for finding, creating and joining game lobbies
   - `game` implements the game logic (resolving player orders on the board)
-    - `boardconfig` contains JSON files for board setups that can be played
-  - `magefiles` contains build scripts using [Mage](https://magefile.org/)
 - `client`
   - `src` contains C# game scripts
   - `scenes` contains Godot scene files
@@ -24,9 +22,10 @@ client built with the Godot game engine and C#.
 ### Server
 
 - Install Go: https://go.dev/
-- Navigate to the server directory in the terminal: `cd casus-belli/server`
-- Run the server: `go run .`
+- Run the server: navigate to `casus-belli/server`, then `go run .`
   - To run in single-lobby mode for local server hosting: `go run . -local`
+- To run cross-compilation build script, install Mage: https://magefile.org/
+  - Run `mage crosscompile` (in `casus-belli/server`) to compile server for all supported OSes
 
 ### Client
 
