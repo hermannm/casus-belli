@@ -393,7 +393,7 @@ func TestWinterOrders(t *testing.T) {
 }
 
 func BenchmarkBoardResolve(b *testing.B) {
-	for n := 0; n < b.N; n++ {
+	for range b.N {
 		b.StopTimer()
 		game, orders := benchmarkSetup(b)
 		b.StartTimer()
