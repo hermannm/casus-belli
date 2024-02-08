@@ -3,7 +3,7 @@ package game
 import (
 	"context"
 	"errors"
-	"math/rand"
+	"math/rand/v2"
 	"time"
 
 	"hermannm.dev/devlog/log"
@@ -64,7 +64,7 @@ func New(
 	}
 	if game.rollDice == nil {
 		game.rollDice = func() int {
-			return rand.Intn(6) + 1
+			return rand.IntN(6) + 1
 		}
 	}
 
