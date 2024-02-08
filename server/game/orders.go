@@ -234,7 +234,7 @@ func validateWinterOrders(orders []Order, faction PlayerFaction, board Board) er
 		}
 	}
 
-	if err := validateOrderSet(orders, board); err != nil {
+	if err := validateOrderSet(orders); err != nil {
 		return wrap.Error(err, "invalid winter order set")
 	}
 
@@ -381,7 +381,7 @@ func validateNonWinterOrders(orders []Order, board Board) error {
 		}
 	}
 
-	if err := validateOrderSet(orders, board); err != nil {
+	if err := validateOrderSet(orders); err != nil {
 		return wrap.Error(err, "invalid order set")
 	}
 
@@ -435,7 +435,7 @@ func validateMoveOrSupport(order Order, origin *Region, board Board) error {
 	case OrderMove:
 		return validateMove(order, origin, board)
 	case OrderSupport:
-		return validateSupport(order, origin, destination)
+		return validateSupport(order, origin)
 	}
 
 	return errors.New("invalid order type")
@@ -459,7 +459,7 @@ func validateMove(order Order, origin *Region, board Board) error {
 	return nil
 }
 
-func validateSupport(order Order, origin *Region, destination *Region) error {
+func validateSupport(order Order, origin *Region) error {
 	if !origin.adjacentTo(order.Destination) {
 		return errors.New("support order must be adjacent to destination")
 	}
@@ -474,15 +474,15 @@ func validateBesiegeOrTransport(order Order, origin *Region) error {
 
 	switch order.Type {
 	case OrderBesiege:
-		return validateBesiege(order, origin)
+		return validateBesiege(origin)
 	case OrderTransport:
-		return validateTransport(order, origin)
+		return validateTransport(origin)
 	default:
 		return errors.New("invalid order type")
 	}
 }
 
-func validateBesiege(order Order, origin *Region) error {
+func validateBesiege(origin *Region) error {
 	if !origin.Castle {
 		return errors.New("besieged region must have castle")
 	}
@@ -498,7 +498,7 @@ func validateBesiege(order Order, origin *Region) error {
 	return nil
 }
 
-func validateTransport(order Order, origin *Region) error {
+func validateTransport(origin *Region) error {
 	if origin.Unit.Type != UnitShip {
 		return errors.New("only ships can transport")
 	}
@@ -555,19 +555,19 @@ func validateReachableMoveDestination(move Order, board Board) error {
 	return nil
 }
 
-func validateOrderSet(orders []Order, board Board) error {
-	if err := validateUniqueMoveDestinations(orders, board); err != nil {
+func validateOrderSet(orders []Order) error {
+	if err := validateUniqueMoveDestinations(orders); err != nil {
 		return err
 	}
 
-	if err := validateOneOrderPerRegion(orders, board); err != nil {
+	if err := validateOneOrderPerRegion(orders); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func validateUniqueMoveDestinations(orders []Order, board Board) error {
+func validateUniqueMoveDestinations(orders []Order) error {
 	moveDestinations := set.ArraySetWithCapacity[RegionName](len(orders))
 
 	for _, order := range orders {
@@ -589,7 +589,7 @@ func validateUniqueMoveDestinations(orders []Order, board Board) error {
 	return nil
 }
 
-func validateOneOrderPerRegion(orders []Order, board Board) error {
+func validateOneOrderPerRegion(orders []Order) error {
 	orderedRegions := set.ArraySetWithCapacity[RegionName](len(orders))
 
 	for _, order := range orders {
