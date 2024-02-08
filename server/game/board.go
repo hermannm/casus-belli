@@ -146,6 +146,7 @@ func (board Board) cutSupportsAttackedByKnightMoves(region *Region) (mustWait bo
 		board.removeOrder(region.order)
 	}
 
+	var supportsToCut []Order
 	for _, support := range region.incomingSupports {
 		origin := board[support.Origin]
 		if origin.resolved {
@@ -153,15 +154,22 @@ func (board Board) cutSupportsAttackedByKnightMoves(region *Region) (mustWait bo
 		}
 
 		if !origin.resolvingKnightMoves {
-			return true
+			mustWait = true
+			continue
 		}
 
 		if origin.attacked() {
-			board.removeOrder(support)
+			// Cuts the supports in a loop below, since cutting it here mutates
+			// region.incomingSupports, invalidating our loop
+			supportsToCut = append(supportsToCut, support)
 		}
 	}
 
-	return false
+	for _, support := range supportsToCut {
+		board.removeOrder(support)
+	}
+
+	return mustWait
 }
 
 func (board Board) resolved() bool {
