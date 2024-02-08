@@ -29,15 +29,15 @@ func NewLobbyAPI(
 
 	api := LobbyAPI{lobbyRegistry: lobbyRegistry, availableBoards: availableBoards, router: router}
 
-	router.HandleFunc("/lobbies", api.ListLobbies)
-	router.HandleFunc("/join", api.JoinLobby)
+	router.HandleFunc("GET /lobbies", api.ListLobbies)
+	router.HandleFunc("GET /join", api.JoinLobby)
 
 	return api
 }
 
 func (api LobbyAPI) RegisterLobbyCreationEndpoints() {
-	api.router.HandleFunc("/create", api.CreateLobby)
-	api.router.HandleFunc("/boards", api.ListBoards)
+	api.router.HandleFunc("POST /create", api.CreateLobby)
+	api.router.HandleFunc("GET /boards", api.ListBoards)
 }
 
 func (api LobbyAPI) ListenAndServe(address string) error {
