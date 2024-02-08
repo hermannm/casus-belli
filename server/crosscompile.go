@@ -33,17 +33,15 @@ func CrossCompile() error {
 
 	for _, target := range targets {
 		for _, arch := range target.architectures {
-			os, arch := target.os, arch // Avoids mutating loop variable
-
-			targetString := os + "-" + arch
+			targetString := target.os + "-" + arch
 			fmt.Println(withColor("[Building]", blue), targetString)
 
 			goroutines.Go(func() error {
 				output := outputDir + "/" + appName + "-" + targetString
-				if os == "windows" {
+				if target.os == "windows" {
 					output += ".exe"
 				}
-				env := map[string]string{"GOOS": os, "GOARCH": arch}
+				env := map[string]string{"GOOS": target.os, "GOARCH": arch}
 				return sh.RunWithV(env, "go", "build", "-o", output)
 			})
 		}

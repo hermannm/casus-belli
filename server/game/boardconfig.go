@@ -159,8 +159,6 @@ func GetAvailableBoards() ([]BoardInfo, error) {
 	var goroutines errgroup.Group
 
 	for i, directoryEntry := range directory {
-		i, directoryEntry := i, directoryEntry // Avoids mutating loop variables
-
 		goroutines.Go(func() error {
 			fullName := directoryEntry.Name()
 			baseName, isJson := strings.CutSuffix(fullName, ".json")

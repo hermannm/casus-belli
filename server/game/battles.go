@@ -161,8 +161,6 @@ func (game *Game) calculateBattle(battle *Battle, region *Region) {
 		factionsInBattle := battle.factions()
 
 		for _, faction := range game.PlayerFactions {
-			faction := faction // Avoids mutating loop variable
-
 			if faction.isFighting(battle) {
 				waitGroup.Add(1)
 				go game.awaitDiceRoll(ctx, faction, battle, &waitGroup, &resultsLock)
@@ -241,8 +239,6 @@ func (game *Game) calculateBorderBattle(battle *Battle, region1 *Region, region2
 	var waitGroup sync.WaitGroup
 
 	for _, faction := range game.PlayerFactions {
-		faction := faction // Avoids mutating loop variable
-
 		if faction.isFighting(battle) {
 			waitGroup.Add(1)
 			go game.awaitDiceRoll(ctx, faction, battle, &waitGroup, &resultsLock)
