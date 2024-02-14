@@ -33,10 +33,7 @@ func (lobby *Lobby) sendMessage(to game.PlayerFaction, message Message) (succeed
 	return player.sendMessage(message)
 }
 
-func (player *Player) sendPreparedMessage(
-	tag MessageTag,
-	message *websocket.PreparedMessage,
-) error {
+func (player *Player) sendPreparedMessage(message *websocket.PreparedMessage) error {
 	player.lock.Lock()
 	defer player.lock.Unlock()
 
@@ -60,7 +57,7 @@ func (lobby *Lobby) sendMessageToAll(message Message) {
 	defer lobby.lock.RUnlock()
 
 	for _, player := range lobby.players {
-		if err := player.sendPreparedMessage(message.Tag, preparedMessage); err != nil {
+		if err := player.sendPreparedMessage(preparedMessage); err != nil {
 			player.log.ErrorCause(err, "failed to send prepared message", message.log())
 		}
 	}
