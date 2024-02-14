@@ -141,12 +141,12 @@ func ReadBoardFromConfigFile(boardID string) (Board, BoardInfo, error) {
 	return board, boardInfo, nil
 }
 
-type PartialJSONBoard struct {
-	Name               string
-	WinningCastleCount int
+type partialBoardConfig struct {
+	Name               string `json:"name"`
+	WinningCastleCount int    `json:"winningCastleCount"`
 	Nations            map[string][]struct {
-		HomeFaction string
-	}
+		HomeFaction string `json:"homeFaction"`
+	} `json:"nations"`
 }
 
 func GetAvailableBoards() ([]BoardInfo, error) {
@@ -171,7 +171,7 @@ func GetAvailableBoards() ([]BoardInfo, error) {
 				return wrap.Errorf(err, "failed to read config file '%s'", fullName)
 			}
 
-			var board PartialJSONBoard
+			var board partialBoardConfig
 			if err := json.NewDecoder(file).Decode(&board); err != nil {
 				return wrap.Errorf(err, "failed to parse board config file '%s'", fullName)
 			}
