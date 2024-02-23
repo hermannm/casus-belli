@@ -1,3 +1,4 @@
+using CasusBelli.Client.Game;
 using CasusBelli.Client.Lobby;
 using Godot;
 
@@ -5,6 +6,11 @@ namespace CasusBelli.Client.Menus.LobbyMenu;
 
 public partial class StartGameButton : Button
 {
+    public override void _Pressed()
+    {
+        GameState.StartGame();
+    }
+
     public override void _Ready()
     {
         UpdateButtonState();

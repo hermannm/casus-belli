@@ -65,8 +65,14 @@ public partial class GameState : Node
 
     public override void _Process(double delta) { }
 
+    public static void StartGame()
+    {
+        ApiClient.Instance.SendMessage(new StartGameMessage());
+    }
+
     private void HandleGameStarted(GameStartedMessage message)
     {
+        GD.Print("Game started!");
         _board.Regions = message.Board;
     }
 
