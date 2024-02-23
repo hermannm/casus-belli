@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 
 	"golang.org/x/sync/errgroup"
@@ -137,6 +138,7 @@ func ReadBoardFromConfigFile(boardID string) (Board, BoardInfo, error) {
 		WinningCastleCount: boardConfig.WinningCastleCount,
 		PlayerFactions:     factions.ToSlice(),
 	}
+	slices.Sort(boardInfo.PlayerFactions)
 
 	return board, boardInfo, nil
 }
@@ -194,6 +196,7 @@ func GetAvailableBoards() ([]BoardInfo, error) {
 				WinningCastleCount: board.WinningCastleCount,
 				PlayerFactions:     factions.ToSlice(),
 			}
+			slices.Sort(boardInfo.PlayerFactions)
 
 			availableBoards[i] = boardInfo
 			return nil
