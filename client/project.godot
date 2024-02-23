@@ -13,7 +13,8 @@ config_version=5
 config/name="casus-belli-client"
 run/main_scene="res://scenes/main-menu.tscn"
 config/features=PackedStringArray("4.1", "C#", "Forward Plus")
-config/icon="res://assets/icon.svg"
+config/icon="res://assets/icons/casus-belli.png"
+config/windows_native_icon="res://assets/icons/casus-belli.ico"
 
 [autoload]
 
