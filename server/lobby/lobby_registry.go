@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"hermannm.dev/casus-belli/server/game"
+	"hermannm.dev/condqueue"
 	"hermannm.dev/devlog/log"
 	"hermannm.dev/wrap"
 )
@@ -44,7 +45,12 @@ func (registry *LobbyRegistry) CreateLobby(
 		return errors.New("lobby name cannot be blank")
 	}
 
-	lobby := &Lobby{name: lobbyName, registry: registry, lock: sync.RWMutex{}}
+	lobby := &Lobby{
+		name:             lobbyName,
+		registry:         registry,
+		lock:             sync.RWMutex{},
+		gameMessageQueue: condqueue.New[ReceivedMessage](),
+	}
 
 	logger := log.Default()
 	if !onlyLobbyOnServer {
