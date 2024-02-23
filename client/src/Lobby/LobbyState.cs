@@ -67,6 +67,9 @@ public partial class LobbyState : Node
     public Task LeaveLobby()
     {
         _joinedLobby = null;
+        Player.Faction = null;
+        OtherPlayers.Clear();
+        SelectableFactions.Clear();
         return ApiClient.Instance.LeaveLobby();
     }
 
