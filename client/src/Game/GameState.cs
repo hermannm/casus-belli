@@ -57,10 +57,13 @@ public partial class GameState : Node
         ApiClient.Instance.AddMessageHandler<BattleAnnouncementMessage>(HandleBattleAnnouncement);
         ApiClient.Instance.AddMessageHandler<BattleResultsMessage>(HandleBattleResults);
 
-        LobbyState.Instance.LobbyChanged += () =>
-        {
-            PlayersYetToSubmitOrders = new List<Player>(LobbyState.Instance.OtherPlayers);
-        };
+        LobbyState.Instance.Connect(
+            LobbyState.SignalName.LobbyChanged,
+            Callable.From(() =>
+            {
+                PlayersYetToSubmitOrders = new List<Player>(LobbyState.Instance.OtherPlayers);
+            })
+        );
     }
 
     public override void _Process(double delta) { }

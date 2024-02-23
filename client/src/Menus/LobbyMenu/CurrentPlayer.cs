@@ -20,7 +20,12 @@ public partial class CurrentPlayer : Node
         _factionSelect.AddThemeFontSizeOverride(Strings.FontSize, 20);
         GetNode("%FactionContainer").AddChild(_factionSelect);
 
-        LobbyState.Instance.LobbyChanged += UpdateSelectedFaction;
+        // Uses Connect() instead of += syntax, because of this issue:
+        // https://github.com/godotengine/godot/issues/70414
+        LobbyState.Instance.Connect(
+            LobbyState.SignalName.LobbyChanged,
+            Callable.From(UpdateSelectedFaction)
+        );
     }
 
     private static void SelectFaction(long selectedFactionIndex)

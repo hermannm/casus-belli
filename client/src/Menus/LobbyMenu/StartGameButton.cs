@@ -14,7 +14,10 @@ public partial class StartGameButton : Button
     public override void _Ready()
     {
         UpdateButtonState();
-        LobbyState.Instance.LobbyChanged += UpdateButtonState;
+        LobbyState.Instance.Connect(
+            LobbyState.SignalName.LobbyChanged,
+            Callable.From(UpdateButtonState)
+        );
     }
 
     private void UpdateButtonState()
