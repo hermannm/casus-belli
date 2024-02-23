@@ -38,6 +38,7 @@ func (registry *LobbyRegistry) CreateLobby(
 	lobbyName string,
 	boardID string,
 	onlyLobbyOnServer bool,
+	customPlayerFactions []game.PlayerFaction,
 ) error {
 	if lobbyName == "" {
 		return errors.New("lobby name cannot be blank")
@@ -54,6 +55,10 @@ func (registry *LobbyRegistry) CreateLobby(
 	board, boardInfo, err := game.ReadBoardFromConfigFile(boardID)
 	if err != nil {
 		return wrap.Error(err, "failed to read board from config file")
+	}
+
+	if len(customPlayerFactions) > 0 {
+		boardInfo.PlayerFactions = customPlayerFactions
 	}
 
 	game := game.New(board, boardInfo, lobby, lobby.log, nil)

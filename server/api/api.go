@@ -122,7 +122,7 @@ func (api LobbyAPI) CreateLobby(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if err := api.lobbyRegistry.CreateLobby(lobbyName, boardID, false); err != nil {
+	if err := api.lobbyRegistry.CreateLobby(lobbyName, boardID, false, nil); err != nil {
 		err = wrap.Error(err, "failed to create lobby")
 		sendServerError(res, err)
 		log.Error(err)

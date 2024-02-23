@@ -26,7 +26,7 @@ func main() {
 	logHandler := devlog.NewHandler(os.Stdout, &devlog.Options{Level: slog.LevelDebug})
 	slog.SetDefault(slog.New(logHandler))
 
-	local, port := getCommandLineFlags()
+	local, devMode, port := getCommandLineFlags()
 
 	availableBoards, err := game.GetAvailableBoards()
 	if err != nil {
@@ -37,9 +37,9 @@ func main() {
 	lobbyRegistry := lobby.NewLobbyRegistry()
 	lobbyAPI := api.NewLobbyAPI(http.DefaultServeMux, lobbyRegistry, availableBoards)
 
-	if local {
-		selectedBoardID := selectBoard(availableBoards)
-		createLobby(selectedBoardID, lobbyRegistry)
+	if local || devMode {
+		selectedBoard := selectBoard(availableBoards)
+		createLobby(selectedBoard, lobbyRegistry, devMode)
 		printIPs(port)
 	} else {
 		lobbyAPI.RegisterLobbyCreationEndpoints()
@@ -52,8 +52,14 @@ func main() {
 	}
 }
 
-func getCommandLineFlags() (local bool, port string) {
+func getCommandLineFlags() (local bool, devMode bool, port string) {
 	flag.BoolVar(&local, "local", false, "Disable public endpoints for creating new lobbies")
+	flag.BoolVar(
+		&devMode,
+		"dev",
+		false,
+		"Allows for creating single-player lobbies for development",
+	)
 	flag.StringVar(
 		&port,
 		"port",
@@ -61,12 +67,12 @@ func getCommandLineFlags() (local bool, port string) {
 		"The port on which the server should handle requests",
 	)
 	flag.Parse()
-	return local, port
+	return local, devMode, port
 }
 
-func selectBoard(availableBoards []game.BoardInfo) string {
+func selectBoard(availableBoards []game.BoardInfo) game.BoardInfo {
 	if len(availableBoards) == 1 {
-		return availableBoards[0].ID
+		return availableBoards[0]
 	}
 
 	fmt.Println("Available boards:")
@@ -76,7 +82,7 @@ func selectBoard(availableBoards []game.BoardInfo) string {
 	}
 	fmt.Println()
 
-	var selectedBoardID string
+	var selectedBoard game.BoardInfo
 	for {
 		fmt.Print("Select board (type number from above list): ")
 		scanner := bufio.NewScanner(os.Stdin)
@@ -89,24 +95,49 @@ func selectBoard(availableBoards []game.BoardInfo) string {
 			continue
 		}
 
-		selection := availableBoards[index]
-		selectedBoardID = selection.ID
-		fmt.Printf("Selected %s!\n\n", selection.Name)
+		selectedBoard = availableBoards[index]
+		fmt.Printf("Selected %s!\n\n", selectedBoard.Name)
 		break
 	}
 
-	return selectedBoardID
+	return selectedBoard
 }
 
-func createLobby(selectedBoardID string, lobbyRegistry *lobby.LobbyRegistry) {
+func createLobby(selectedBoard game.BoardInfo, lobbyRegistry *lobby.LobbyRegistry, devMode bool) {
 	var lobbyName string
 	for {
-		fmt.Print("Type name of lobby: ")
+		fmt.Print("Lobby name: ")
 		scanner := bufio.NewScanner(os.Stdin)
 		scanner.Scan()
 		lobbyName = scanner.Text()
 
-		if err := lobbyRegistry.CreateLobby(lobbyName, selectedBoardID, true); err != nil {
+		var customFactions []game.PlayerFaction
+		if devMode {
+			fmt.Println()
+			fmt.Println("[dev] Playable factions:")
+			for i, faction := range selectedBoard.PlayerFactions {
+				fmt.Printf("  [%d] %s\n", i, faction)
+			}
+
+			fmt.Print("Select faction (type number from above list): ")
+			scanner := bufio.NewScanner(os.Stdin)
+			scanner.Scan()
+			index, err := strconv.Atoi(scanner.Text())
+			if err != nil || index < 0 || index >= len(selectedBoard.PlayerFactions) {
+				fmt.Println("Invalid faction selection, try again!")
+				continue
+			}
+			fmt.Println()
+
+			customFactions = []game.PlayerFaction{selectedBoard.PlayerFactions[index]}
+		}
+
+		if err := lobbyRegistry.CreateLobby(
+			lobbyName,
+			selectedBoard.ID,
+			true,
+			customFactions,
+		); err != nil {
 			fmt.Printf("Got error: '%s', try again!\n", err.Error())
 			continue
 		}
