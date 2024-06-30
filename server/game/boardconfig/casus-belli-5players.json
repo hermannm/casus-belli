@@ -66,7 +66,7 @@
     { "name": "Mare Furie" },
     { "name": "Mare Ovond" },
     { "name": "Mare Unna" },
-    { "name": "Mare Bøso" }
+    { "name": "Mare Beso" }
   ],
   "neighbors": [
     { "region1": "Kyrie", "region2": "Mare Hynd" },
@@ -135,7 +135,7 @@
     { "region1": "Zona", "region2": "Mare Gond" },
     { "region1": "Tond", "region2": "Mare Gond" },
     { "region1": "Tond", "region2": "Mare Elle" },
-    { "region1": "Tond", "region2": "Tige", "dangerZone": "Bankene", "river": true },
+    { "region1": "Tond", "region2": "Tige", "dangerZone": "The Dire Strait", "river": true },
     { "region1": "Tond", "region2": "Mare Ovond" },
     { "region1": "Tige", "region2": "Mare Elle" },
     { "region1": "Tige", "region2": "Dalom" },
@@ -153,9 +153,9 @@
     { "region1": "Hyll", "region2": "Mare Furie" },
     { "region1": "Hyll", "region2": "Samoje" },
     { "region1": "Sash", "region2": "Mare Furie" },
-    { "region1": "Sash", "region2": "Mare Bøso" },
+    { "region1": "Sash", "region2": "Mare Beso" },
     { "region1": "Samoje", "region2": "Mare Furie" },
-    { "region1": "Samoje", "region2": "Mare Bøso" },
+    { "region1": "Samoje", "region2": "Mare Beso" },
     { "region1": "Samoje", "region2": "Erren", "cliffs": true },
     { "region1": "Furie", "region2": "Mare Ovond" },
     { "region1": "Furie", "region2": "Firril" },
@@ -173,7 +173,7 @@
     { "region1": "Gewel", "region2": "Mare Unna" },
     { "region1": "Emman", "region2": "Erren", "cliffs": true },
     { "region1": "Emman", "region2": "Mare Unna" },
-    { "region1": "Erren", "region2": "Mare Bøso" },
+    { "region1": "Erren", "region2": "Mare Beso" },
     { "region1": "Mare Duna", "region2": "Mare Illa" },
     { "region1": "Mare Duna", "region2": "Mare Gond" },
     { "region1": "Mare Illa", "region2": "Mare Hynd" },
@@ -181,10 +181,10 @@
     { "region1": "Mare Gond", "region2": "Mare Elle" },
     { "region1": "Mare Gond", "region2": "Mare Ovond" },
     { "region1": "Mare Elle", "region2": "Mare Furie" },
-    { "region1": "Mare Elle", "region2": "Mare Furie", "dangerZone": "Tennene" },
-    { "region1": "Mare Elle", "region2": "Mare Ovond", "dangerZone": "Bankene" },
-    { "region1": "Mare Furie", "region2": "Mare Bøso" },
+    { "region1": "Mare Elle", "region2": "Mare Furie", "dangerZone": "The Teeth" },
+    { "region1": "Mare Elle", "region2": "Mare Ovond", "dangerZone": "The Dire Strait" },
+    { "region1": "Mare Furie", "region2": "Mare Beso" },
     { "region1": "Mare Ovond", "region2": "Mare Unna" },
-    { "region1": "Mare Unna", "region2": "Mare Bøso" }
+    { "region1": "Mare Unna", "region2": "Mare Beso" }
   ]
 }
