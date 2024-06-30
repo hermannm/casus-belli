@@ -2,7 +2,7 @@ using CasusBelli.Client.Game;
 using CasusBelli.Client.Lobby;
 using Godot;
 
-namespace CasusBelli.Client.Menus.LobbyMenu;
+namespace CasusBelli.Client.UI.LobbyMenu;
 
 public partial class StartGameButton : Button
 {

@@ -1,11 +1,11 @@
 using Godot;
 
-namespace CasusBelli.Client.Menus.LobbyListMenu;
+namespace CasusBelli.Client.UI.LobbyListMenu;
 
 public partial class MainMenuButton : Button
 {
     public override void _Pressed()
     {
-        SceneManager.Instance.LoadScene(Scenes.MainMenu);
+        SceneManager.Instance.LoadScene(ScenePaths.MainMenu);
     }
 }

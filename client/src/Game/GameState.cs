@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using CasusBelli.Client.Api;
 using CasusBelli.Client.Lobby;
+using CasusBelli.Client.UI;
 using Godot;
 
 namespace CasusBelli.Client.Game;
@@ -75,8 +77,15 @@ public partial class GameState : Node
 
     private void HandleGameStarted(GameStartedMessage message)
     {
+        var boardId = LobbyState.Instance.BoardId;
+        if (boardId == null)
+        {
+            throw new Exception("Lobby board ID was null when trying to start game");
+        }
+
         GD.Print("Game started!");
         _board.Regions = message.Board;
+        SceneManager.Instance.LoadScene(ScenePaths.Board);
     }
 
     private void HandleOrderRequest(OrderRequestMessage message)

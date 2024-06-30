@@ -3,12 +3,12 @@ using CasusBelli.Client.Api;
 using CasusBelli.Client.Lobby;
 using Godot;
 
-namespace CasusBelli.Client.Menus.LobbyListMenu;
+namespace CasusBelli.Client.UI.LobbyListMenu;
 
 public partial class LobbyList : Node
 {
     private PackedScene _lobbyListItemScene = ResourceLoader.Load<PackedScene>(
-        Scenes.LobbyListItem
+        ScenePaths.LobbyListItem
     );
     private Popup _usernameInputPopup = null!;
     private LobbyInfo? _lobbyToJoin = null;
@@ -67,7 +67,7 @@ public partial class LobbyList : Node
                 var success = await LobbyState.Instance.TryJoinLobby(lobby, usernameInput.Text);
                 if (success)
                 {
-                    SceneManager.Instance.LoadScene(Scenes.LobbyMenu);
+                    SceneManager.Instance.LoadScene(ScenePaths.LobbyMenu);
                 }
             }
             else

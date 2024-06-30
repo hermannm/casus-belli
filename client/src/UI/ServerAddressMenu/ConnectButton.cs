@@ -1,7 +1,7 @@
 using CasusBelli.Client.Api;
 using Godot;
 
-namespace CasusBelli.Client.Menus.ServerAddressMenu;
+namespace CasusBelli.Client.UI.ServerAddressMenu;
 
 public partial class ConnectButton : Button
 {
@@ -19,6 +19,6 @@ public partial class ConnectButton : Button
             return;
         }
 
-        SceneManager.Instance.LoadScene(Scenes.LobbyListMenu);
+        SceneManager.Instance.LoadScene(ScenePaths.LobbyListMenu);
     }
 }

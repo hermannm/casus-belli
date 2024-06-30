@@ -1,7 +1,8 @@
 using CasusBelli.Client.Api;
+using CasusBelli.Client.UI;
 using Godot;
 
-namespace CasusBelli.Client.Menus.LobbyListMenu;
+namespace CasusBelli.Client.UI.LobbyListMenu;
 
 public partial class ServerAddressField : Label
 {

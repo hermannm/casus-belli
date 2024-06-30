@@ -3,7 +3,7 @@ using System.Text;
 using CasusBelli.Client.Utils;
 using Godot;
 
-namespace CasusBelli.Client;
+namespace CasusBelli.Client.UI;
 
 public partial class MessageDisplay : Node
 {
@@ -29,13 +29,13 @@ public partial class MessageDisplay : Node
 
     public void ShowError(string errorMessage, params string[] subErrors)
     {
-        var message = ShowMessage(Scenes.ErrorMessage, "Error: ", errorMessage, subErrors);
+        var message = ShowMessage(ScenePaths.ErrorMessage, "Error: ", errorMessage, subErrors);
         GD.Print(message);
     }
 
     public void ShowInfo(string infoMessage, params string[] subMessages)
     {
-        ShowMessage(Scenes.InfoMessage, null, infoMessage, subMessages);
+        ShowMessage(ScenePaths.InfoMessage, null, infoMessage, subMessages);
     }
 
     private string ShowMessage(string scene, string? prefix, string message, string[] subMessages)

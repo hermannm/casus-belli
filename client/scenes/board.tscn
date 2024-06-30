@@ -1,0 +1,12 @@
+[gd_scene load_steps=2 format=3 uid="uid://dghhldpbtn5ka"]
+
+[ext_resource type="Texture2D" uid="uid://btoqpktrk4voc" path="res://assets/board/casus-belli-5players/board.png" id="1_7n0p4"]
+
+[node name="board" type="Node2D"]
+
+[node name="TextureRect" type="TextureRect" parent="."]
+offset_left = -637.0
+offset_top = 451.0
+offset_right = -597.0
+offset_bottom = 491.0
+texture = ExtResource("1_7n0p4")

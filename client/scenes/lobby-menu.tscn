@@ -2,11 +2,11 @@
 
 [ext_resource type="Texture2D" uid="uid://dua6cf3bykx6" path="res://assets/immerse-logo-transparent-background-with-text-under.svg" id="1_y78ai"]
 [ext_resource type="FontFile" uid="uid://bjjxiy03d51n0" path="res://assets/fonts/quantico/quantico-bold.ttf" id="2_mbcsh"]
-[ext_resource type="Script" path="res://src/Menus/LobbyMenu/CurrentPlayer.cs" id="4_drd26"]
+[ext_resource type="Script" path="res://src/UI/LobbyMenu/CurrentPlayer.cs" id="4_drd26"]
 [ext_resource type="PackedScene" uid="uid://b3ae215bqtb36" path="res://scenes/components/player-list-item.tscn" id="4_tvwoe"]
-[ext_resource type="Script" path="res://src/Menus/LobbyMenu/OtherPlayersList.cs" id="5_d6sh1"]
-[ext_resource type="Script" path="res://src/Menus/LobbyMenu/StartGameButton.cs" id="6_r5a3c"]
-[ext_resource type="Script" path="res://src/Menus/LobbyMenu/LeaveLobbyButton.cs" id="7_dfs7i"]
+[ext_resource type="Script" path="res://src/UI/LobbyMenu/OtherPlayersList.cs" id="5_d6sh1"]
+[ext_resource type="Script" path="res://src/UI/LobbyMenu/StartGameButton.cs" id="6_r5a3c"]
+[ext_resource type="Script" path="res://src/UI/LobbyMenu/LeaveLobbyButton.cs" id="7_dfs7i"]
 
 [node name="Control" type="Control"]
 layout_mode = 3

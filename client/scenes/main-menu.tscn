@@ -2,8 +2,8 @@
 
 [ext_resource type="Texture2D" uid="uid://dua6cf3bykx6" path="res://assets/immerse-logo-transparent-background-with-text-under.svg" id="1_hlify"]
 [ext_resource type="FontFile" uid="uid://bjjxiy03d51n0" path="res://assets/fonts/quantico/quantico-bold.ttf" id="2_bhxow"]
-[ext_resource type="Script" path="res://src/Menus/MainMenu/PlayButton.cs" id="3_4pa18"]
-[ext_resource type="Script" path="res://src/Menus/MainMenu/QuitButton.cs" id="4_28nu7"]
+[ext_resource type="Script" path="res://src/UI/MainMenu/PlayButton.cs" id="3_4pa18"]
+[ext_resource type="Script" path="res://src/UI/MainMenu/QuitButton.cs" id="4_28nu7"]
 
 [node name="Control" type="Control"]
 layout_mode = 3

@@ -2,12 +2,12 @@ using CasusBelli.Client.Lobby;
 using CasusBelli.Client.Utils;
 using Godot;
 
-namespace CasusBelli.Client.Menus.LobbyMenu;
+namespace CasusBelli.Client.UI.LobbyMenu;
 
 public partial class OtherPlayersList : Node
 {
     private PackedScene _playerListItemScene = ResourceLoader.Load<PackedScene>(
-        Scenes.PlayerListItem
+        ScenePaths.PlayerListItem
     );
 
     public override void _Ready()

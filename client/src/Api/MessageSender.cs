@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using CasusBelli.Client.UI;
 using Godot;
 
 namespace CasusBelli.Client.Api;

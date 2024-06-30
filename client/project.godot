@@ -20,8 +20,9 @@ config/windows_native_icon="res://assets/icons/casus-belli.ico"
 
 MessageDisplay="*res://scenes/components/message-display.tscn"
 ApiClient="*res://src/Api/ApiClient.cs"
-SceneManager="*res://src/SceneManager.cs"
+SceneManager="*res://src/UI/SceneManager.cs"
 LobbyState="*res://src/Lobby/LobbyState.cs"
+GameState="*res://src/Game/GameState.cs"
 
 [display]
 

@@ -12,6 +12,7 @@ public partial class LobbyState : Node
     public Player Player { get; private set; } = new();
     public List<Player> OtherPlayers { get; private set; } = new();
     public List<string> SelectableFactions { get; private set; } = new();
+    public string? BoardId => _joinedLobby?.BoardInfo.Id;
 
     [Signal]
     public delegate void LobbyChangedEventHandler();

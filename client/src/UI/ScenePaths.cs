@@ -1,7 +1,8 @@
-namespace CasusBelli.Client;
+namespace CasusBelli.Client.UI;
 
-public static class Scenes
+public static class ScenePaths
 {
+    public const string Board = "res://scenes/board.tscn";
     public const string MainMenu = "res://scenes/main-menu.tscn";
     public const string ServerAddressMenu = "res://scenes/server-address-menu.tscn";
     public const string LobbyListMenu = "res://scenes/lobby-list-menu.tscn";
