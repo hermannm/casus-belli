@@ -2,7 +2,6 @@ package game
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -77,10 +76,6 @@ func (orderType OrderType) String() string {
 	return orderNames.GetNameOrFallback(orderType, "INVALID")
 }
 
-func (order Order) isNone() bool {
-	return order.Type == 0
-}
-
 func (order Order) unit() Unit {
 	return Unit{Type: order.UnitType, Faction: order.Faction}
 }
@@ -118,18 +113,6 @@ func countOrdersFromFaction(orders []Order, faction PlayerFaction) int {
 		}
 	}
 	return count
-}
-
-// Custom json.Marshaler implementation, to serialize uninitialized orders to null.
-func (order Order) MarshalJSON() ([]byte, error) {
-	if order.isNone() {
-		return []byte("null"), nil
-	}
-
-	// Alias to avoid infinite loop of MarshalJSON.
-	type orderAlias Order
-
-	return json.Marshal(orderAlias(order))
 }
 
 func (game *Game) gatherAndValidateOrders() []Order {
@@ -296,7 +279,7 @@ func validateWinterMove(
 		return fmt.Errorf("move destination '%s' already has a unit", destination.Name)
 	}
 
-	if origin.Unit.Type == UnitShip && !destination.isCoast(board) {
+	if origin.Unit.Value.Type == UnitShip && !destination.isCoast(board) {
 		return errors.New("ship winter move destination must be coast")
 	}
 
@@ -421,7 +404,7 @@ func validateMoveOrSupport(order Order, origin *Region, board Board) error {
 		return fmt.Errorf("destination region with name '%s' not found", order.Destination)
 	}
 
-	if origin.Unit.Type == UnitShip {
+	if origin.Unit.Value.Type == UnitShip {
 		if !(destination.Sea || destination.isCoast(board)) {
 			return errors.New("ship order destination must be sea or coast")
 		}
@@ -443,7 +426,7 @@ func validateMoveOrSupport(order Order, origin *Region, board Board) error {
 
 func validateMove(order Order, origin *Region, board Board) error {
 	if order.SecondDestination != "" {
-		if origin.Unit.Type != UnitKnight {
+		if origin.Unit.Value.Type != UnitKnight {
 			return errors.New(
 				"second destinations for move orders can only be applied to knight units",
 			)
@@ -491,7 +474,7 @@ func validateBesiege(origin *Region) error {
 		return errors.New("besieged region cannot already be controlled")
 	}
 
-	if origin.Unit.Type == UnitShip {
+	if origin.Unit.Value.Type == UnitShip {
 		return errors.New("ships cannot besiege")
 	}
 
@@ -499,7 +482,7 @@ func validateBesiege(origin *Region) error {
 }
 
 func validateTransport(origin *Region) error {
-	if origin.Unit.Type != UnitShip {
+	if origin.Unit.Value.Type != UnitShip {
 		return errors.New("only ships can transport")
 	}
 
@@ -613,19 +596,19 @@ func validateOrderedUnit(order Order, origin *Region) error {
 			return errors.New("ordered region does not have a unit")
 		}
 
-		if origin.Unit.Faction != order.Faction {
+		if origin.Unit.Value.Faction != order.Faction {
 			return fmt.Errorf(
 				"faction of ordered unit '%s' does not match your faction '%s'",
-				origin.Unit.Faction,
+				origin.Unit.Value.Faction,
 				order.Faction,
 			)
 		}
 
-		if origin.Unit.Type != order.UnitType {
+		if origin.Unit.Value.Type != order.UnitType {
 			return fmt.Errorf(
 				"order unit type '%v' does not match unit type '%v' in ordered region",
 				order.UnitType,
-				origin.Unit.Type,
+				origin.Unit.Value.Type,
 			)
 		}
 	}

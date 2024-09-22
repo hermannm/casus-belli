@@ -8,6 +8,7 @@ import (
 	"slices"
 	"sync"
 
+	"hermannm.dev/opt"
 	"hermannm.dev/set"
 	"hermannm.dev/wrap"
 )
@@ -30,7 +31,7 @@ type Result struct {
 
 	// If result of a move order to the battle: the move order in question, otherwise empty.
 	// If the result is part of a danger zone crossing, the order is either a move or support order.
-	Order Order
+	Order opt.Option[Order]
 
 	// If result of a defending unit in a region: the faction of the defender, otherwise blank.
 	DefenderFaction PlayerFaction `json:",omitempty"`
@@ -38,7 +39,8 @@ type Result struct {
 
 func (battle *Battle) addModifier(faction PlayerFaction, modifier Modifier) {
 	for i, result := range battle.Results {
-		if result.DefenderFaction == faction || result.Order.Faction == faction {
+		if result.DefenderFaction == faction ||
+			(result.Order.HasValue() && result.Order.Value.Faction == faction) {
 			result.Parts = append(result.Parts, modifier)
 			result.Total += modifier.Value
 			battle.Results[i] = result
@@ -54,7 +56,7 @@ func (battle Battle) factions() []PlayerFaction {
 		if result.DefenderFaction != "" {
 			factions[i] = result.DefenderFaction
 		} else {
-			factions[i] = result.Order.Faction
+			factions[i] = result.Order.Value.Faction
 		}
 	}
 
@@ -63,7 +65,7 @@ func (battle Battle) factions() []PlayerFaction {
 
 func (faction PlayerFaction) isFighting(battle *Battle) bool {
 	for _, result := range battle.Results {
-		if result.DefenderFaction == faction || result.Order.Faction == faction {
+		if result.DefenderFaction == faction || result.Order.Value.Faction == faction {
 			return true
 		}
 	}
@@ -92,7 +94,7 @@ func (game *Game) resolveMultiplayerBattle(region *Region) {
 		battle.Results = append(battle.Results, game.newAttackerResult(move, region, false, false))
 	}
 	if !region.empty() {
-		battle.Results = append(battle.Results, game.newDefenderResult(region))
+		battle.Results = append(battle.Results, game.newDefenderResult(region.Unit.Value))
 	}
 
 	game.calculateBattle(&battle, region)
@@ -118,7 +120,7 @@ func (game *Game) resolveMultiplayerBattle(region *Region) {
 			continue
 		}
 
-		move := result.Order
+		move := result.Order.Value
 		if slices.Contains(losers, move.Faction) {
 			game.board.killMove(move)
 			continue
@@ -149,7 +151,7 @@ func (game *Game) calculateBattle(battle *Battle, region *Region) {
 
 	// If we have no supports to call, and only 1 combatant, then we can avoid concurrency
 	if len(remainingSupports) == 0 && len(battle.Results) == 1 {
-		faction := battle.Results[0].Order.Faction // If 1 result, it must be a move order
+		faction := battle.Results[0].Order.Value.Faction // If 1 result, it must be a move order
 		if err := game.messenger.AwaitDiceRoll(ctx, faction); err != nil {
 			game.handleBattleError(wrap.Error(err, "failed to receive dice roll"), faction, battle)
 		}
@@ -189,7 +191,7 @@ func (game *Game) calculateBattle(battle *Battle, region *Region) {
 
 // Battle where units from two regions attack each other simultaneously.
 func (game *Game) resolveBorderBattle(region1 *Region, region2 *Region) {
-	moveToRegion1, moveToRegion2 := region2.order, region1.order
+	moveToRegion1, moveToRegion2 := region2.order.Value, region1.order.Value
 	battle := Battle{
 		Results: []Result{
 			game.newAttackerResult(moveToRegion1, region1, false, true),
@@ -204,18 +206,18 @@ func (game *Game) resolveBorderBattle(region1 *Region, region2 *Region) {
 	// If battle was a tie, both moves retreat
 	if len(winners) > 1 {
 		// Remove both orders before retreating, so they don't think their origins are attacked
-		game.board.removeOrder(region1.order)
-		game.board.removeOrder(region2.order)
+		game.board.removeOrder(region1.order.Value)
+		game.board.removeOrder(region2.order.Value)
 
-		game.board.retreatMove(region1.order)
-		game.board.retreatMove(region2.order)
+		game.board.retreatMove(region1.order.Value)
+		game.board.retreatMove(region2.order.Value)
 	} else {
 		for _, result := range battle.Results {
 			// Only the loser is affected by the results of the border battle; the winner may still
 			// have to win a battle in the destination region, which will be handled by the next
 			// cycle of move resolving.
-			if result.Order.Faction == losers[0] {
-				game.board.killMove(result.Order)
+			if result.Order.Value.Faction == losers[0] {
+				game.board.killMove(result.Order.Value)
 				break
 			}
 		}
@@ -227,8 +229,8 @@ func (game *Game) resolveBorderBattle(region1 *Region, region2 *Region) {
 var errSupportedOtherRegion error = errors.New("supported other region in border battle")
 
 func (game *Game) calculateBorderBattle(battle *Battle, region1 *Region, region2 *Region) {
-	remainingSupports1 := battle.addAutomaticSupports(region1, []Order{region2.order}, true)
-	remainingSupports2 := battle.addAutomaticSupports(region2, []Order{region1.order}, true)
+	remainingSupports1 := battle.addAutomaticSupports(region1, []Order{region2.order.Value}, true)
+	remainingSupports2 := battle.addAutomaticSupports(region2, []Order{region1.order.Value}, true)
 
 	game.messenger.SendBattleAnnouncement(*battle)
 
@@ -259,7 +261,7 @@ func (game *Game) calculateBorderBattle(battle *Battle, region1 *Region, region2
 					battle,
 					region1.Name,
 					supportCount1,
-					[]PlayerFaction{region2.order.Faction},
+					[]PlayerFaction{region2.order.Value.Faction},
 					&waitGroup,
 					&resultsLock,
 				)
@@ -276,7 +278,7 @@ func (game *Game) calculateBorderBattle(battle *Battle, region1 *Region, region2
 					battle,
 					region2.Name,
 					supportCount2,
-					[]PlayerFaction{region1.order.Faction},
+					[]PlayerFaction{region1.order.Value.Faction},
 					&waitGroup,
 					&resultsLock,
 				)
@@ -370,7 +372,7 @@ func (battle *Battle) addAutomaticSupports(
 
 SupportLoop:
 	for _, support := range region.incomingSupports {
-		if !region.empty() && !borderBattle && support.Faction == region.Unit.Faction {
+		if !region.empty() && !borderBattle && support.Faction == region.Unit.Value.Faction {
 			supportCounts[support.Faction]++
 			continue
 		}
@@ -407,9 +409,9 @@ func (battle Battle) winnersAndLosers() (winners []PlayerFaction, losers []Playe
 		result := battle.Results[0]
 
 		if result.Total >= MinResultToConquerNeutralRegion {
-			return []PlayerFaction{result.Order.Faction}, nil
+			return []PlayerFaction{result.Order.Value.Faction}, nil
 		} else {
-			return nil, []PlayerFaction{result.Order.Faction}
+			return nil, []PlayerFaction{result.Order.Value.Faction}
 		}
 	}
 
@@ -425,7 +427,7 @@ func (battle Battle) winnersAndLosers() (winners []PlayerFaction, losers []Playe
 		if result.DefenderFaction != "" {
 			faction = result.DefenderFaction
 		} else {
-			faction = result.Order.Faction
+			faction = result.Order.Value.Faction
 		}
 
 		if result.Total >= highestResult {
@@ -443,8 +445,8 @@ func (battle Battle) regionNames() []RegionName {
 	nameSet := set.ArraySetWithCapacity[RegionName](2)
 
 	for _, result := range battle.Results {
-		if !result.Order.isNone() {
-			nameSet.Add(result.Order.Destination)
+		if result.Order.HasValue() {
+			nameSet.Add(result.Order.Value.Destination)
 		}
 	}
 

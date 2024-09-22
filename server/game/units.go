@@ -1,8 +1,6 @@
 package game
 
 import (
-	"encoding/json"
-
 	"hermannm.dev/enumnames"
 )
 
@@ -40,16 +38,8 @@ func (unitType UnitType) String() string {
 	return unitNames.GetNameOrFallback(unitType, "INVALID")
 }
 
-func (unitType UnitType) isNone() bool {
-	return unitType == 0
-}
-
 func (unitType UnitType) isValid() bool {
 	return unitNames.ContainsKey(unitType)
-}
-
-func (unit Unit) isNone() bool {
-	return unit.Type.isNone()
 }
 
 func (unitType UnitType) battleModifier(
@@ -70,16 +60,4 @@ func (unitType UnitType) battleModifier(
 	} else {
 		return Modifier{}, false
 	}
-}
-
-// Custom json.Marshaler implementation, to serialize uninitialized units to null.
-func (unit Unit) MarshalJSON() ([]byte, error) {
-	if unit.isNone() {
-		return []byte("null"), nil
-	}
-
-	// Alias to avoid infinite loop of MarshalJSON.
-	type unitAlias Unit
-
-	return json.Marshal(unitAlias(unit))
 }

@@ -8,6 +8,7 @@ import (
 
 	"hermannm.dev/devlog"
 	"hermannm.dev/devlog/log"
+	"hermannm.dev/opt"
 	"hermannm.dev/wrap"
 )
 
@@ -527,7 +528,7 @@ func newMockGame(
 			t.Fatalf("unit map contained region '%s' not found on board", regionName)
 		}
 
-		region.Unit = unit
+		region.Unit.Put(unit)
 		if !region.Sea {
 			region.ControllingFaction = unit.Faction
 		}
@@ -554,9 +555,9 @@ func newMockGame(
 
 		if order.Type == OrderBuild {
 			order.Faction = region.ControllingFaction
-		} else {
-			order.Faction = region.Unit.Faction
-			order.UnitType = region.Unit.Type
+		} else if region.Unit.HasValue() {
+			order.Faction = region.Unit.Value.Faction
+			order.UnitType = region.Unit.Value.Type
 		}
 		orders[i] = order
 
@@ -592,16 +593,18 @@ func (expected expectedUnits) check(t *testing.T, board Board, originalUnits uni
 			t.Fatalf("invalid test setup: '%s' is not a region on the board", regionName)
 		}
 
-		var expectedUnit Unit
+		var expectedUnit opt.Option[Unit]
 		switch expected := expected.(type) {
 		case Unit:
-			expectedUnit = expected
+			if expected != empty {
+				expectedUnit.Put(expected)
+			}
 		case movedFrom:
 			unit, ok := originalUnits[expected.region]
 			if !ok {
 				t.Fatalf("invalid test setup: no unit for region '%s' in unit map", expected)
 			}
-			expectedUnit = unit
+			expectedUnit.Put(unit)
 		case struct{}: // stayed
 			unit, ok := originalUnits[regionName]
 			if !ok {
@@ -610,7 +613,7 @@ func (expected expectedUnits) check(t *testing.T, board Board, originalUnits uni
 					regionName,
 				)
 			}
-			expectedUnit = unit
+			expectedUnit.Put(unit)
 		default:
 			t.Fatalf(
 				"invalid test setup: expectedUnit in region '%s' is not Unit, movedFrom or stayed",
@@ -619,13 +622,7 @@ func (expected expectedUnits) check(t *testing.T, board Board, originalUnits uni
 		}
 
 		if region.Unit != expectedUnit {
-			if expectedUnit.isNone() {
-				t.Errorf("%s: want no unit, got %v", regionName, region.Unit)
-			} else if region.Unit.isNone() {
-				t.Errorf("%s: want %v, got no unit", regionName, expectedUnit)
-			} else {
-				t.Errorf("%s: want %v, got %v", regionName, expectedUnit, region.Unit)
-			}
+			t.Errorf("%s: want %v, got %v", regionName, expectedUnit, region.Unit)
 		}
 	}
 }

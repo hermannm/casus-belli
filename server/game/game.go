@@ -106,16 +106,19 @@ func (game *Game) resolveWinterOrders(orders []Order) {
 		allResolved = true
 
 		for _, region := range game.board {
-			switch region.order.Type {
-			case OrderBuild:
-				region.Unit = Unit{
-					Faction: region.order.Faction,
-					Type:    region.order.UnitType,
+			order, hasOrder := region.order.Get()
+			if hasOrder {
+				switch order.Type {
+				case OrderBuild:
+					region.Unit.Put(Unit{
+						Faction: order.Faction,
+						Type:    order.UnitType,
+					})
+					region.order.Clear()
+				case OrderDisband:
+					region.removeUnit()
+					region.order.Clear()
 				}
-				region.order = Order{}
-			case OrderDisband:
-				region.removeUnit()
-				region.order = Order{}
 			}
 
 			if !region.partOfCycle {
@@ -124,14 +127,14 @@ func (game *Game) resolveWinterOrders(orders []Order) {
 				}
 			}
 
-			if !region.order.isNone() {
+			if region.order.HasValue() {
 				allResolved = false
 				continue
 			}
 
 			if len(region.incomingMoves) != 0 {
 				move := region.incomingMoves[0] // Max 1 incoming move in winter
-				region.Unit = move.unit()
+				region.Unit.Put(move.unit())
 				game.board[move.Origin].removeUnit()
 				game.board.removeOrder(move)
 			}
@@ -242,7 +245,7 @@ func (game *Game) resolveContestedRegion(region *Region) (waiting bool) {
 	}
 
 	// If the destination region has an outgoing move order, that must be resolved first
-	if region.order.Type == OrderMove {
+	if order, ok := region.order.Get(); ok && order.Type == OrderMove {
 		return true
 	}
 
@@ -260,13 +263,13 @@ func (game *Game) resolveContestedRegion(region *Region) (waiting bool) {
 
 func (game *Game) resolveSieges() {
 	for _, region := range game.board {
-		if region.order.Type != OrderBesiege {
+		if order, ok := region.order.Get(); !ok || order.Type != OrderBesiege {
 			continue
 		}
 
 		region.SiegeCount++
 		if region.SiegeCount == 2 {
-			region.ControllingFaction = region.Unit.Faction
+			region.ControllingFaction = region.Unit.Value.Faction
 			region.SiegeCount = 0
 		}
 	}

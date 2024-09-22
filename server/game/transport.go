@@ -74,7 +74,7 @@ func (board Board) findTransportPath(
 	destinationName RegionName,
 ) (canTransport bool, transportAttacked bool, dangerZone DangerZone) {
 	origin := board[originName]
-	if origin.empty() || origin.Unit.Type == UnitShip || origin.Sea {
+	if origin.empty() || origin.Unit.Value.Type == UnitShip || origin.Sea {
 		return false, false, ""
 	}
 
@@ -161,8 +161,9 @@ func (region *Region) getTransportingNeighbors(
 		neighborRegion := board[neighbor.Name]
 
 		if excludedRegions.Contains(neighbor.Name) ||
-			neighborRegion.order.Type != OrderTransport ||
-			neighborRegion.Unit.Faction != region.Unit.Faction {
+			neighborRegion.order.IsEmpty() ||
+			neighborRegion.order.Value.Type != OrderTransport ||
+			neighborRegion.Unit.Value.Faction != region.Unit.Value.Faction {
 			continue
 		}
 

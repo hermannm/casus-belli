@@ -1,6 +1,6 @@
 module hermannm.dev/casus-belli/server
 
-go 1.22.0
+go 1.23.1
 
 require (
 	github.com/gorilla/websocket v1.4.2
@@ -12,6 +12,7 @@ require (
 	hermannm.dev/ipfinder v0.2.0
 	hermannm.dev/set v0.2.1
 	hermannm.dev/wrap v0.3.1
+	hermannm.dev/opt v0.1.0
 )
 
 require (

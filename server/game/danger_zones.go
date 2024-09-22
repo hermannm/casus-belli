@@ -1,12 +1,14 @@
 package game
 
+import "hermannm.dev/opt"
+
 type DangerZone string
 
 // Number to beat when attempting to cross a danger zone.
 const MinResultToSurviveDangerZone = 3
 
 func newDangerZoneCrossing(order Order, dangerZone DangerZone) Battle {
-	return Battle{Results: []Result{{Order: order}}, DangerZone: dangerZone}
+	return Battle{Results: []Result{{Order: opt.Value(order)}}, DangerZone: dangerZone}
 }
 
 func (game *Game) resolveDangerZoneCrossings(region *Region) {
@@ -26,7 +28,7 @@ func (game *Game) resolveDangerZoneCrossings(region *Region) {
 }
 
 func (game *Game) resolveDangerZoneCrossing(crossing Battle) {
-	order := crossing.Results[0].Order
+	order := crossing.Results[0].Order.Value
 
 	game.messenger.SendBattleAnnouncement(crossing)
 

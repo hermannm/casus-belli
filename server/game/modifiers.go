@@ -2,6 +2,7 @@ package game
 
 import (
 	"hermannm.dev/enumnames"
+	"hermannm.dev/opt"
 )
 
 // Part of a player's result in a battle.
@@ -53,16 +54,16 @@ func (modifierType ModifierType) String() string {
 	return modifierNames.GetNameOrFallback(modifierType, "INVALID")
 }
 
-func (game *Game) newDefenderResult(region *Region) Result {
+func (game *Game) newDefenderResult(unit Unit) Result {
 	var modifiers []Modifier
 	total := 0
 
-	if unitModifier, hasModifier := region.Unit.Type.battleModifier(false); hasModifier {
+	if unitModifier, hasModifier := unit.Type.battleModifier(false); hasModifier {
 		modifiers = append(modifiers, unitModifier)
 		total += unitModifier.Value
 	}
 
-	return Result{DefenderFaction: region.Unit.Faction, Parts: modifiers, Total: total}
+	return Result{DefenderFaction: unit.Faction, Parts: modifiers, Total: total}
 }
 
 func (game *Game) newAttackerResult(
@@ -109,5 +110,5 @@ func (game *Game) newAttackerResult(
 		total += modifier.Value
 	}
 
-	return Result{Order: move, Parts: modifiers, Total: total}
+	return Result{Order: opt.Value(move), Parts: modifiers, Total: total}
 }
