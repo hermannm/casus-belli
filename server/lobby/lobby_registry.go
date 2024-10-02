@@ -3,7 +3,6 @@ package lobby
 import (
 	"errors"
 	"fmt"
-	"log/slog"
 	"slices"
 	"sync"
 
@@ -54,7 +53,7 @@ func (registry *LobbyRegistry) CreateLobby(
 
 	logger := log.Default()
 	if !onlyLobbyOnServer {
-		logger = logger.With(slog.String("lobby", lobbyName))
+		logger = logger.With("lobby", lobbyName)
 	}
 	lobby.log = logger
 

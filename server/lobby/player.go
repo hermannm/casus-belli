@@ -2,7 +2,6 @@ package lobby
 
 import (
 	"fmt"
-	"log/slog"
 	"slices"
 	"sync"
 
@@ -30,7 +29,7 @@ func newPlayer(username Username, socket *websocket.Conn, lobbyLogger log.Logger
 		socket:      socket,
 		gameFaction: "",
 		lock:        sync.RWMutex{},
-		log:         lobbyLogger.With(slog.Any("player", username)),
+		log:         lobbyLogger.With("player", username),
 	}
 }
 

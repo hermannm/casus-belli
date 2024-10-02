@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log/slog"
 	"slices"
 	"sync"
 
@@ -357,7 +356,7 @@ func (game *Game) awaitSupport(
 
 func (game *Game) handleBattleError(err error, faction PlayerFaction, battle *Battle) {
 	game.messenger.SendError(faction, err)
-	game.log.WarnError(err, slog.Any("from", faction), slog.Any("battle", battle.regionNames()))
+	game.log.WarnError(err, "from", faction, "battle", battle.regionNames())
 }
 
 // Adds modifiers for support orders from players involved in the battle, as we assume they always

@@ -14,11 +14,7 @@ type Message struct {
 }
 
 func (message Message) log() slog.Attr {
-	return slog.Group(
-		"message",
-		slog.String("tag", message.Tag.String()),
-		log.JSON("data", message.Data),
-	)
+	return slog.Group("message", "tag", message.Tag.String(), log.JSON("data", message.Data))
 }
 
 type ReceivedMessage struct {

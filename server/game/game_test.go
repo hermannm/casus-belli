@@ -476,11 +476,10 @@ func benchmarkSetup(b *testing.B) (*Game, []Order) {
 }
 
 func TestMain(m *testing.M) {
-	logHandler := devlog.NewHandler(
+	devlog.InitDefaultLogHandler(
 		os.Stdout,
 		&devlog.Options{Level: slog.LevelDebug, ForceColors: true},
 	)
-	slog.SetDefault(slog.New(logHandler))
 
 	board, boardInfo, err := ReadBoardFromConfigFile("casus-belli-5players")
 	if err != nil {

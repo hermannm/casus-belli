@@ -23,8 +23,7 @@ import (
 const defaultPort string = "8000"
 
 func main() {
-	logHandler := devlog.NewHandler(os.Stdout, &devlog.Options{Level: slog.LevelDebug})
-	slog.SetDefault(slog.New(logHandler))
+	devlog.InitDefaultLogHandler(os.Stdout, &devlog.Options{Level: slog.LevelDebug})
 
 	local, devMode, port := getCommandLineFlags()
 
