@@ -13,7 +13,7 @@ func (player *Player) sendMessage(message Message) (succeeded bool) {
 	defer player.lock.Unlock()
 
 	if err := player.socket.WriteJSON(message); err != nil {
-		player.log.ErrorCause(err, "failed to send message", message.log())
+		player.log.ErrorCause(err, "Failed to send message", message.log())
 		return false
 	}
 
@@ -24,7 +24,7 @@ func (lobby *Lobby) sendMessage(to game.PlayerFaction, message Message) (succeed
 	player, ok := lobby.getPlayer(to)
 	if !ok {
 		lobby.log.ErrorMessage(
-			fmt.Sprintf("tried to send message to unrecognized player faction '%s'", to),
+			fmt.Sprintf("Tried to send message to unrecognized player faction '%s'", to),
 			message.log(),
 		)
 		return false
@@ -43,13 +43,13 @@ func (player *Player) sendPreparedMessage(message *websocket.PreparedMessage) er
 func (lobby *Lobby) sendMessageToAll(message Message) {
 	messageJSON, err := json.Marshal(message)
 	if err != nil {
-		lobby.log.ErrorCause(err, "failed to serialize message", message.log())
+		lobby.log.ErrorCause(err, "Failed to serialize message", message.log())
 		return
 	}
 
 	preparedMessage, err := websocket.NewPreparedMessage(websocket.TextMessage, messageJSON)
 	if err != nil {
-		lobby.log.ErrorCause(err, "failed to prepare websocket message", message.log())
+		lobby.log.ErrorCause(err, "Failed to prepare websocket message", message.log())
 		return
 	}
 
@@ -58,7 +58,7 @@ func (lobby *Lobby) sendMessageToAll(message Message) {
 
 	for _, player := range lobby.players {
 		if err := player.sendPreparedMessage(preparedMessage); err != nil {
-			player.log.ErrorCause(err, "failed to send prepared message", message.log())
+			player.log.ErrorCause(err, "Failed to send prepared message", message.log())
 		}
 	}
 }

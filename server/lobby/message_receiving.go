@@ -16,7 +16,7 @@ func (player *Player) readMessagesUntilSocketCloses(lobby *Lobby) {
 	for {
 		socketClosed, err := player.readMessage(lobby)
 		if socketClosed {
-			player.log.ErrorCause(err, "socket closed, removing from lobby")
+			player.log.ErrorCause(err, "Socket closed, removing from lobby")
 			lobby.RemovePlayer(player.username)
 			return
 		} else if err != nil {

@@ -29,7 +29,7 @@ func main() {
 
 	availableBoards, err := game.GetAvailableBoards()
 	if err != nil {
-		log.ErrorCause(err, "failed to get available boards for game server")
+		log.ErrorCause(err, "Failed to get available boards for game server")
 		os.Exit(1)
 	}
 
@@ -44,9 +44,9 @@ func main() {
 		lobbyAPI.RegisterLobbyCreationEndpoints()
 	}
 
-	log.Infof("listening on port %s...", port)
+	log.Infof("Listening on port %s...", port)
 	if err := lobbyAPI.ListenAndServe(fmt.Sprintf(":%s", port)); err != nil {
-		log.Error(err)
+		log.ErrorCause(err, "Server stopped")
 		os.Exit(1)
 	}
 }

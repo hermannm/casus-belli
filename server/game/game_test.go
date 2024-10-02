@@ -483,7 +483,7 @@ func TestMain(m *testing.M) {
 
 	board, boardInfo, err := ReadBoardFromConfigFile("casus-belli-5players")
 	if err != nil {
-		log.ErrorCause(err, "failed to read board config for tests")
+		log.ErrorCause(err, "Failed to read board config for tests")
 		os.Exit(1)
 	}
 	emptyBoard, baseBoardInfo = board, boardInfo
