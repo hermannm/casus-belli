@@ -10,7 +10,7 @@ require (
 	hermannm.dev/devlog v0.5.0
 	hermannm.dev/enumnames v0.2.1
 	hermannm.dev/ipfinder v0.2.0
-	hermannm.dev/opt v0.1.0
+	hermannm.dev/opt v0.1.1
 	hermannm.dev/set v0.2.1
 	hermannm.dev/wrap v0.3.1
 )
