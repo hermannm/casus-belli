@@ -54,6 +54,7 @@ func (api LobbyAPI) ListLobbies(res http.ResponseWriter, req *http.Request) {
 // Endpoint for a player to join a lobby.
 // Expects query parameters "lobbyName" and "username".
 func (api LobbyAPI) JoinLobby(res http.ResponseWriter, req *http.Request) {
+	ctx := req.Context()
 	query := req.URL.Query()
 
 	lobbyName, err := getQueryParam(query, "lobbyName")
@@ -85,18 +86,20 @@ func (api LobbyAPI) JoinLobby(res http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		err := wrap.Error(err, "failed to establish socket connection")
 		sendServerErrorWithHeader(res, err)
-		gameLobby.Logger().Error(err, "player", username)
+		gameLobby.Logger().Error(ctx, err, "player", username)
 		return
 	}
 
 	player, err := gameLobby.AddPlayer(username, socket)
 	if err != nil {
-		gameLobby.Logger().ErrorCause(err, "failed to add player", "player", username)
-		socket.WriteJSON(lobby.Message{
-			Tag:  lobby.MessageTagError,
-			Data: lobby.ErrorMessage{Error: wrap.Error(err, "failed to join game").Error()},
-		})
-		socket.Close()
+		gameLobby.Logger().Error(ctx, err, "failed to add player", "player", username)
+		_ = socket.WriteJSON(
+			lobby.Message{
+				Tag:  lobby.MessageTagError,
+				Data: lobby.ErrorMessage{Error: wrap.Error(err, "failed to join game").Error()},
+			},
+		)
+		_ = socket.Close()
 		return
 	}
 
@@ -107,6 +110,7 @@ func (api LobbyAPI) JoinLobby(res http.ResponseWriter, req *http.Request) {
 // Endpoint for creating lobbies (for servers with public lobby creation enabled).
 // Expects query parameters "lobbyName" and "boardID".
 func (api LobbyAPI) CreateLobby(res http.ResponseWriter, req *http.Request) {
+	ctx := req.Context()
 	query := req.URL.Query()
 
 	lobbyName, err := getQueryParam(query, "lobbyName")
@@ -124,11 +128,11 @@ func (api LobbyAPI) CreateLobby(res http.ResponseWriter, req *http.Request) {
 	if err := api.lobbyRegistry.CreateLobby(lobbyName, boardID, false, nil); err != nil {
 		err = wrap.Error(err, "failed to create lobby")
 		sendServerError(res, err)
-		log.Error(err)
+		log.Error(ctx, err, "")
 		return
 	}
 
-	res.Write([]byte("lobby created"))
+	res.WriteHeader(http.StatusCreated)
 }
 
 // Endpoint for showing the list of boards supported by the server.

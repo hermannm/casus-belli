@@ -277,11 +277,13 @@ func TestNonWinterOrders(t *testing.T) {
 	}
 
 	for _, test := range testCases {
-		t.Run(test.name, func(t *testing.T) {
-			game, board := newMockGame(t, test.units, test.control, test.orders, SeasonSpring)
-			game.resolveNonWinterOrders(test.orders)
-			test.expected.check(t, board, test.units)
-		})
+		t.Run(
+			test.name, func(t *testing.T) {
+				game, board := newMockGame(t, test.units, test.control, test.orders, SeasonSpring)
+				game.resolveNonWinterOrders(test.orders)
+				test.expected.check(t, board, test.units)
+			},
+		)
 	}
 }
 
@@ -385,11 +387,13 @@ func TestWinterOrders(t *testing.T) {
 	}
 
 	for _, test := range testCases {
-		t.Run(test.name, func(t *testing.T) {
-			game, board := newMockGame(t, test.units, test.control, test.orders, SeasonWinter)
-			game.resolveWinterOrders(test.orders)
-			test.expected.check(t, board, test.units)
-		})
+		t.Run(
+			test.name, func(t *testing.T) {
+				game, board := newMockGame(t, test.units, test.control, test.orders, SeasonWinter)
+				game.resolveWinterOrders(test.orders)
+				test.expected.check(t, board, test.units)
+			},
+		)
 	}
 }
 
@@ -476,14 +480,13 @@ func benchmarkSetup(b *testing.B) (*Game, []Order) {
 }
 
 func TestMain(m *testing.M) {
-	devlog.InitDefaultLogHandler(
-		os.Stdout,
-		&devlog.Options{Level: slog.LevelDebug, ForceColors: true},
+	log.SetDefault(
+		devlog.NewHandler(os.Stdout, &devlog.Options{Level: slog.LevelDebug, ForceColors: true}),
 	)
 
 	board, boardInfo, err := ReadBoardFromConfigFile("casus-belli-5players")
 	if err != nil {
-		log.ErrorCause(err, "Failed to read board config for tests")
+		log.Error(nil, err, "Failed to read board config for tests")
 		os.Exit(1)
 	}
 	emptyBoard, baseBoardInfo = board, boardInfo

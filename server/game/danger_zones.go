@@ -36,7 +36,7 @@ func (game *Game) resolveDangerZoneCrossing(crossing Battle) {
 	defer cleanup()
 
 	if err := game.messenger.AwaitDiceRoll(ctx, order.Faction); err != nil {
-		game.log.Error(err)
+		game.log.Error(nil, err, "")
 	}
 
 	crossing.addModifier(order.Faction, Modifier{Type: ModifierDice, Value: game.rollDice()})

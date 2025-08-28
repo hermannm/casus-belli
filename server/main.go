@@ -23,13 +23,15 @@ import (
 const defaultPort string = "8000"
 
 func main() {
-	devlog.InitDefaultLogHandler(os.Stdout, &devlog.Options{Level: slog.LevelDebug})
+	log.SetDefault(devlog.NewHandler(os.Stdout, &devlog.Options{Level: slog.LevelDebug}))
+
+	ctx := context.Background()
 
 	local, devMode, port := getCommandLineFlags()
 
 	availableBoards, err := game.GetAvailableBoards()
 	if err != nil {
-		log.ErrorCause(err, "Failed to get available boards for game server")
+		log.Error(ctx, err, "Failed to get available boards for game server")
 		os.Exit(1)
 	}
 
@@ -39,14 +41,14 @@ func main() {
 	if local || devMode {
 		selectedBoard := selectBoard(availableBoards)
 		createLobby(selectedBoard, lobbyRegistry, devMode)
-		printIPs(port)
+		printIPs(ctx, port)
 	} else {
 		lobbyAPI.RegisterLobbyCreationEndpoints()
 	}
 
-	log.Infof("Listening on port %s...", port)
+	log.Infof(ctx, "Listening on port %s...", port)
 	if err := lobbyAPI.ListenAndServe(fmt.Sprintf(":%s", port)); err != nil {
-		log.ErrorCause(err, "Server stopped")
+		log.Error(ctx, err, "Server stopped")
 		os.Exit(1)
 	}
 }
@@ -102,7 +104,11 @@ func selectBoard(availableBoards []game.BoardInfo) game.BoardInfo {
 	return selectedBoard
 }
 
-func createLobby(selectedBoard game.BoardInfo, lobbyRegistry *lobby.LobbyRegistry, devMode bool) {
+func createLobby(
+	selectedBoard game.BoardInfo,
+	lobbyRegistry *lobby.LobbyRegistry,
+	devMode bool,
+) {
 	var lobbyName string
 	for {
 		fmt.Print("Lobby name: ")
@@ -147,7 +153,7 @@ func createLobby(selectedBoard game.BoardInfo, lobbyRegistry *lobby.LobbyRegistr
 	fmt.Printf("Lobby '%s' created!\n\n", lobbyName)
 }
 
-func printIPs(port string) {
+func printIPs(ctx context.Context, port string) {
 	fmt.Println("Game clients should now see lobby at:")
 
 	writer := tabwriter.NewWriter(os.Stdout, 1, 1, 1, ' ', 0)
@@ -155,22 +161,27 @@ func printIPs(port string) {
 	localIPs, err := ipfinder.FindLocalIPs()
 	if err == nil {
 		for _, ip := range localIPs {
-			fmt.Fprintf(writer, "%s:%s\t(if on the same network)\n", ip.Address.String(), port)
+			_, _ = fmt.Fprintf(
+				writer,
+				"%s:%s\t(if on the same network)\n",
+				ip.Address.String(),
+				port,
+			)
 		}
 	} else {
 		fmt.Printf("[Error finding local IPs] %s\n", err.Error())
 	}
 
-	ctx, cancelCtx := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancelCtx := context.WithTimeout(ctx, 5*time.Second)
 	defer cancelCtx()
 
 	publicIP, err := ipfinder.FindPublicIP(ctx)
 	if err == nil {
-		fmt.Fprintf(writer, "%s:%s\t(if port forwarding)\n", publicIP, port)
+		_, _ = fmt.Fprintf(writer, "%s:%s\t(if port forwarding)\n", publicIP, port)
 	} else {
 		fmt.Printf("[Error finding public IP] %s\n", err.Error())
 	}
 
-	writer.Flush()
+	_ = writer.Flush()
 	fmt.Println()
 }

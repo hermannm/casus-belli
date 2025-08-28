@@ -106,13 +106,12 @@ func (board Board) placeOrder(order Order) {
 	}
 
 	destination := board[order.Destination]
-	switch order.Type {
-	case OrderMove:
+	if order.Type == OrderMove {
 		destination.incomingMoves = append(destination.incomingMoves, order)
 		if order.hasKnightMove() {
 			board[order.SecondDestination].expectedKnightMoves++
 		}
-	case OrderSupport:
+	} else if order.Type == OrderSupport {
 		destination.incomingSupports = append(destination.incomingSupports, order)
 	}
 }
@@ -193,8 +192,7 @@ func (board Board) removeOrder(order Order) {
 		board[order.Origin].order.Clear()
 	}
 
-	switch order.Type {
-	case OrderMove:
+	if order.Type == OrderMove {
 		destination := board[order.Destination]
 		for i, move := range destination.incomingMoves {
 			if move == order {
@@ -202,7 +200,7 @@ func (board Board) removeOrder(order Order) {
 				break
 			}
 		}
-	case OrderSupport:
+	} else if order.Type == OrderSupport {
 		destination := board[order.Destination]
 		for i, support := range destination.incomingSupports {
 			if support == order {

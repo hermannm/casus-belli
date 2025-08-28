@@ -36,14 +36,16 @@ func CrossCompile() error {
 			targetString := target.os + "-" + arch
 			fmt.Println(withColor("[Building]", blue), targetString)
 
-			goroutines.Go(func() error {
-				output := outputDir + "/" + appName + "-" + targetString
-				if target.os == "windows" {
-					output += ".exe"
-				}
-				env := map[string]string{"GOOS": target.os, "GOARCH": arch}
-				return sh.RunWithV(env, "go", "build", "-o", output)
-			})
+			goroutines.Go(
+				func() error {
+					output := outputDir + "/" + appName + "-" + targetString
+					if target.os == "windows" {
+						output += ".exe"
+					}
+					env := map[string]string{"GOOS": target.os, "GOARCH": arch}
+					return sh.RunWithV(env, "go", "build", "-o", output)
+				},
+			)
 		}
 	}
 

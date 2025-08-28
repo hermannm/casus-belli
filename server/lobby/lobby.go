@@ -54,7 +54,7 @@ func (lobby *Lobby) AddPlayer(username string, socket *websocket.Conn) (*Player,
 
 	player := newPlayer(Username(username), socket, lobby.log)
 
-	lobby.log.Infof("Player '%s' joined", username)
+	lobby.log.Infof(nil, "Player '%s' joined", username)
 	lobby.players = append(lobby.players, player)
 	go player.readMessagesUntilSocketCloses(lobby)
 
@@ -94,7 +94,7 @@ func (lobby *Lobby) Close() {
 		player.lock.Lock()
 
 		if err := player.socket.Close(); err != nil {
-			player.log.ErrorCause(err, "Failed to close socket connection")
+			player.log.Error(nil, err, "Failed to close socket connection")
 		}
 
 		player.lock.Unlock()
@@ -102,7 +102,7 @@ func (lobby *Lobby) Close() {
 
 	lobby.registry.removeLobby(lobby.name)
 
-	lobby.log.Info("Lobby closed")
+	lobby.log.Info(nil, "Lobby closed")
 }
 
 func (lobby *Lobby) ClearMessages() {
@@ -126,7 +126,7 @@ func (lobby *Lobby) startGame() error {
 		return errors.New("all player factions must be claimed before starting the game")
 	}
 
-	lobby.log.Info("Starting game")
+	lobby.log.Info(nil, "Starting game")
 	lobby.gameStarted = true
 
 	go func() {

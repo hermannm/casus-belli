@@ -108,14 +108,10 @@ func (game *Game) resolveWinterOrders(orders []Order) {
 		for _, region := range game.board {
 			order, hasOrder := region.order.Get()
 			if hasOrder {
-				switch order.Type {
-				case OrderBuild:
-					region.Unit.Put(Unit{
-						Faction: order.Faction,
-						Type:    order.UnitType,
-					})
+				if order.Type == OrderBuild {
+					region.Unit.Put(Unit{Faction: order.Faction, Type: order.UnitType})
 					region.order.Clear()
-				case OrderDisband:
+				} else if order.Type == OrderDisband {
 					region.removeUnit()
 					region.order.Clear()
 				}

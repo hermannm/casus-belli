@@ -346,17 +346,19 @@ func (game *Game) awaitSupport(
 	}
 
 	resultsLock.Lock()
-	battle.addModifier(supported, Modifier{
-		Type:              ModifierSupport,
-		Value:             supportCount,
-		SupportingFaction: faction,
-	})
+	battle.addModifier(
+		supported, Modifier{
+			Type:              ModifierSupport,
+			Value:             supportCount,
+			SupportingFaction: faction,
+		},
+	)
 	resultsLock.Unlock()
 }
 
 func (game *Game) handleBattleError(err error, faction PlayerFaction, battle *Battle) {
 	game.messenger.SendError(faction, err)
-	game.log.WarnError(err, "from", faction, "battle", battle.regionNames())
+	game.log.WarnError(nil, err, "", "from", faction, "battle", battle.regionNames())
 }
 
 // Adds modifiers for support orders from players involved in the battle, as we assume they always

@@ -40,15 +40,17 @@ const (
 	ModifierSupport
 )
 
-var modifierNames = enumnames.NewMap(map[ModifierType]string{
-	ModifierDice:     "Dice",
-	ModifierUnit:     "Unit",
-	ModifierForest:   "Forest",
-	ModifierCastle:   "Castle",
-	ModifierWater:    "Water",
-	ModifierSurprise: "Surprise",
-	ModifierSupport:  "Support",
-})
+var modifierNames = enumnames.NewMap(
+	map[ModifierType]string{
+		ModifierDice:     "Dice",
+		ModifierUnit:     "Unit",
+		ModifierForest:   "Forest",
+		ModifierCastle:   "Castle",
+		ModifierWater:    "Water",
+		ModifierSurprise: "Surprise",
+		ModifierSupport:  "Support",
+	},
+)
 
 func (modifierType ModifierType) String() string {
 	return modifierNames.GetNameOrFallback(modifierType, "INVALID")
@@ -72,6 +74,7 @@ func (game *Game) newAttackerResult(
 	singleplayerBattle bool,
 	borderBattle bool,
 ) Result {
+	//goland:noinspection GoPreferNilSlice - We want this to serialize as an empty JSON array
 	modifiers := []Modifier{}
 
 	neighbor, adjacent := region.getNeighbor(move.Origin, move.ViaDangerZone)

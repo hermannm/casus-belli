@@ -16,11 +16,11 @@ func (player *Player) readMessagesUntilSocketCloses(lobby *Lobby) {
 	for {
 		socketClosed, err := player.readMessage(lobby)
 		if socketClosed {
-			player.log.ErrorCause(err, "Socket closed, removing from lobby")
+			player.log.Error(nil, err, "Socket closed, removing from lobby")
 			lobby.RemovePlayer(player.username)
 			return
 		} else if err != nil {
-			player.log.Error(err)
+			player.log.Error(nil, err, "")
 			player.SendError(err)
 		}
 	}
@@ -32,6 +32,7 @@ func (player *Player) readMessage(lobby *Lobby) (socketClosed bool, err error) {
 	// See https://pkg.go.dev/github.com/gorilla/websocket#hdr-Concurrency
 	_, messageBytes, err := player.socket.ReadMessage()
 	if err != nil {
+		//goland:noinspection GoTypeAssertionOnErrors
 		if _, closed := err.(*websocket.CloseError); closed || errors.Is(err, net.ErrClosed) {
 			return true, err
 		} else {
@@ -114,11 +115,13 @@ func (player *Player) handleGameMessage(
 		return fmt.Errorf("invalid game message tag '%s'", messageTag)
 	}
 
-	lobby.gameMessageQueue.Add(ReceivedMessage{
-		Tag:          messageTag,
-		Data:         messageData,
-		ReceivedFrom: player.gameFaction,
-	})
+	lobby.gameMessageQueue.Add(
+		ReceivedMessage{
+			Tag:          messageTag,
+			Data:         messageData,
+			ReceivedFrom: player.gameFaction,
+		},
+	)
 	return nil
 }
 
@@ -176,8 +179,10 @@ func (lobby *Lobby) AwaitSupport(
 }
 
 func (lobby *Lobby) AwaitDiceRoll(ctx context.Context, from game.PlayerFaction) error {
-	_, err := lobby.gameMessageQueue.AwaitMatchingItem(ctx, func(message ReceivedMessage) bool {
-		return message.ReceivedFrom == from && message.Tag == MessageTagDiceRoll
-	})
+	_, err := lobby.gameMessageQueue.AwaitMatchingItem(
+		ctx, func(message ReceivedMessage) bool {
+			return message.ReceivedFrom == from && message.Tag == MessageTagDiceRoll
+		},
+	)
 	return err
 }

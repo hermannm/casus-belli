@@ -27,12 +27,14 @@ const (
 	UnitCatapult
 )
 
-var unitNames = enumnames.NewMap(map[UnitType]string{
-	UnitFootman:  "Footman",
-	UnitKnight:   "Knight",
-	UnitShip:     "Ship",
-	UnitCatapult: "Catapult",
-})
+var unitNames = enumnames.NewMap(
+	map[UnitType]string{
+		UnitFootman:  "Footman",
+		UnitKnight:   "Knight",
+		UnitShip:     "Ship",
+		UnitCatapult: "Catapult",
+	},
+)
 
 func (unitType UnitType) String() string {
 	return unitNames.GetNameOrFallback(unitType, "INVALID")
@@ -46,13 +48,8 @@ func (unitType UnitType) battleModifier(
 	isAttackOnCastle bool,
 ) (modifier Modifier, hasModifier bool) {
 	modifierValue := 0
-	switch unitType {
-	case UnitFootman:
+	if unitType == UnitFootman || (unitType == UnitCatapult && isAttackOnCastle) {
 		modifierValue = 1
-	case UnitCatapult:
-		if isAttackOnCastle {
-			modifierValue = 1
-		}
 	}
 
 	if modifierValue != 0 {

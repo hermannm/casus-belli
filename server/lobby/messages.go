@@ -4,7 +4,6 @@ import (
 	"log/slog"
 
 	"hermannm.dev/casus-belli/server/game"
-	"hermannm.dev/devlog/log"
 	"hermannm.dev/enumnames"
 )
 
@@ -13,8 +12,12 @@ type Message struct {
 	Data any
 }
 
-func (message Message) log() slog.Attr {
-	return slog.Group("message", "tag", message.Tag.String(), log.JSON("data", message.Data))
+// Implements [slog.LogValuer].
+func (message Message) LogValue() slog.Value {
+	return slog.GroupValue(
+		slog.String("tag", message.Tag.String()),
+		slog.Any("data", message.Data),
+	)
 }
 
 type ReceivedMessage struct {
@@ -121,23 +124,25 @@ const (
 	MessageTagGiveSupport
 )
 
-var messageTags = enumnames.NewMap(map[MessageTag]string{
-	MessageTagError:              "Error",
-	MessageTagLobbyJoined:        "LobbyJoined",
-	MessageTagPlayerStatus:       "PlayerStatus",
-	MessageTagSelectFaction:      "SelectFaction",
-	MessageTagStartGame:          "StartGame",
-	MessageTagGameStarted:        "GameStarted",
-	MessageTagOrderRequest:       "OrderRequest",
-	MessageTagOrdersConfirmation: "OrdersConfirmation",
-	MessageTagOrdersReceived:     "OrdersReceived",
-	MessageTagBattleAnnouncement: "BattleAnnouncement",
-	MessageTagBattleResults:      "BattleResults",
-	MessageTagWinner:             "Winner",
-	MessageTagSubmitOrders:       "SubmitOrders",
-	MessageTagDiceRoll:           "DiceRoll",
-	MessageTagGiveSupport:        "GiveSupport",
-})
+var messageTags = enumnames.NewMap(
+	map[MessageTag]string{
+		MessageTagError:              "Error",
+		MessageTagLobbyJoined:        "LobbyJoined",
+		MessageTagPlayerStatus:       "PlayerStatus",
+		MessageTagSelectFaction:      "SelectFaction",
+		MessageTagStartGame:          "StartGame",
+		MessageTagGameStarted:        "GameStarted",
+		MessageTagOrderRequest:       "OrderRequest",
+		MessageTagOrdersConfirmation: "OrdersConfirmation",
+		MessageTagOrdersReceived:     "OrdersReceived",
+		MessageTagBattleAnnouncement: "BattleAnnouncement",
+		MessageTagBattleResults:      "BattleResults",
+		MessageTagWinner:             "Winner",
+		MessageTagSubmitOrders:       "SubmitOrders",
+		MessageTagDiceRoll:           "DiceRoll",
+		MessageTagGiveSupport:        "GiveSupport",
+	},
+)
 
 func (tag MessageTag) String() string {
 	return messageTags.GetNameOrFallback(tag, "INVALID")

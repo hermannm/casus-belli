@@ -64,13 +64,15 @@ const (
 	OrderDisband
 )
 
-var orderNames = enumnames.NewMap(map[OrderType]string{
-	OrderMove:      "Move",
-	OrderSupport:   "Support",
-	OrderTransport: "Transport",
-	OrderBesiege:   "Besiege",
-	OrderBuild:     "Build",
-})
+var orderNames = enumnames.NewMap(
+	map[OrderType]string{
+		OrderMove:      "Move",
+		OrderSupport:   "Support",
+		OrderTransport: "Transport",
+		OrderBesiege:   "Besiege",
+		OrderBuild:     "Build",
+	},
+)
 
 func (orderType OrderType) String() string {
 	return orderNames.GetNameOrFallback(orderType, "INVALID")
@@ -159,7 +161,7 @@ func (game *Game) gatherAndValidateOrderSet(
 		orders, err := game.messenger.AwaitOrders(ctx, faction)
 		if err != nil {
 			err = wrap.Error(err, "failed to receive orders")
-			game.log.Error(err)
+			game.log.Error(ctx, err, "")
 			game.messenger.SendError(faction, err)
 			orderChan <- []Order{}
 			return
@@ -170,7 +172,7 @@ func (game *Game) gatherAndValidateOrderSet(
 		}
 
 		if err := validateOrders(orders, faction, game.board, game.season); err != nil {
-			game.log.Error(err)
+			game.log.Error(ctx, err, "")
 			game.messenger.SendError(faction, err)
 			continue
 		}
@@ -196,10 +198,9 @@ func validateWinterOrders(orders []Order, faction PlayerFaction, board Board) er
 	var disbands set.ArraySet[RegionName]
 	var outgoingMoves set.ArraySet[RegionName]
 	for _, order := range orders {
-		switch order.Type {
-		case OrderDisband:
+		if order.Type == OrderDisband {
 			disbands.Add(order.Origin)
-		case OrderMove:
+		} else if order.Type == OrderMove {
 			outgoingMoves.Add(order.Origin)
 		}
 	}
@@ -419,9 +420,9 @@ func validateMoveOrSupport(order Order, origin *Region, board Board) error {
 		return validateMove(order, origin, board)
 	case OrderSupport:
 		return validateSupport(order, origin)
+	default:
+		return errors.New("invalid order type")
 	}
-
-	return errors.New("invalid order type")
 }
 
 func validateMove(order Order, origin *Region, board Board) error {
