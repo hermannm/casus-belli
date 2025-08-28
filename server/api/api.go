@@ -3,12 +3,14 @@ package api
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/websocket"
-	"hermannm.dev/casus-belli/server/game"
-	"hermannm.dev/casus-belli/server/lobby"
 	"hermannm.dev/devlog/log"
 	"hermannm.dev/wrap"
+
+	"hermannm.dev/casus-belli/server/game"
+	"hermannm.dev/casus-belli/server/lobby"
 )
 
 type LobbyAPI struct {
@@ -28,32 +30,37 @@ func NewLobbyAPI(
 
 	api := LobbyAPI{lobbyRegistry: lobbyRegistry, availableBoards: availableBoards, router: router}
 
-	router.HandleFunc("GET /lobbies", api.ListLobbies)
-	router.HandleFunc("GET /join", api.JoinLobby)
+	router.HandleFunc("GET /lobbies", api.listLobbies)
+	router.HandleFunc("GET /join", api.joinLobby)
 
 	return api
 }
 
 func (api LobbyAPI) RegisterLobbyCreationEndpoints() {
-	api.router.HandleFunc("POST /create", api.CreateLobby)
-	api.router.HandleFunc("GET /boards", api.ListBoards)
+	api.router.HandleFunc("POST /create", api.createLobby)
+	api.router.HandleFunc("GET /boards", api.listBoards)
 }
 
 func (api LobbyAPI) ListenAndServe(address string) error {
-	if err := http.ListenAndServe(address, api.router); err != nil {
+	server := &http.Server{
+		Addr:              address,
+		Handler:           api.router,
+		ReadHeaderTimeout: 3 * time.Second,
+	}
+	if err := server.ListenAndServe(); err != nil {
 		return wrap.Error(err, "server stopped")
 	}
 	return nil
 }
 
 // Endpoint to list available game lobbies.
-func (api LobbyAPI) ListLobbies(res http.ResponseWriter, req *http.Request) {
+func (api LobbyAPI) listLobbies(res http.ResponseWriter, _ *http.Request) {
 	sendJSON(res, api.lobbyRegistry.ListLobbies())
 }
 
 // Endpoint for a player to join a lobby.
 // Expects query parameters "lobbyName" and "username".
-func (api LobbyAPI) JoinLobby(res http.ResponseWriter, req *http.Request) {
+func (api LobbyAPI) joinLobby(res http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 	query := req.URL.Query()
 
@@ -75,6 +82,7 @@ func (api LobbyAPI) JoinLobby(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	//nolint:exhaustruct
 	upgrader := websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
@@ -84,7 +92,7 @@ func (api LobbyAPI) JoinLobby(res http.ResponseWriter, req *http.Request) {
 
 	socket, err := upgrader.Upgrade(res, req, nil)
 	if err != nil {
-		err := wrap.Error(err, "failed to establish socket connection")
+		err = wrap.Error(err, "failed to establish socket connection")
 		sendServerErrorWithHeader(res, err)
 		gameLobby.Logger().Error(ctx, err, "player", username)
 		return
@@ -109,7 +117,7 @@ func (api LobbyAPI) JoinLobby(res http.ResponseWriter, req *http.Request) {
 
 // Endpoint for creating lobbies (for servers with public lobby creation enabled).
 // Expects query parameters "lobbyName" and "boardID".
-func (api LobbyAPI) CreateLobby(res http.ResponseWriter, req *http.Request) {
+func (api LobbyAPI) createLobby(res http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 	query := req.URL.Query()
 
@@ -136,6 +144,6 @@ func (api LobbyAPI) CreateLobby(res http.ResponseWriter, req *http.Request) {
 }
 
 // Endpoint for showing the list of boards supported by the server.
-func (api LobbyAPI) ListBoards(res http.ResponseWriter, req *http.Request) {
+func (api LobbyAPI) listBoards(res http.ResponseWriter, _ *http.Request) {
 	sendJSON(res, api.availableBoards)
 }

@@ -71,6 +71,7 @@ var orderNames = enumnames.NewMap(
 		OrderTransport: "Transport",
 		OrderBesiege:   "Besiege",
 		OrderBuild:     "Build",
+		OrderDisband:   "Disband",
 	},
 )
 
@@ -198,10 +199,12 @@ func validateWinterOrders(orders []Order, faction PlayerFaction, board Board) er
 	var disbands set.ArraySet[RegionName]
 	var outgoingMoves set.ArraySet[RegionName]
 	for _, order := range orders {
-		if order.Type == OrderDisband {
+		switch order.Type {
+		case OrderDisband:
 			disbands.Add(order.Origin)
-		} else if order.Type == OrderMove {
+		case OrderMove:
 			outgoingMoves.Add(order.Origin)
+		default: // Done
 		}
 	}
 
@@ -406,7 +409,7 @@ func validateMoveOrSupport(order Order, origin *Region, board Board) error {
 	}
 
 	if origin.Unit.Value.Type == UnitShip {
-		if !(destination.Sea || destination.isCoast(board)) {
+		if !destination.Sea && !destination.isCoast(board) {
 			return errors.New("ship order destination must be sea or coast")
 		}
 	} else {

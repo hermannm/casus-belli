@@ -3,13 +3,14 @@ package lobby
 import (
 	"log/slog"
 
-	"hermannm.dev/casus-belli/server/game"
 	"hermannm.dev/enumnames"
+
+	"hermannm.dev/casus-belli/server/game"
 )
 
 type Message struct {
-	Tag  MessageTag
-	Data any
+	Tag  MessageTag `json:"Tag"`
+	Data any        `json:"Data"`
 }
 
 // Implements [slog.LogValuer].
@@ -21,31 +22,31 @@ func (message Message) LogValue() slog.Value {
 }
 
 type ReceivedMessage struct {
-	Tag          MessageTag
-	Data         any
-	ReceivedFrom game.PlayerFaction
+	Tag          MessageTag         `json:"Tag"`
+	Data         any                `json:"Data"`
+	ReceivedFrom game.PlayerFaction `json:"ReceivedFrom"`
 }
 
 // Message sent from server when an error occurs.
 type ErrorMessage struct {
-	Error string
+	Error string `json:"Error"`
 }
 
 // Message sent to a player when they join a lobby, to inform them about the game and other players.
 type LobbyJoinedMessage struct {
-	SelectableFactions []game.PlayerFaction
-	PlayerStatuses     []PlayerStatusMessage
+	SelectableFactions []game.PlayerFaction  `json:"SelectableFactions"`
+	PlayerStatuses     []PlayerStatusMessage `json:"PlayerStatuses"`
 }
 
 // Message sent from server to all clients when a player's status changes.
 type PlayerStatusMessage struct {
-	Username        Username
-	SelectedFaction game.PlayerFaction `json:",omitempty"`
+	Username        Username           `json:"Username"`
+	SelectedFaction game.PlayerFaction `json:"SelectedFaction,omitempty"`
 }
 
 // Message sent from client when they want to select a faction to play for the game.
 type SelectFactionMessage struct {
-	Faction game.PlayerFaction
+	Faction game.PlayerFaction `json:"Faction"`
 }
 
 // Message sent from a player when the lobby wants to start the game.
@@ -54,43 +55,43 @@ type StartGameMessage struct{}
 
 // Message sent from server when the game starts.
 type GameStartedMessage struct {
-	Board game.Board
+	Board game.Board `json:"Board"`
 }
 
 // Message sent from server to client to signal that client should submit orders.
 type OrderRequestMessage struct {
-	Season game.Season
+	Season game.Season `json:"Season"`
 }
 
 // Message sent from server to all clients when valid orders are received from a player.
 // Used to show who the server is waiting for.
 type OrdersConfirmationMessage struct {
-	FactionThatSubmittedOrders game.PlayerFaction
+	FactionThatSubmittedOrders game.PlayerFaction `json:"FactionThatSubmittedOrders"`
 }
 
 // Message sent from server to all clients when valid orders are received from all players.
 type OrdersReceivedMessage struct {
-	OrdersByFaction map[game.PlayerFaction][]game.Order
+	OrdersByFaction map[game.PlayerFaction][]game.Order `json:"OrdersByFaction"`
 }
 
 // Message sent from server to all clients when a battle has begun.
 type BattleAnnouncementMessage struct {
-	Battle game.Battle
+	Battle game.Battle `json:"Battle"`
 }
 
 // Message sent from server to all clients when a battle has finished resolving.
 type BattleResultsMessage struct {
-	Battle game.Battle
+	Battle game.Battle `json:"Battle"`
 }
 
 // Message sent from server to all clients when the game is won.
 type WinnerMessage struct {
-	WinningFaction game.PlayerFaction
+	WinningFaction game.PlayerFaction `json:"WinningFaction"`
 }
 
 // Message sent from client when submitting orders.
 type SubmitOrdersMessage struct {
-	Orders []game.Order
+	Orders []game.Order `json:"Orders"`
 }
 
 // Message sent from client when they roll the dice in a battle.
@@ -98,10 +99,10 @@ type DiceRollMessage struct{}
 
 // Message sent from client when declaring who to support with their support order.
 type GiveSupportMessage struct {
-	EmbattledRegion game.RegionName
+	EmbattledRegion game.RegionName `json:"EmbattledRegion"`
 
 	// Blank if none were supported.
-	SupportedFaction game.PlayerFaction `json:",omitempty"`
+	SupportedFaction game.PlayerFaction `json:"SupportedFaction,omitempty"`
 }
 
 type MessageTag uint8

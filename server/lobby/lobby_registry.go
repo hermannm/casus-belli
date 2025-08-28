@@ -6,10 +6,11 @@ import (
 	"slices"
 	"sync"
 
-	"hermannm.dev/casus-belli/server/game"
 	"hermannm.dev/condqueue"
 	"hermannm.dev/devlog/log"
 	"hermannm.dev/wrap"
+
+	"hermannm.dev/casus-belli/server/game"
 )
 
 type LobbyRegistry struct {
@@ -46,9 +47,13 @@ func (registry *LobbyRegistry) CreateLobby(
 
 	lobby := &Lobby{
 		name:             lobbyName,
+		players:          nil,
+		game:             nil,
+		gameStarted:      false,
+		gameMessageQueue: condqueue.New[ReceivedMessage](),
 		registry:         registry,
 		lock:             sync.RWMutex{},
-		gameMessageQueue: condqueue.New[ReceivedMessage](),
+		log:              log.Logger{},
 	}
 
 	logger := log.Default()

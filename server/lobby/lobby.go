@@ -7,9 +7,10 @@ import (
 	"sync"
 
 	"github.com/gorilla/websocket"
-	"hermannm.dev/casus-belli/server/game"
 	"hermannm.dev/condqueue"
 	"hermannm.dev/devlog/log"
+
+	"hermannm.dev/casus-belli/server/game"
 )
 
 // A collection of players for a game.

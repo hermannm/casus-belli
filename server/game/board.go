@@ -106,13 +106,15 @@ func (board Board) placeOrder(order Order) {
 	}
 
 	destination := board[order.Destination]
-	if order.Type == OrderMove {
+	switch order.Type {
+	case OrderMove:
 		destination.incomingMoves = append(destination.incomingMoves, order)
 		if order.hasKnightMove() {
 			board[order.SecondDestination].expectedKnightMoves++
 		}
-	} else if order.Type == OrderSupport {
+	case OrderSupport:
 		destination.incomingSupports = append(destination.incomingSupports, order)
+	default: // Done
 	}
 }
 
@@ -183,7 +185,7 @@ func (board Board) resolved() bool {
 
 func (board Board) resetResolvingState() {
 	for _, region := range board {
-		region.regionResolvingState = regionResolvingState{}
+		region.regionResolvingState = regionResolvingState{} //nolint:exhaustruct
 	}
 }
 

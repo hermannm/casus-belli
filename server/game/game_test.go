@@ -12,6 +12,7 @@ import (
 	"hermannm.dev/wrap"
 )
 
+//nolint:exhaustruct
 func TestNonWinterOrders(t *testing.T) {
 	testCases := []struct {
 		name     string
@@ -287,6 +288,7 @@ func TestNonWinterOrders(t *testing.T) {
 	}
 }
 
+//nolint:exhaustruct
 func TestWinterOrders(t *testing.T) {
 	testCases := []struct {
 		name     string
@@ -406,7 +408,10 @@ func BenchmarkBoardResolve(b *testing.B) {
 	}
 }
 
+//nolint:exhaustruct
 func benchmarkSetup(b *testing.B) (*Game, []Order) {
+	b.Helper()
+
 	units := unitMap{
 		"Emman": {Type: UnitFootman, Faction: white},
 
@@ -515,19 +520,21 @@ type unitMap map[RegionName]Unit
 type controlMap map[RegionName]PlayerFaction
 
 func newMockGame(
-	t testing.TB,
+	tb testing.TB,
 	units unitMap,
 	control controlMap,
 	orders []Order,
 	season Season,
 ) (*Game, Board) {
+	tb.Helper()
+
 	board := emptyBoard.copy()
 	ordersByFaction := make(map[PlayerFaction][]Order)
 
 	for regionName, unit := range units {
 		region, ok := board[regionName]
 		if !ok {
-			t.Fatalf("unit map contained region '%s' not found on board", regionName)
+			tb.Fatalf("unit map contained region '%s' not found on board", regionName)
 		}
 
 		region.Unit.Put(unit)
@@ -541,7 +548,7 @@ func newMockGame(
 	for regionName, faction := range control {
 		region, ok := board[regionName]
 		if !ok {
-			t.Fatalf("control map contained region '%s' not found on board", regionName)
+			tb.Fatalf("control map contained region '%s' not found on board", regionName)
 		}
 
 		region.ControllingFaction = faction
@@ -552,7 +559,7 @@ func newMockGame(
 	for i, order := range orders {
 		region, ok := board[order.Origin]
 		if !ok {
-			t.Fatalf("order origin region '%s' not found on board", order.Origin)
+			tb.Fatalf("order origin region '%s' not found on board", order.Origin)
 		}
 
 		if order.Type == OrderBuild {
@@ -568,7 +575,7 @@ func newMockGame(
 
 	for faction, orders := range ordersByFaction {
 		if err := validateOrders(orders, faction, board, season); err != nil {
-			t.Fatal(wrap.Error(err, "invalid orders in test setup"))
+			tb.Fatal(wrap.Error(err, "invalid orders in test setup"))
 		}
 	}
 
@@ -589,6 +596,8 @@ type movedFrom struct {
 }
 
 func (expected expectedUnits) check(t *testing.T, board Board, originalUnits unitMap) {
+	t.Helper()
+
 	for regionName, expected := range expected {
 		region, ok := board[regionName]
 		if !ok {
@@ -631,19 +640,38 @@ func (expected expectedUnits) check(t *testing.T, board Board, originalUnits uni
 
 type MockMessenger struct{}
 
+//goland:noinspection GoUnusedParameter
 func (MockMessenger) SendError(to PlayerFaction, err error) {}
-func (MockMessenger) SendGameStarted(board Board)           {}
+
+//goland:noinspection GoUnusedParameter
+func (MockMessenger) SendGameStarted(board Board) {}
+
+//goland:noinspection GoUnusedParameter
 func (MockMessenger) SendOrderRequest(to PlayerFaction, season Season) (succeeded bool) {
 	return true
 }
-func (MockMessenger) SendOrdersReceived(orders map[PlayerFaction][]Order)             {}
+
+//goland:noinspection GoUnusedParameter
+func (MockMessenger) SendOrdersReceived(orders map[PlayerFaction][]Order) {}
+
+//goland:noinspection GoUnusedParameter
 func (MockMessenger) SendOrdersConfirmation(factionThatSubmittedOrders PlayerFaction) {}
-func (MockMessenger) SendBattleAnnouncement(battle Battle)                            {}
-func (MockMessenger) SendBattleResults(battle Battle)                                 {}
-func (MockMessenger) SendWinner(winner PlayerFaction)                                 {}
+
+//goland:noinspection GoUnusedParameter
+func (MockMessenger) SendBattleAnnouncement(battle Battle) {}
+
+//goland:noinspection GoUnusedParameter
+func (MockMessenger) SendBattleResults(battle Battle) {}
+
+//goland:noinspection GoUnusedParameter
+func (MockMessenger) SendWinner(winner PlayerFaction) {}
+
+//goland:noinspection GoUnusedParameter
 func (MockMessenger) AwaitOrders(ctx context.Context, from PlayerFaction) ([]Order, error) {
 	return nil, nil
 }
+
+//goland:noinspection GoUnusedParameter
 func (MockMessenger) AwaitSupport(
 	ctx context.Context,
 	from PlayerFaction,
@@ -651,7 +679,10 @@ func (MockMessenger) AwaitSupport(
 ) (supported PlayerFaction, err error) {
 	return "", nil
 }
+
+//goland:noinspection GoUnusedParameter
 func (MockMessenger) AwaitDiceRoll(ctx context.Context, from PlayerFaction) error {
 	return nil
 }
+
 func (MockMessenger) ClearMessages() {}

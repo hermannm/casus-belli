@@ -53,7 +53,7 @@ func (unitType UnitType) battleModifier(
 	}
 
 	if modifierValue != 0 {
-		return Modifier{Type: ModifierUnit, Value: modifierValue}, true
+		return newModifier(ModifierUnit, modifierValue), true
 	} else {
 		return Modifier{}, false
 	}

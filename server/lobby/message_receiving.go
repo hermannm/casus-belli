@@ -8,8 +8,9 @@ import (
 	"net"
 
 	"github.com/gorilla/websocket"
-	"hermannm.dev/casus-belli/server/game"
 	"hermannm.dev/wrap"
+
+	"hermannm.dev/casus-belli/server/game"
 )
 
 func (player *Player) readMessagesUntilSocketCloses(lobby *Lobby) {
@@ -32,7 +33,7 @@ func (player *Player) readMessage(lobby *Lobby) (socketClosed bool, err error) {
 	// See https://pkg.go.dev/github.com/gorilla/websocket#hdr-Concurrency
 	_, messageBytes, err := player.socket.ReadMessage()
 	if err != nil {
-		//goland:noinspection GoTypeAssertionOnErrors
+		//nolint:errorlint // ReadMessage will always return CloseError directly
 		if _, closed := err.(*websocket.CloseError); closed || errors.Is(err, net.ErrClosed) {
 			return true, err
 		} else {
@@ -41,10 +42,10 @@ func (player *Player) readMessage(lobby *Lobby) (socketClosed bool, err error) {
 	}
 
 	var message struct {
-		Tag  MessageTag
-		Data json.RawMessage
+		Tag  MessageTag      `json:"Tag"`
+		Data json.RawMessage `json:"Data"`
 	}
-	if err := json.Unmarshal(messageBytes, &message); err != nil {
+	if err = json.Unmarshal(messageBytes, &message); err != nil {
 		return false, wrap.Error(err, "failed to parse received message")
 	}
 
@@ -101,7 +102,10 @@ func (player *Player) handleGameMessage(
 	switch messageTag {
 	case MessageTagSubmitOrders:
 		var message SubmitOrdersMessage
-		if err := json.Unmarshal(rawMessage, &message); err != nil {
+		if err := json.Unmarshal(
+			rawMessage,
+			&message, //nolint:musttag // False positive
+		); err != nil {
 			return wrap.Error(err, "failed to parse message")
 		}
 		messageData = message
@@ -174,7 +178,8 @@ func (lobby *Lobby) AwaitSupport(
 		return "", err
 	}
 
-	messageData := message.Data.(GiveSupportMessage) // Already checked inside AwaitMatchingItem
+	//nolint:errcheck // Already checked inside AwaitMatchingItem
+	messageData := message.Data.(GiveSupportMessage)
 	return messageData.SupportedFaction, nil
 }
 

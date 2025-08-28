@@ -6,8 +6,9 @@ import (
 	"sync"
 
 	"github.com/gorilla/websocket"
-	"hermannm.dev/casus-belli/server/game"
 	"hermannm.dev/devlog/log"
+
+	"hermannm.dev/casus-belli/server/game"
 )
 
 // A player connected to a game lobby.

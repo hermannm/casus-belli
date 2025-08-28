@@ -12,12 +12,13 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"hermannm.dev/casus-belli/server/api"
-	"hermannm.dev/casus-belli/server/game"
-	"hermannm.dev/casus-belli/server/lobby"
 	"hermannm.dev/devlog"
 	"hermannm.dev/devlog/log"
 	"hermannm.dev/ipfinder"
+
+	"hermannm.dev/casus-belli/server/api"
+	"hermannm.dev/casus-belli/server/game"
+	"hermannm.dev/casus-belli/server/lobby"
 )
 
 const defaultPort string = "8000"
@@ -71,6 +72,7 @@ func getCommandLineFlags() (local bool, devMode bool, port string) {
 	return local, devMode, port
 }
 
+//nolint:forbidigo
 func selectBoard(availableBoards []game.BoardInfo) game.BoardInfo {
 	if len(availableBoards) == 1 {
 		return availableBoards[0]
@@ -104,6 +106,7 @@ func selectBoard(availableBoards []game.BoardInfo) game.BoardInfo {
 	return selectedBoard
 }
 
+//nolint:forbidigo
 func createLobby(
 	selectedBoard game.BoardInfo,
 	lobbyRegistry *lobby.LobbyRegistry,
@@ -153,6 +156,7 @@ func createLobby(
 	fmt.Printf("Lobby '%s' created!\n\n", lobbyName)
 }
 
+//nolint:forbidigo
 func printIPs(ctx context.Context, port string) {
 	fmt.Println("Game clients should now see lobby at:")
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/gorilla/websocket"
+
 	"hermannm.dev/casus-belli/server/game"
 )
 

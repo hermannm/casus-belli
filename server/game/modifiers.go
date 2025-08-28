@@ -10,8 +10,20 @@ type Modifier struct {
 	Type  ModifierType
 	Value int
 
-	// Blank, unless Type is ModifierSupport.
-	SupportingFaction PlayerFaction `json:",omitempty"`
+	// Empty, unless Type is ModifierSupport.
+	SupportingFaction opt.Option[PlayerFaction]
+}
+
+func newModifier(modifierType ModifierType, value int) Modifier {
+	return Modifier{Type: modifierType, Value: value, SupportingFaction: opt.Empty[PlayerFaction]()}
+}
+
+func newSupportModifier(value int, supportingFaction PlayerFaction) Modifier {
+	return Modifier{
+		Type:              ModifierSupport,
+		Value:             value,
+		SupportingFaction: opt.Value(supportingFaction),
+	}
 }
 
 type ModifierType uint8
@@ -65,7 +77,12 @@ func (game *Game) newDefenderResult(unit Unit) Result {
 		total += unitModifier.Value
 	}
 
-	return Result{DefenderFaction: unit.Faction, Parts: modifiers, Total: total}
+	return Result{
+		DefenderFaction: opt.Value(unit.Faction),
+		Parts:           modifiers,
+		Total:           total,
+		Order:           opt.Empty[Order](),
+	}
 }
 
 func (game *Game) newAttackerResult(
@@ -82,7 +99,7 @@ func (game *Game) newAttackerResult(
 	// Assumes danger zone checks have been made before battle,
 	// and thus adds surprise modifier to attacker coming across such zones.
 	if adjacent && neighbor.DangerZone != "" {
-		modifiers = append(modifiers, Modifier{Type: ModifierSurprise, Value: 1})
+		modifiers = append(modifiers, newModifier(ModifierSurprise, 1))
 	}
 
 	isOnlyAttackerOnUncontrolledRegion := !region.controlled() && singleplayerBattle
@@ -91,16 +108,16 @@ func (game *Game) newAttackerResult(
 
 	if includeTerrainModifiers {
 		if region.Forest {
-			modifiers = append(modifiers, Modifier{Type: ModifierForest, Value: -1})
+			modifiers = append(modifiers, newModifier(ModifierForest, -1))
 		}
 
 		if region.Castle {
-			modifiers = append(modifiers, Modifier{Type: ModifierCastle, Value: -1})
+			modifiers = append(modifiers, newModifier(ModifierCastle, -1))
 		}
 
 		isMovingAcrossWater := !adjacent || neighbor.AcrossWater
 		if isMovingAcrossWater {
-			modifiers = append(modifiers, Modifier{Type: ModifierWater, Value: -1})
+			modifiers = append(modifiers, newModifier(ModifierWater, -1))
 		}
 	}
 
@@ -113,5 +130,10 @@ func (game *Game) newAttackerResult(
 		total += modifier.Value
 	}
 
-	return Result{Order: opt.Value(move), Parts: modifiers, Total: total}
+	return Result{
+		Total:           total,
+		Parts:           modifiers,
+		Order:           opt.Value(move),
+		DefenderFaction: opt.Empty[PlayerFaction](),
+	}
 }

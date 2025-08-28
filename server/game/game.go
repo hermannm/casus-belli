@@ -64,7 +64,7 @@ func New(
 	}
 	if game.rollDice == nil {
 		game.rollDice = func() int {
-			return rand.IntN(6) + 1
+			return rand.IntN(6) + 1 //nolint:gosec // Acceptable to use non-crypto randomness here
 		}
 	}
 
@@ -108,12 +108,14 @@ func (game *Game) resolveWinterOrders(orders []Order) {
 		for _, region := range game.board {
 			order, hasOrder := region.order.Get()
 			if hasOrder {
-				if order.Type == OrderBuild {
+				switch order.Type {
+				case OrderBuild:
 					region.Unit.Put(Unit{Faction: order.Faction, Type: order.UnitType})
 					region.order.Clear()
-				} else if order.Type == OrderDisband {
+				case OrderDisband:
 					region.removeUnit()
 					region.order.Clear()
+				default: // Done
 				}
 			}
 
@@ -142,10 +144,7 @@ func (game *Game) resolveNonWinterOrders(orders []Order) {
 	game.board.placeOrders(orders)
 
 	game.resolveUncontestedRegions()
-	for {
-		if game.board.resolved() {
-			break
-		}
+	for !game.board.resolved() {
 		game.resolveContestedRegions()
 		game.resolveUncontestedRegions()
 	}

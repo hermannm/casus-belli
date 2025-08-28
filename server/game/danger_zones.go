@@ -1,6 +1,8 @@
 package game
 
-import "hermannm.dev/opt"
+import (
+	"hermannm.dev/opt"
+)
 
 type DangerZone string
 
@@ -8,7 +10,16 @@ type DangerZone string
 const MinResultToSurviveDangerZone = 3
 
 func newDangerZoneCrossing(order Order, dangerZone DangerZone) Battle {
-	return Battle{Results: []Result{{Order: opt.Value(order)}}, DangerZone: dangerZone}
+	return Battle{
+		Results: []Result{
+			{
+				Order:           opt.Value(order),
+				Total:           0,
+				Parts:           nil,
+				DefenderFaction: opt.Empty[PlayerFaction](),
+			},
+		}, DangerZone: opt.Value(dangerZone),
+	}
 }
 
 func (game *Game) resolveDangerZoneCrossings(region *Region) {
@@ -39,7 +50,7 @@ func (game *Game) resolveDangerZoneCrossing(crossing Battle) {
 		game.log.Error(nil, err, "")
 	}
 
-	crossing.addModifier(order.Faction, Modifier{Type: ModifierDice, Value: game.rollDice()})
+	crossing.addModifier(order.Faction, newModifier(ModifierDice, game.rollDice()))
 
 	if crossing.Results[0].Total < MinResultToSurviveDangerZone {
 		if order.Type == OrderMove {

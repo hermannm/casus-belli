@@ -20,7 +20,7 @@ type Battle struct {
 	Results []Result
 
 	// If the battle is a danger zone crossing: name of the crossed danger zone.
-	DangerZone DangerZone
+	DangerZone opt.Option[DangerZone]
 }
 
 // Dice and modifier result for a battle.
@@ -33,13 +33,23 @@ type Result struct {
 	Order opt.Option[Order]
 
 	// If result of a defending unit in a region: the faction of the defender, otherwise blank.
-	DefenderFaction PlayerFaction `json:",omitempty"`
+	DefenderFaction opt.Option[PlayerFaction]
+}
+
+func (result Result) faction() PlayerFaction {
+	if order, ok := result.Order.Get(); ok {
+		return order.Faction
+	}
+	if defenderFaction, ok := result.DefenderFaction.Get(); ok {
+		return defenderFaction
+	}
+	// Should be unreachable
+	panic("No faction on battle result")
 }
 
 func (battle *Battle) addModifier(faction PlayerFaction, modifier Modifier) {
 	for i, result := range battle.Results {
-		if result.DefenderFaction == faction ||
-			(result.Order.HasValue() && result.Order.Value.Faction == faction) {
+		if result.faction() == faction {
 			result.Parts = append(result.Parts, modifier)
 			result.Total += modifier.Value
 			battle.Results[i] = result
@@ -49,14 +59,10 @@ func (battle *Battle) addModifier(faction PlayerFaction, modifier Modifier) {
 }
 
 func (battle Battle) factions() []PlayerFaction {
-	factions := make([]PlayerFaction, len(battle.Results))
+	factions := make([]PlayerFaction, 0, len(battle.Results))
 
-	for i, result := range battle.Results {
-		if result.DefenderFaction != "" {
-			factions[i] = result.DefenderFaction
-		} else {
-			factions[i] = result.Order.Value.Faction
-		}
+	for _, result := range battle.Results {
+		factions = append(factions, result.faction())
 	}
 
 	return factions
@@ -64,7 +70,7 @@ func (battle Battle) factions() []PlayerFaction {
 
 func (faction PlayerFaction) isFighting(battle *Battle) bool {
 	for _, result := range battle.Results {
-		if result.DefenderFaction == faction || result.Order.Value.Faction == faction {
+		if result.faction() == faction {
 			return true
 		}
 	}
@@ -73,7 +79,10 @@ func (faction PlayerFaction) isFighting(battle *Battle) bool {
 
 func (game *Game) resolveSingleplayerBattle(region *Region) {
 	move := region.incomingMoves[0]
-	battle := Battle{Results: []Result{game.newAttackerResult(move, region, true, false)}}
+	battle := Battle{
+		Results:    []Result{game.newAttackerResult(move, region, true, false)},
+		DangerZone: opt.Empty[DangerZone](),
+	}
 
 	game.calculateBattle(&battle, region)
 
@@ -102,13 +111,13 @@ func (game *Game) resolveMultiplayerBattle(region *Region) {
 	tie := len(winners) > 1
 
 	for _, result := range battle.Results {
-		if result.DefenderFaction != "" {
+		if defenderFaction, ok := result.DefenderFaction.Get(); ok {
 			// If the defender won or or was part of a tie, nothing changes for them.
 			// If an attacker won alone and the defender controlled the region, the defender will be
 			// removed as part of succeedMove for the winner.
 			// If the defender was on the losing end of a tie in a battle with multiple combatants,
 			// or the defender lost but did not control the region, we have to remove the unit here.
-			if slices.Contains(losers, result.DefenderFaction) {
+			if slices.Contains(losers, defenderFaction) {
 				// Guaranteed to have 1 element, since this is not a border battle
 				regionName := battle.regionNames()[0]
 				region := game.board[regionName]
@@ -154,7 +163,7 @@ func (game *Game) calculateBattle(battle *Battle, region *Region) {
 		if err := game.messenger.AwaitDiceRoll(ctx, faction); err != nil {
 			game.handleBattleError(wrap.Error(err, "failed to receive dice roll"), faction, battle)
 		}
-		battle.addModifier(faction, Modifier{Type: ModifierDice, Value: game.rollDice()})
+		battle.addModifier(faction, newModifier(ModifierDice, game.rollDice()))
 	} else {
 		var resultsLock sync.Mutex
 		var waitGroup sync.WaitGroup
@@ -196,6 +205,7 @@ func (game *Game) resolveBorderBattle(region1 *Region, region2 *Region) {
 			game.newAttackerResult(moveToRegion1, region1, false, true),
 			game.newAttackerResult(moveToRegion2, region2, false, true),
 		},
+		DangerZone: opt.Empty[DangerZone](),
 	}
 
 	game.calculateBorderBattle(&battle, region1, region2)
@@ -225,7 +235,7 @@ func (game *Game) resolveBorderBattle(region1 *Region, region2 *Region) {
 	game.messenger.SendBattleResults(battle)
 }
 
-var errSupportedOtherRegion error = errors.New("supported other region in border battle")
+var errSupportedOtherRegion = errors.New("supported other region in border battle")
 
 func (game *Game) calculateBorderBattle(battle *Battle, region1 *Region, region2 *Region) {
 	remainingSupports1 := battle.addAutomaticSupports(region1, []Order{region2.order.Value}, true)
@@ -249,8 +259,8 @@ func (game *Game) calculateBorderBattle(battle *Battle, region1 *Region, region2
 		supportCount1 := countOrdersFromFaction(remainingSupports1, faction)
 		supportCount2 := countOrdersFromFaction(remainingSupports2, faction)
 
+		//nolint:govet // We wait for both goroutines to complete below
 		ctx, cancel := context.WithCancelCause(ctx)
-
 		if supportCount1 != 0 {
 			waitGroup.Add(1)
 			go func() {
@@ -287,7 +297,7 @@ func (game *Game) calculateBorderBattle(battle *Battle, region1 *Region, region2
 	}
 
 	waitGroup.Wait()
-}
+} //nolint:govet // We wait for both goroutines to complete with waitGroup.Wait()
 
 func (game *Game) awaitDiceRoll(
 	ctx context.Context,
@@ -304,7 +314,7 @@ func (game *Game) awaitDiceRoll(
 	}
 
 	resultsLock.Lock()
-	battle.addModifier(faction, Modifier{Type: ModifierDice, Value: game.rollDice()})
+	battle.addModifier(faction, newModifier(ModifierDice, game.rollDice()))
 	resultsLock.Unlock()
 }
 
@@ -322,7 +332,7 @@ func (game *Game) awaitSupport(
 
 	supported, err := game.messenger.AwaitSupport(ctx, faction, regionName)
 	if err != nil {
-		if err != errSupportedOtherRegion {
+		if !errors.Is(err, errSupportedOtherRegion) {
 			game.handleBattleError(
 				wrap.Error(err, "failed to receive support declaration"),
 				faction,
@@ -346,13 +356,7 @@ func (game *Game) awaitSupport(
 	}
 
 	resultsLock.Lock()
-	battle.addModifier(
-		supported, Modifier{
-			Type:              ModifierSupport,
-			Value:             supportCount,
-			SupportingFaction: faction,
-		},
-	)
+	battle.addModifier(supported, newSupportModifier(supportCount, faction))
 	resultsLock.Unlock()
 }
 
@@ -391,7 +395,11 @@ SupportLoop:
 	for faction, supportCount := range supportCounts {
 		battle.addModifier(
 			faction,
-			Modifier{Type: ModifierSupport, Value: supportCount, SupportingFaction: faction},
+			Modifier{
+				Type:              ModifierSupport,
+				Value:             supportCount,
+				SupportingFaction: opt.Value(faction),
+			},
 		)
 	}
 
@@ -424,17 +432,10 @@ func (battle Battle) winnersAndLosers() (winners []PlayerFaction, losers []Playe
 	}
 
 	for _, result := range battle.Results {
-		var faction PlayerFaction
-		if result.DefenderFaction != "" {
-			faction = result.DefenderFaction
-		} else {
-			faction = result.Order.Value.Faction
-		}
-
 		if result.Total >= highestResult {
-			winners = append(winners, faction)
+			winners = append(winners, result.faction())
 		} else {
-			losers = append(losers, faction)
+			losers = append(losers, result.faction())
 		}
 	}
 
