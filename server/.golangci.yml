@@ -396,7 +396,6 @@ linters:
     # Predefined exclusion rules.
     # Default: []
     presets:
-      - std-error-handling
       - common-false-positives
     # Excluding configuration per-path, per-linter, per-text and per-source.
     rules:
