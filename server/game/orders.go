@@ -283,7 +283,7 @@ func validateWinterMove(
 		return fmt.Errorf("move destination '%s' already has a unit", destination.Name)
 	}
 
-	if origin.Unit.Value.Type == UnitShip && !destination.isCoast(board) {
+	if origin.Unit.Type == UnitShip && !destination.isCoast(board) {
 		return errors.New("ship winter move destination must be coast")
 	}
 
@@ -408,7 +408,7 @@ func validateMoveOrSupport(order Order, origin *Region, board Board) error {
 		return fmt.Errorf("destination region with name '%s' not found", order.Destination)
 	}
 
-	if origin.Unit.Value.Type == UnitShip {
+	if origin.Unit.Type == UnitShip {
 		if !destination.Sea && !destination.isCoast(board) {
 			return errors.New("ship order destination must be sea or coast")
 		}
@@ -430,7 +430,7 @@ func validateMoveOrSupport(order Order, origin *Region, board Board) error {
 
 func validateMove(order Order, origin *Region, board Board) error {
 	if order.SecondDestination != "" {
-		if origin.Unit.Value.Type != UnitKnight {
+		if origin.Unit.Type != UnitKnight {
 			return errors.New(
 				"second destinations for move orders can only be applied to knight units",
 			)
@@ -478,7 +478,7 @@ func validateBesiege(origin *Region) error {
 		return errors.New("besieged region cannot already be controlled")
 	}
 
-	if origin.Unit.Value.Type == UnitShip {
+	if origin.Unit.Type == UnitShip {
 		return errors.New("ships cannot besiege")
 	}
 
@@ -486,7 +486,7 @@ func validateBesiege(origin *Region) error {
 }
 
 func validateTransport(origin *Region) error {
-	if origin.Unit.Value.Type != UnitShip {
+	if origin.Unit.Type != UnitShip {
 		return errors.New("only ships can transport")
 	}
 
@@ -600,19 +600,19 @@ func validateOrderedUnit(order Order, origin *Region) error {
 			return errors.New("ordered region does not have a unit")
 		}
 
-		if origin.Unit.Value.Faction != order.Faction {
+		if origin.Unit.Faction != order.Faction {
 			return fmt.Errorf(
 				"faction of ordered unit '%s' does not match your faction '%s'",
-				origin.Unit.Value.Faction,
+				origin.Unit.Faction,
 				order.Faction,
 			)
 		}
 
-		if origin.Unit.Value.Type != order.UnitType {
+		if origin.Unit.Type != order.UnitType {
 			return fmt.Errorf(
 				"order unit type '%v' does not match unit type '%v' in ordered region",
 				order.UnitType,
-				origin.Unit.Value.Type,
+				origin.Unit.Type,
 			)
 		}
 	}

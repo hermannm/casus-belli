@@ -2,7 +2,6 @@ package game
 
 import (
 	"hermannm.dev/enumnames"
-	"hermannm.dev/opt"
 )
 
 // Part of a player's result in a battle.
@@ -10,19 +9,19 @@ type Modifier struct {
 	Type  ModifierType
 	Value int
 
-	// Empty, unless Type is ModifierSupport.
-	SupportingFaction opt.Option[PlayerFaction]
+	// Blank, unless Type is ModifierSupport.
+	SupportingFaction PlayerFaction `json:",omitempty"`
 }
 
 func newModifier(modifierType ModifierType, value int) Modifier {
-	return Modifier{Type: modifierType, Value: value, SupportingFaction: opt.Empty[PlayerFaction]()}
+	return Modifier{Type: modifierType, Value: value, SupportingFaction: ""}
 }
 
 func newSupportModifier(value int, supportingFaction PlayerFaction) Modifier {
 	return Modifier{
 		Type:              ModifierSupport,
 		Value:             value,
-		SupportingFaction: opt.Value(supportingFaction),
+		SupportingFaction: supportingFaction,
 	}
 }
 
@@ -78,10 +77,10 @@ func (game *Game) newDefenderResult(unit Unit) Result {
 	}
 
 	return Result{
-		DefenderFaction: opt.Value(unit.Faction),
+		DefenderFaction: unit.Faction,
 		Parts:           modifiers,
 		Total:           total,
-		Order:           opt.Empty[Order](),
+		Order:           nil,
 	}
 }
 
@@ -133,7 +132,7 @@ func (game *Game) newAttackerResult(
 	return Result{
 		Total:           total,
 		Parts:           modifiers,
-		Order:           opt.Value(move),
-		DefenderFaction: opt.Empty[PlayerFaction](),
+		Order:           &move,
+		DefenderFaction: "",
 	}
 }

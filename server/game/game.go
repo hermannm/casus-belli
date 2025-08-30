@@ -106,15 +106,14 @@ func (game *Game) resolveWinterOrders(orders []Order) {
 		allResolved = true
 
 		for _, region := range game.board {
-			order, hasOrder := region.order.Get()
-			if hasOrder {
-				switch order.Type {
+			if region.order != nil {
+				switch region.order.Type {
 				case OrderBuild:
-					region.Unit.Put(Unit{Faction: order.Faction, Type: order.UnitType})
-					region.order.Clear()
+					region.Unit = &Unit{Faction: region.order.Faction, Type: region.order.UnitType}
+					region.order = nil
 				case OrderDisband:
 					region.removeUnit()
-					region.order.Clear()
+					region.order = nil
 				default: // Done
 				}
 			}
@@ -125,14 +124,14 @@ func (game *Game) resolveWinterOrders(orders []Order) {
 				}
 			}
 
-			if region.order.HasValue() {
+			if region.order != nil {
 				allResolved = false
 				continue
 			}
 
 			if len(region.incomingMoves) != 0 {
 				move := region.incomingMoves[0] // Max 1 incoming move in winter
-				region.Unit.Put(move.unit())
+				region.Unit = ptr(move.unit())
 				game.board[move.Origin].removeUnit()
 				game.board.removeOrder(move)
 			}
@@ -240,7 +239,7 @@ func (game *Game) resolveContestedRegion(region *Region) (waiting bool) {
 	}
 
 	// If the destination region has an outgoing move order, that must be resolved first
-	if order, ok := region.order.Get(); ok && order.Type == OrderMove {
+	if region.order != nil && region.order.Type == OrderMove {
 		return true
 	}
 
@@ -258,14 +257,12 @@ func (game *Game) resolveContestedRegion(region *Region) (waiting bool) {
 
 func (game *Game) resolveSieges() {
 	for _, region := range game.board {
-		if order, ok := region.order.Get(); !ok || order.Type != OrderBesiege {
-			continue
-		}
-
-		region.SiegeCount++
-		if region.SiegeCount == 2 {
-			region.ControllingFaction = region.Unit.Value.Faction
-			region.SiegeCount = 0
+		if region.order != nil && region.order.Type == OrderBesiege {
+			region.SiegeCount++
+			if region.SiegeCount == 2 {
+				region.ControllingFaction = region.Unit.Faction
+				region.SiegeCount = 0
+			}
 		}
 	}
 }

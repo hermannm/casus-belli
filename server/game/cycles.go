@@ -5,18 +5,17 @@ type MoveCycle []*Region
 // Recursively finds a cycle of move orders through regions starting and ending with the given
 // firstRegionName.
 func (board Board) findCycle(firstRegionName RegionName, region *Region) MoveCycle {
-	order, hasOrder := region.order.Get()
-	if !hasOrder || order.Type != OrderMove {
+	if region.order == nil || region.order.Type != OrderMove {
 		return nil
 	}
 
 	// The base case: the destination is the beginning of the cycle.
-	if order.Destination == firstRegionName {
+	if region.order.Destination == firstRegionName {
 		return []*Region{region}
 	}
 
 	// If the base case is not yet reached, passes cycle discovery to the next region in the chain.
-	cycle := board.findCycle(firstRegionName, board[order.Destination])
+	cycle := board.findCycle(firstRegionName, board[region.order.Destination])
 	if cycle == nil {
 		return nil
 	} else {
@@ -25,14 +24,14 @@ func (board Board) findCycle(firstRegionName RegionName, region *Region) MoveCyc
 }
 
 func (board Board) findBorderBattle(region *Region) (isBorderBattle bool, secondRegion *Region) {
-	order, hasOrder := region.order.Get()
-	if !hasOrder || order.Type != OrderMove {
+	order := region.order
+	if order == nil || order.Type != OrderMove {
 		return false, nil
 	}
 
-	secondRegion = board[order.Destination]
-	secondOrder, hasSecondOrder := secondRegion.order.Get()
-	if !hasSecondOrder || secondOrder.Type != OrderMove {
+	secondRegion = board[region.order.Destination]
+	secondOrder := secondRegion.order
+	if secondOrder == nil || secondOrder.Type != OrderMove {
 		return false, nil
 	}
 
@@ -46,7 +45,7 @@ func (board Board) findBorderBattle(region *Region) (isBorderBattle bool, second
 func (cycle MoveCycle) prepareForResolving() {
 	for _, region := range cycle {
 		region.removeUnit()
-		region.order.Clear()
+		region.order = nil
 		region.partOfCycle = true
 	}
 }

@@ -4,11 +4,11 @@ import (
 	"context"
 	"log/slog"
 	"os"
+	"reflect"
 	"testing"
 
 	"hermannm.dev/devlog"
 	"hermannm.dev/devlog/log"
-	"hermannm.dev/opt"
 	"hermannm.dev/wrap"
 )
 
@@ -537,7 +537,7 @@ func newMockGame(
 			tb.Fatalf("unit map contained region '%s' not found on board", regionName)
 		}
 
-		region.Unit.Put(unit)
+		region.Unit = &unit
 		if !region.Sea {
 			region.ControllingFaction = unit.Faction
 		}
@@ -564,9 +564,9 @@ func newMockGame(
 
 		if order.Type == OrderBuild {
 			order.Faction = region.ControllingFaction
-		} else if region.Unit.HasValue() {
-			order.Faction = region.Unit.Value.Faction
-			order.UnitType = region.Unit.Value.Type
+		} else if region.Unit != nil {
+			order.Faction = region.Unit.Faction
+			order.UnitType = region.Unit.Type
 		}
 		orders[i] = order
 
@@ -604,18 +604,18 @@ func (expected expectedUnits) check(t *testing.T, board Board, originalUnits uni
 			t.Fatalf("invalid test setup: '%s' is not a region on the board", regionName)
 		}
 
-		var expectedUnit opt.Option[Unit]
+		var expectedUnit *Unit
 		switch expected := expected.(type) {
 		case Unit:
 			if expected != empty {
-				expectedUnit.Put(expected)
+				expectedUnit = &expected
 			}
 		case movedFrom:
 			unit, ok := originalUnits[expected.region]
 			if !ok {
 				t.Fatalf("invalid test setup: no unit for region '%s' in unit map", expected)
 			}
-			expectedUnit.Put(unit)
+			expectedUnit = &unit
 		case struct{}: // stayed
 			unit, ok := originalUnits[regionName]
 			if !ok {
@@ -624,7 +624,7 @@ func (expected expectedUnits) check(t *testing.T, board Board, originalUnits uni
 					regionName,
 				)
 			}
-			expectedUnit.Put(unit)
+			expectedUnit = &unit
 		default:
 			t.Fatalf(
 				"invalid test setup: expectedUnit in region '%s' is not Unit, movedFrom or stayed",
@@ -632,8 +632,8 @@ func (expected expectedUnits) check(t *testing.T, board Board, originalUnits uni
 			)
 		}
 
-		if region.Unit != expectedUnit {
-			t.Errorf("%s: want %v, got %v", regionName, expectedUnit, region.Unit)
+		if !reflect.DeepEqual(region.Unit, expectedUnit) {
+			t.Errorf("%s: want %+v, got %+v", regionName, expectedUnit, region.Unit)
 		}
 	}
 }

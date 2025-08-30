@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"golang.org/x/sync/errgroup"
-	"hermannm.dev/opt"
 	"hermannm.dev/set"
 	"hermannm.dev/wrap"
 )
@@ -80,7 +79,7 @@ func ReadBoardFromConfigFile(boardID string) (Board, BoardInfo, error) {
 				Castle:               landRegion.Castle,
 				Nation:               nation,
 				HomeFaction:          homeFaction,
-				Unit:                 opt.Empty[Unit](),
+				Unit:                 nil,
 				ControllingFaction:   homeFaction,
 				SiegeCount:           0,
 				regionResolvingState: regionResolvingState{}, //nolint:exhaustruct
@@ -103,7 +102,7 @@ func ReadBoardFromConfigFile(boardID string) (Board, BoardInfo, error) {
 			Castle:               false,
 			Nation:               "",
 			HomeFaction:          "",
-			Unit:                 opt.Empty[Unit](),
+			Unit:                 nil,
 			ControllingFaction:   "",
 			SiegeCount:           0,
 			regionResolvingState: regionResolvingState{}, //nolint:exhaustruct

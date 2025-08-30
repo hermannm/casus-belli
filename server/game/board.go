@@ -3,7 +3,6 @@ package game
 import (
 	"slices"
 
-	"hermannm.dev/opt"
 	"hermannm.dev/set"
 )
 
@@ -34,7 +33,7 @@ type Region struct {
 	HomeFaction PlayerFaction `json:",omitempty"`
 
 	// The unit that currently occupies the region (if any).
-	Unit opt.Option[Unit]
+	Unit *Unit
 
 	// The player faction that currently controls the region.
 	ControllingFaction PlayerFaction `json:",omitempty"`
@@ -48,7 +47,7 @@ type Region struct {
 // Internal resolving state for a region. Resets to its zero value every round.
 // Since all fields are private, they're not included in JSON messages.
 type regionResolvingState struct {
-	order                opt.Option[Order]
+	order                *Order // Nil if there is no order originating from this region.
 	incomingMoves        []Order
 	incomingSupports     []Order
 	incomingKnightMoves  []Order
@@ -57,8 +56,8 @@ type regionResolvingState struct {
 	resolved             bool
 	transportsResolved   bool
 	dangerZonesResolved  bool
-	partOfCycle          bool // Whether the region is part of a cycle of move orders.
-	unresolvedRetreat    opt.Option[Order]
+	partOfCycle          bool   // Whether the region is part of a cycle of move orders.
+	unresolvedRetreat    *Order // Nil if there is no unresolved retreat back to this region.
 }
 
 type Neighbor struct {
@@ -99,7 +98,7 @@ func (board Board) placeOrders(orders []Order) {
 
 func (board Board) placeOrder(order Order) {
 	origin := board[order.Origin]
-	origin.order.Put(order)
+	origin.order = &order
 
 	if order.Destination == "" {
 		return
@@ -121,7 +120,7 @@ func (board Board) placeOrder(order Order) {
 func (board Board) placeKnightMoves(region *Region) {
 	region.incomingMoves = region.incomingKnightMoves
 	for _, move := range region.incomingMoves {
-		board[move.Origin].order.Put(move)
+		board[move.Origin].order = &move
 	}
 
 	region.resolvingKnightMoves = true
@@ -139,13 +138,13 @@ func (board Board) placeKnightMoves(region *Region) {
 // Also goes through incoming supports to the region, and cuts any incoming support orders that are
 // under attack, unless we must wait for their origin regions to reach knight move resolving.
 func (board Board) cutSupportsAttackedByKnightMoves(region *Region) (mustWait bool) {
-	if order, ok := region.order.Get(); ok && order.Type == OrderSupport {
-		destination := board[order.Destination]
+	if region.order != nil && region.order.Type == OrderSupport {
+		destination := board[region.order.Destination]
 		if !destination.resolved && !destination.resolvingKnightMoves {
 			return true
 		}
 
-		board.removeOrder(order)
+		board.removeOrder(*region.order)
 	}
 
 	var supportsToCut []Order
@@ -191,7 +190,7 @@ func (board Board) resetResolvingState() {
 
 func (board Board) removeOrder(order Order) {
 	if !order.Retreat {
-		board[order.Origin].order.Clear()
+		board[order.Origin].order = nil
 	}
 
 	if order.Type == OrderMove {
@@ -217,7 +216,7 @@ func (board Board) succeedMove(move Order) {
 	destination := board[move.Destination]
 
 	destination.replaceUnit(move.unit())
-	destination.order.Clear()
+	destination.order = nil
 
 	// Seas cannot be controlled, and unconquered castles must be besieged first, unless the
 	// attacking unit is a catapult
@@ -254,15 +253,15 @@ func (board Board) retreatMove(move Order) {
 	if !move.Retreat {
 		origin := board[move.Origin]
 		if !origin.attacked() {
-			origin.Unit.Put(move.unit())
+			origin.Unit = ptr(move.unit())
 		} else if origin.partOfCycle {
-			origin.unresolvedRetreat.Put(move)
+			origin.unresolvedRetreat = &move
 		} else if !move.Retreat {
 			move.Retreat = true
 			move.Origin, move.Destination = move.Destination, move.Origin
 			move.SecondDestination = ""
 			origin.incomingMoves = append(origin.incomingMoves, move)
-			origin.order.Clear()
+			origin.order = nil
 			origin.removeUnit()
 		}
 
@@ -278,7 +277,7 @@ func (board Board) unitCounts(faction PlayerFaction) (unitCount int, maxUnitCoun
 	var nationsNotControlled set.ArraySet[string]
 
 	for _, region := range board {
-		if region.Unit.HasValue() && region.Unit.Value.Faction == faction {
+		if region.Unit != nil && region.Unit.Faction == faction {
 			unitCount++
 		}
 
@@ -313,7 +312,7 @@ func (board Board) copy() Board {
 
 // Checks whether the region contains a unit.
 func (region *Region) empty() bool {
-	return region.Unit.IsEmpty()
+	return region.Unit == nil
 }
 
 // Checks whether the region is controlled by a player faction.
@@ -330,22 +329,22 @@ func (region *Region) removeUnit() {
 	// If the region is part of a move cycle, then the unit has already been removed, and another
 	// unit may have taken its place
 	if !region.partOfCycle {
-		region.Unit.Clear()
+		region.Unit = nil
 		region.SiegeCount = 0
 	}
 }
 
 func (region *Region) replaceUnit(unit Unit) {
-	region.Unit.Put(unit)
+	region.Unit = &unit
 	region.SiegeCount = 0
 }
 
 func (region *Region) resolveRetreat() {
-	if region.unresolvedRetreat.HasValue() {
+	if region.unresolvedRetreat != nil {
 		if region.empty() {
-			region.Unit.Put(region.unresolvedRetreat.Value.unit())
+			region.Unit = ptr(region.unresolvedRetreat.unit())
 		}
-		region.unresolvedRetreat.Clear()
+		region.unresolvedRetreat = nil
 	}
 }
 
