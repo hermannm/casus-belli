@@ -25,6 +25,14 @@ formatters:
     #- gofumpt # enforces a stricter format than 'gofmt', while being backwards compatible
     #- swaggo # formats swaggo comments
 
+  settings:
+    goimports:
+      local-prefixes:
+        - hermannm.dev/casus-belli/server
+    golines:
+      shorten-comments: true
+      reformat-tags: false # Conflicts with default formatter
+
 linters:
   enable:
     - asasalint # checks for pass []any as any in variadic func(...any)
@@ -78,7 +86,6 @@ linters:
     - spancheck # checks for mistakes with OpenTelemetry/Census spans
     - sqlclosecheck # checks that sql.Rows and sql.Stmt are closed
     - staticcheck # is a go vet on steroids, applying a ton of static analysis checks
-    - tagalign # checks that struct tags are well aligned
     - testableexamples # checks if examples are testable (have an expected output)
     - testifylint # checks usage of github.com/stretchr/testify
     - thelper # detects golang test helpers without t.Helper() call and checks the consistency of test helpers
@@ -135,6 +142,7 @@ linters:
     #- nonamedreturns # [unhelpful] reports all named returns
     #- paralleltest # [too many false positives] detects missing usage of t.Parallel() method in your Go test
     #- recvcheck # [unhelpful] checks for receiver type consistency
+    #- tagalign # [unhelpful] checks that struct tags are well aligned
     #- tagliatelle # checks the struct tags
     #- testpackage # [not helpful] makes you use a separate _test package
     #- wsl # [too strict and mostly code is not more readable] whitespace linter forces you to use empty lines
