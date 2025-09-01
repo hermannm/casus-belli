@@ -5,11 +5,11 @@ type DangerZone string
 // Number to beat when attempting to cross a danger zone.
 const MinResultToSurviveDangerZone = 3
 
-func newDangerZoneCrossing(order Order, dangerZone DangerZone) Battle {
+func newDangerZoneCrossing(order *Order, dangerZone DangerZone) Battle {
 	return Battle{
 		Results: []Result{
 			{
-				Order:           &order,
+				Order:           order,
 				Total:           0,
 				Parts:           nil,
 				DefenderFaction: "",
@@ -23,7 +23,7 @@ func (game *Game) resolveDangerZoneCrossings(region *Region) {
 		return
 	}
 
-	for _, orders := range [...][]Order{region.incomingMoves, region.incomingSupports} {
+	for _, orders := range [...][]*Order{region.incomingMoves, region.incomingSupports} {
 		for _, order := range orders {
 			if mustCross, dangerZone := order.mustCrossDangerZone(region); mustCross {
 				game.resolveDangerZoneCrossing(newDangerZoneCrossing(order, dangerZone))
@@ -50,9 +50,9 @@ func (game *Game) resolveDangerZoneCrossing(crossing Battle) {
 
 	if crossing.Results[0].Total < MinResultToSurviveDangerZone {
 		if order.Type == OrderMove {
-			game.board.killMove(*order)
+			game.board.killMove(order)
 		} else {
-			game.board.removeOrder(*order)
+			game.board.removeOrder(order)
 		}
 	}
 

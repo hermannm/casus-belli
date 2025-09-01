@@ -71,7 +71,8 @@ type OrdersConfirmationMessage struct {
 
 // Message sent from server to all clients when valid orders are received from all players.
 type OrdersReceivedMessage struct {
-	OrdersByFaction map[game.PlayerFaction][]game.Order `json:"OrdersByFaction"`
+	// All orders will be non-nil.
+	OrdersByFaction map[game.PlayerFaction][]*game.Order `json:"OrdersByFaction"`
 }
 
 // Message sent from server to all clients when a battle has begun.
@@ -91,7 +92,8 @@ type WinnerMessage struct {
 
 // Message sent from client when submitting orders.
 type SubmitOrdersMessage struct {
-	Orders []game.Order `json:"Orders"`
+	// All elements must be non-nil (checked in [Lobby.AwaitOrders]).
+	Orders []*game.Order `json:"Orders"`
 }
 
 // Message sent from client when they roll the dice in a battle.

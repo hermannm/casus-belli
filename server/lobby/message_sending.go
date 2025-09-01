@@ -149,7 +149,7 @@ func (lobby *Lobby) SendOrderRequest(to game.PlayerFaction, season game.Season) 
 	)
 }
 
-func (lobby *Lobby) SendOrdersReceived(orders map[game.PlayerFaction][]game.Order) {
+func (lobby *Lobby) SendOrdersReceived(orders map[game.PlayerFaction][]*game.Order) {
 	lobby.sendMessageToAll(
 		Message{
 			Tag:  MessageTagOrdersReceived,

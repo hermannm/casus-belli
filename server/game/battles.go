@@ -122,23 +122,22 @@ func (game *Game) resolveMultiplayerBattle(region *Region) {
 				}
 			}
 			continue
-		}
+		} else if move := result.Order; move != nil {
+			if slices.Contains(losers, move.Faction) {
+				game.board.killMove(move)
+				continue
+			}
 
-		move := *result.Order
-		if slices.Contains(losers, move.Faction) {
-			game.board.killMove(move)
-			continue
-		}
+			if tie {
+				game.board.retreatMove(move)
+				continue
+			}
 
-		if tie {
-			game.board.retreatMove(move)
-			continue
-		}
-
-		// If the destination is not controlled, then the winner will have to battle there before we
-		// can succeed the move
-		if game.board[move.Destination].controlled() {
-			game.board.succeedMove(move)
+			// If the destination is not controlled, then the winner will have to battle there before we
+			// can succeed the move
+			if game.board[move.Destination].controlled() {
+				game.board.succeedMove(move)
+			}
 		}
 	}
 
@@ -195,7 +194,7 @@ func (game *Game) calculateBattle(battle *Battle, region *Region) {
 
 // Battle where units from two regions attack each other simultaneously.
 func (game *Game) resolveBorderBattle(region1 *Region, region2 *Region) {
-	moveToRegion1, moveToRegion2 := *region2.order, *region1.order
+	moveToRegion1, moveToRegion2 := region2.order, region1.order
 	battle := Battle{
 		Results: []Result{
 			game.newAttackerResult(moveToRegion1, region1, false, true),
@@ -222,7 +221,7 @@ func (game *Game) resolveBorderBattle(region1 *Region, region2 *Region) {
 			// have to win a battle in the destination region, which will be handled by the next
 			// cycle of move resolving.
 			if result.Order.Faction == losers[0] {
-				game.board.killMove(*result.Order)
+				game.board.killMove(result.Order)
 				break
 			}
 		}
@@ -234,8 +233,8 @@ func (game *Game) resolveBorderBattle(region1 *Region, region2 *Region) {
 var errSupportedOtherRegion = errors.New("supported other region in border battle")
 
 func (game *Game) calculateBorderBattle(battle *Battle, region1 *Region, region2 *Region) {
-	remainingSupports1 := battle.addAutomaticSupports(region1, []Order{*region2.order}, true)
-	remainingSupports2 := battle.addAutomaticSupports(region2, []Order{*region1.order}, true)
+	remainingSupports1 := battle.addAutomaticSupports(region1, []*Order{region2.order}, true)
+	remainingSupports2 := battle.addAutomaticSupports(region2, []*Order{region1.order}, true)
 
 	game.messenger.SendBattleAnnouncement(*battle)
 
@@ -366,9 +365,9 @@ func (game *Game) handleBattleError(err error, faction PlayerFaction, battle *Ba
 // added automatically.
 func (battle *Battle) addAutomaticSupports(
 	region *Region,
-	incomingMoves []Order,
+	incomingMoves []*Order,
 	borderBattle bool,
-) (remainingSupports []Order) {
+) (remainingSupports []*Order) {
 	supportCounts := make(map[PlayerFaction]int)
 
 SupportLoop:

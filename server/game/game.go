@@ -33,11 +33,11 @@ type Messenger interface {
 	SendGameStarted(board Board)
 	SendOrderRequest(to PlayerFaction, season Season) (succeeded bool)
 	SendOrdersConfirmation(factionThatSubmittedOrders PlayerFaction)
-	SendOrdersReceived(orders map[PlayerFaction][]Order)
+	SendOrdersReceived(orders map[PlayerFaction][]*Order)
 	SendBattleAnnouncement(battle Battle)
 	SendBattleResults(battle Battle)
 	SendWinner(winner PlayerFaction)
-	AwaitOrders(ctx context.Context, from PlayerFaction) ([]Order, error)
+	AwaitOrders(ctx context.Context, from PlayerFaction) ([]*Order, error)
 	AwaitDiceRoll(ctx context.Context, from PlayerFaction) error
 	AwaitSupport(
 		ctx context.Context,
@@ -98,7 +98,7 @@ func (game *Game) nextRound() {
 	game.board.resetResolvingState()
 }
 
-func (game *Game) resolveWinterOrders(orders []Order) {
+func (game *Game) resolveWinterOrders(orders []*Order) {
 	game.board.placeOrders(orders)
 
 	allResolved := false
@@ -139,7 +139,7 @@ func (game *Game) resolveWinterOrders(orders []Order) {
 	}
 }
 
-func (game *Game) resolveNonWinterOrders(orders []Order) {
+func (game *Game) resolveNonWinterOrders(orders []*Order) {
 	game.board.placeOrders(orders)
 
 	game.resolveUncontestedRegions()

@@ -49,7 +49,7 @@ func (game *Game) resolveContestedTransports(region *Region) (mustWait bool) {
 }
 
 func (board Board) resolveTransport(
-	move Order,
+	move *Order,
 	destination *Region,
 ) (transportsAttacked bool, dangerZone DangerZone) {
 	if destination.adjacentTo(move.Origin) {

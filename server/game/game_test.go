@@ -18,7 +18,7 @@ func TestNonWinterOrders(t *testing.T) {
 		name     string
 		units    unitMap
 		control  controlMap
-		orders   []Order
+		orders   []*Order
 		expected expectedUnits
 	}{
 		{
@@ -26,7 +26,7 @@ func TestNonWinterOrders(t *testing.T) {
 			units: unitMap{
 				"Emman": {Type: UnitFootman, Faction: white},
 			},
-			orders: []Order{
+			orders: []*Order{
 				{Type: OrderMove, Origin: "Emman", Destination: "Erren"},
 			},
 			expected: expectedUnits{
@@ -39,7 +39,7 @@ func TestNonWinterOrders(t *testing.T) {
 			units: unitMap{
 				"Furie": {Type: UnitKnight, Faction: black},
 			},
-			orders: []Order{
+			orders: []*Order{
 				{Type: OrderMove, Origin: "Furie", Destination: "Firril"},
 			},
 			expected: expectedUnits{
@@ -53,7 +53,7 @@ func TestNonWinterOrders(t *testing.T) {
 				"Furie":      {Type: UnitKnight, Faction: black},
 				"Mare Ovond": {Type: UnitShip, Faction: black},
 			},
-			orders: []Order{
+			orders: []*Order{
 				{Type: OrderMove, Origin: "Furie", Destination: "Firril"},
 				{Type: OrderSupport, Origin: "Mare Ovond", Destination: "Firril"},
 			},
@@ -71,7 +71,7 @@ func TestNonWinterOrders(t *testing.T) {
 			control: controlMap{
 				"Gnade": black,
 			},
-			orders: []Order{
+			orders: []*Order{
 				{Type: OrderMove, Origin: "Gron", Destination: "Gnade"},
 				{Type: OrderMove, Origin: "Gewel", Destination: "Gnade"},
 			},
@@ -88,7 +88,7 @@ func TestNonWinterOrders(t *testing.T) {
 				"Lusía":  {Type: UnitFootman, Faction: red},
 				"Brodo":  {Type: UnitFootman, Faction: red},
 			},
-			orders: []Order{
+			orders: []*Order{
 				{Type: OrderMove, Origin: "Lomone", Destination: "Lusía"},
 				{Type: OrderSupport, Origin: "Brodo", Destination: "Lusía"},
 			},
@@ -103,7 +103,7 @@ func TestNonWinterOrders(t *testing.T) {
 				"Tusser": {Type: UnitFootman, Faction: white},
 				"Tige":   {Type: UnitKnight, Faction: black},
 			},
-			orders: []Order{
+			orders: []*Order{
 				{Type: OrderMove, Origin: "Tusser", Destination: "Tige"},
 				{Type: OrderMove, Origin: "Tige", Destination: "Tusser"},
 			},
@@ -121,7 +121,7 @@ func TestNonWinterOrders(t *testing.T) {
 				"Limbol": red,
 				"Worp":   green,
 			},
-			orders: []Order{
+			orders: []*Order{
 				{
 					Type:              OrderMove,
 					Origin:            "Lomone",
@@ -151,7 +151,7 @@ func TestNonWinterOrders(t *testing.T) {
 				"Limbol": red,
 				"Leil":   red,
 			},
-			orders: []Order{
+			orders: []*Order{
 				{
 					Type:              OrderMove,
 					Origin:            "Worp",
@@ -189,7 +189,7 @@ func TestNonWinterOrders(t *testing.T) {
 			control: controlMap{
 				"Zona": white,
 			},
-			orders: []Order{
+			orders: []*Order{
 				{Type: OrderMove, Origin: "Ovo", Destination: "Zona"},
 				{Type: OrderTransport, Origin: "Mare Elle"},
 			},
@@ -210,7 +210,7 @@ func TestNonWinterOrders(t *testing.T) {
 			control: controlMap{
 				"Fond": black,
 			},
-			orders: []Order{
+			orders: []*Order{
 				{Type: OrderMove, Origin: "Winde", Destination: "Fond"},
 				{Type: OrderTransport, Origin: "Mare Gond"},
 				{Type: OrderTransport, Origin: "Mare Ovond"},
@@ -231,7 +231,7 @@ func TestNonWinterOrders(t *testing.T) {
 				"Limbol": {Type: UnitFootman, Faction: green},
 				"Worp":   {Type: UnitFootman, Faction: yellow},
 			},
-			orders: []Order{
+			orders: []*Order{
 				{Type: OrderMove, Origin: "Leil", Destination: "Limbol"},
 				{Type: OrderMove, Origin: "Limbol", Destination: "Worp"},
 				{Type: OrderMove, Origin: "Worp", Destination: "Leil"},
@@ -248,7 +248,7 @@ func TestNonWinterOrders(t *testing.T) {
 				"Dordel": {Type: UnitFootman, Faction: white},
 				"Dalom":  {Type: UnitShip, Faction: white},
 			},
-			orders: []Order{
+			orders: []*Order{
 				{Type: OrderMove, Origin: "Dordel", Destination: "Dalom"},
 				{Type: OrderMove, Origin: "Dalom", Destination: "Dordel"},
 			},
@@ -264,7 +264,7 @@ func TestNonWinterOrders(t *testing.T) {
 				"Fond":   {Type: UnitKnight, Faction: green},
 				"Gron":   {Type: UnitFootman, Faction: black},
 			},
-			orders: []Order{
+			orders: []*Order{
 				{Type: OrderMove, Origin: "Firril", Destination: "Fond"},
 				{Type: OrderMove, Origin: "Fond", Destination: "Firril"},
 				{Type: OrderMove, Origin: "Gron", Destination: "Firril"},
@@ -294,7 +294,7 @@ func TestWinterOrders(t *testing.T) {
 		name     string
 		units    unitMap
 		control  controlMap
-		orders   []Order
+		orders   []*Order
 		expected expectedUnits
 	}{
 		{
@@ -305,7 +305,7 @@ func TestWinterOrders(t *testing.T) {
 			control: controlMap{
 				"Cymere": yellow,
 			},
-			orders: []Order{
+			orders: []*Order{
 				{Type: OrderBuild, Origin: "Cymere", UnitType: UnitShip},
 				{Type: OrderBuild, Origin: "Pesth", UnitType: UnitKnight},
 			},
@@ -322,7 +322,7 @@ func TestWinterOrders(t *testing.T) {
 				"Bassas": {Type: UnitFootman, Faction: red},
 				"Bom":    {Type: UnitKnight, Faction: yellow},
 			},
-			orders: []Order{
+			orders: []*Order{
 				{Type: OrderDisband, Origin: "Brodo"},
 			},
 			expected: expectedUnits{
@@ -342,7 +342,7 @@ func TestWinterOrders(t *testing.T) {
 				"Limbol": green,
 				"Lomone": green,
 			},
-			orders: []Order{
+			orders: []*Order{
 				{Type: OrderMove, Origin: "Worp", Destination: "Lomone"},
 				{Type: OrderMove, Origin: "Winde", Destination: "Worp"},
 			},
@@ -359,7 +359,7 @@ func TestWinterOrders(t *testing.T) {
 				"Samoje": {Type: UnitFootman, Faction: black},
 				"Emman":  {Type: UnitKnight, Faction: white},
 			},
-			orders: []Order{
+			orders: []*Order{
 				{Type: OrderDisband, Origin: "Erren"},
 				{Type: OrderMove, Origin: "Samoje", Destination: "Erren"},
 			},
@@ -375,7 +375,7 @@ func TestWinterOrders(t *testing.T) {
 				"Cymere": {Type: UnitKnight, Faction: yellow},
 				"Pesth":  {Type: UnitFootman, Faction: yellow},
 			},
-			orders: []Order{
+			orders: []*Order{
 				{Type: OrderMove, Origin: "Calis", Destination: "Cymere"},
 				{Type: OrderMove, Origin: "Cymere", Destination: "Pesth"},
 				{Type: OrderMove, Origin: "Pesth", Destination: "Calis"},
@@ -409,7 +409,7 @@ func BenchmarkBoardResolve(b *testing.B) {
 }
 
 //nolint:exhaustruct
-func benchmarkSetup(b *testing.B) (*Game, []Order) {
+func benchmarkSetup(b *testing.B) (*Game, []*Order) {
 	b.Helper()
 
 	units := unitMap{
@@ -442,7 +442,7 @@ func benchmarkSetup(b *testing.B) (*Game, []Order) {
 		"Worp":   {Type: UnitFootman, Faction: yellow},
 	}
 
-	orders := []Order{
+	orders := []*Order{
 		// Auto-success
 		{Type: OrderMove, Origin: "Emman", Destination: "Erren"},
 
@@ -523,13 +523,13 @@ func newMockGame(
 	tb testing.TB,
 	units unitMap,
 	control controlMap,
-	orders []Order,
+	orders []*Order,
 	season Season,
 ) (*Game, Board) {
 	tb.Helper()
 
 	board := emptyBoard.copy()
-	ordersByFaction := make(map[PlayerFaction][]Order)
+	ordersByFaction := make(map[PlayerFaction][]*Order)
 
 	for regionName, unit := range units {
 		region, ok := board[regionName]
@@ -652,7 +652,7 @@ func (MockMessenger) SendOrderRequest(to PlayerFaction, season Season) (succeede
 }
 
 //goland:noinspection GoUnusedParameter
-func (MockMessenger) SendOrdersReceived(orders map[PlayerFaction][]Order) {}
+func (MockMessenger) SendOrdersReceived(orders map[PlayerFaction][]*Order) {}
 
 //goland:noinspection GoUnusedParameter
 func (MockMessenger) SendOrdersConfirmation(factionThatSubmittedOrders PlayerFaction) {}
@@ -667,7 +667,7 @@ func (MockMessenger) SendBattleResults(battle Battle) {}
 func (MockMessenger) SendWinner(winner PlayerFaction) {}
 
 //goland:noinspection GoUnusedParameter
-func (MockMessenger) AwaitOrders(ctx context.Context, from PlayerFaction) ([]Order, error) {
+func (MockMessenger) AwaitOrders(ctx context.Context, from PlayerFaction) ([]*Order, error) {
 	return nil, nil
 }
 

@@ -85,7 +85,7 @@ func (game *Game) newDefenderResult(unit Unit) Result {
 }
 
 func (game *Game) newAttackerResult(
-	move Order,
+	move *Order,
 	region *Region,
 	singleplayerBattle bool,
 	borderBattle bool,
@@ -132,7 +132,7 @@ func (game *Game) newAttackerResult(
 	return Result{
 		Total:           total,
 		Parts:           modifiers,
-		Order:           &move,
+		Order:           move,
 		DefenderFaction: "",
 	}
 }

@@ -47,10 +47,10 @@ type Region struct {
 // Internal resolving state for a region. Resets to its zero value every round.
 // Since all fields are private, they're not included in JSON messages.
 type regionResolvingState struct {
-	order                *Order // Nil if there is no order originating from this region.
-	incomingMoves        []Order
-	incomingSupports     []Order
-	incomingKnightMoves  []Order
+	order                *Order   // Nil if there is no order originating from this region.
+	incomingMoves        []*Order // All elements must be non-nil.
+	incomingSupports     []*Order // All elements must be non-nil.
+	incomingKnightMoves  []*Order // All elements must be non-nil.
 	expectedKnightMoves  int
 	resolvingKnightMoves bool
 	resolved             bool
@@ -77,8 +77,8 @@ type Neighbor struct {
 
 // Populates regions on the board with the given orders.
 // Does not add support orders that have moves against them, as that cancels them.
-func (board Board) placeOrders(orders []Order) {
-	var supportOrders []Order
+func (board Board) placeOrders(orders []*Order) {
+	var supportOrders []*Order
 
 	for _, order := range orders {
 		if order.Type == OrderSupport {
@@ -96,9 +96,9 @@ func (board Board) placeOrders(orders []Order) {
 	}
 }
 
-func (board Board) placeOrder(order Order) {
+func (board Board) placeOrder(order *Order) {
 	origin := board[order.Origin]
-	origin.order = &order
+	origin.order = order
 
 	if order.Destination == "" {
 		return
@@ -120,7 +120,7 @@ func (board Board) placeOrder(order Order) {
 func (board Board) placeKnightMoves(region *Region) {
 	region.incomingMoves = region.incomingKnightMoves
 	for _, move := range region.incomingMoves {
-		board[move.Origin].order = &move
+		board[move.Origin].order = move
 	}
 
 	region.resolvingKnightMoves = true
@@ -144,10 +144,10 @@ func (board Board) cutSupportsAttackedByKnightMoves(region *Region) (mustWait bo
 			return true
 		}
 
-		board.removeOrder(*region.order)
+		board.removeOrder(region.order)
 	}
 
-	var supportsToCut []Order
+	var supportsToCut []*Order
 	for _, support := range region.incomingSupports {
 		origin := board[support.Origin]
 		if origin.resolved {
@@ -188,7 +188,7 @@ func (board Board) resetResolvingState() {
 	}
 }
 
-func (board Board) removeOrder(order Order) {
+func (board Board) removeOrder(order *Order) {
 	if !order.Retreat {
 		board[order.Origin].order = nil
 	}
@@ -212,7 +212,7 @@ func (board Board) removeOrder(order Order) {
 	}
 }
 
-func (board Board) succeedMove(move Order) {
+func (board Board) succeedMove(move *Order) {
 	destination := board[move.Destination]
 
 	destination.replaceUnit(move.unit())
@@ -235,7 +235,7 @@ func (board Board) succeedMove(move Order) {
 	}
 }
 
-func (board Board) killMove(move Order) {
+func (board Board) killMove(move *Order) {
 	board.removeOrder(move)
 
 	if !move.Retreat {
@@ -247,7 +247,7 @@ func (board Board) killMove(move Order) {
 	}
 }
 
-func (board Board) retreatMove(move Order) {
+func (board Board) retreatMove(move *Order) {
 	board.removeOrder(move)
 
 	if !move.Retreat {
@@ -255,12 +255,10 @@ func (board Board) retreatMove(move Order) {
 		if !origin.attacked() {
 			origin.Unit = ptr(move.unit())
 		} else if origin.partOfCycle {
-			origin.unresolvedRetreat = &move
+			origin.unresolvedRetreat = move
 		} else if !move.Retreat {
-			move.Retreat = true
-			move.Origin, move.Destination = move.Destination, move.Origin
-			move.SecondDestination = ""
-			origin.incomingMoves = append(origin.incomingMoves, move)
+			retreat := move.retreat()
+			origin.incomingMoves = append(origin.incomingMoves, retreat)
 			origin.order = nil
 			origin.removeUnit()
 		}

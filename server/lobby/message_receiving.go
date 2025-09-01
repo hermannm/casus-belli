@@ -129,10 +129,11 @@ func (player *Player) handleGameMessage(
 	return nil
 }
 
+// Checks that none of the returned orders are nil.
 func (lobby *Lobby) AwaitOrders(
 	ctx context.Context,
 	from game.PlayerFaction,
-) ([]game.Order, error) {
+) ([]*game.Order, error) {
 	message, err := lobby.gameMessageQueue.AwaitMatchingItem(
 		ctx,
 		func(message ReceivedMessage) bool {
@@ -146,6 +147,12 @@ func (lobby *Lobby) AwaitOrders(
 	messageData, ok := message.Data.(SubmitOrdersMessage)
 	if !ok {
 		return nil, errors.New("failed to cast received message to SubmitOrdersMessage")
+	}
+
+	for _, order := range messageData.Orders {
+		if order == nil {
+			return nil, errors.New("received nil order in SubmitOrdersMessage")
+		}
 	}
 
 	return messageData.Orders, nil

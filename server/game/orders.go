@@ -79,25 +79,36 @@ func (orderType OrderType) String() string {
 	return orderNames.GetNameOrFallback(orderType, "INVALID")
 }
 
-func (order Order) unit() Unit {
+func (order *Order) unit() Unit {
 	return Unit{Type: order.UnitType, Faction: order.Faction}
 }
 
 // Checks if the order is a move by a knight unit with a second destination.
-func (order Order) hasKnightMove() bool {
+func (order *Order) hasKnightMove() bool {
 	return order.Type == OrderMove && order.UnitType == UnitKnight && order.SecondDestination != ""
 }
 
-// Returns the order with the original destination set as the origin, and the destination set as the
-// original second destination. Assumes hasKnightMove has already been called.
-func (order Order) knightMove() Order {
-	order.Origin = order.Destination
-	order.Destination = order.SecondDestination
-	order.SecondDestination = ""
-	return order
+// Returns a copy of the order with the original destination set as the origin, and the destination
+// set as the original second destination. Assumes hasKnightMove has already been called.
+func (order *Order) knightMove() *Order {
+	knightMove := *order // Copy order
+	knightMove.Origin = order.Destination
+	knightMove.Destination = order.SecondDestination
+	knightMove.SecondDestination = ""
+	return &knightMove
 }
 
-func (order Order) mustCrossDangerZone(
+// Returns a copy of the given move order, with the Retreat flag set to true and origin/destination
+// flipped.
+func (order *Order) retreat() *Order {
+	retreat := *order // Copy order
+	retreat.Retreat = true
+	retreat.Origin, retreat.Destination = retreat.Destination, retreat.Origin
+	retreat.SecondDestination = ""
+	return &retreat
+}
+
+func (order *Order) mustCrossDangerZone(
 	destination *Region,
 ) (mustCross bool, dangerZone DangerZone) {
 	neighbor, adjacent := destination.getNeighbor(order.Origin, order.ViaDangerZone)
@@ -108,7 +119,7 @@ func (order Order) mustCrossDangerZone(
 	return neighbor.DangerZone != "", neighbor.DangerZone
 }
 
-func countOrdersFromFaction(orders []Order, faction PlayerFaction) int {
+func countOrdersFromFaction(orders []*Order, faction PlayerFaction) int {
 	count := 0
 	for _, order := range orders {
 		if order.Faction == faction {
@@ -118,7 +129,7 @@ func countOrdersFromFaction(orders []Order, faction PlayerFaction) int {
 	return count
 }
 
-func (game *Game) gatherAndValidateOrders() []Order {
+func (game *Game) gatherAndValidateOrders() []*Order {
 	ctx, cleanup := context.WithTimeoutCause(
 		context.Background(),
 		15*time.Minute,
@@ -126,15 +137,15 @@ func (game *Game) gatherAndValidateOrders() []Order {
 	)
 	defer cleanup()
 
-	orderChans := make(map[PlayerFaction]chan []Order, len(game.PlayerFactions))
+	orderChans := make(map[PlayerFaction]chan []*Order, len(game.PlayerFactions))
 	for _, faction := range game.PlayerFactions {
-		orderChan := make(chan []Order, 1)
+		orderChan := make(chan []*Order, 1)
 		orderChans[faction] = orderChan
 		go game.gatherAndValidateOrderSet(ctx, faction, orderChan)
 	}
 
-	var allOrders []Order
-	factionOrders := make(map[PlayerFaction][]Order, len(orderChans))
+	var allOrders []*Order
+	factionOrders := make(map[PlayerFaction][]*Order, len(orderChans))
 	for faction, orderChan := range orderChans {
 		orders := <-orderChan
 		allOrders = append(allOrders, orders...)
@@ -151,11 +162,11 @@ func (game *Game) gatherAndValidateOrders() []Order {
 func (game *Game) gatherAndValidateOrderSet(
 	ctx context.Context,
 	faction PlayerFaction,
-	orderChan chan<- []Order,
+	orderChan chan<- []*Order,
 ) {
 	for {
 		if succeeded := game.messenger.SendOrderRequest(faction, game.season); !succeeded {
-			orderChan <- []Order{}
+			orderChan <- nil
 			return
 		}
 
@@ -164,7 +175,7 @@ func (game *Game) gatherAndValidateOrderSet(
 			err = wrap.Error(err, "failed to receive orders")
 			game.log.Error(ctx, err, "")
 			game.messenger.SendError(faction, err)
-			orderChan <- []Order{}
+			orderChan <- nil
 			return
 		}
 
@@ -185,7 +196,7 @@ func (game *Game) gatherAndValidateOrderSet(
 
 // Checks if the given set of orders are valid for the state of the board in the given season.
 // Assumes that all orders are from the same faction.
-func validateOrders(orders []Order, faction PlayerFaction, board Board, season Season) error {
+func validateOrders(orders []*Order, faction PlayerFaction, board Board, season Season) error {
 	var err error
 	if season == SeasonWinter {
 		err = validateWinterOrders(orders, faction, board)
@@ -195,7 +206,7 @@ func validateOrders(orders []Order, faction PlayerFaction, board Board, season S
 	return err
 }
 
-func validateWinterOrders(orders []Order, faction PlayerFaction, board Board) error {
+func validateWinterOrders(orders []*Order, faction PlayerFaction, board Board) error {
 	var disbands set.ArraySet[RegionName]
 	var outgoingMoves set.ArraySet[RegionName]
 	for _, order := range orders {
@@ -233,7 +244,7 @@ func validateWinterOrders(orders []Order, faction PlayerFaction, board Board) er
 }
 
 func validateWinterOrder(
-	order Order,
+	order *Order,
 	origin *Region,
 	board Board,
 	disbands set.ArraySet[RegionName],
@@ -258,7 +269,7 @@ func validateWinterOrder(
 }
 
 func validateWinterMove(
-	order Order,
+	order *Order,
 	origin *Region,
 	board Board,
 	disbands set.ArraySet[RegionName],
@@ -290,7 +301,7 @@ func validateWinterMove(
 	return nil
 }
 
-func validateBuild(order Order, origin *Region, board Board) error {
+func validateBuild(order *Order, origin *Region, board Board) error {
 	if !origin.empty() {
 		return errors.New("cannot build in region already occupied")
 	}
@@ -310,7 +321,7 @@ func validateBuild(order Order, origin *Region, board Board) error {
 }
 
 func validateNumberOfBuilds(
-	orders []Order,
+	orders []*Order,
 	faction PlayerFaction,
 	board Board,
 	disbands set.ArraySet[RegionName],
@@ -354,7 +365,7 @@ func validateNumberOfBuilds(
 	return nil
 }
 
-func validateNonWinterOrders(orders []Order, board Board) error {
+func validateNonWinterOrders(orders []*Order, board Board) error {
 	for _, order := range orders {
 		origin, ok := board[order.Origin]
 		if !ok {
@@ -379,7 +390,7 @@ func validateNonWinterOrders(orders []Order, board Board) error {
 	return nil
 }
 
-func validateNonWinterOrder(order Order, origin *Region, board Board) error {
+func validateNonWinterOrder(order *Order, origin *Region, board Board) error {
 	if err := validateOrderedUnit(order, origin); err != nil {
 		return err
 	}
@@ -398,7 +409,7 @@ func validateNonWinterOrder(order Order, origin *Region, board Board) error {
 	}
 }
 
-func validateMoveOrSupport(order Order, origin *Region, board Board) error {
+func validateMoveOrSupport(order *Order, origin *Region, board Board) error {
 	if order.Destination == "" {
 		return errors.New("moves and supports must have destination")
 	}
@@ -428,7 +439,7 @@ func validateMoveOrSupport(order Order, origin *Region, board Board) error {
 	}
 }
 
-func validateMove(order Order, origin *Region, board Board) error {
+func validateMove(order *Order, origin *Region, board Board) error {
 	if order.SecondDestination != "" {
 		if origin.Unit.Type != UnitKnight {
 			return errors.New(
@@ -446,7 +457,7 @@ func validateMove(order Order, origin *Region, board Board) error {
 	return nil
 }
 
-func validateSupport(order Order, origin *Region) error {
+func validateSupport(order *Order, origin *Region) error {
 	if !origin.adjacentTo(order.Destination) {
 		return errors.New("support order must be adjacent to destination")
 	}
@@ -454,7 +465,7 @@ func validateSupport(order Order, origin *Region) error {
 	return nil
 }
 
-func validateBesiegeOrTransport(order Order, origin *Region) error {
+func validateBesiegeOrTransport(order *Order, origin *Region) error {
 	if order.Destination != "" {
 		return errors.New("besiege or transport orders cannot have destination")
 	}
@@ -497,7 +508,7 @@ func validateTransport(origin *Region) error {
 	return nil
 }
 
-func validateReachableMoveDestinations(orders []Order, board Board) error {
+func validateReachableMoveDestinations(orders []*Order, board Board) error {
 	// Copy the board, so orders do not persist
 	board = board.copy()
 	board.placeOrders(orders)
@@ -528,7 +539,7 @@ func validateReachableMoveDestinations(orders []Order, board Board) error {
 	return nil
 }
 
-func validateReachableMoveDestination(move Order, board Board) error {
+func validateReachableMoveDestination(move *Order, board Board) error {
 	origin := board[move.Origin]
 
 	if !origin.adjacentTo(move.Destination) {
@@ -542,7 +553,7 @@ func validateReachableMoveDestination(move Order, board Board) error {
 	return nil
 }
 
-func validateOrderSet(orders []Order) error {
+func validateOrderSet(orders []*Order) error {
 	if err := validateUniqueMoveDestinations(orders); err != nil {
 		return err
 	}
@@ -554,7 +565,7 @@ func validateOrderSet(orders []Order) error {
 	return nil
 }
 
-func validateUniqueMoveDestinations(orders []Order) error {
+func validateUniqueMoveDestinations(orders []*Order) error {
 	moveDestinations := set.ArraySetWithCapacity[RegionName](len(orders))
 
 	for _, order := range orders {
@@ -576,7 +587,7 @@ func validateUniqueMoveDestinations(orders []Order) error {
 	return nil
 }
 
-func validateOneOrderPerRegion(orders []Order) error {
+func validateOneOrderPerRegion(orders []*Order) error {
 	orderedRegions := set.ArraySetWithCapacity[RegionName](len(orders))
 
 	for _, order := range orders {
@@ -590,7 +601,7 @@ func validateOneOrderPerRegion(orders []Order) error {
 	return nil
 }
 
-func validateOrderedUnit(order Order, origin *Region) error {
+func validateOrderedUnit(order *Order, origin *Region) error {
 	if !order.UnitType.isValid() {
 		return fmt.Errorf("invalid ordered unit type '%d'", order.UnitType)
 	}
