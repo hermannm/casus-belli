@@ -56,7 +56,6 @@ linters:
     - gochecknoinits # checks that no init functions are present in Go code
     - gochecksumtype # checks exhaustiveness on Go "sum types"
     - gocritic # provides diagnostics that check for bugs, performance and style issues
-    - godot # checks if comments end in a period
     - gomoddirectives # manages the use of 'replace', 'retract', and 'excludes' directives in go.mod
     - goprintffuncname # checks that printf-like functions are named with f at the end
     - gosec # inspects source code for security problems
@@ -129,6 +128,7 @@ linters:
     #- gocognit # [unhelpful] computes and checks the cognitive complexity of functions
     #- goconst # [unhelpful] finds repeated strings that could be replaced by a constant
     #- gocyclo # [unhelpful] computes and checks the cyclomatic complexity of functions
+    #- godot # [unhelpful] checks if comments end in a period
     #- gomodguard # [use more powerful depguard] allow and block lists linter for direct Go module dependencies
     #- gosmopolitan # reports certain i18n/l10n anti-patterns in your Go codebase
     #- grouper # analyzes expression groups
