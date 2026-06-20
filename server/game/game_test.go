@@ -1,3 +1,4 @@
+//nolint:exhaustruct
 package game
 
 import (
@@ -12,7 +13,6 @@ import (
 	"hermannm.dev/wrap"
 )
 
-//nolint:exhaustruct
 func TestNonWinterOrders(t *testing.T) {
 	testCases := []struct {
 		name     string
@@ -288,7 +288,6 @@ func TestNonWinterOrders(t *testing.T) {
 	}
 }
 
-//nolint:exhaustruct
 func TestWinterOrders(t *testing.T) {
 	testCases := []struct {
 		name     string
@@ -408,7 +407,6 @@ func BenchmarkBoardResolve(b *testing.B) {
 	}
 }
 
-//nolint:exhaustruct
 func benchmarkSetup(b *testing.B) (*Game, []*Order) {
 	b.Helper()
 

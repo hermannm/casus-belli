@@ -133,8 +133,8 @@ func (game *Game) resolveMultiplayerBattle(region *Region) {
 				continue
 			}
 
-			// If the destination is not controlled, then the winner will have to battle there before we
-			// can succeed the move
+			// If the destination is not controlled, then the winner will have to battle there
+			// before we can succeed the move
 			if game.board[move.Destination].controlled() {
 				game.board.succeedMove(move)
 			}
