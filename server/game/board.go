@@ -253,7 +253,7 @@ func (board Board) retreatMove(move *Order) {
 	if !move.Retreat {
 		origin := board[move.Origin]
 		if !origin.attacked() {
-			origin.Unit = ptr(move.unit())
+			origin.Unit = new(move.unit())
 		} else if origin.partOfCycle {
 			origin.unresolvedRetreat = move
 		} else if !move.Retreat {
@@ -340,7 +340,7 @@ func (region *Region) replaceUnit(unit Unit) {
 func (region *Region) resolveRetreat() {
 	if region.unresolvedRetreat != nil {
 		if region.empty() {
-			region.Unit = ptr(region.unresolvedRetreat.unit())
+			region.Unit = new(region.unresolvedRetreat.unit())
 		}
 		region.unresolvedRetreat = nil
 	}

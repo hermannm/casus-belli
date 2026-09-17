@@ -131,7 +131,7 @@ func (game *Game) resolveWinterOrders(orders []*Order) {
 
 			if len(region.incomingMoves) != 0 {
 				move := region.incomingMoves[0] // Max 1 incoming move in winter
-				region.Unit = ptr(move.unit())
+				region.Unit = new(move.unit())
 				game.board[move.Origin].removeUnit()
 				game.board.removeOrder(move)
 			}
