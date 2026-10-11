@@ -3,10 +3,9 @@ package game
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"math/rand/v2"
 	"time"
-
-	"hermannm.dev/devlog/log"
 )
 
 type Game struct {
@@ -14,7 +13,7 @@ type Game struct {
 	board     Board
 	season    Season
 	messenger Messenger
-	log       log.Logger
+	log       *slog.Logger
 	rollDice  func() int
 }
 
@@ -51,7 +50,7 @@ func New(
 	board Board,
 	boardInfo BoardInfo,
 	messenger Messenger,
-	logger log.Logger,
+	logger *slog.Logger,
 	customDiceRoller func() int,
 ) *Game {
 	game := Game{

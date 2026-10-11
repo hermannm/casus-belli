@@ -8,6 +8,7 @@ import (
 	"net"
 
 	"github.com/gorilla/websocket"
+	"hermannm.dev/devlog/errlog"
 	"hermannm.dev/wrap"
 
 	"hermannm.dev/casus-belli/server/game"
@@ -17,11 +18,11 @@ func (player *Player) readMessagesUntilSocketCloses(lobby *Lobby) {
 	for {
 		socketClosed, err := player.readMessage(lobby)
 		if socketClosed {
-			player.log.Error(nil, err, "Socket closed, removing from lobby")
+			player.log.Error("Socket closed, removing from lobby", errlog.Cause(err))
 			lobby.RemovePlayer(player.username)
 			return
 		} else if err != nil {
-			player.log.Error(nil, err, "")
+			player.log.Error("Failed to read message from player", errlog.Cause(err))
 			player.SendError(err)
 		}
 	}

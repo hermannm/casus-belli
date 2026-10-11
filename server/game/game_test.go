@@ -9,7 +9,8 @@ import (
 	"testing"
 
 	"hermannm.dev/devlog"
-	"hermannm.dev/devlog/log"
+	"hermannm.dev/devlog/errlog"
+	"hermannm.dev/devlog/sloginit"
 	"hermannm.dev/wrap"
 )
 
@@ -483,13 +484,14 @@ func benchmarkSetup(b *testing.B) (*Game, []*Order) {
 }
 
 func TestMain(m *testing.M) {
-	log.SetDefault(
-		devlog.NewHandler(os.Stdout, &devlog.Options{Level: slog.LevelDebug, ForceColors: true}),
+	sloginit.InitPrettyLogHandler(
+		os.Stdout,
+		&devlog.Options{Level: slog.LevelDebug, ForceColors: true, RenameErrorAttrKey: "cause"},
 	)
 
 	board, boardInfo, err := ReadBoardFromConfigFile("casus-belli-5players")
 	if err != nil {
-		log.Error(nil, err, "Failed to read board config for tests")
+		slog.Error("Failed to read board config for tests", errlog.Cause(err))
 		os.Exit(1)
 	}
 	emptyBoard, baseBoardInfo = board, boardInfo
@@ -577,7 +579,7 @@ func newMockGame(
 		}
 	}
 
-	return New(board, baseBoardInfo, MockMessenger{}, log.Default(), diceRollerForTests), board
+	return New(board, baseBoardInfo, MockMessenger{}, slog.Default(), diceRollerForTests), board
 }
 
 // Maps region names to either a Unit (which may be empty), a movedFrom struct, or stayed.

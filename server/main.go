@@ -13,7 +13,8 @@ import (
 	"time"
 
 	"hermannm.dev/devlog"
-	"hermannm.dev/devlog/log"
+	"hermannm.dev/devlog/errlog"
+	"hermannm.dev/devlog/sloginit"
 	"hermannm.dev/ipfinder"
 
 	"hermannm.dev/casus-belli/server/api"
@@ -24,7 +25,10 @@ import (
 const defaultPort string = "8000"
 
 func main() {
-	log.SetDefault(devlog.NewHandler(os.Stdout, &devlog.Options{Level: slog.LevelDebug}))
+	sloginit.InitPrettyLogHandler(
+		os.Stdout,
+		&devlog.Options{RenameErrorAttrKey: "cause", Level: slog.LevelDebug},
+	)
 
 	ctx := context.Background()
 
@@ -32,7 +36,7 @@ func main() {
 
 	availableBoards, err := game.GetAvailableBoards()
 	if err != nil {
-		log.Error(ctx, err, "Failed to get available boards for game server")
+		slog.ErrorContext(ctx, "Failed to get available boards for game server", errlog.Cause(err))
 		os.Exit(1)
 	}
 
@@ -47,9 +51,9 @@ func main() {
 		lobbyAPI.RegisterLobbyCreationEndpoints()
 	}
 
-	log.Infof(ctx, "Listening on port %s...", port)
+	slog.InfoContext(ctx, fmt.Sprintf("Listening on port %s...", port))
 	if err := lobbyAPI.ListenAndServe(fmt.Sprintf(":%s", port)); err != nil {
-		log.Error(ctx, err, "Server stopped")
+		slog.ErrorContext(ctx, "Server stopped", errlog.Cause(err))
 		os.Exit(1)
 	}
 }

@@ -2,11 +2,11 @@ package lobby
 
 import (
 	"fmt"
+	"log/slog"
 	"slices"
 	"sync"
 
 	"github.com/gorilla/websocket"
-	"hermannm.dev/devlog/log"
 
 	"hermannm.dev/casus-belli/server/game"
 )
@@ -19,12 +19,12 @@ type Player struct {
 	// Blank until selected. Must hold lock to access safely before the game has started.
 	gameFaction game.PlayerFaction
 	lock        sync.RWMutex
-	log         log.Logger
+	log         *slog.Logger
 }
 
 type Username string
 
-func newPlayer(username Username, socket *websocket.Conn, lobbyLogger log.Logger) *Player {
+func newPlayer(username Username, socket *websocket.Conn, lobbyLogger *slog.Logger) *Player {
 	return &Player{
 		username:    username,
 		socket:      socket,

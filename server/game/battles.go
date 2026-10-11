@@ -7,6 +7,7 @@ import (
 	"slices"
 	"sync"
 
+	"hermannm.dev/devlog/errlog"
 	"hermannm.dev/set"
 	"hermannm.dev/wrap"
 )
@@ -357,7 +358,12 @@ func (game *Game) awaitSupport(
 
 func (game *Game) handleBattleError(err error, faction PlayerFaction, battle *Battle) {
 	game.messenger.SendError(faction, err)
-	game.log.WarnError(nil, err, "", "from", faction, "battle", battle.regionNames())
+	game.log.Warn(
+		"battle error",
+		errlog.Cause(err),
+		"from", faction,
+		"battle", battle.regionNames(),
+	)
 }
 
 // Adds modifiers for support orders from players involved in the battle, as we assume they always

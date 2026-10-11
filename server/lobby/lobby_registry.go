@@ -3,11 +3,11 @@ package lobby
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"slices"
 	"sync"
 
 	"hermannm.dev/condqueue"
-	"hermannm.dev/devlog/log"
 	"hermannm.dev/wrap"
 
 	"hermannm.dev/casus-belli/server/game"
@@ -53,14 +53,12 @@ func (registry *LobbyRegistry) CreateLobby(
 		gameMessageQueue: condqueue.New[ReceivedMessage](),
 		registry:         registry,
 		lock:             sync.RWMutex{},
-		log:              log.Logger{},
+		log:              slog.Default(),
 	}
 
-	logger := log.Default()
 	if !onlyLobbyOnServer {
-		logger = logger.With("lobby", lobbyName)
+		lobby.log = lobby.log.With("lobby", lobbyName)
 	}
-	lobby.log = logger
 
 	board, boardInfo, err := game.ReadBoardFromConfigFile(boardID)
 	if err != nil {

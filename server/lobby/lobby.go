@@ -3,12 +3,13 @@ package lobby
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"slices"
 	"sync"
 
 	"github.com/gorilla/websocket"
 	"hermannm.dev/condqueue"
-	"hermannm.dev/devlog/log"
+	"hermannm.dev/devlog/errlog"
 
 	"hermannm.dev/casus-belli/server/game"
 )
@@ -22,7 +23,7 @@ type Lobby struct {
 	gameMessageQueue *condqueue.CondQueue[ReceivedMessage]
 	registry         *LobbyRegistry
 	lock             sync.RWMutex
-	log              log.Logger
+	log              *slog.Logger
 }
 
 func (lobby *Lobby) getPlayer(faction game.PlayerFaction) (player *Player, foundPlayer bool) {
@@ -55,7 +56,7 @@ func (lobby *Lobby) AddPlayer(username string, socket *websocket.Conn) (*Player,
 
 	player := newPlayer(Username(username), socket, lobby.log)
 
-	lobby.log.Infof(nil, "Player '%s' joined", username)
+	lobby.log.Info("Player joined", "username", username)
 	lobby.players = append(lobby.players, player)
 	go player.readMessagesUntilSocketCloses(lobby)
 
@@ -95,7 +96,7 @@ func (lobby *Lobby) Close() {
 		player.lock.Lock()
 
 		if err := player.socket.Close(); err != nil {
-			player.log.Error(nil, err, "Failed to close socket connection")
+			player.log.Error("Failed to close socket connection", errlog.Cause(err))
 		}
 
 		player.lock.Unlock()
@@ -103,7 +104,7 @@ func (lobby *Lobby) Close() {
 
 	lobby.registry.removeLobby(lobby.name)
 
-	lobby.log.Info(nil, "Lobby closed")
+	lobby.log.Info("Lobby closed")
 }
 
 func (lobby *Lobby) ClearMessages() {
@@ -127,7 +128,7 @@ func (lobby *Lobby) startGame() error {
 		return errors.New("all player factions must be claimed before starting the game")
 	}
 
-	lobby.log.Info(nil, "Starting game")
+	lobby.log.Info("Starting game")
 	lobby.gameStarted = true
 
 	go func() {
@@ -138,6 +139,6 @@ func (lobby *Lobby) startGame() error {
 	return nil
 }
 
-func (lobby *Lobby) Logger() log.Logger {
+func (lobby *Lobby) Logger() *slog.Logger {
 	return lobby.log
 }

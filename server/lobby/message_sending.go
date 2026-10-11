@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/gorilla/websocket"
+	"hermannm.dev/devlog/errlog"
 
 	"hermannm.dev/casus-belli/server/game"
 )
@@ -14,7 +15,7 @@ func (player *Player) sendMessage(message Message) (succeeded bool) {
 	defer player.lock.Unlock()
 
 	if err := player.socket.WriteJSON(message); err != nil {
-		player.log.Error(nil, err, "Failed to send message", "message", message)
+		player.log.Error("Failed to send message", errlog.Cause(err), "message", message)
 		return false
 	}
 
@@ -24,8 +25,7 @@ func (player *Player) sendMessage(message Message) (succeeded bool) {
 func (lobby *Lobby) sendMessage(to game.PlayerFaction, message Message) (succeeded bool) {
 	player, ok := lobby.getPlayer(to)
 	if !ok {
-		lobby.log.ErrorMessage(
-			nil,
+		lobby.log.Error(
 			fmt.Sprintf("Tried to send message to unrecognized player faction '%s'", to),
 			"message", message,
 		)
@@ -45,13 +45,17 @@ func (player *Player) sendPreparedMessage(message *websocket.PreparedMessage) er
 func (lobby *Lobby) sendMessageToAll(message Message) {
 	messageJSON, err := json.Marshal(message)
 	if err != nil {
-		lobby.log.Error(nil, err, "Failed to serialize message", "message", message)
+		lobby.log.Error("Failed to serialize message", errlog.Cause(err), "message", message)
 		return
 	}
 
 	preparedMessage, err := websocket.NewPreparedMessage(websocket.TextMessage, messageJSON)
 	if err != nil {
-		lobby.log.Error(nil, err, "Failed to prepare websocket message", "message", message)
+		lobby.log.Error(
+			"Failed to prepare websocket message",
+			errlog.Cause(err),
+			"message", message,
+		)
 		return
 	}
 
@@ -60,7 +64,11 @@ func (lobby *Lobby) sendMessageToAll(message Message) {
 
 	for _, player := range lobby.players {
 		if err := player.sendPreparedMessage(preparedMessage); err != nil {
-			player.log.Error(nil, err, "Failed to send prepared message", "message", message)
+			player.log.Error(
+				"Failed to send prepared message",
+				errlog.Cause(err),
+				"message", message,
+			)
 		}
 	}
 }

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"hermannm.dev/devlog/errlog"
 	"hermannm.dev/enumnames"
 	"hermannm.dev/set"
 	"hermannm.dev/wrap"
@@ -173,7 +174,7 @@ func (game *Game) gatherAndValidateOrderSet(
 		orders, err := game.messenger.AwaitOrders(ctx, faction)
 		if err != nil {
 			err = wrap.Error(err, "failed to receive orders")
-			game.log.Error(ctx, err, "")
+			game.log.ErrorContext(ctx, "", errlog.Cause(err))
 			game.messenger.SendError(faction, err)
 			orderChan <- nil
 			return
@@ -184,7 +185,12 @@ func (game *Game) gatherAndValidateOrderSet(
 		}
 
 		if err := validateOrders(orders, faction, game.board, game.season); err != nil {
-			game.log.Error(ctx, err, "")
+			game.log.WarnContext(
+				ctx,
+				"invalid orders",
+				errlog.Cause(err),
+				"faction", faction,
+			)
 			game.messenger.SendError(faction, err)
 			continue
 		}

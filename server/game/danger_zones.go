@@ -1,5 +1,7 @@
 package game
 
+import "hermannm.dev/devlog/errlog"
+
 type DangerZone string
 
 // Number to beat when attempting to cross a danger zone.
@@ -43,7 +45,7 @@ func (game *Game) resolveDangerZoneCrossing(crossing Battle) {
 	defer cleanup()
 
 	if err := game.messenger.AwaitDiceRoll(ctx, order.Faction); err != nil {
-		game.log.Error(nil, err, "")
+		game.log.Error("failed to get dice roll", errlog.Cause(err), "faction", order.Faction)
 	}
 
 	crossing.addModifier(order.Faction, newModifier(ModifierDice, game.rollDice()))

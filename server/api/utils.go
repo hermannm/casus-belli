@@ -3,10 +3,11 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"net/url"
 
-	"hermannm.dev/devlog/log"
+	"hermannm.dev/devlog/errlog"
 	"hermannm.dev/wrap"
 )
 
@@ -30,7 +31,7 @@ func sendJSON(res http.ResponseWriter, value any) {
 	if err := json.NewEncoder(res).Encode(value); err != nil {
 		err = wrap.Error(err, "failed to serialize response")
 		sendServerError(res, err)
-		log.Error(nil, err, "")
+		slog.Error("", errlog.Cause(err))
 	}
 }
 
