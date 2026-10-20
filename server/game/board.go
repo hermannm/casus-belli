@@ -184,7 +184,7 @@ func (board Board) resolved() bool {
 
 func (board Board) resetResolvingState() {
 	for _, region := range board {
-		region.regionResolvingState = regionResolvingState{} //nolint:exhaustruct
+		region.regionResolvingState = regionResolvingState{} //exhaustruct:ignore
 	}
 }
 

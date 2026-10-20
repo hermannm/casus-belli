@@ -83,7 +83,7 @@ func (api LobbyAPI) joinLobby(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	//nolint:exhaustruct
+	//exhaustruct:ignore
 	upgrader := websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,

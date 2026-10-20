@@ -82,7 +82,7 @@ func ReadBoardFromConfigFile(boardID string) (Board, BoardInfo, error) {
 				Unit:                 nil,
 				ControllingFaction:   homeFaction,
 				SiegeCount:           0,
-				regionResolvingState: regionResolvingState{}, //nolint:exhaustruct
+				regionResolvingState: regionResolvingState{}, //exhaustruct:ignore
 			}
 
 			board[region.Name] = &region
@@ -105,7 +105,7 @@ func ReadBoardFromConfigFile(boardID string) (Board, BoardInfo, error) {
 			Unit:                 nil,
 			ControllingFaction:   "",
 			SiegeCount:           0,
-			regionResolvingState: regionResolvingState{}, //nolint:exhaustruct
+			regionResolvingState: regionResolvingState{}, //exhaustruct:ignore
 		}
 		board[region.Name] = &region
 	}

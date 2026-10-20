@@ -48,7 +48,7 @@ linters:
     - errname # checks that sentinel errors are prefixed with the Err and error types are suffixed with the Error
     - errorlint # finds code that will cause problems with the error wrapping scheme introduced in Go 1.13
     - exhaustive # checks exhaustiveness of enum switch statements
-    - exhaustruct # checks if all structure fields are initialized
+    - exhaustruct_v5 # checks if all structure fields are initialized
     - exptostd # detects functions from golang.org/x/exp/ that can be replaced by std functions
     - fatcontext # detects nested contexts in loops
     - forbidigo # forbids identifiers
@@ -221,15 +221,15 @@ linters:
         - map
       default-signifies-exhaustive: true
 
-    exhaustruct:
-      # List of regular expressions to match type names that should be excluded from processing.
+    exhaustruct_v5:
+      # List of regular expressions to match type names that should be skipped from checking.
       # Anonymous structs can be matched by '<anonymous>' alias.
       # Has precedence over `include`.
       # Each regular expression must match the full type name, including package path.
       # For example, to match type `net/http.Cookie` regular expression should be `.*/http\.Cookie`,
       # but not `http\.Cookie`.
       # Default: []
-      exclude:
+      ignore-patterns:
         # std libs
         - ^log/slog.HandlerOptions$
         - ^net/http.Client$
@@ -319,7 +319,7 @@ linters:
     nolintlint:
       # Exclude following linters from requiring an explanation.
       # Default: []
-      allow-no-explanation: [ golines, exhaustruct, forbidigo ]
+      allow-no-explanation: [ golines, exhaustruct_v5, forbidigo ]
       # Enable to require an explanation of nonzero length after each nolint directive.
       # Default: false
       require-explanation: true
@@ -375,9 +375,6 @@ linters:
         # Omit embedded fields from selector expression (sometimes this is necessary).
         # https://staticcheck.dev/docs/checks/#QF1008
         - -QF1008
-        # [project-specific] Do not pass a nil Context (our logging library uses nil context).
-        # https://staticcheck.dev/docs/checks/#SA1012
-        - -SA1012
 
     usetesting:
       # Enable/disable `os.TempDir()` detections.
